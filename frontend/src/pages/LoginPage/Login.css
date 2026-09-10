@@ -1,0 +1,86 @@
+@font-face {
+    font-family: "Maplestory";
+    src: url('../font/Maplestory-Light.ttf') format("truetype");
+}
+
+.Login-container{
+    width: 100%;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo{
+    width: 350px;
+    margin-bottom: 15px;
+    filter: hue-rotate(200deg);
+}
+
+.logo-title{
+    margin-bottom: 40px;
+
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.login-input,
+.pw-input{
+    width: 320px;
+    height: 50px;
+
+    padding: 0 15px;
+    margin-bottom: 15px;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    font-size: 16px;
+    outline: none;
+}
+
+.login-input:focus,
+.pw-input:focus{
+    border-color: #4CAF50;
+}
+
+.login-btn{
+    width: 320px;
+    height: 50px;
+
+    margin-top: 10px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #aeee64;
+    color: white;
+
+    font-size: 18px;
+    font-weight: bold;
+
+    cursor: pointer;
+    font-family: "Maplestory", sans-serif;
+}
+
+.login-btn:hover{
+    background: #43a047;
+}
+
+.Login-container p{
+    margin-top: 25px;
+
+    font-size: 14px;
+}
+
+.Login-container a{
+    margin-left: 8px;
+
+    text-decoration: none;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.pw_re{ margin-top: 20px;}
