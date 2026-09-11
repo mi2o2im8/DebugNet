@@ -1,6 +1,6 @@
 import "./Login.css";
 import logo from "../../assets/img/logo_name.png";
-
+import {Link} from "react-router-dom"
 // ==============================
 // 로그인 API 전달 항목
 // 기능명 : 로그인
@@ -53,7 +53,7 @@ function Login() {
       <a href="#" className="pw_re">비밀번호 찾기</a>
       <p>
         아직 계정이 없으신가요?
-        <a href="#">회원가입</a>
+        <Link to="/signup">회원가입</Link>
       </p>
     </div>
   );
