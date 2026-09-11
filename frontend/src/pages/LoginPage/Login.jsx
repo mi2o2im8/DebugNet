@@ -1,10 +1,18 @@
 import "./Login.css";
 import logo from "../../assets/img/logo_name.png";
 
-// 로그인 화면 백엔드 전달 사항 / 기능명: 로그인 / 
-// 항목: 아이디(이메일), 데이터명:email, 입력형식: 이메일
-// 항목: 비밀번호, 데이터명: password, 입력 형식: 비밀번호
-// 로그인 API 필요
+// ==============================
+// 로그인 API 전달 항목
+// 기능명 : 로그인
+// HTTP Method : POST
+// URL : /login
+//
+// Request Body
+// {
+//    email: 사용자 이메일,
+//    password: 사용자 비밀번호
+// }
+// ==============================
 
 function Login() {
   return (
@@ -17,9 +25,10 @@ function Login() {
       </h4>
 
       {/* 로그인 입력 */}
-      <p className="email-lavel">아이디(이메일)</p>
+      <p className="email-label">아이디(이메일)</p>
       <input
-        type="text"
+        type="email"
+        name="email"
         placeholder="이메일을 입력하세요"
         className="login-input"
       />
@@ -27,6 +36,7 @@ function Login() {
       <p className="email-lavel">비밀번호</p>
       <input
         type="password"
+        name="password"
         placeholder="비밀번호를 입력하세요"
         className="pw-input"
       />
@@ -40,7 +50,7 @@ function Login() {
       {/* <button>네이버 로그인</button>
       <button>카카오 로그인</button> */}
 
-      <a href="%" className="pw_re">비밀번호 찾기</a>
+      <a href="#" className="pw_re">비밀번호 찾기</a>
       <p>
         아직 계정이 없으신가요?
         <a href="#">회원가입</a>
