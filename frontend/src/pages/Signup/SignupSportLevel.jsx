@@ -8,16 +8,16 @@ function SignupSportLevel() {
     const navigate = useNavigate();
     // 회원가입 전체 데이터 가져오기
     const { signupData, setSignupData } = useSignup();
-    // 종목별 수준 선택
+    // 종목별 운동 수준 선택
     const handleLevel = (sport, level) => {
-        if (signupData.sports.includes(sport)){
-            setSignupData({
-                ...signupData,
+        if (signupData.sports.includes(sport)) {
+            setSignupData((prev) => ({
+                ...prev,
                 levels: {
-                    ...signupData.levels,
+                    ...prev.levels,
                     [sport]: level
                 }
-            });
+            }));
         }
     };
     //나중에 Supabase에 회원가입 요청을 넣으면서 await를 사용하게 되면 그때 다시

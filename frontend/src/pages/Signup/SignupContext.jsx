@@ -22,7 +22,8 @@ export function SignupProvider({ children }) {
         levels: {},
 
         // 4. 활동 지역 / 이동 가능 거리
-        location: [],
+        // location: [],
+        regions: [],
         travel_distance_km: null,
 
         // 5. 활동 빈도
@@ -32,8 +33,8 @@ export function SignupProvider({ children }) {
         clubPreferences: [],
 
         // 7. 활동 가능 지역
-        regions: [],
-        distance: "",
+        // regions: [], 2개
+        // distance: "", //----별도로 필요 없다면 뺀다.
 
         // 8. 활동 가능 시간
         availableTimes: [],
@@ -69,3 +70,5 @@ export function useSignup() {
 // "이 4개 필드도 DB에 저장하는 거야?"
 
 // 라고 확인해서 필요 없다고 하면 그때 삭제하면 돼.
+
+// day > day_of_week

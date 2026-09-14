@@ -3,64 +3,115 @@
 import "./Signup.css";
 import { useNavigate } from "react-router-dom";
 import { useSignup } from "./SignupContext";
-import { supabase } from "../../../supabaseClient";
 
 function SignupFee() {
     const navigate = useNavigate();
 
     const { signupData, setSignupData } = useSignup();
 
-    // 회원가입 완료
+    // ⭐ 회원가입 완료
     const handleNext = async () => {
+
+        // 최대 가능 회비 선택 확인
         if (signupData.max_monthly_fee === null) {
             alert("최대 가능 회비를 선택해주세요.");
             return;
         }
-        try {
-            // Supabase Auth에 전달되는 이메일 확인
-            console.log("회원가입 이메일:", signupData.email);
-            console.log("비밀번호 입력 여부:", !!signupData.password);
 
-            // 이메일 또는 비밀번호가 비어 있으면 회원가입 중단
-            if (!signupData.email || !signupData.password) {
-                alert("이메일 또는 비밀번호가 입력되지 않았습니다.");
-                return;
-            }
-            // Supabase Auth 회원가입
-            const { data, error } = await supabase.auth.signUp({
-                email: signupData.email,
-                password: signupData.password,
+        try {
+            // ⭐ sports와 levels 실제 데이터 확인
+            console.log("최종 signupData:", signupData);
+            console.log("signupData.sports:", signupData.sports);
+            console.log("signupData.levels:", signupData.levels);
+
+            // ⭐ 운동 이름 → 백엔드 sport_id 변환
+            const sportIdMap = {
+                "축구ㆍ풋살": 1,
+                "배구": 2,
+                "농구": 3,
+                "테니스": 4,
+                "탁구": 5
+            };
+
+            // ⭐ 백엔드가 요구하는 형식으로 변환
+            const formattedSports = signupData.sports.map((sportName) => {
+
+                const sportId = sportIdMap[sportName];
+
+                if (!sportId) {
+                    throw new Error(`등록되지 않은 운동 종목입니다: ${sportName}`);
+                }
+
+                return {
+                    sport_id: sportId,
+                    sport_level: signupData.levels[sportName]
+                };
             });
 
-            // 회원가입 실패
-            if (error) {
-                console.error("회원가입 오류:", error);
-                alert(error.message);
+            console.log("formattedSports:", formattedSports);
+
+            // ⭐ 백엔드에 보낼 최종 데이터
+            const requestData = {
+                email: signupData.email,
+                password: signupData.password,
+
+                name: signupData.name,
+                nickname: signupData.nickname,
+                gender: signupData.gender,
+
+                birth_date: signupData.birth_date
+                    ? signupData.birth_date.toISOString().split("T")[0]
+                    : null,
+
+                travel_distance_km: signupData.travel_distance_km,
+                max_monthly_fee: signupData.max_monthly_fee,
+
+                sports: formattedSports,
+
+                regions: signupData.regions,
+
+                available_times: signupData.availableTimes,
+
+                frequency: signupData.frequency,
+                club_preferences: signupData.clubPreferences
+            };
+            console.log(
+                "백엔드 전송 데이터:",
+                JSON.stringify(requestData, null, 2)
+            );
+
+            // ⭐ 백엔드 회원가입 API 호출
+            const response = await fetch(
+                "http://127.0.0.1:8000/api/auth/signup",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(requestData)
+                }
+            );
+
+            // ⭐ 백엔드 응답
+            const data = await response.json();
+
+            console.log(
+                "백엔드 응답 상세:",
+                JSON.stringify(data, null, 2)
+            );
+
+            // ⭐ 회원가입 실패
+            if (!response.ok) {
+                alert(data.detail || data.message || "회원가입에 실패했습니다.");
                 return;
             }
 
-            // Supabase에서 생성된 UUID 확인
-            if (!data.user) {
-                alert("회원가입은 되었지만 사용자 정보를 확인할 수 없습니다.");
-                return;
-            }
-
-            // Supabase에서 생성된 UUID
-            const userId = data.user.id;
-
-            console.log("생성된 UUID:", userId);
-            console.log("회원가입 정보:", signupData);
-
-            // 여기서 나중에 백엔드 API 호출
-            // 현재는 Supabase Auth 회원가입까지만 연결된 상태
-
+            // ⭐ 회원가입 성공
             alert("회원가입이 완료되었습니다.");
-
-            navigate("/Login");
 
         } catch (error) {
             console.error("회원가입 오류:", error);
-            alert("회원가입 중 오류가 발생했습니다.");
+            alert("서버와 연결할 수 없습니다.");
         }
     };
 
@@ -74,7 +125,7 @@ function SignupFee() {
             >
                 뒤로가기
             </button>
-            
+
             <h1 className="signup-level-title">월 회비는 최대</h1>
             <h1 className="signup-level-title">얼마까지 낼 수 있나요?</h1>
 

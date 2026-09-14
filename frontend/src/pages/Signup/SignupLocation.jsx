@@ -14,11 +14,11 @@ function SignupLocation() {
 
     // 구/군 선택
     const handLocation = (district) => {
-        if (signupData.location.includes(district)){
+        if (signupData.regions.includes(district)){
             // 이미 선택되어 있으면 제거
             setSignupData({
                 ...signupData,
-                location: signupData.location.filter(
+                regions: signupData.regions.filter(
                     (item) => item !== district
                 )
             });
@@ -26,7 +26,7 @@ function SignupLocation() {
             // 선택되어 있지 않으면 추가
             setSignupData({
                 ...signupData,
-                location: [...signupData.location, district]
+                regions: [...signupData.regions, district]
             })            
         }
     }
@@ -35,7 +35,7 @@ function SignupLocation() {
     //나중에 Supabase에 회원가입 요청을 넣으면서 await를 사용하게 되면 그때 다시
     // const handleSignup = async ()
     const handleNext = () => {
-        if (signupData.location.length === 0){
+        if (signupData.regions.length === 0){
             alert("활동 지역을 하나 이상 선택해주세요.");
             return;
         }
@@ -79,7 +79,7 @@ function SignupLocation() {
             <h1>지역을 선택해주세요</h1>
             
             {/* 시/도 선택 */}
-            <div className="location-select">
+            <div className="regions-select">
                 <p>시도 선택</p>
 
                 <select>
@@ -93,7 +93,7 @@ function SignupLocation() {
             </div>
 
             {/* 구/군 선택 */}
-            <div className="location-select">
+            <div className="regions-select">
                 <p>구/군 선택</p>
 
                 <select onChange={(e)=> handLocation(e.target.value)}>
@@ -105,26 +105,26 @@ function SignupLocation() {
                     ))}
                 </select>
             </div>
-            <div className="selected-location">
+            <div className="selected-regions">
                 <p>선택된 지역</p>
 
-                <div className="selected-location-list">
-                    {signupData.location.map((district)=> (
+                <div className="selected-regions-list">
+                    {signupData.regions.map((district)=> (
                         <button
                             key={district}
                             type="button"
-                            className="selected-location-item"
+                            className="selected-regions-item"
                             onClick={()=> handLocation(district)}
                         >
                             <span>{district}</span>
-                            <span className="location-remove">  x</span>
+                            <span className="regions-remove">  x</span>
                         </button>
                     ))}
                 </div>
             </div>
 
-            <div className="location-guide">
-                <span className="location-icon">📍</span>
+            <div className="regions-guide">
+                <span className="regions-icon">📍</span>
                 <p>
                     선택된 지역을 기준으로<br />
                     주변 운동을 추천해드려요
