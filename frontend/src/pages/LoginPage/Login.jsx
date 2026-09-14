@@ -1,21 +1,32 @@
 import "./Login.css";
 import logo from "../../assets/img/logo_name.png";
-import {Link} from "react-router-dom"
-// ==============================
-// 로그인 API 전달 항목
-// 기능명 : 로그인
-// HTTP Method : POST
-// URL : /login
-//
-// Request Body
-// {
-//    email: 사용자 이메일,
-//    password: 사용자 비밀번호
-// }
-// ==============================
+import {Link, useNavigate} from "react-router-dom"
+import { useState } from "react";
+
+// supabase설치 npm install @supabase/supabase-js
 
 function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  // 뒤로가기
+  const navigate = useNavigate();
+  const handleLogin = async () => {
+  // Supabase 로그인 실제 사용할때
+    // const { data, error } = await supabase.auth.signInWithPassword({
+    //   email: email,
+    //   password: password,
+    // });
+
+    // if (error) {
+    //   alert("로그인에 실패했습니다.");
+    //   return;
+    // }
+
+    // console.log("로그인 성공:", data);
+  
+  };
   return (
+    
     // 타이틀 부분
     <div className="Login-container">
       <img src={logo} alt="로고" className="logo" />
@@ -31,6 +42,8 @@ function Login() {
         name="email"
         placeholder="이메일을 입력하세요"
         className="login-input"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
       />
       
       <p className="email-lavel">비밀번호</p>
@@ -39,10 +52,13 @@ function Login() {
         name="password"
         placeholder="비밀번호를 입력하세요"
         className="pw-input"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
       />
 
       {/* 로그인 버튼 */}
-      <button className="login-btn">
+      
+      <button className="login-btn" onClick={handleLogin}>
         로그인
       </button>
 
