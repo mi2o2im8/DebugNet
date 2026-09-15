@@ -226,3 +226,22 @@ class UserRepository:
         )
 
         return len(response.data) > 0
+
+    # ---------------------------------------------------------
+    # 프로필 이미지 URL 수정
+    # ---------------------------------------------------------
+    def update_profile_image(
+        self,
+        user_id: str,
+        profile_image: str,
+    ) -> None:
+
+        self.admin_client.table(
+            "users"
+        ).update(
+            {
+                "profile_image": profile_image
+            }
+        ).eq(
+            "user_id", user_id
+        ).execute()

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # 회원가입 API Router 가져오기
 from app.routers.auth import router as auth_router
+from app.routers.users import router as users_router
 
 
 # ---------------------------------------------------------
@@ -40,6 +41,7 @@ app.add_middleware(
 # 로그인은 React가 Supabase Auth와 직접 처리한다.
 # ---------------------------------------------------------
 app.include_router(auth_router)
+app.include_router(users_router)
 
 
 # ---------------------------------------------------------

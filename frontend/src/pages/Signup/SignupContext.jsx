@@ -41,11 +41,16 @@ export function SignupProvider({ children }) {
 
         // 9. 최대 가능 회비
         max_monthly_fee: null
+        
     });
+
+    // 회원가입 중 선택한 프로필 이미지 파일
+    // 실제 Storage 업로드 전까지 임시로 보관
+    const [profileImageFile, setProfileImageFile] = useState(null);
 
     return (
         <SignupContext.Provider
-            value={{ signupData, setSignupData }}
+            value={{ signupData, setSignupData, profileImageFile, setProfileImageFile }}
         >
             {children}
         </SignupContext.Provider>

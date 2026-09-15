@@ -90,10 +90,25 @@ class SignupRequest(BaseModel):
         max_length=20,
     )
     profile_image: str | None = None
+
     gender: str
+
     birth_date: date
-    travel_distance_km: int = Field(ge=0)
+
+    travel_distance_km: int | None = Field(
+    default=None,
+    ge=0,
+    )
+
     max_monthly_fee: int = Field(ge=0)
+
+    #활동빈도수
+    activity_frequency: str = Field(
+    validation_alias=AliasChoices(
+        "activity_frequency",
+        "frequency",
+    )
+    )
 
     # user_sports + user_sport_levels에 저장되는 정보
     sports: list[SignupSport] = Field(min_length=1)

@@ -114,6 +114,7 @@ class AuthService:
             "birth_date": signup_data.birth_date,
             "travel_distance_km": signup_data.travel_distance_km,
             "max_monthly_fee": signup_data.max_monthly_fee,
+            "activity_frequency": signup_data.activity_frequency,
         }
 
         self.user_repository.create_user(

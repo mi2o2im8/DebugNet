@@ -41,6 +41,7 @@ function SignupTime() {
 
     // 시간 선택 목록 
     const timeOptions = createTimeOptions(); 
+    const endTimeOptions = [...timeOptions, "24:00"];
  
     // 현재 선택 중인 시간 
     const [selectedDay, setSelectedDay] = useState(""); 
@@ -50,6 +51,17 @@ function SignupTime() {
     // 시간 선택창 표시 여부
     const [showTimeSelect, setShowTimeSelect] = useState(false);
  
+    // 시간대를 분으로 환산해서 비교
+    const timeToMinutes = (time) => {
+    if (time === "24:00") {
+        return 24 * 60;
+    }
+
+    const [hour, minute] = time.split(":").map(Number);
+
+    return hour * 60 + minute;
+    };
+
     // 시간대 추가 
     const handleAddTime = () => { 
         if (!selectedDay || !startTime || !endTime){ 
@@ -58,10 +70,10 @@ function SignupTime() {
         } 
  
         // 종료 시간이 시작 시간보다 빠른 경우 
-        if (startTime >= endTime) { 
-            alert("종료 시간은 시작 시간보다 늦어야 합니다."); 
-            return; 
-        } 
+        if (timeToMinutes(startTime) >= timeToMinutes(endTime)) {
+            alert("종료 시간은 시작 시간보다 늦어야 합니다.");
+            return;
+        }
  
         const newTime = { 
             day: selectedDay, 
@@ -181,7 +193,7 @@ function SignupTime() {
                         > 
                             <option value="">종료 시간</option>
 
-                            {timeOptions.map((time) => (
+                            {endTimeOptions.map((time) => (
                                 <option key={time} value={time}>
                                     {time}
                                 </option>
