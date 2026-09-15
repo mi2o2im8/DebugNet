@@ -11,6 +11,18 @@ function Signup() {
     const navigate = useNavigate();
     // 회원가입 전체 데이터 가져오기
     const { signupData, setSignupData } = useSignup();
+    
+    // 프로필 이미지
+    // const handleImageUpload = async (e) => {
+    //     const file = e.target.files[0];
+
+    //     if (!file) return;
+
+    //     const response = await fetch(
+
+    //     )
+    // }
+
     //나중에 Supabase에 회원가입 요청을 넣으면서 await를 사용하게 되면 그때 다시
     // const handleSignup = async ()
     const handleNext = () => {
@@ -52,6 +64,10 @@ function Signup() {
             <h1>입력해주세요</h1>
             <p>나에게 맞는 동호회 추천을</p>
             <p>위해 필요한 정보에.</p>
+
+            {/* ---- 프로필 입력 ---- */}
+
+            <button></button>
 
             {/* ----이름 입력칸---- */}
             <div className="name-box">
