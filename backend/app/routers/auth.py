@@ -35,6 +35,34 @@ def signup(signup_data: SignupRequest):
     return auth_service.signup(signup_data)
 
 # ---------------------------------------------------------
+# 이메일 중복 확인
+#
+# GET /api/auth/check-email?email=test@test.com
+# ---------------------------------------------------------
+@router.get("/check-email")
+def check_email(email: str):
+
+    auth_service = AuthService()
+
+    return auth_service.check_email(email)
+
+
+# ---------------------------------------------------------
+# 닉네임 중복 확인
+#
+# GET /api/auth/check-nickname?nickname=다찍어
+# ---------------------------------------------------------
+@router.get("/check-nickname")
+def check_nickname(nickname: str):
+
+    auth_service = AuthService()
+
+    return auth_service.check_nickname(nickname)
+
+
+
+
+# ---------------------------------------------------------
 # Bearer Token 검증 테스트 API
 #
 # Authorization 헤더의 Access Token을 security.py가 검증하고,

@@ -166,3 +166,63 @@ class UserRepository:
                 "end_time": end_time_string,
             }
         ).execute()
+
+    # ---------------------------------------------------------
+    # user_club_atmospheres 저장
+    #
+    # 사용자가 회원가입 시 선택한
+    # 선호 동호회 분위기를 저장한다.
+    # ---------------------------------------------------------
+    def create_user_club_atmosphere(
+        self,
+        user_id: str,
+        atmosphere: str,
+    ) -> None:
+
+        self.admin_client.table(
+            "user_club_atmospheres"
+        ).insert(
+            {
+                "user_id": user_id,
+                "atmosphere": atmosphere,
+            }
+        ).execute()
+
+    # ---------------------------------------------------------
+    # 이메일 중복 확인
+    # ---------------------------------------------------------
+    def email_exists(
+        self,
+        email: str,
+    ) -> bool:
+
+        response = (
+            self.admin_client
+            .table("users")
+            .select("user_id")
+            .eq("email", email)
+            .limit(1)
+            .execute()
+        )
+
+        return len(response.data) > 0
+
+
+    # ---------------------------------------------------------
+    # 닉네임 중복 확인
+    # ---------------------------------------------------------
+    def nickname_exists(
+        self,
+        nickname: str,
+    ) -> bool:
+
+        response = (
+            self.admin_client
+            .table("users")
+            .select("user_id")
+            .eq("nickname", nickname)
+            .limit(1)
+            .execute()
+        )
+
+        return len(response.data) > 0

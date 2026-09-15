@@ -16,6 +16,51 @@ class AuthService:
         self.user_repository = UserRepository()
 
     # -----------------------------------------------------
+    # 이메일 사용 가능 여부 확인
+    # -----------------------------------------------------
+    def check_email(
+        self,
+        email: str,
+    ) -> dict:
+
+        email = email.strip().lower()
+
+        exists = self.user_repository.email_exists(email)
+
+        return {
+            "available": not exists,
+            "message": (
+                "이미 가입된 이메일입니다."
+                if exists
+                else "사용 가능한 이메일입니다."
+            ),
+        }
+
+
+    # -----------------------------------------------------
+    # 닉네임 사용 가능 여부 확인
+    # -----------------------------------------------------
+    def check_nickname(
+        self,
+        nickname: str,
+    ) -> dict:
+
+        nickname = nickname.strip()
+
+        exists = self.user_repository.nickname_exists(
+            nickname
+        )
+
+        return {
+            "available": not exists,
+            "message": (
+                "이미 사용 중인 닉네임입니다."
+                if exists
+                else "사용 가능한 닉네임입니다."
+            ),
+        }
+
+    # -----------------------------------------------------
     # 회원가입
     # -----------------------------------------------------
     def signup(
@@ -97,6 +142,18 @@ class AuthService:
             self.user_repository.create_user_region(
                 user_id=user_id,
                 region=region,
+            )
+
+        # -------------------------------------------------
+        # 선호 동호회 분위기 저장
+        #
+        # 프론트에서 받은 club_preferences 배열을
+        # 하나씩 user_club_atmospheres 테이블에 저장한다.
+        # -------------------------------------------------
+        for atmosphere in signup_data.club_preferences:
+            self.user_repository.create_user_club_atmosphere(
+                user_id=user_id,
+                atmosphere=atmosphere,
             )
 
         # -------------------------------------------------

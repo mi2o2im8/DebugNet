@@ -104,6 +104,16 @@ class SignupRequest(BaseModel):
     # user_available_times에 저장되는 활동 가능 시간
     available_times: list[SignupAvailableTime] = Field(min_length=1)
 
+    # -----------------------------------------------------
+    # 선호하는 동호회 분위기
+    #
+    # 프론트에서:
+    # club_preferences: ["친목 중심", "가볍게 활동"]
+    #
+    # 형태로 전달된다.
+    # -----------------------------------------------------
+    club_preferences: list[str] = Field(min_length=1)
+
 
 # ---------------------------------------------------------
 # 회원가입 성공 응답
