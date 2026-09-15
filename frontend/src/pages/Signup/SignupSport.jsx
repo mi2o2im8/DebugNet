@@ -10,6 +10,8 @@ import volleyballImg from "../../assets/img/volleyball.png";
 import tableTennisImg from "../../assets/img/table_tennis.png";
 import tennisImg from "../../assets/img/tennis.png";
 import otherImg from "../../assets/img/other.png";
+// 뒤로가기 버튼 소환
+import backIcon from "../../assets/img/back.png";
 
 function Signup() {
     const navigate = useNavigate();

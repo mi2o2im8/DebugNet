@@ -6,6 +6,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSignup } from "./SignupContext";
 
+// 뒤로가기 버튼 소환
+import backIcon from "../../assets/img/back.png";
+
 function Signup() {
     // 비밀번호 보여주는 함수(눈)
     const [showPassword, setShowPassword] = useState(false);
@@ -129,15 +132,16 @@ function Signup() {
 
 
     return (
-        <div>
+        <div signup-container>
 
             {/* 뒤로가기 버튼 */}
             <button
                 type="button"
                 className="Back-btn"
-                onClick={() => navigate("/")}
+                onClick={() => navigate(-1)}
+                aria-label="뒤로가기"
             >
-                뒤로가기
+                <img src={backIcon} alt="뒤로가기" />
             </button>
 
 

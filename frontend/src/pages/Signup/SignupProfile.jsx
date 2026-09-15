@@ -9,6 +9,9 @@ import { useSignup } from "./SignupContext";
 // import "react-datepicker/dist/react-datepicker.css"
 import basicProfileImg from "../../assets/img/basic_profile_img.png";
 
+// 뒤로가기 버튼 소환
+import backIcon from "../../assets/img/back.png";
+
 function Signup() {
     const navigate = useNavigate();
     // 회원가입 전체 데이터 가져오기

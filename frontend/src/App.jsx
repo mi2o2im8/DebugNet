@@ -13,6 +13,7 @@ import SignupTime from './pages/Signup/SignupTime'
 import SignupFrequency from './pages/Signup/SignupFrequency'
 import SignupClubPreference from './pages/Signup/SignupClubPreference'
 import SignupFee from './pages/Signup/SignupFee'
+import SignupReview from './pages/Signup/SignupReview'
 
 import './App.css'
 
@@ -43,6 +44,7 @@ function App() {
           <Route path='/signup/basic/SignupClubPreference' element={<SignupClubPreference />} />
           {/* 월 회비 - 가입완료 마지막 페이지 */}
           <Route path='/signup/basic/SignupFee' element={<SignupFee />} />
+          <Route path='/signup/basic/review' element={<SignupReview />} />
         </Routes>
       </SignupProvider>
     </BrowserRouter>

@@ -3,7 +3,10 @@
 import "./Signup.css"; 
 import { useNavigate } from "react-router-dom";
 import { useSignup } from "./SignupContext";
- 
+
+// 뒤로가기 버튼 소환
+import backIcon from "../../assets/img/back.png";
+
 function SignupClubPreference() {
     const navigate = useNavigate();
     // 회원가입 전체 데이터 가져오기

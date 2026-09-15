@@ -57,7 +57,7 @@
     border: none;
     border-radius: 10px;
 
-    background: #aeee64;
+    background: #008006;
     color: white;
 
     font-size: 18px;
@@ -68,7 +68,12 @@
 }
 
 .login-btn:hover{
-    background: #43a047;
+    background-color: #aeee64;
+}
+
+/* 로그인 버튼 클릭 */
+.login-btn:active {
+    transform: translateY(1px);
 }
 
 .Login-container p{

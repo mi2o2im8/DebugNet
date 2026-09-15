@@ -3,7 +3,9 @@
 import "./Signup.css"; 
 import { useNavigate } from "react-router-dom"; 
 import { useSignup } from "./SignupContext"; 
-import { useState } from "react"; 
+import { useState } from "react";
+// 뒤로가기 버튼 소환
+import backIcon from "../../assets/img/back.png";
  
 function SignupTime() { 
     const navigate = useNavigate(); 
