@@ -1,5 +1,6 @@
 /* 회원가입 공통 css툴 */
 
+
 /* ========================================
    ⭐ 폰트
    ======================================== */
@@ -23,6 +24,8 @@
    .valid             → 조건 충족 시 적용
    .Next-btn          → 다음 버튼
    ======================================== */
+
+
 /* ========================================
    ⭐ 2번 기본정보 페이지 추가 클래스
 
@@ -35,6 +38,8 @@
    .gender-box        → 성별 선택 영역
    .selected          → 선택된 성별 버튼
    ======================================== */
+
+
 /* ========================================
    ⭐ 3. 운동 종목 선택 페이지
 
@@ -44,6 +49,8 @@
    .sport-choice-box button.selected → 선택된 종목
    .select-count → 선택된 종목 개수
    ======================================== */
+
+
 /* ========================================
    ⭐ 4. 종목별 운동 수준 선택
 
@@ -54,7 +61,9 @@
    .level-box button → 수준 선택 버튼
    .check-box → 선택 체크 표시
    ======================================== */
-   /* ========================================
+
+
+/* ========================================
    ⭐ 5. 활동 가능 지역 선택
 
    .location-select → 시/도, 구/군 선택 영역
@@ -65,7 +74,9 @@
    .distance-select → 이동 가능 거리 영역
    .distance-list → 거리 선택 영역
    ======================================== */
-   /* ========================================
+
+
+/* ========================================
    ⭐ 6. 활동 가능 시간 선택
 
    .time-example       → 시간 선택 예시
@@ -78,13 +89,17 @@
    .selected-time-item → 선택한 시간대 한 개
    .time-delete-btn    → 시간대 삭제 버튼
    ======================================== */
-   /* ========================================
+
+
+/* ========================================
    ⭐ 7. 활동 빈도 선택
 
    .frequency-options  → 활동 빈도 전체 영역
    .frequency-option   → 빈도 선택 항목
    ======================================== */
-   /* ========================================
+
+
+/* ========================================
    ⭐ 8. 동호회 선호 선택
 
    .club-preference-options → 선호 선택 전체 영역
@@ -92,18 +107,36 @@
    .club-preference-example → 복수 선택 안내
    ======================================== */
 
+
 /* ========================================
    ⭐ 공통 기본 설정
    ======================================== */
 
 body {
     margin: 0;
+
     font-family: "Maplestory", sans-serif;
+
     background-color: #fff;
 
     min-height: 100vh;
+
     display: flex;
     justify-content: center;
+}
+/* ========================================
+   ⭐ 회원가입 전체 영역
+   ======================================== */
+
+.signup-container {
+    position: relative;
+
+    width: clamp(260px, 100vw, 390px);
+
+    margin: 0 auto;
+    padding: 0;
+
+    box-sizing: border-box;
 }
 
 
@@ -114,11 +147,11 @@ body {
 .Back-btn {
     position: fixed;
 
-    top: 25px;
-    left: 25px;
+    top: 20px;
+    left: 20px;
 
     width: 42px;
-    height: 80px;
+    height: 90px;
 
     padding: 0;
 
@@ -142,36 +175,33 @@ body {
     display: block;
 }
 
-.Back-btn:hover {
-    opacity: 0.7;
-}
-
-.Back-btn:active {
-    transform: scale(0.95);
-}
-
 
 /* ========================================
    ⭐ 회원가입 상단 영역
    ======================================== */
 
 .signup-header {
-    width: 400px;
-    margin: 100px auto 40px;
+    width: 320px;
+
+    margin: 120px auto 35px;
 }
 
 .signup-header h2 {
     margin: 0;
+
     font-size: 32px;
     line-height: 1.3;
     font-weight: 700;
+
     color: #222;
 }
 
 .signup-header p {
-    margin: 8px 0 0;
+    margin: 6px 0 0;
+
     font-size: 15px;
     color: #888;
+
     line-height: 1.5;
 }
 
@@ -181,13 +211,31 @@ body {
    ======================================== */
 
 .email-label {
-    width: 400px;
-    margin: 20px auto 8px;
+    width: 320px;
+
+    margin: 18px auto 8px;
+
     box-sizing: border-box;
 
-    font-size: 14px;
+    font-size: 17px;
     font-weight: 600;
+
     color: #333;
+    text-align: left;
+}
+
+
+/* ========================================
+   ⭐ 이메일 + 중복확인 버튼
+   ======================================== */
+
+.email-check-wrapper {
+    width: 320px;
+
+    margin: 0 auto;
+
+    display: flex;
+    gap: 8px;
 }
 
 
@@ -198,29 +246,108 @@ body {
 .login-input {
     display: block;
 
-    width: 400px;
+    width: 100%;
     height: 50px;
 
-    margin: 0 auto;
+    margin: 0;
     padding: 0 15px;
 
     box-sizing: border-box;
 
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 10px;
 
-    font-size: 14px;
+    background-color: #fff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 16px;
+
     outline: none;
 }
 
 .login-input:focus {
-    border-color: #222;
+    border-color: #4CAF50;
 }
 
 .login-input::placeholder {
     color: #aaa;
 }
 
+
+/* 이메일 입력창 + 버튼 안에서만 */
+
+.email-check-wrapper .login-input {
+    flex: 1;
+    width: auto;
+}
+
+
+/* ========================================
+   ⭐ 이메일 중복확인 버튼
+   ======================================== */
+
+.email-check-btn {
+    width: 82px;
+    height: 50px;
+
+    flex-shrink: 0;
+
+    border: 1px solid #4CAF50;
+    border-radius: 10px;
+
+    background-color: #fff;
+    color: #4CAF50;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+/* ========================================
+   ⭐ 이메일 중복확인 결과
+   ======================================== */
+
+.email-check-success,
+.email-check-error {
+    width: 320px;
+
+    margin: 7px auto 0;
+
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.email-check-success {
+    color: #4CAF50;
+}
+
+.email-check-error {
+    color: #e05252;
+}
+
+
+/* ========================================
+   ⭐ 비밀번호 입력 영역
+   ======================================== */
+
+.password-box {
+    position: relative;
+
+    width: 320px;
+
+    margin: 0 auto;
+}
+.password-box .email-label {
+    width: 320px;
+
+    margin-left: 0;
+    margin-right: 0;
+
+    text-align: left;
+}
 
 /* ========================================
    ⭐ 비밀번호 입력창
@@ -229,23 +356,28 @@ body {
 .pw-input {
     display: block;
 
-    width: 400px;
+    width: 320px;
     height: 50px;
 
     margin: 0 auto;
+
     padding: 0 50px 0 15px;
 
     box-sizing: border-box;
 
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 10px;
 
-    font-size: 14px;
+    background-color: #fff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 16px;
+
     outline: none;
 }
 
 .pw-input:focus {
-    border-color: #222;
+    border-color: #4CAF50;
 }
 
 .pw-input::placeholder {
@@ -257,37 +389,43 @@ body {
    ⭐ 비밀번호 보기/숨기기
    ======================================== */
 
-.password-eye {
+.password-eye-signup {
     position: absolute;
-    margin-left: -45px;
-    margin-top: 14px;
+    right: 8px;
+    top: 53px;
+    transform: translateY(-40%);
 
-    width: 35px;
-    height: 35px;
+    width: 38px;
+    height: 38px;
 
     border: none;
-    background: none;
+    background: transparent;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #888;
+    font-size: 22px;
+
     cursor: pointer;
-
-    font-size: 18px;
+    z-index: 2;
 }
-
 
 /* ========================================
    ⭐ 비밀번호 조건 안내
    ======================================== */
 
 .password-guide {
-    width: 400px;
+    width: 320px;
     margin: 15px auto 0;
 }
 
 .password-guide p {
-    margin: 7px 0;
-
-    font-size: 13px;
-    color: #ee70ff;
-    line-height: 1.5;
+    margin: 10px 0;
+    font-size: 15px;
+    color: #ff735ab6;
+    line-height: 1.7;
 }
 
 .password-guide span {
@@ -297,6 +435,7 @@ body {
 
 
 /* 조건 충족 */
+
 .password-guide p.valid {
     color: #86da00;
 }
@@ -304,6 +443,7 @@ body {
 .password-guide p.valid span {
     font-weight: bold;
 }
+
 
 /* ========================================
    ⭐ 다음 버튼 - 하단 고정
@@ -313,33 +453,28 @@ body {
     position: fixed;
 
     left: 50%;
-    bottom: 80px; /* ⭐ 기존 30px → 80px */
+    bottom: 30px;
 
     transform: translateX(-50%);
 
-    width: 400px;
-    height: 52px;
+    width: 100%;
+    height: clamp(55px, 7vw, 60px);
 
     margin: 0;
 
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
 
-    background-color: #008006; /* ⭐ 기본 색상 */
+    background-color: #4CAF50;
     color: #fff;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 700;
 
     cursor: pointer;
 
     z-index: 1000;
-}
-
-/* ⭐ 마우스를 올렸을 때 */
-.Next-btn:hover {
-    background-color: #aeee64;
 }
 
 
@@ -354,16 +489,34 @@ body {
     }
 
     .email-label,
-    .login-input,
-    .pw-input,
-    .password-guide,
+    .password-guide {
+        width: calc(100% - 40px);
+    }
+
+    .email-check-wrapper {
+        width: calc(100% - 40px);
+    }
+
+    .password-box {
+        width: calc(100% - 40px);
+    }
+
+    .pw-input {
+        width: 100%;
+    }
+
+    .email-check-success,
+    .email-check-error {
+        width: calc(100% - 40px);
+    }
+
     .Next-btn {
         width: calc(100% - 40px);
     }
 
     .Back-btn {
-        left: 20px;
-        top: 20px;
+        left: 15px;
+        top: 15px;
     }
 }
 
@@ -383,15 +536,17 @@ body {
    ======================================== */
 
 .name-box {
-    width: 400px;
+    width: 320px;
+
     margin: 0 auto;
 }
 
 .name-label {
-    margin: 20px 0 8px;
+    margin: 18px 0 8px;
 
     font-size: 14px;
     font-weight: 600;
+
     color: #333;
 }
 
@@ -401,15 +556,17 @@ body {
    ======================================== */
 
 .nickname-box {
-    width: 400px;
+    width: 320px;
+
     margin: 0 auto;
 }
 
 .nickname-label {
-    margin: 20px 0 8px;
+    margin: 18px 0 8px;
 
     font-size: 14px;
     font-weight: 600;
+
     color: #333;
 }
 
@@ -419,15 +576,17 @@ body {
    ======================================== */
 
 .birth-box {
-    width: 400px;
+    width: 320px;
+
     margin: 0 auto;
 }
 
 .birth-box p {
-    margin: 20px 0 8px;
+    margin: 18px 0 8px;
 
     font-size: 14px;
     font-weight: 600;
+
     color: #333;
 }
 
@@ -436,6 +595,7 @@ body {
 
 .birth-box .react-datepicker-wrapper {
     display: block;
+
     width: 100%;
 }
 
@@ -444,7 +604,7 @@ body {
 }
 
 .birth-box input {
-    width: 400px;
+    width: 320px;
     height: 50px;
 
     padding: 0 15px;
@@ -452,16 +612,18 @@ body {
     box-sizing: border-box;
 
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 10px;
+
+    background-color: #fff;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 14px;
+    font-size: 16px;
 
     outline: none;
 }
 
 .birth-box input:focus {
-    border-color: #222;
+    border-color: #4CAF50;
 }
 
 
@@ -470,11 +632,13 @@ body {
    ======================================== */
 
 .gender-title {
-    width: 400px;
-    margin: 20px auto 8px;
+    width: 320px;
+
+    margin: 18px auto 8px;
 
     font-size: 14px;
     font-weight: 600;
+
     color: #333;
 }
 
@@ -482,11 +646,12 @@ body {
 /* 성별 버튼 영역 */
 
 .gender-box {
-    width: 400px;
+    width: 320px;
+
     margin: 0 auto;
 
     display: flex;
-    gap: 10px;
+    gap: 8px;
 }
 
 
@@ -498,32 +663,26 @@ body {
     height: 50px;
 
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 10px;
 
     background-color: #fff;
     color: #555;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 14px;
+    font-size: 15px;
 
     cursor: pointer;
-}
-
-
-/* 마우스 올렸을 때 */
-
-.gender-box button:hover {
-    border-color: #008006;
 }
 
 
 /* 선택된 성별 */
 
 .gender-box button.selected {
-    border: 2px solid #008006;
+    border: 2px solid #4CAF50;
 
     background-color: #f3faf3;
-    color: #008006;
+
+    color: #4CAF50;
 
     font-weight: 600;
 }
@@ -559,12 +718,15 @@ body {
    ======================================== */
 
 .sport-choice-box {
-    width: 400px;
+    width: 320px;
+
     margin: 30px auto 0;
 
     display: grid;
+
     grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+
+    gap: 10px;
 }
 
 
@@ -574,15 +736,16 @@ body {
 
 .sport-choice-box button {
     width: 100%;
-    height: 160px;
+    height: 135px;
 
     border: 1px solid #ddd;
-    border-radius: 12px;
+    border-radius: 10px;
 
     background-color: #fff;
 
     display: flex;
     flex-direction: column;
+
     align-items: center;
     justify-content: center;
 
@@ -590,6 +753,7 @@ body {
 
     font-family: "Maplestory", sans-serif;
     font-size: 14px;
+
     color: #333;
 
     cursor: pointer;
@@ -601,19 +765,10 @@ body {
    ======================================== */
 
 .sport-choice-box img {
-    width: 100px;
-    height: 100px;
+    width: 85px;
+    height: 85px;
 
     object-fit: contain;
-}
-
-
-/* ========================================
-   ⭐ 마우스 올렸을 때
-   ======================================== */
-
-.sport-choice-box button:hover {
-    border-color: #008006;
 }
 
 
@@ -622,11 +777,12 @@ body {
    ======================================== */
 
 .sport-choice-box button.selected {
-    border: 2px solid #008006;
+    border: 2px solid #4CAF50;
 
     background-color: #f3faf3;
 
-    color: #008006;
+    color: #4CAF50;
+
     font-weight: 600;
 }
 
@@ -636,14 +792,15 @@ body {
    ======================================== */
 
 .select-count {
-    width: 400px;
+    width: 320px;
 
-    margin: 15px auto 0;
+    margin: 12px auto 0;
 
     text-align: right;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 14px;
+    font-size: 13px;
+
     color: #666;
 }
 
@@ -658,10 +815,10 @@ body {
         width: calc(100% - 40px);
 
         grid-template-columns: repeat(2, 1fr);
+
         gap: 8px;
     }
 
-    /* ⭐ 모바일 카드 */
     .sport-choice-box button {
         height: 120px;
 
@@ -670,52 +827,57 @@ body {
         font-size: 12px;
     }
 
-    /* ⭐ 모바일 이미지 */
     .sport-choice-box img {
-        width: 90px;
-        height: 90px;
-
-        object-fit: contain;
+        width: 80px;
+        height: 80px;
     }
 
     .select-count {
         width: calc(100% - 40px);
 
-        margin-top: 12px;
+        margin-top: 10px;
 
         font-size: 12px;
     }
 }
 
 
-/* ==============================================여기까지 운동 3번
+/* ==============================================
+   여기까지 운동 3번
+   ============================================== */
+
+
 /* ========================================
    ⭐ 운동 수준 페이지 제목
    ======================================== */
 
 .signup-level-title {
-    width: 400px;
+    width: 320px;
+
     margin: 0 auto;
 
     font-size: 28px;
     line-height: 1.3;
+
     font-weight: 700;
 
     color: #222;
 }
 
 .signup-level-title:first-child {
-    margin-top: 100px;
+    margin-top: 90px;
 }
 
 
 /* 복수 선택 가능 */
 
 .signup-level-title + p {
-    width: 400px;
+    width: 320px;
+
     margin: 8px auto 25px;
 
     font-size: 14px;
+
     color: #888;
 }
 
@@ -725,7 +887,8 @@ body {
    ======================================== */
 
 .sport-level-box {
-    width: 400px;
+    width: 320px;
+
     margin: 0 auto 25px;
 }
 
@@ -737,6 +900,7 @@ body {
 
     font-size: 18px;
     font-weight: 600;
+
     color: #333;
 }
 
@@ -747,7 +911,9 @@ body {
 
 .level-box {
     display: flex;
+
     flex-direction: column;
+
     gap: 8px;
 }
 
@@ -758,7 +924,8 @@ body {
 
 .level-box button {
     width: 100%;
-    min-height: 65px;
+
+    min-height: 60px;
 
     padding: 10px 15px;
 
@@ -768,6 +935,7 @@ body {
     background-color: #fff;
 
     display: flex;
+
     align-items: center;
 
     text-align: left;
@@ -775,13 +943,6 @@ body {
     font-family: "Maplestory", sans-serif;
 
     cursor: pointer;
-}
-
-
-/* 마우스 올렸을 때 */
-
-.level-box button:hover {
-    border-color: #008006;
 }
 
 
@@ -796,16 +957,20 @@ body {
     margin-right: 12px;
 
     border: 1px solid #ccc;
+
     border-radius: 50%;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
     box-sizing: border-box;
 
     color: #fff;
+
     font-size: 14px;
+
     flex-shrink: 0;
 }
 
@@ -815,14 +980,15 @@ body {
    ======================================== */
 
 .level-box button.selected {
-    border: 2px solid #008006;
+    border: 2px solid #4CAF50;
+
     background-color: #f3faf3;
 }
 
-
 .level-box button.selected .check-box {
-    border-color: #008006;
-    background-color: #008006;
+    border-color: #4CAF50;
+
+    background-color: #4CAF50;
 }
 
 
@@ -836,18 +1002,19 @@ body {
     margin-bottom: 3px;
 
     font-size: 15px;
+
     color: #333;
 }
 
 .level-box button.selected strong {
-    color: #008006;
+    color: #4CAF50;
 }
-
 
 .level-box p {
     margin: 0;
 
     font-size: 12px;
+
     color: #888;
 }
 
@@ -883,6 +1050,7 @@ body {
 
     .sport-level-box {
         width: calc(100% - 40px);
+
         margin-bottom: 20px;
     }
 
@@ -892,12 +1060,14 @@ body {
 
     .level-box button {
         min-height: 60px;
+
         padding: 8px 12px;
     }
 
     .check-box {
         width: 22px;
         height: 22px;
+
         margin-right: 10px;
     }
 
@@ -909,7 +1079,13 @@ body {
         font-size: 11px;
     }
 }
-/* =============================================여기까지 4번 운동 레벨 */
+
+
+/* =============================================
+   여기까지 4번 운동 레벨
+   ============================================= */
+
+
 /* ========================================
    ⭐ 제목
    ======================================== */
@@ -924,7 +1100,8 @@ body {
    ======================================== */
 
 .location-select {
-    width: 400px;
+    width: 320px;
+
     margin: 0 auto 18px;
 }
 
@@ -933,6 +1110,7 @@ body {
 
     font-size: 14px;
     font-weight: 600;
+
     color: #333;
 }
 
@@ -945,20 +1123,22 @@ body {
     box-sizing: border-box;
 
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 10px;
 
     background-color: #fff;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 14px;
+    font-size: 16px;
+
     color: #333;
 
     outline: none;
+
     cursor: pointer;
 }
 
 .location-select select:focus {
-    border-color: #008006;
+    border-color: #4CAF50;
 }
 
 
@@ -967,7 +1147,8 @@ body {
    ======================================== */
 
 .selected-location {
-    width: 400px;
+    width: 320px;
+
     margin: 25px auto 0;
 }
 
@@ -976,6 +1157,7 @@ body {
 
     font-size: 14px;
     font-weight: 600;
+
     color: #333;
 }
 
@@ -984,7 +1166,9 @@ body {
 
 .selected-location-list {
     display: flex;
+
     flex-wrap: wrap;
+
     gap: 8px;
 }
 
@@ -994,13 +1178,16 @@ body {
 .selected-location-item {
     padding: 8px 12px;
 
-    border: 1px solid #008006;
+    border: 1px solid #4CAF50;
+
     border-radius: 20px;
 
     background-color: #f3faf3;
-    color: #008006;
+
+    color: #4CAF50;
 
     font-family: "Maplestory", sans-serif;
+
     font-size: 13px;
 
     cursor: pointer;
@@ -1012,7 +1199,8 @@ body {
 .location-remove {
     margin-left: 4px;
 
-    color: #008006;
+    color: #4CAF50;
+
     font-weight: bold;
 }
 
@@ -1022,7 +1210,8 @@ body {
    ======================================== */
 
 .location-guide {
-    width: 400px;
+    width: 320px;
+
     margin: 20px auto 25px;
 
     padding: 12px 15px;
@@ -1030,10 +1219,12 @@ body {
     box-sizing: border-box;
 
     display: flex;
+
     align-items: center;
+
     gap: 10px;
 
-    border-radius: 8px;
+    border-radius: 10px;
 
     background-color: #f8f8f8;
 }
@@ -1046,7 +1237,9 @@ body {
     margin: 0;
 
     font-size: 12px;
+
     line-height: 1.5;
+
     color: #777;
 }
 
@@ -1056,7 +1249,8 @@ body {
    ======================================== */
 
 .distance-select {
-    width: 400px;
+    width: 320px;
+
     margin: 0 auto;
 }
 
@@ -1065,6 +1259,7 @@ body {
 
     font-size: 14px;
     font-weight: 600;
+
     color: #333;
 }
 
@@ -1073,7 +1268,9 @@ body {
 
 .distance-list {
     display: flex;
+
     flex-direction: column;
+
     gap: 8px;
 }
 
@@ -1082,42 +1279,40 @@ body {
 
 .distance-list button {
     width: 100%;
-    height: 48px;
+    height: 50px;
 
     padding: 0 15px;
 
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 10px;
 
     background-color: #fff;
 
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 14px;
+
+    font-size: 15px;
+
     color: #555;
 
     cursor: pointer;
 }
 
 
-/* 거리 버튼 hover */
-
-.distance-list button:hover {
-    border-color: #008006;
-}
-
-
 /* 선택된 거리 */
 
 .distance-list button.selected {
-    border: 2px solid #008006;
+    border: 2px solid #4CAF50;
 
     background-color: #f3faf3;
 
-    color: #008006;
+    color: #4CAF50;
+
     font-weight: 600;
 }
 
@@ -1126,6 +1321,7 @@ body {
 
 .distance-list button.selected span {
     font-size: 16px;
+
     font-weight: bold;
 }
 
@@ -1144,11 +1340,12 @@ body {
     }
 
     .location-select select {
-        height: 48px;
+        height: 50px;
     }
 
     .selected-location-item {
         padding: 7px 10px;
+
         font-size: 12px;
     }
 
@@ -1157,88 +1354,113 @@ body {
     }
 
     .distance-list button {
-        height: 46px;
-        font-size: 13px;
+        height: 48px;
+
+        font-size: 14px;
     }
 }
-/* --===================================여기까지 5번 활동지역 및 이동시간 */
+
+
+/* =============================================
+   여기까지 5번 활동지역 및 이동시간
+   ============================================= */
+
+
+/* ========================================
+   ⭐ 활동 가능 시간
+   ======================================== */
+
+
 /* 시간 예시 */
+
 .time-example {
-    width: 400px;
+    width: 320px;
+
     margin: 8px auto 25px;
+
     font-size: 13px;
     font-weight: 400;
+
     color: #888;
 }
 
 
 /* 시간대 추가 버튼 */
+
 .time-add-box {
-    width: 400px;
+    width: 320px;
+
     margin: 0 auto;
 }
 
 .time-add-btn {
     width: 100%;
-    height: 48px;
+    height: 50px;
 
     border: 1px dashed #ccc;
-    border-radius: 8px;
+
+    border-radius: 10px;
 
     background-color: #fff;
-    color: #008006;
+
+    color: #4CAF50;
 
     font-family: "Maplestory", sans-serif;
+
     font-size: 14px;
 
     cursor: pointer;
 }
 
-.time-add-btn:hover {
-    border-color: #008006;
-    background-color: #f3faf3;
-}
-
 
 /* 요일 / 시간 선택 영역 */
+
 .time-select-box {
-    width: 400px;
+    width: 320px;
+
     margin: 15px auto 0;
+
     padding: 15px;
 
     box-sizing: border-box;
 
     border: 1px solid #ddd;
+
     border-radius: 10px;
+
     background-color: #fafafa;
 }
 
 
 /* 요일 / 시간 선택창 */
+
 .time-select {
     height: 45px;
+
     padding: 0 10px;
 
     border: 1px solid #ddd;
+
     border-radius: 8px;
 
     background-color: #fff;
 
     font-family: "Maplestory", sans-serif;
+
     font-size: 13px;
 
     outline: none;
+
     cursor: pointer;
 }
 
-
-/* 선택창 포커스 */
 .time-select:focus {
-    border-color: #008006;
+    border-color: #4CAF50;
 }
 
 
 /* 시간 선택 완료 버튼 */
+
 .time-confirm-btn {
     width: 100%;
     height: 45px;
@@ -1246,25 +1468,26 @@ body {
     margin-top: 12px;
 
     border: none;
+
     border-radius: 8px;
 
-    background-color: #008006;
+    background-color: #4CAF50;
+
     color: #fff;
 
     font-family: "Maplestory", sans-serif;
+
     font-size: 14px;
 
     cursor: pointer;
 }
 
-.time-confirm-btn:hover {
-    background-color: #008006;
-}
-
 
 /* 선택한 시간대 */
+
 .selected-time-box {
-    width: 400px;
+    width: 320px;
+
     margin: 25px auto 0;
 }
 
@@ -1272,52 +1495,61 @@ body {
     margin: 0 0 10px;
 
     font-size: 16px;
+
     font-weight: 600;
+
     color: #333;
 }
 
 
 /* 선택한 시간대 한 개 */
+
 .selected-time-item {
     width: 100%;
+
     min-height: 48px;
 
     margin-bottom: 8px;
+
     padding: 0 12px;
 
     box-sizing: border-box;
 
     border: 1px solid #ddd;
-    border-radius: 8px;
+
+    border-radius: 10px;
 
     background-color: #fff;
 
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
     font-size: 14px;
+
     color: #333;
 }
 
 
 /* 시간 삭제 버튼 */
+
 .time-delete-btn {
     border: none;
+
     background: none;
 
     color: #999;
+
     font-size: 16px;
 
     cursor: pointer;
 }
 
-.time-delete-btn:hover {
-    color: #008006;
-}
-
 
 /* 모바일 */
+
 @media (max-width: 500px) {
 
     .time-example,
@@ -1333,7 +1565,9 @@ body {
 
     .time-select {
         flex: 1;
+
         min-width: 0;
+
         font-size: 12px;
     }
 
@@ -1341,84 +1575,124 @@ body {
         font-size: 13px;
     }
 }
-/* ===================================== 여기까지 활동시간 6번 */
+
+
+/* =====================================
+   여기까지 활동시간 6번
+   ===================================== */
+
+
+/* ========================================
+   ⭐ 활동 빈도
+   ======================================== */
+
 .frequency-options {
-    width: 400px;
+    width: 320px;
+
     margin: 30px auto 0;
 
     display: flex;
+
     flex-direction: column;
+
     gap: 10px;
 }
 
 .frequency-option {
     width: 100%;
+
     min-height: 50px;
 
     padding: 0 15px;
+
     box-sizing: border-box;
 
     border: 1px solid #ddd;
-    border-radius: 8px;
+
+    border-radius: 10px;
 
     display: flex;
+
     align-items: center;
 
     background-color: #fff;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 14px;
+
+    font-size: 15px;
+
     color: #555;
 
     cursor: pointer;
 }
 
-.frequency-option:hover {
-    border-color: #008006;
-}
 
 /* 라디오 버튼 */
+
 .frequency-option input {
     margin: 0 10px 0 0;
 
     width: 16px;
     height: 16px;
 
-    accent-color: #008006;
+    accent-color: #4CAF50;
+
     cursor: pointer;
 }
 
+
 /* 선택된 항목 */
+
 .frequency-option:has(input:checked) {
-    border: 2px solid #008006;
+    border: 2px solid #4CAF50;
+
     background-color: #f3faf3;
-    color: #008006;
+
+    color: #4CAF50;
+
     font-weight: 600;
 }
 
 
 /* 모바일 */
+
 @media (max-width: 500px) {
 
     .frequency-options {
         width: calc(100% - 40px);
+
         margin-top: 25px;
     }
 
     .frequency-option {
         min-height: 48px;
-        font-size: 13px;
+
+        font-size: 14px;
     }
 }
-/* ==============================여기까지 활동 빈도 */
+
+
+/* ==============================
+   여기까지 활동 빈도
+   ============================== */
+
+
+/* ========================================
+   ⭐ 동호회 선호
+   ======================================== */
+
+
 /* 복수 선택 안내 */
 
 .club-preference-example {
-    width: 400px;
+    width: 320px;
+
     margin: 8px auto 25px;
 
     font-size: 13px;
+
     font-weight: 400;
+
     color: #888;
 }
 
@@ -1426,11 +1700,14 @@ body {
 /* 선호 선택 전체 영역 */
 
 .club-preference-options {
-    width: 400px;
+    width: 320px;
+
     margin: 30px auto 0;
 
     display: flex;
+
     flex-direction: column;
+
     gap: 10px;
 }
 
@@ -1439,31 +1716,30 @@ body {
 
 .club-preference-option {
     width: 100%;
+
     min-height: 50px;
 
     padding: 0 15px;
+
     box-sizing: border-box;
 
     border: 1px solid #ddd;
-    border-radius: 8px;
+
+    border-radius: 10px;
 
     display: flex;
+
     align-items: center;
 
     background-color: #fff;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 14px;
+
+    font-size: 15px;
+
     color: #555;
 
     cursor: pointer;
-}
-
-
-/* 마우스 올렸을 때 */
-
-.club-preference-option:hover {
-    border-color: #008006;
 }
 
 
@@ -1475,7 +1751,7 @@ body {
 
     margin: 0 10px 0 0;
 
-    accent-color: #008006;
+    accent-color: #4CAF50;
 
     cursor: pointer;
 }
@@ -1484,11 +1760,11 @@ body {
 /* 선택된 항목 */
 
 .club-preference-option:has(input:checked) {
-    border: 2px solid #008006;
+    border: 2px solid #4CAF50;
 
     background-color: #f3faf3;
 
-    color: #008006;
+    color: #4CAF50;
 
     font-weight: 600;
 }
@@ -1510,7 +1786,12 @@ body {
 
     .club-preference-option {
         min-height: 48px;
-        font-size: 13px;
+
+        font-size: 14px;
     }
 }
-/* ========================================== 여기까지 선호 동호회 */
+
+
+/* ==========================================
+   여기까지 선호 동호회
+   ========================================== */

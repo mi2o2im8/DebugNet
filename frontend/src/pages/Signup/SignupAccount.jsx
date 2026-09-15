@@ -5,6 +5,8 @@ import "./Signup.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSignup } from "./SignupContext";
+// 눈..
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 // 뒤로가기 버튼 소환
 import backIcon from "../../assets/img/back.png";
@@ -132,7 +134,7 @@ function Signup() {
 
 
     return (
-        <div signup-container>
+        <div className="signup-container">
 
             {/* 뒤로가기 버튼 */}
             <button
@@ -146,9 +148,8 @@ function Signup() {
 
 
             <div className="signup-header">
-                <h2>기본 정보를</h2>
-                <h2>입력해주세요</h2>
-                <p>디버깅넷과 함께</p>
+                <h2>계정을 생성해주세요</h2>
+                <p>PlayBridge와 함께</p>
                 <p>더 즐거운 운동 생활을 시작하세요.</p>
             </div>
 
@@ -197,7 +198,7 @@ function Signup() {
 
 
             {/* 비밀번호 */}
-            <div>
+            <div className="password-box">
 
                 <p className="email-label">비밀번호</p>
 
@@ -217,33 +218,31 @@ function Signup() {
 
                 <button
                     type="button"
-                    className="password-eye"
+                    className="password-eye-signup"
                     onClick={() =>
                         setShowPassword(!showPassword)
                     }
                 >
-                    {showPassword ? "🙈" : "👁️"}
+                    {showPassword ? <FiEye /> : <FiEyeOff />}
                 </button>
+                {/* 비밀번호 확인 */}
+            
+                <p className="email-label">비밀번호 확인</p>
 
+                <input
+                    type="password"
+                    name="passwordConfirm"
+                    placeholder="비밀번호를 입력하세요"
+                    className="pw-input"
+                    value={signupData.passwordConfirm}
+                    onChange={(e) =>
+                        setSignupData({
+                            ...signupData,
+                            passwordConfirm: e.target.value
+                        })
+                    }
+                />
             </div>
-
-
-            {/* 비밀번호 확인 */}
-            <p className="email-label">비밀번호 확인</p>
-
-            <input
-                type="password"
-                name="passwordConfirm"
-                placeholder="비밀번호를 입력하세요"
-                className="pw-input"
-                value={signupData.passwordConfirm}
-                onChange={(e) =>
-                    setSignupData({
-                        ...signupData,
-                        passwordConfirm: e.target.value
-                    })
-                }
-            />
 
 
             {/* 비밀번호 조건 */}

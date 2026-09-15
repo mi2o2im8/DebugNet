@@ -1,93 +1,296 @@
-/* 로그인페이지 css */
-
 @font-face {
     font-family: "Maplestory";
-    src: url('../font/Maplestory-Light.ttf') format("truetype");
+    src: url("../font/Maplestory-Light.ttf") format("truetype");
 }
 
-.Login-container{
+/* ========================================
+   ⭐ 전체 레이아웃
+   ======================================== */
+
+.Login-container {
+    position: relative;
     width: 100%;
-    height: 100vh;
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding: 0;
+    box-sizing: border-box;
 
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    align-items: center;
+
+    background-color: #fff;
+    font-family: "Maplestory", sans-serif;
+    overflow: hidden;
+}
+
+/* ========================================
+   ⭐ 상단 로고
+   ======================================== */
+
+.Login-top {
+    width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
     align-items: center;
 }
 
-.logo{
-    width: 350px;
-    margin-bottom: 15px;
-    filter: hue-rotate(200deg);
+.logo-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: calc(clamp(55px, 18vh, 90px) + 35px);
 }
 
-.logo-title{
-    margin-bottom: 40px;
-
-    font-size: 18px;
-    font-weight: 500;
+.Home-logo {
+    width: clamp(55px, 18vw, 75px);
+    height: clamp(55px, 14vw, 75px);
+    object-fit: contain;
+    flex-shrink: 0;
 }
+
+.logo-title h1 {
+    margin: 0;
+
+    /* ⭐ Home CSS와 동일한 타이틀 크기 */
+    font-family: "Maplestory", sans-serif;
+    font-size: clamp(32px, 10vw, 39px);
+
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: -1px;
+    transform: translateX(-5px);
+    color: #222;
+}
+
+.Home-subtitle {
+    margin: clamp(3px, 1.5vw, 8px) 0 0;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: clamp(13px, 4vw, 15px);
+
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: -0.3px;
+    color: #888;
+    text-align: center;
+}
+
+/* ========================================
+   ⭐ 중단 영역 (폼 컨테이너)
+   ======================================== */
+
+.Login-middle {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+
+    /* ⭐ 입력 영역은 기존보다 살짝 위로 */
+    padding-top: clamp(60px, 4vh, 50px);
+
+    box-sizing: border-box;
+}
+
+/* 폼 전체 기준 폭 */
+.login-form {
+    width: clamp(260px, 85vw, 350px);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+/* ========================================
+   ⭐ 입력 그룹 및 라벨
+   ======================================== */
+
+.input-group {
+    width: 100%;
+    margin-bottom: clamp(14px, 2.2vh, 20px);
+    box-sizing: border-box;
+}
+
+.input-label {
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+
+    /* ⭐ 글씨 조금 크게 */
+    font-size: clamp(16px, 3.7vw, 19px);
+
+    font-weight: 600;
+    color: #222;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.label-row {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+}
+
+.label-row .input-label {
+    width: auto;
+    margin-bottom: 0;
+}
+
+.pw-find-link {
+    /* ⭐ 글씨 조금 크게 */
+    font-size: clamp(14px, 3.4vw, 17px);
+
+    color: #888;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.pw-find-link:hover {
+    text-decoration: underline;
+}
+
+/* ========================================
+   ⭐ 입력창 & 로그인 버튼 (높이 확대 적용)
+   ======================================== */
 
 .login-input,
-.pw-input{
-    width: 320px;
-    height: 50px;
+.pw-input {
+    width: 100% !important;
 
-    padding: 0 15px;
-    margin-bottom: 15px;
+    /* ⭐ 입력창 높이는 그대로 */
+    height: clamp(50px, 7vw, 60px) !important;
 
+    padding: 0 clamp(14px, 3.5vw, 18px);
+    box-sizing: border-box;
     border: 1px solid #ddd;
     border-radius: 10px;
+    font-family: "Maplestory", sans-serif;
 
-    font-size: 16px;
+    /* ⭐ 입력 글씨 조금 크게 */
+    font-size: clamp(17px, 4vw, 20px);
+
     outline: none;
+    transition: border-color 0.2s ease;
 }
 
 .login-input:focus,
-.pw-input:focus{
-    border-color: #4CAF50;
+.pw-input:focus {
+    border-color: #008006;
 }
 
-.login-btn{
-    width: 320px;
-    height: 50px;
+/* 비밀번호 + 눈 버튼 위치 */
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
 
-    margin-top: 10px;
+.password-input-wrapper .pw-input {
+    padding-right: 50px;
+}
+
+.password-eye {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+
+    width: 38px;
+    height: 38px;
+
+    padding: 0;
+    margin: 0;
+    /* 강제 눈 높이 조정 */
+    transform: translateY(-55%) !important;
 
     border: none;
-    border-radius: 10px;
+    background: transparent;
 
-    background: #008006;
-    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    font-size: 18px;
-    font-weight: bold;
-
+    color: #888;
     cursor: pointer;
+}
+
+.password-eye svg {
+    width: 22px;
+    height: 22px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* 로그인 버튼 */
+.login-btn {
+    width: 100% !important;
+
+    /* ⭐ 로그인 버튼 높이는 그대로 */
+    height: clamp(55px, 7vw, 60px);
+
+    margin-top: clamp(4px, 1vh, 10px);
+    border: none;
+    border-radius: 10px;
+    background-color: #4CAF50;
+    color: #fff;
     font-family: "Maplestory", sans-serif;
+
+    /* ⭐ 로그인 글씨는 그대로 */
+    font-size: 19px;
+
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-.login-btn:hover{
-    background-color: #aeee64;
+.login-btn:hover {
+    background-color: #86da00;
 }
 
-/* 로그인 버튼 클릭 */
 .login-btn:active {
     transform: translateY(1px);
 }
 
-.Login-container p{
-    margin-top: 25px;
+/* ========================================
+   ⭐ 하단 영역
+   ======================================== */
 
-    font-size: 14px;
+.Login-bottom {
+    width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+
+    /* ⭐ 하단 위치는 그대로 */
+    padding-bottom: calc(
+        clamp(20px, 4vh, 35px)
+        + env(safe-area-inset-bottom)
+    );
 }
 
-.Login-container a{
-    margin-left: 8px;
+.signup-text {
+    margin: 0;
 
-    text-decoration: none;
-    color: #4CAF50;
+    /* ⭐ 회원가입 글씨 조금 크게 */
+    font-size: clamp(14px, 3.7vw, 17px);
+
+    color: #888;
+}
+
+.signup-text a {
+    margin-left: 7px;
+    color: #008006;
     font-weight: bold;
+    text-decoration: none;
 }
 
-.pw_re{ margin-top: 20px;}
+.signup-text a:hover {
+    text-decoration: underline;
+}

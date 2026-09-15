@@ -15,7 +15,7 @@ function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigate("/login");
-    }, 2500);
+    }, 2800);
 
     return () => clearTimeout(timer);
   }, [navigate]);
