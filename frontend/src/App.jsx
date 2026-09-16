@@ -14,6 +14,7 @@ import SignupFrequency from './pages/Signup/SignupFrequency'
 import SignupClubPreference from './pages/Signup/SignupClubPreference'
 import SignupFee from './pages/Signup/SignupFee'
 import SignupReview from './pages/Signup/SignupReview'
+import Main from "./pages/Main/Main";
 
 import './App.css'
 
@@ -26,6 +27,8 @@ function App() {
           <Route path='/' element={<Home/>}/>
           {/* 로그인 페이지 */}
           <Route path='/Login' element={<Login/>}/>
+          {/* 로그인 후 메인 페이지 */}
+          <Route path="/main" element={<Main/>} />
           {/* 회원가입 버튼 연동 */}
           <Route path='/signup' element={<Signup/>}/>
           {/* 기본 정보 입력 페이지 */}

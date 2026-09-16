@@ -1,7 +1,0 @@
-fastapi
-uvicorn[standard]
-supabase
-pydantic
-pydantic-settings
-email-validator
-python-dotenv
