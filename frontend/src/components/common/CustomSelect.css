@@ -1,0 +1,155 @@
+.custom-select {
+    position: relative;
+
+    width: 100%;
+    min-width: 0;
+
+    font-family: "Maplestory", sans-serif;
+}
+
+.custom-select-trigger {
+    width: 100%;
+    height: 48px;
+
+    padding: 0 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d9dee8;
+    border-radius: 9px;
+
+    background-color: #ffffff;
+    color: #222222;
+
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.custom-select-trigger:hover {
+    border-color: #aeb8ca;
+}
+
+.custom-select.open .custom-select-trigger {
+    border-color: #008006;
+
+    box-shadow: 0 0 0 1px rgba(0, 128, 6, 0.08);
+}
+
+.custom-select-value {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.custom-select-placeholder {
+    color: #949baa;
+}
+
+.custom-select-icon {
+    width: 18px;
+    height: 18px;
+
+    flex-shrink: 0;
+
+    object-fit: contain;
+}
+
+.custom-select-arrow {
+    width: 17px;
+    height: 17px;
+
+    margin-left: auto;
+
+    flex-shrink: 0;
+
+    color: #09247c;
+
+    transition: transform 0.2s ease;
+}
+
+.custom-select.open .custom-select-arrow {
+    transform: rotate(180deg);
+}
+
+.custom-select-menu {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+
+    z-index: 100;
+
+    max-height: min(210px, 35vh);
+    padding: 5px;
+
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    border: 1px solid #d9dee8;
+    border-radius: 9px;
+
+    background-color: #ffffff;
+
+    box-shadow: 0 7px 20px rgba(9, 36, 124, 0.12);
+}
+
+.custom-select-option {
+    width: 100%;
+    min-height: 42px;
+
+    padding: 0 10px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    border: none;
+    border-radius: 6px;
+
+    background-color: #ffffff;
+    color: #222222;
+
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.custom-select-option:hover {
+    background-color: #f3faf4;
+}
+
+.custom-select-option.selected {
+    color: #008006;
+    background-color: #eaf7eb;
+    font-weight: 700;
+}
+
+.custom-select-trigger:focus-visible,
+.custom-select-option:focus-visible {
+    outline: 2px solid rgba(0, 128, 6, 0.3);
+    outline-offset: 1px;
+}
+
+.custom-select-trigger:disabled {
+    color: #a7acb6;
+    background-color: #f5f6f8;
+
+    cursor: not-allowed;
+}
