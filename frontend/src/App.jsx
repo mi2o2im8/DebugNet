@@ -15,7 +15,13 @@ import SignupClubPreference from './pages/Signup/SignupClubPreference'
 import SignupFee from './pages/Signup/SignupFee'
 import SignupReview from './pages/Signup/SignupReview'
 import Main from "./pages/Main/Main";
+
 import ClubCreate from "./pages/ClubCreate/ClubCreate";
+
+import Community from "./pages/Community/Community";
+import PostDetail from './pages/Community/PostDetail';
+import PostWrite from './pages/Community/PostWrite';
+
 
 import './App.css'
 
@@ -49,8 +55,17 @@ function App() {
           {/* 월 회비 - 가입완료 마지막 페이지 */}
           <Route path='/signup/basic/SignupFee' element={<SignupFee />} />
           <Route path='/signup/basic/review' element={<SignupReview />} />
+
           {/* 동호회 만들기 페이지 */}
           <Route path="/clubs/create" element={<ClubCreate />} />
+
+
+          {/* 커뮤니티 페이지 */}
+          <Route path="/community" element={<Community/>} />
+          {/* 커뮤니티 상세보기 */}
+          <Route path="/community/post/:postId" element={<PostDetail />} />
+          {/* 커뮤니티 게시글 작성하기 */}
+          <Route path="/community/write" element={<PostWrite />} />
 
         </Routes>
       </SignupProvider>

@@ -1,0 +1,507 @@
+/* ========================================
+   전체
+======================================== */
+
+.post-write-container {
+  width: 100%;
+  min-height: 100vh;
+
+  background-color: #ffffff;
+
+  padding-bottom: 90px;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   상단
+======================================== */
+
+.post-write-header {
+  position: relative;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  height: 56px;
+
+  padding: 0 16px;
+
+  border-bottom: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+}
+
+
+.post-write-header h1 {
+  margin: 0;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  color: #222222;
+}
+
+
+.post-write-back {
+  position: absolute;
+  left: 16px;
+
+  border: none;
+  background: none;
+
+  padding: 6px;
+
+  font-size: 23px;
+  line-height: 1;
+
+  color: #333333;
+
+  cursor: pointer;
+}
+
+
+/* ========================================
+   작성 영역
+======================================== */
+
+.post-write-main {
+  padding: 20px 18px;
+}
+
+
+/* ========================================
+   입력 필드 공통
+======================================== */
+
+.post-write-field {
+  position: relative;
+
+  margin-bottom: 22px;
+}
+
+
+.post-write-field label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: #333333;
+}
+
+
+.post-write-field select,
+.post-write-field input,
+.post-write-field textarea {
+  width: 100%;
+
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+
+  background-color: #ffffff;
+
+  font-size: 14px;
+
+  outline: none;
+
+  box-sizing: border-box;
+}
+
+
+.post-write-field select,
+.post-write-field input {
+  height: 44px;
+
+  padding: 0 12px;
+}
+
+
+.post-write-field textarea {
+  min-height: 220px;
+
+  padding: 12px;
+
+  line-height: 1.6;
+
+  resize: vertical;
+}
+
+
+.post-write-field select:focus,
+.post-write-field input:focus,
+.post-write-field textarea:focus {
+  border-color: #20b26b;
+}
+
+
+/* disabled select */
+
+.post-write-field select:disabled {
+  background-color: #f7f7f7;
+
+  color: #999999;
+
+  cursor: not-allowed;
+}
+
+
+/* ========================================
+   글자 수
+======================================== */
+
+.post-write-count {
+  display: block;
+
+  margin-top: 5px;
+
+  text-align: right;
+
+  font-size: 11px;
+
+  color: #999999;
+}
+
+
+/* ========================================
+   작성 화면 버튼
+======================================== */
+
+.post-write-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 8px;
+}
+
+
+.post-write-actions button {
+  height: 40px;
+
+  padding: 0 16px;
+
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+/* 미리보기 버튼 */
+
+.post-preview-btn {
+  border: 1px solid #20b26b;
+
+  background-color: #ffffff;
+
+  color: #20b26b;
+}
+
+
+.post-preview-btn:active {
+  background-color: #f2fbf6;
+}
+
+
+/* 혹시 기존 등록 버튼이 남아 있을 경우 */
+
+.post-submit-btn {
+  border: none;
+
+  background-color: #20b26b;
+
+  color: #ffffff;
+}
+
+
+.post-submit-btn:active {
+  opacity: 0.85;
+}
+
+
+/* ========================================
+   미리보기 모달 배경
+======================================== */
+
+.post-preview-overlay {
+  position: fixed;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 20px;
+
+  background-color: rgba(0, 0, 0, 0.4);
+
+  box-sizing: border-box;
+
+  z-index: 2000;
+}
+
+
+/* ========================================
+   미리보기 모달
+======================================== */
+
+.post-preview-modal {
+  width: 100%;
+  max-width: 390px;
+
+  /* 글이 짧아도 미리보기 크기가 줄어들지 않도록 고정 */
+  height: 72vh;
+  max-height: 650px;
+
+  display: flex;
+  flex-direction: column;
+
+  background-color: #ffffff;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+
+/* ========================================
+   미리보기 모달 상단
+======================================== */
+
+.post-preview-modal-header {
+  flex-shrink: 0;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  height: 56px;
+
+  padding: 0 18px;
+
+  border-bottom: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+}
+
+
+.post-preview-modal-header h2 {
+  margin: 0;
+
+  font-size: 17px;
+  font-weight: 700;
+
+  color: #222222;
+}
+
+
+/* X 버튼 */
+
+.post-preview-close {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 30px;
+  height: 30px;
+
+  padding: 0;
+
+  border: none;
+  background: none;
+
+  font-size: 27px;
+  line-height: 1;
+
+  color: #777777;
+
+  cursor: pointer;
+}
+
+
+.post-preview-close:hover {
+  color: #333333;
+}
+
+
+/* ========================================
+   실제 게시글 미리보기 영역
+======================================== */
+
+.post-preview-modal-body {
+  flex: 1;
+
+  padding: 20px 18px;
+
+  overflow-y: auto;
+
+  box-sizing: border-box;
+}
+
+
+/* 게시판 종류 */
+
+.post-preview-board {
+  margin-bottom: 10px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  color: #20b26b;
+}
+
+
+/* 제목 */
+
+.post-preview-title {
+  margin: 0 0 10px;
+
+  font-size: 19px;
+  font-weight: 700;
+
+  line-height: 1.4;
+
+  word-break: break-word;
+
+  color: #222222;
+}
+
+
+/* 작성자 / 시간 / 조회수 */
+
+.post-preview-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  font-size: 12px;
+
+  color: #999999;
+}
+
+
+.post-preview-info span:not(:last-child)::after {
+  content: "·";
+
+  margin-left: 7px;
+
+  color: #cccccc;
+}
+
+
+.post-preview-author {
+  font-weight: 600;
+
+  color: #555555;
+}
+
+
+/* 제목과 본문 사이 선 */
+
+.post-preview-divider {
+  width: 100%;
+
+  margin: 16px 0 20px;
+
+  border-top: 1px solid #eeeeee;
+}
+
+
+/* 게시글 본문 */
+
+.post-preview-content {
+  min-height: 220px;
+
+  font-size: 14px;
+  line-height: 1.7;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  color: #333333;
+}
+
+
+/* ========================================
+   미리보기 하단
+======================================== */
+
+.post-preview-modal-footer {
+  flex-shrink: 0;
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+
+  min-height: 62px;
+
+  padding: 12px 18px;
+
+  border-top: 1px solid #eeeeee;
+
+  background-color: #ffffff;
+
+  box-sizing: border-box;
+}
+
+
+/* 등록 버튼 */
+
+.post-preview-submit {
+  height: 38px;
+
+  padding: 0 18px;
+
+  border: none;
+  border-radius: 8px;
+
+  background-color: #20b26b;
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.post-preview-submit:active {
+  opacity: 0.85;
+}
+
+
+/* ========================================
+   작은 모바일 화면 대응
+======================================== */
+
+@media (max-width: 430px) {
+
+  .post-preview-overlay {
+    padding: 16px;
+  }
+
+
+  .post-preview-modal {
+    max-width: 100%;
+
+    height: 75vh;
+  }
+
+}
