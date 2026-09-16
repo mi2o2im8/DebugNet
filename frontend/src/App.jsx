@@ -4,7 +4,6 @@ import Home from './pages/LoginPage/Home'
 import Login from './pages/LoginPage/Login';
 import Signup from './pages/Signup/SignupAccount';
 import SignupProfile from './pages/Signup/SignupProfile'
-import Main from './pages/Main/Main';
 // 회원가입 전체 데이터 공용 저장공간
 import { SignupProvider } from './pages/Signup/SignupContext';
 import SignupSport from './pages/Signup/SignupSport';
@@ -15,6 +14,8 @@ import SignupFrequency from './pages/Signup/SignupFrequency'
 import SignupClubPreference from './pages/Signup/SignupClubPreference'
 import SignupFee from './pages/Signup/SignupFee'
 import SignupReview from './pages/Signup/SignupReview'
+import Main from "./pages/Main/Main";
+import ClubCreate from "./pages/ClubCreate/ClubCreate";
 
 import './App.css'
 
@@ -27,8 +28,8 @@ function App() {
           <Route path='/' element={<Home/>}/>
           {/* 로그인 페이지 */}
           <Route path='/Login' element={<Login/>}/>
-          {/* 메인 페이지 */}
-          <Route path='/main' element={<Main/>}/>
+          {/* 로그인 후 메인 페이지 */}
+          <Route path="/main" element={<Main/>} />
           {/* 회원가입 버튼 연동 */}
           <Route path='/signup' element={<Signup/>}/>
           {/* 기본 정보 입력 페이지 */}
@@ -47,9 +48,10 @@ function App() {
           <Route path='/signup/basic/SignupClubPreference' element={<SignupClubPreference />} />
           {/* 월 회비 - 가입완료 마지막 페이지 */}
           <Route path='/signup/basic/SignupFee' element={<SignupFee />} />
-          {/* 설정한 정보 통합 확인 페이지 */}
           <Route path='/signup/basic/review' element={<SignupReview />} />
-          
+          {/* 동호회 만들기 페이지 */}
+          <Route path="/clubs/create" element={<ClubCreate />} />
+
         </Routes>
       </SignupProvider>
     </BrowserRouter>

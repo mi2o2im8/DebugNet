@@ -1,0 +1,1043 @@
+/* ========================================
+   동호회 만들기 공통 폰트
+   ======================================== */
+
+@font-face {
+    font-family: "Maplestory";
+    src: url("../../assets/font/Maplestory-Light.ttf")
+        format("truetype");
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: "Maplestory";
+    src: url("../../assets/font/Maplestory-Bold.ttf")
+        format("truetype");
+    font-weight: 700;
+}
+
+
+/* ========================================
+   동호회 만들기 전체 화면
+   ======================================== */
+
+.club-create-page {
+    width: 100%;
+    min-height: 100dvh;
+
+    background-color: #f4f7fb;
+    color: #222;
+
+    font-family: "Maplestory", sans-serif;
+
+    box-sizing: border-box;
+}
+
+.club-create-page * {
+    box-sizing: border-box;
+}
+
+
+/* ========================================
+   모바일 앱 영역
+   ======================================== */
+
+.club-create-container {
+    width: clamp(260px, 100vw, 412px);
+    min-height: 100dvh;
+
+    margin: 0 auto;
+
+    background-color: #fff;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ========================================
+   상단 헤더
+   ======================================== */
+
+.club-create-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+
+    width: 100%;
+    height: 56px;
+
+    padding: 0 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    border-bottom: 1px solid #edf0f5;
+
+    background-color: rgba(255, 255, 255, 0.96);
+}
+
+
+/* 뒤로가기 버튼 */
+
+.club-create-back-button {
+    width: 40px;
+    height: 40px;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 10px;
+
+    background-color: transparent;
+    color: #09247c;
+
+    font-size: 28px;
+
+    cursor: pointer;
+}
+
+
+/* 헤더 제목 */
+
+.club-create-header h1 {
+    margin: 0;
+
+    color: #09247c;
+
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+
+/* 좌우 균형을 맞추는 빈 공간 */
+
+.club-create-header-space {
+    width: 40px;
+    height: 40px;
+}
+
+
+/* ========================================
+   본문 영역
+   ======================================== */
+
+.club-create-content {
+    width: 100%;
+
+    padding: 24px 20px;
+
+    flex: 1;
+}
+
+
+/* PC 화면에서 모바일 영역 구분 */
+
+@media (min-width: 413px) {
+    .club-create-container {
+        box-shadow: 0 0 28px rgba(19, 50, 92, 0.08);
+    }
+}
+
+
+/* ========================================
+   단계 진행률
+   ======================================== */
+
+.club-create-progress {
+    width: 100%;
+
+    padding: 12px 20px 4px;
+}
+
+.club-create-progress-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.club-create-step-number {
+    width: 28px;
+    height: 28px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background-color: #008006;
+    color: #fff;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.club-create-progress-track {
+    height: 6px;
+
+    flex: 1;
+
+    overflow: hidden;
+
+    border-radius: 999px;
+
+    background-color: #e7edf7;
+}
+
+.club-create-progress-bar {
+    height: 100%;
+
+    border-radius: 999px;
+
+    background-color: #008006;
+
+    transition: width 0.2s ease;
+}
+
+.club-create-progress-info {
+    margin-top: 5px;
+
+    margin-left: 40px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    color: #09247c;
+
+    font-size: 13px;
+}
+
+.club-create-progress-info span {
+    flex-shrink: 0;
+
+    color: #008006;
+
+    text-align: left;
+}
+
+.club-create-progress-info strong {
+    font-size: 14px;
+}
+
+/* ========================================
+   하단 이전/다음 버튼
+   ======================================== */
+
+.club-create-navigation {
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+
+    width: 100%;
+
+    padding: 12px 20px;
+
+    display: flex;
+    gap: 8px;
+
+    border-top: 1px solid #e8edf4;
+
+    background-color: rgba(255, 255, 255, 0.96);
+}
+
+.club-create-button {
+    height: 50px;
+
+    flex: 1;
+
+    border-radius: 10px;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.club-create-button.previous {
+    border: 1px solid #d5dcea;
+
+    background-color: #fff;
+    color: #09247c;
+}
+
+.club-create-button.next {
+    border: none;
+
+    background-color: #008006;
+    color: #fff;
+}
+
+.club-create-button.next:hover {
+    background-color: #006b05;
+}
+
+/* ========================================
+   동호회 생성 공통 입력 영역
+   ======================================== */
+
+.club-create-field {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.club-create-field > label {
+    color: #09247c;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.club-create-field em {
+    color: #e43a3a;
+    font-style: normal;
+}
+
+.club-create-input{
+    width: 100%;
+    height: 50px;
+
+    padding: 0 14px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    background-color: #fff;
+    color: #222;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 16px;
+
+    outline: none;
+}
+
+
+.club-create-select {
+    width: 100%;
+    height: 50px;
+
+    padding: 0 40px 0 14px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    background-color: #fff;
+    color: #222;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 16px;
+
+    outline: none;
+    cursor: pointer;
+
+    /* 기본 화살표 제거 */
+    appearance: none;
+    -webkit-appearance: none;
+
+    /* 화살표 직접 표시 */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2309227c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px;
+}
+
+.club-create-input:focus,
+.club-create-select:focus {
+    border-color: #008006;
+}
+
+.club-create-input::placeholder {
+    color: #aaa;
+}
+
+.club-create-input-wrapper {
+    position: relative;
+}
+
+.club-create-input-wrapper .club-create-input {
+    padding-right: 58px;
+}
+
+.club-create-input-count {
+    position: absolute;
+
+    right: 13px;
+    top: 50%;
+
+    color: #777;
+
+    font-size: 12px;
+
+    transform: translateY(-50%);
+}
+
+.club-create-icon-input {
+    position: relative;
+}
+
+.club-create-icon-input > svg {
+    position: absolute;
+
+    top: 50%;
+    left: 14px;
+
+    z-index: 1;
+
+    color: #09247c;
+
+    font-size: 18px;
+
+    transform: translateY(-50%);
+}
+
+.club-create-icon-input .club-create-input {
+    padding-left: 42px;
+}
+
+/* ========================================
+   1단계 기본 정보
+   ======================================== */
+
+.club-basic-step {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 24px;
+}
+
+.club-basic-heading h2 {
+    margin: 0;
+
+    color: #09247c;
+
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.club-basic-heading p {
+    margin: 6px 0 0;
+
+    color: #777;
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+
+/* 대표 이미지 */
+
+.club-basic-image-upload {
+    width: 100%;
+    height: 170px;
+
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    border: 1px dashed #b8c6dc;
+    border-radius: 12px;
+
+    background-color: #f8faff;
+    color: #09247c;
+
+    cursor: pointer;
+}
+
+.club-basic-image-upload input {
+    display: none;
+}
+
+.club-basic-image-upload > img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.club-basic-image-icon {
+    width: 54px;
+    height: 54px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background-color: #e6edfa;
+
+    font-size: 25px;
+}
+
+.club-basic-image-upload strong {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    font-size: 14px;
+}
+
+.club-basic-image-upload small {
+    color: #777;
+
+    font-size: 12px;
+}
+
+
+/* 활동 지역 */
+
+.club-basic-region-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 8px;
+}
+
+
+/* 운영자 정보 */
+
+.club-basic-operator-card {
+    width: 100%;
+
+    padding: 10px 12px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    border: 1px solid #eee;
+    border-radius: 12px;
+
+    background-color: #fff;
+}
+
+.club-basic-operator-avatar {
+    width: 36px;
+    height: 36px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background-color: #09247c;
+    color: #fff;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.club-basic-operator-card strong {
+    flex: 1;
+
+    color: #09247c;
+
+    font-size: 14px;
+}
+
+.club-basic-operator-badge {
+    padding: 6px 10px;
+
+    border-radius: 8px;
+
+    background-color: #e8f5e9;
+    color: #008006;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* ========================================
+   2단계: 활동 일정 설정
+   ======================================== */
+
+.club-schedule-step {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.club-schedule-heading h2 {
+    margin: 0;
+
+    color: #09247c;
+
+    font-size: 20px;
+    line-height: 1.4;
+    font-weight: 700;
+}
+
+.club-schedule-heading p {
+    margin: 5px 0 0;
+
+    color: #7a8395;
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.club-create-field > label span {
+    margin-left: 3px;
+
+    color: #65708a;
+
+    font-size: 12px;
+    font-weight: 400;
+}
+
+
+/* 일정 목록 */
+
+.club-schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.club-schedule-card {
+    position: relative;
+
+    padding: 10px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d9dee8;
+    border-radius: 10px;
+
+    background-color: #ffffff;
+
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.club-schedule-card.active {
+    border-color: #b8dfba;
+    background-color: #f8fcf8;
+}
+
+.club-schedule-card-top {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 32px;
+    align-items: center;
+    gap: 8px;
+}
+
+.club-schedule-check {
+    width: 24px;
+    height: 24px;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #b9c2d2;
+    border-radius: 6px;
+
+    background-color: #ffffff;
+    color: #ffffff;
+
+    cursor: pointer;
+}
+
+.club-schedule-card.active .club-schedule-check {
+    border-color: #009b69;
+    background-color: #009b69;
+}
+
+.club-schedule-check svg {
+    width: 16px;
+    height: 16px;
+}
+
+.club-schedule-day {
+    min-width: 0;
+}
+
+.club-schedule-delete {
+    width: 32px;
+    height: 32px;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 6px;
+
+    background-color: transparent;
+    color: #68738b;
+
+    cursor: pointer;
+}
+
+.club-schedule-delete:hover {
+    background-color: #fff0f0;
+    color: #d94242;
+}
+
+.club-schedule-delete:disabled {
+    color: #c6cbd4;
+
+    cursor: not-allowed;
+}
+
+.club-basic-heading h2,
+.club-schedule-heading h2 {
+    margin: 0;
+
+    color: #09247c;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 20px;
+    line-height: 1.4;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.club-basic-heading p,
+.club-schedule-heading p {
+    margin: 5px 0 0;
+
+    color: #7a8395;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 400;
+    letter-spacing: -0.1px;
+}
+
+
+/* 시간 선택 */
+
+.club-schedule-time-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr);
+    align-items: center;
+    gap: 5px;
+
+    margin-top: 8px;
+    padding-left: 36px;
+}
+
+.club-schedule-time-divider {
+    color: #68738b;
+
+    font-size: 14px;
+    text-align: center;
+}
+
+.club-schedule-time-row .custom-select-trigger {
+    height: 42px;
+    padding: 0 10px;
+
+    font-size: 13px;
+}
+
+
+/* 일정 추가 버튼 */
+
+.club-schedule-add-button {
+    width: 100%;
+    height: 44px;
+
+    margin-top: 9px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    border: 1px solid #cbd5e4;
+    border-radius: 8px;
+
+    background-color: #ffffff;
+    color: #09247c;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.club-schedule-add-button:hover {
+    border-color: #008006;
+    color: #008006;
+}
+
+.club-schedule-add-button svg {
+    width: 17px;
+    height: 17px;
+}
+
+
+/* 상세 장소 */
+
+.club-schedule-step .club-create-icon-input {
+    margin-top: 8px;
+}
+
+
+/* 활동 빈도 */
+
+.club-frequency-list {
+    overflow: hidden;
+
+    border: 1px solid #d9dee8;
+    border-radius: 9px;
+
+    background-color: #ffffff;
+}
+
+.club-frequency-option {
+    width: 100%;
+    min-height: 44px;
+
+    padding: 0 13px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    border: none;
+    border-bottom: 1px solid #e6e9ef;
+
+    background-color: #ffffff;
+    color: #222222;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 14px;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.club-frequency-option:last-child {
+    border-bottom: none;
+}
+
+.club-frequency-option:hover {
+    background-color: #f5faf6;
+}
+
+.club-frequency-option.selected {
+    color: #008006;
+    background-color: #f0faf1;
+    font-weight: 700;
+}
+
+.club-frequency-radio {
+    width: 17px;
+    height: 17px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    box-sizing: border-box;
+
+    border: 1.5px solid #8792a8;
+    border-radius: 50%;
+}
+
+.club-frequency-option.selected .club-frequency-radio {
+    border-color: #009b69;
+}
+
+.club-frequency-radio span {
+    width: 9px;
+    height: 9px;
+
+    border-radius: 50%;
+
+    background-color: #009b69;
+}
+
+/* ========================================
+   운동 종목 커스텀 선택창
+   ======================================== */
+
+.club-sport-select {
+    position: relative;
+
+    width: 100%;
+    min-width: 0;
+}
+
+.club-sport-select-button {
+    width: 100%;
+    height: 50px;
+
+    padding: 0 14px;
+
+    display: flex;
+    align-items: center;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    background-color: #fff;
+    color: #222;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 16px;
+
+    cursor: pointer;
+}
+
+.club-sport-select-button.open {
+    border-color: #008006;
+}
+
+.club-sport-selected {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+}
+
+.club-sport-selected img {
+    width: 20px;
+    height: 20px;
+
+    flex-shrink: 0;
+
+    object-fit: contain;
+}
+
+.club-sport-placeholder {
+    color: #aaa;
+}
+
+.club-sport-arrow {
+    margin-left: auto;
+    margin-right: 1px;
+
+    flex-shrink: 0;
+
+    color: #09247c;
+
+    font-size: 17px;
+
+    transition: transform 0.2s ease;
+}
+
+.club-sport-arrow.open {
+    transform: rotate(180deg);
+}
+
+
+/* 종목 선택 목록 */
+
+.club-sport-option-list {
+    position: absolute;
+
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+
+    z-index: 200;
+
+    width: 100%;
+    max-height: 240px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    padding: 6px;
+
+    border: 1px solid #dfe5ef;
+    border-radius: 10px;
+
+    background-color: #fff;
+
+    box-shadow: 0 8px 24px rgba(9, 36, 124, 0.14);
+}
+
+.club-sport-option {
+    width: 100%;
+    min-height: 44px;
+
+    padding: 0 10px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    border: none;
+    border-radius: 8px;
+
+    background-color: #fff;
+    color: #222;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 15px;
+
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.club-sport-option:hover {
+    background-color: #f4f8f5;
+}
+
+.club-sport-option.selected {
+    background-color: #e8f5e9;
+    color: #008006;
+
+    font-weight: 700;
+}
+
+.club-sport-option img {
+    width: 20px;
+    height: 20px;
+
+    flex-shrink: 0;
+
+    object-fit: contain;
+}
