@@ -241,7 +241,7 @@ function Signup() {
             <button
                 type="button"
                 className="Back-btn"
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/signup")}
                 aria-label="뒤로가기"
             >
                 <img

@@ -74,53 +74,68 @@ function SignupLocation() {
                 type="button"
                 className="Back-btn"
                 onClick={() => navigate("/signup/basic/SignupSportLevel")}
+                aria-label="뒤로가기"
             >
-                뒤로가기
+                <img src={backIcon} alt="뒤로가기" />
             </button>
-            
-            <h1>활동하고 싶은</h1>
-            <h1>지역을 선택해주세요</h1>
-            
-            {/* 시/도 선택 */}
-            <div className="regions-select">
-                <p>시도 선택</p>
 
-                <select>
-                    <option value="">시/도 선택</option>
-                    {cities.map((city) => (
-                        <option key={city} value={city}>
-                            {city}
-                        </option>
-                    ))}
-                </select>
+            <div className="signup-header05">
+                <h2>활동하고 싶은</h2>
+                <h2>지역을 선택해주세요</h2>
             </div>
 
-            {/* 구/군 선택 */}
-            <div className="regions-select">
-                <p>구/군 선택</p>
+            {/* 지역 선택 */}
+            <div className="regions-select-row">
 
-                <select onChange={(e)=> handLocation(e.target.value)}>
-                    <option value="">구/군 선택</option>
-                    {districts.map((district) => (
-                        <option key={district} value={district}>
-                            {district}
-                        </option>
-                    ))}
-                </select>
+                {/* 시/도 선택 */}
+                <div className="regions-select">
+                    <p>시도 선택</p>
+
+                    <select>
+                        <option value="">시/도 선택</option>
+                        {cities.map((city) => (
+                            <option key={city} value={city}>
+                                {city}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* 구/군 선택 */}
+                <div className="regions-select">
+                    <p>구/군 선택</p>
+
+                    <select onChange={(e) => handLocation(e.target.value)}>
+                        <option value="">구/군 선택</option>
+                        {districts.map((district) => (
+                            <option key={district} value={district}>
+                                {district}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
             </div>
+
+            <img
+                src={down_arrow}
+                alt="아래 화살표"
+                className="down-arrow"
+            />
+
             <div className="selected-regions">
                 <p>선택된 지역</p>
 
                 <div className="selected-regions-list">
-                    {signupData.regions.map((district)=> (
+                    {signupData.regions.map((district) => (
                         <button
                             key={district}
                             type="button"
                             className="selected-regions-item"
-                            onClick={()=> handLocation(district)}
+                            onClick={() => handLocation(district)}
                         >
                             <span>{district}</span>
-                            <span className="regions-remove">  x</span>
+                            <span className="regions-remove">x</span>
                         </button>
                     ))}
                 </div>

@@ -16,7 +16,13 @@ import SignupFee from './pages/Signup/SignupFee'
 import SignupReview from './pages/Signup/SignupReview'
 import Main from "./pages/Main/Main";
 
-import ClubCreate from "./pages/ClubCreate/ClubCreate";
+// // 동호회
+// import BasicInfoStep from './pages/ClubCreate/BasicInfoStep'
+import ClubCreate from './pages/ClubCreate/ClubCreate'
+// import ScheduleStep from './pages/ClubCreate/ScheduleStep';
+// // components
+// import CustomSelect from './components/common/CustomSelect';
+// import BottomNav from './components/BottomNav';
 
 import Community from "./pages/Community/Community";
 import PostDetail from './pages/Community/PostDetail';

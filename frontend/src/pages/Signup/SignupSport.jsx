@@ -51,15 +51,17 @@ function Signup() {
             <button
                 type="button"
                 className="Back-btn"
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/signup/basic")}
                 aria-label="뒤로가기"
             >
                 <img src={backIcon} alt="뒤로가기" />
             </button>
-            
-            <h1>관심 있는 운동을</h1>
-            <h1>선택해주세요</h1>
+
+            <div className="signup-header03">
+            <h2>관심 있는 운동을</h2>
+            <h2>선택해주세요</h2>
             <p>(복수 선택 가능)</p>
+            </div>
 
             {/* ----종목 선택----- */}
             <div className="sport-choice-box">

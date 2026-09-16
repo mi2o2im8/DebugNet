@@ -43,13 +43,15 @@ function SignupSportLevel() {
                 type="button"
                 className="Back-btn"
                 onClick={() => navigate("/signup/basic/sport")}
+                aria-label="뒤로가기"
             >
-                뒤로가기
+                <img src={backIcon} alt="뒤로가기" />
             </button>
             
-            <h1>운동 수준을</h1>
-            <h1>선택해주세요</h1>
-            <p>(복수 선택 가능)</p>
+            <div className="signup-header04">
+                <h2>운동 수준을</h2>
+                <h2>선택해주세요</h2>
+            </div>
 
             {/* 선택한 종목별 운동 수준 */}
             {signupData.sports.map((sport) => (

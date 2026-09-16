@@ -140,7 +140,7 @@ function Signup() {
             <button
                 type="button"
                 className="Back-btn"
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/Login")}
                 aria-label="뒤로가기"
             >
                 <img src={backIcon} alt="뒤로가기" />
