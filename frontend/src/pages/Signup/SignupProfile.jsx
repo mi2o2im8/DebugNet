@@ -217,46 +217,30 @@ function Signup() {
     };
     return (
         // 헤더
-        <div>
-            {/* 뒤로가기 버튼 */}
+        <div className="signup-container">
             <button
                 type="button"
                 className="Back-btn"
-                onClick={() => navigate("/signup")}
+                onClick={() => navigate(-1)}
+                aria-label="뒤로가기"
             >
-                뒤로가기
+                <img src={backIcon} alt="뒤로가기" />
             </button>
-            
-            <h1>기본 정보를</h1>
-            <h1>입력해주세요</h1>
-            <p>나에게 맞는 동호회 추천을</p>
-            <p>위해 필요한 정보에.</p>
+            <div className="signup-header02">
+                <h2>기본 정보를</h2>
+                <h2>입력해주세요</h2>
+                <p>나에게 맞는 동호회 추천을</p>
+                <p>위해 필요한 정보에.</p>
+            </div>
 
-            {/* ---- 프로필 입력 ---- */}
             {/* ---- 프로필 이미지 ---- */}
-            <div
-            style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center"
-            }}
-            >
-                <div
-                    style={{
-                        position: "relative",
-                        width: "100px",
-                        height: "100px"
-                    }}
-                >
+            <div className="profile-image-area">
+
+                <div className="profile-image-wrapper">
                     <img
                         src={profilePreview}
                         alt="프로필 미리보기"
-                        width="100"
-                        height="100"
-                        style={{
-                            borderRadius: "50%",
-                            objectFit: "cover"
-                        }}
+                        className="profile-image"
                     />
 
                     {profileImageFile && (
@@ -264,18 +248,14 @@ function Signup() {
                             type="button"
                             onClick={handleRemoveProfileImage}
                             aria-label="프로필 이미지 삭제"
-                            style={{
-                                position: "absolute",
-                                top: "0",
-                                left: "0"
-                            }}
+                            className="profile-image-remove"
                         >
                             ×
                         </button>
                     )}
                 </div>
 
-                <div>
+                <div className="profile-image-input">
                     <label htmlFor="profile-image">
                         프로필 사진 선택
                     </label>
@@ -288,6 +268,7 @@ function Signup() {
                         onChange={handleImageChange}
                     />
                 </div>
+
             </div>
 
             {/* ----이름 입력칸---- */}
@@ -312,7 +293,7 @@ function Signup() {
             <div className="nickname-box">
                 <p className="nickname-label">닉네임</p>
 
-                <div>
+                <div className="nickname-input-area">
                     <input
                         type="text"
                         name="nickname"

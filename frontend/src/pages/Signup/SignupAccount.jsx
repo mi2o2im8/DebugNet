@@ -5,7 +5,7 @@ import "./Signup.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSignup } from "./SignupContext";
-// 눈..
+// 눈.. 설치파일 npm install react-icons
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
 // 뒤로가기 버튼 소환

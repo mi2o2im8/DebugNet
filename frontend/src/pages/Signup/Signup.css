@@ -14,97 +14,127 @@
 /* ========================================
    ⭐ Signup 공통 클래스 목록
 
-   .Back-btn          → 뒤로가기 버튼
-   .signup-header     → 회원가입 상단 제목/설명
-   .email-label       → 입력창 제목(이메일/비밀번호)
-   .login-input       → 이메일 입력창
-   .pw-input          → 비밀번호 입력창
-   .password-eye      → 비밀번호 보기/숨기기 버튼
-   .password-guide    → 비밀번호 조건 안내
-   .valid             → 조건 충족 시 적용
-   .Next-btn          → 다음 버튼
+   .signup-container        → 회원가입 전체 영역
+   .Back-btn                → 뒤로가기 버튼
+   .signup-header           → 회원가입 상단 제목/설명
+   .signup-header02         → 특정 페이지 상단 제목/설명
+   .email-label             → 입력창 제목(이메일/비밀번호)
+   .email-check-wrapper     → 이메일 입력 + 중복확인 영역
+   .login-input             → 이메일 입력창
+   .email-check-btn         → 이메일 중복확인 버튼
+   .email-check-success     → 이메일 중복확인 성공 메시지
+   .email-check-error       → 이메일 중복확인 실패 메시지
+   .password-box            → 비밀번호 입력 전체 영역
+   .pw-input                → 비밀번호 입력창
+   .password-eye-signup     → 비밀번호 보기/숨기기 버튼
+   .password-guide          → 비밀번호 조건 안내
+   .valid                   → 조건 충족 시 적용
+   .Next-btn                → 다음 버튼
    ======================================== */
 
 
 /* ========================================
    ⭐ 2번 기본정보 페이지 추가 클래스
 
-   .name-box          → 이름 입력 영역
-   .name-label        → 이름 라벨
-   .nickname-box      → 닉네임 입력 영역
-   .nickname-label    → 닉네임 라벨
-   .birth-box         → 생년월일 입력 영역
-   .gender-title      → 성별 제목
-   .gender-box        → 성별 선택 영역
-   .selected          → 선택된 성별 버튼
+   .profile-image-area      → 프로필 이미지 전체 영역
+   .profile-image-wrapper   → 프로필 이미지 위치 영역
+   .profile-image           → 프로필 이미지
+   .profile-image-remove    → 프로필 이미지 삭제 버튼
+   .profile-image-input     → 프로필 사진 선택 영역
+
+   .name-box                → 이름 입력 영역
+   .name-label              → 이름 라벨
+   .nickname-box            → 닉네임 입력 영역
+   .nickname-label          → 닉네임 라벨
+   .nickname-check-btn      → 닉네임 중복확인 버튼
+   .birth-box               → 생년월일 입력 영역
+   .gender-title            → 성별 제목
+   .gender-box              → 성별 선택 영역
+   .selected                → 선택된 상태
    ======================================== */
 
 
 /* ========================================
    ⭐ 3. 운동 종목 선택 페이지
 
-   .sport-choice-box → 운동 종목 전체 영역
+   .sport-choice-box        → 운동 종목 전체 영역
    .sport-choice-box button → 운동 종목 선택 버튼
-   .sport-choice-box img → 운동 종목 이미지
-   .sport-choice-box button.selected → 선택된 종목
-   .select-count → 선택된 종목 개수
+   .sport-choice-box img    → 운동 종목 이미지
+   .sport-choice-box button.selected
+                            → 선택된 운동 종목
+   .select-count            → 선택된 종목 개수
    ======================================== */
 
 
 /* ========================================
    ⭐ 4. 종목별 운동 수준 선택
 
-   .signup-level-title → 운동 수준 페이지 제목
-   .sport-level-box → 종목별 전체 영역
-   .sport-level-box h3 → 운동 종목 이름
-   .level-box → 수준 선택 영역
-   .level-box button → 수준 선택 버튼
-   .check-box → 선택 체크 표시
+   .signup-level-title      → 운동 수준 페이지 제목
+   .sport-level-box         → 종목별 운동 수준 전체 영역
+   .sport-level-box h3      → 운동 종목 이름
+   .level-box               → 수준 선택 영역
+   .level-box button        → 수준 선택 버튼
+   .check-box               → 선택 체크 표시
+   .level-box button.selected
+                            → 선택된 운동 수준
    ======================================== */
 
 
 /* ========================================
    ⭐ 5. 활동 가능 지역 선택
 
-   .location-select → 시/도, 구/군 선택 영역
-   .selected-location → 선택된 지역 영역
-   .selected-location-list → 지역 태그 영역
-   .selected-location-item → 선택된 지역 태그
-   .location-guide → 지역 안내
-   .distance-select → 이동 가능 거리 영역
-   .distance-list → 거리 선택 영역
+   .location-select         → 시/도, 구/군 선택 영역
+   .selected-location       → 선택된 지역 전체 영역
+   .selected-location-list  → 지역 태그 목록 영역
+   .selected-location-item  → 선택된 지역 태그
+   .location-remove         → 선택된 지역 삭제 버튼
+   .location-guide          → 지역 선택 안내 영역
+   .location-icon           → 지역 안내 아이콘
+   .distance-select         → 이동 가능 거리 영역
+   .distance-list           → 거리 선택 영역
+   .distance-list button    → 거리 선택 버튼
+   .distance-list button.selected
+                            → 선택된 이동 가능 거리
    ======================================== */
 
 
 /* ========================================
    ⭐ 6. 활동 가능 시간 선택
 
-   .time-example       → 시간 선택 예시
-   .time-add-box       → 시간대 추가 영역
-   .time-add-btn       → 시간대 추가 버튼
-   .time-select-box    → 요일/시간 선택 영역
-   .time-select        → 요일/시간 선택창
-   .time-confirm-btn   → 시간대 추가 완료 버튼
-   .selected-time-box  → 선택한 시간대 영역
-   .selected-time-item → 선택한 시간대 한 개
-   .time-delete-btn    → 시간대 삭제 버튼
+   .time-example            → 시간 선택 예시/안내
+   .time-add-box            → 시간대 추가 영역
+   .time-add-btn            → 시간대 추가 버튼
+   .time-select-box         → 요일/시간 선택 영역
+   .time-select             → 요일/시간 선택창
+   .time-confirm-btn        → 시간대 추가 완료 버튼
+   .selected-time-box       → 선택한 시간대 전체 영역
+   .selected-time-item      → 선택한 시간대 한 개
+   .time-delete-btn         → 시간대 삭제 버튼
    ======================================== */
 
 
 /* ========================================
    ⭐ 7. 활동 빈도 선택
 
-   .frequency-options  → 활동 빈도 전체 영역
-   .frequency-option   → 빈도 선택 항목
+   .frequency-options       → 활동 빈도 전체 영역
+   .frequency-option        → 빈도 선택 항목
+   .frequency-option input  → 빈도 라디오 버튼
+   .frequency-option:has(input:checked)
+                            → 선택된 빈도 항목
    ======================================== */
 
 
 /* ========================================
    ⭐ 8. 동호회 선호 선택
 
+   .club-preference-example
+                            → 복수 선택 안내
    .club-preference-options → 선호 선택 전체 영역
    .club-preference-option  → 선호 선택 항목
-   .club-preference-example → 복수 선택 안내
+   .club-preference-option input
+                            → 선호 선택 체크박스
+   .club-preference-option:has(input:checked)
+                            → 선택된 선호 항목
    ======================================== */
 
 
@@ -150,7 +180,7 @@ body {
     top: 20px;
     left: 20px;
 
-    width: 42px;
+    width: 52px;
     height: 90px;
 
     padding: 0;
@@ -204,7 +234,31 @@ body {
 
     line-height: 1.5;
 }
+/* ------------2번 관심종목 위치조절-------------- */
+.signup-header02 {
+    width: 320px;
 
+    margin: 80px auto 35px;
+}
+
+.signup-header02 h2 {
+    margin: 0;
+
+    font-size: 32px;
+    line-height: 1.3;
+    font-weight: 700;
+
+    color: #222;
+}
+
+.signup-header02 p {
+    margin: 6px 0 0;
+
+    font-size: 15px;
+    color: #888;
+
+    line-height: 1.5;
+}
 
 /* ========================================
    ⭐ 입력창 제목
@@ -527,9 +581,118 @@ body {
 
 
 /* ========================================
-   ⭐ 2. 기본정보 입력 페이지
+   ⭐⭐ 2. 기본정보 입력 페이지⭐⭐
+   ======================================== */
+/* ========================================
+   ⭐ 프로필 이미지
    ======================================== */
 
+.profile-image-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+
+/* ⭐ 프로필 이미지 위치 영역 */
+
+.profile-image-wrapper {
+    position: relative;
+
+    width: 100px;
+    height: 100px;
+}
+
+
+/* ⭐ 프로필 이미지 */
+
+.profile-image {
+    width: 120px;
+    height: 120px;
+
+    border-radius: 50%;
+    object-fit: cover;
+
+    display: block;
+}
+
+/* ⭐ 마우스를 올렸을 때 */
+.nickname-check-btn:hover {
+    background-color: #006b05;
+}
+
+/* ⭐ 중복확인 결과 */
+
+.nickname-box > p:last-child {
+    margin-top: 8px;
+    margin-bottom: 0;
+
+    font-size: 13px;
+}
+
+/* ⭐ 프로필 이미지 삭제 버튼 */
+.profile-image-remove {
+    position: absolute;
+
+    top: -5px;
+    right: -40px;
+
+    width: 28px;
+    height: 28px;
+
+    border: none;
+    border-radius: 50%;
+
+    background-color: #ffffff;
+    color: #555555;
+
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 28px;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+
+/* ⭐ 프로필 사진 선택 영역 */
+
+.profile-image-input {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    transform: translateX(5px);
+
+    padding: 8px 12px;
+    border-radius: 14px;
+
+    background-color: #f3faf3;
+    border: 1px solid #c8e8c8;
+
+    box-shadow: 0 3px 8px rgba(0, 107, 5, 0.08);
+}
+
+/* ⭐ 버튼을 눌렀을 때 */
+
+.profile-image-input label:active {
+    transform: translateY(1px) scale(0.96);
+}
+
+/* ⭐ 실제 파일 선택 input 숨기기 */
+
+.profile-image-input input {
+    display: none;
+}
 
 /* ========================================
    ⭐ 이름 입력 영역
@@ -718,7 +881,7 @@ body {
    ======================================== */
 
 .sport-choice-box {
-    width: 320px;
+    width: 300px;
 
     margin: 30px auto 0;
 
@@ -765,8 +928,8 @@ body {
    ======================================== */
 
 .sport-choice-box img {
-    width: 85px;
-    height: 85px;
+    width: 90px;
+    height: 90px;
 
     object-fit: contain;
 }
@@ -796,7 +959,7 @@ body {
 
     margin: 12px auto 0;
 
-    text-align: right;
+    text-align: left;
 
     font-family: "Maplestory", sans-serif;
     font-size: 13px;

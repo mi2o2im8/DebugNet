@@ -2,6 +2,32 @@
     font-family: "Maplestory";
     src: url("../font/Maplestory-Light.ttf") format("truetype");
 }
+/* ========================================
+   ⭐ Home 클래스 목록
+
+   .Home-container       → Home 전체 화면 영역
+   .Home-top             → 상단 로고/제목 영역
+   .Home-title           → 로고 + 서비스 제목 영역
+   .Home-logo            → Home 로고 이미지
+   .Home-title h1        → 서비스 제목
+   .Home-subtitle        → 상단/하단 설명 문구
+
+   .Home-middle          → 중단 콘텐츠 전체 영역
+   .Home-image           → 중앙 이미지
+   .Home-text            → 이미지 아래 텍스트 영역
+   .Home-text h2         → 메인 안내 제목
+   .Home-text p          → 안내 설명
+
+   .Home-bottom          → 하단 영역
+   .Home-dots            → 페이지 이동 점 영역
+   .Home-dots button     → 페이지 이동 버튼
+   .Home-dots button.active
+                         → 현재 선택된 페이지 점
+
+   .home-foot            → 하단 설명 영역
+   .home-foot .Home-subtitle
+                         → 하단 설명 문구
+   ======================================== */
 
 /* ========================================
    ⭐ 전체 레이아웃 (Login과 100% 동일)

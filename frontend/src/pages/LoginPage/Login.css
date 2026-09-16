@@ -89,7 +89,7 @@
     justify-content: center;
 
     /* ⭐ 입력 영역은 기존보다 살짝 위로 */
-    padding-top: clamp(60px, 4vh, 50px);
+    padding-top: clamp(60px, 4vh, 70px);
 
     box-sizing: border-box;
 }

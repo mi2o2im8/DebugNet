@@ -51,9 +51,10 @@ function Signup() {
             <button
                 type="button"
                 className="Back-btn"
-                onClick={() => navigate("/signup/basic")}
+                onClick={() => navigate(-1)}
+                aria-label="뒤로가기"
             >
-                뒤로가기
+                <img src={backIcon} alt="뒤로가기" />
             </button>
             
             <h1>관심 있는 운동을</h1>
@@ -106,14 +107,14 @@ function Signup() {
                     테니스
                 </button>
 
-                <button
+                {/* <button ---
                     type="button"
                     className={signupData.sports.includes("기타")? "selected" : ""}
                     onClick={() => handleSport("기타")}
                 >
                     <img src={otherImg} alt="기타" />
                     기타
-                </button>
+                </button> */}
             </div>
 
             {/* ----선택 표시칸---- */}
