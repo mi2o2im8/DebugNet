@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { FiChevronLeft } from "react-icons/fi";
 import BasicInfoStep from "./BasicInfoStep";
 import ScheduleStep from "./ScheduleStep";
+import ConditionStep from "./ConditionStep";
+import IntroductionStep from "./IntroductionStep";
+import OperationStep from "./OperationStep";
+import CompletionStep from "./CompletionStep";
 
 import "./ClubCreate.css";
 
@@ -57,8 +61,38 @@ function ClubCreate() {
 
         activityPlace: "여의도 한강공원",
         activityPlaceDetail: "",
-        activityFrequency: "주 2회"
+        activityFrequency: "주 2회",
+
+        // 3단계
+        activityLevels: [
+            "입문 가능",
+            "초급 중심"
+        ],
+        joinTarget: "모두",
+        ageGroups: [
+            "20대",
+            "30대",
+            "50대"
+        ],
+        noAgeLimit: false,
+
+        // 4단계
+        introKeywords: [
+            "한강",
+            "초보자 환영",
+            "즐거운 분위기"
+        ],
+        clubDescription: "",
+        activityImages: [],
+
+        // 5단계
+        joinMethod: "approval",
+        maxMembers: "50",
+        joinQuestions: [],
+
     });
+
+    
 
     const handleFormChange = (field, value) => {
     setClubForm((previous) => ({
@@ -103,7 +137,7 @@ function ClubCreate() {
                         <FiChevronLeft />
                     </button>
 
-                    <h1>동호회 만들기</h1>
+                    <h1 className="club-create-header-title">동호회 만들기</h1>
 
                     <span
                         className="club-create-header-space"
@@ -142,23 +176,47 @@ function ClubCreate() {
                 {/* 각 페이지 내용 */}
                 <div className="club-create-content">
 
-                {currentStep === 1 && (
-                    <BasicInfoStep
-                        formData={clubForm}
-                        onChange={handleFormChange}
-                    />
-                )}
+                    {currentStep === 1 && (
+                        <BasicInfoStep
+                            formData={clubForm}
+                            onChange={handleFormChange}
+                        />
+                    )}
 
-                {currentStep === 2 && (
-                    <ScheduleStep
-                        formData={clubForm}
-                        onChange={handleFormChange}
-                    />
-                )}
+                    {currentStep === 2 && (
+                        <ScheduleStep
+                            formData={clubForm}
+                            onChange={handleFormChange}
+                        />
+                    )}
 
-                {currentStep > 2 && (
-                    <p>{currentStep}단계 화면</p>
-                )}
+                    {currentStep === 3 && (
+                        <ConditionStep
+                            formData={clubForm}
+                            onChange={handleFormChange}
+                        />
+                    )}
+
+                    {currentStep === 4 && (
+                        <IntroductionStep
+                            formData={clubForm}
+                            onChange={handleFormChange}
+                        />
+                    )}
+
+                    {currentStep === 5 && (
+                        <OperationStep
+                            formData={clubForm}
+                            onChange={handleFormChange}
+                        />
+                    )}
+
+                    {currentStep === 6 && (
+                        <CompletionStep
+                            formData={clubForm}
+                            onRestart={() => setCurrentStep(1)}
+                        />
+                    )}
                 </div>
 
                 {/* 하단 이전/다음 버튼 */}
@@ -180,7 +238,7 @@ function ClubCreate() {
                             className="club-create-button next"
                             onClick={handleNext}
                         >
-                            다음
+                            {currentStep === 5 ? "동호회 개설하기" : "다음"}
                         </button>
                     )}
 
