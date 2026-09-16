@@ -51,6 +51,8 @@
    .gender-title            → 성별 제목
    .gender-box              → 성별 선택 영역
    .selected                → 선택된 상태
+   ---------++ 09 16 11:16  추가
+   nickname-check-btn -> 중복 확인 버튼
    ======================================== */
 
 
@@ -154,6 +156,8 @@ body {
     display: flex;
     justify-content: center;
 }
+
+
 /* ========================================
    ⭐ 회원가입 전체 영역
    ======================================== */
@@ -230,11 +234,14 @@ body {
     margin: 6px 0 0;
 
     font-size: 15px;
-    color: #888;
+    color: #777;
 
     line-height: 1.5;
 }
+
+
 /* ------------2번 관심종목 위치조절-------------- */
+
 .signup-header02 {
     width: 320px;
 
@@ -255,10 +262,11 @@ body {
     margin: 6px 0 0;
 
     font-size: 15px;
-    color: #888;
+    color: #777;
 
     line-height: 1.5;
 }
+
 
 /* ========================================
    ⭐ 입력창 제목
@@ -320,7 +328,7 @@ body {
 }
 
 .login-input:focus {
-    border-color: #4CAF50;
+    border-color: #01A17F;
 }
 
 .login-input::placeholder {
@@ -346,17 +354,29 @@ body {
 
     flex-shrink: 0;
 
-    border: 1px solid #4CAF50;
+    border: 1px solid #01A17F;
     border-radius: 10px;
 
     background-color: #fff;
-    color: #4CAF50;
+    color: #01A17F;
 
     font-family: "Maplestory", sans-serif;
     font-size: 14px;
     font-weight: 600;
 
     cursor: pointer;
+
+    transition: transform 0.1s ease, background-color 0.1s ease;
+}
+
+
+/* ⭐ 이메일 중복확인 버튼을 누르는 순간 */
+
+.email-check-btn:active {
+    background-color: #008A6D;
+    color: #fff;
+
+    transform: scale(0.97);
 }
 
 
@@ -375,13 +395,8 @@ body {
 }
 
 .email-check-success {
-    color: #4CAF50;
+    color: #008A6D;
 }
-
-.email-check-error {
-    color: #e05252;
-}
-
 
 /* ========================================
    ⭐ 비밀번호 입력 영역
@@ -394,6 +409,7 @@ body {
 
     margin: 0 auto;
 }
+
 .password-box .email-label {
     width: 320px;
 
@@ -402,6 +418,7 @@ body {
 
     text-align: left;
 }
+
 
 /* ========================================
    ⭐ 비밀번호 입력창
@@ -431,7 +448,7 @@ body {
 }
 
 .pw-input:focus {
-    border-color: #4CAF50;
+    border-color: #01A17F;
 }
 
 .pw-input::placeholder {
@@ -466,24 +483,30 @@ body {
     z-index: 2;
 }
 
+
 /* ========================================
    ⭐ 비밀번호 조건 안내
    ======================================== */
 
 .password-guide {
     width: 320px;
+
     margin: 15px auto 0;
 }
 
 .password-guide p {
     margin: 10px 0;
+
     font-size: 15px;
-    color: #ff735ab6;
+
+    color: #999;
+
     line-height: 1.7;
 }
 
 .password-guide span {
     display: inline-block;
+
     width: 20px;
 }
 
@@ -491,7 +514,7 @@ body {
 /* 조건 충족 */
 
 .password-guide p.valid {
-    color: #86da00;
+    color: #01A17F;
 }
 
 .password-guide p.valid span {
@@ -504,22 +527,17 @@ body {
    ======================================== */
 
 .Next-btn {
-    position: fixed;
+    display: block;
 
-    left: 50%;
-    bottom: 30px;
-
-    transform: translateX(-50%);
-
-    width: 100%;
+    width: 320px;
     height: clamp(55px, 7vw, 60px);
 
-    margin: 0;
+    margin: 80px auto 30px;
 
     border: none;
     border-radius: 10px;
 
-    background-color: #4CAF50;
+    background-color: #01A17F;
     color: #fff;
 
     font-family: "Maplestory", sans-serif;
@@ -528,7 +546,13 @@ body {
 
     cursor: pointer;
 
-    z-index: 1000;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.Next-btn:active {
+    background-color: #008A6D;
+
+    transform: scale(0.98);
 }
 
 
@@ -572,6 +596,14 @@ body {
         left: 15px;
         top: 15px;
     }
+
+    .Back-btn:active {
+        transform: scale(0.92);
+    }
+
+    .Back-btn:active img {
+        opacity: 0.7;
+    }
 }
 
 
@@ -583,6 +615,8 @@ body {
 /* ========================================
    ⭐⭐ 2. 기본정보 입력 페이지⭐⭐
    ======================================== */
+
+
 /* ========================================
    ⭐ 프로필 이미지
    ======================================== */
@@ -617,10 +651,65 @@ body {
     display: block;
 }
 
-/* ⭐ 마우스를 올렸을 때 */
-.nickname-check-btn:hover {
-    background-color: #006b05;
+
+/* ⭐ 닉네임 중복확인 버튼 */
+
+.nickname-check-btn {
+    width: 82px;
+    height: 50px;
+
+    flex-shrink: 0;
+
+    border: 1px solid #01A17F;
+    border-radius: 10px;
+
+    background-color: #fff;
+    color: #01A17F;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: transform 0.1s ease, background-color 0.1s ease;
 }
+
+
+/* ⭐ 버튼을 실제로 누르는 순간 */
+
+.nickname-check-btn:active {
+    background-color: #008A6D;
+    color: #fff;
+
+    transform: scale(0.97);
+}
+
+
+/* ========================================
+   ⭐ 닉네임 입력 + 중복확인
+   ======================================== */
+
+.nickname-check-wrapper {
+    width: 320px;
+
+    margin: 0 auto;
+
+    display: flex;
+    gap: 8px;
+}
+
+
+/* 닉네임 입력창 */
+
+.nickname-check-wrapper .login-input {
+    flex: 1;
+    width: auto;
+}
+
+
+/* 닉네임 중복확인 버튼 */
+
 
 /* ⭐ 중복확인 결과 */
 
@@ -631,7 +720,32 @@ body {
     font-size: 13px;
 }
 
+
+/* ⭐ 닉네임 중복확인 결과 문구 */
+
+.nickname-check-message {
+    width: 320px;
+
+    margin: 8px auto 0;
+
+    font-family: "Maplestory", sans-serif;
+
+    font-size: 14px;
+
+    font-weight: 500;
+}
+
+.nickname-check-message.success {
+    color: #01A17F;
+}
+
+.nickname-check-message.error {
+    color: #D9534F;
+}
+
+
 /* ⭐ 프로필 이미지 삭제 버튼 */
+
 .profile-image-remove {
     position: absolute;
 
@@ -669,18 +783,22 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+
     gap: 8px;
 
     transform: translateX(5px);
 
     padding: 8px 12px;
+
     border-radius: 14px;
 
-    background-color: #f3faf3;
-    border: 1px solid #c8e8c8;
+    background-color: #F4FBF9;
 
-    box-shadow: 0 3px 8px rgba(0, 107, 5, 0.08);
+    border: 1px solid #CDEBE4;
+
+    box-shadow: 0 3px 8px rgba(1, 161, 127, 0.08);
 }
+
 
 /* ⭐ 버튼을 눌렀을 때 */
 
@@ -688,11 +806,13 @@ body {
     transform: translateY(1px) scale(0.96);
 }
 
+
 /* ⭐ 실제 파일 선택 input 숨기기 */
 
 .profile-image-input input {
     display: none;
 }
+
 
 /* ========================================
    ⭐ 이름 입력 영역
@@ -702,6 +822,8 @@ body {
     width: 320px;
 
     margin: 0 auto;
+
+    text-align: left;
 }
 
 .name-label {
@@ -730,6 +852,8 @@ body {
     font-size: 14px;
     font-weight: 600;
 
+    text-align: left;
+
     color: #333;
 }
 
@@ -754,23 +878,25 @@ body {
 }
 
 
-/* DatePicker */
+/* ========================================
+   ⭐ 생년월일 선택창
+   ======================================== */
 
-.birth-box .react-datepicker-wrapper {
-    display: block;
+.birth-box > div {
+    display: flex;
+
+    gap: 8px;
 
     width: 100%;
 }
 
-.birth-box .react-datepicker__input-container {
-    width: 100%;
-}
 
-.birth-box input {
-    width: 320px;
+/* ⭐ 년 / 월 / 일 선택창 */
+
+.birth-box select {
     height: 50px;
 
-    padding: 0 15px;
+    padding: 0 12px;
 
     box-sizing: border-box;
 
@@ -780,13 +906,32 @@ body {
     background-color: #fff;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 16px;
+
+    font-size: 15px;
+
+    color: #555;
 
     outline: none;
+
+    cursor: pointer;
+
+    flex: 1;
+
+    width: 0;
 }
 
-.birth-box input:focus {
-    border-color: #4CAF50;
+
+/* ⭐ 선택창을 클릭했을 때 */
+
+.birth-box select:focus {
+    border-color: #01A17F;
+}
+
+
+/* ⭐ 선택창에 마우스를 올렸을 때 */
+
+.birth-box select:hover {
+    border-color: #01A17F;
 }
 
 
@@ -814,6 +959,7 @@ body {
     margin: 0 auto;
 
     display: flex;
+
     gap: 8px;
 }
 
@@ -832,6 +978,7 @@ body {
     color: #555;
 
     font-family: "Maplestory", sans-serif;
+
     font-size: 15px;
 
     cursor: pointer;
@@ -841,11 +988,11 @@ body {
 /* 선택된 성별 */
 
 .gender-box button.selected {
-    border: 2px solid #4CAF50;
+    border: 2px solid #01A17F;
 
-    background-color: #f3faf3;
+    background-color: #E8F6F2;
 
-    color: #4CAF50;
+    color: #01A17F;
 
     font-weight: 600;
 }
@@ -865,8 +1012,20 @@ body {
         width: calc(100% - 40px);
     }
 
-    .birth-box input {
+    /* ⭐ 닉네임 중복확인 영역 */
+
+    .nickname-check-wrapper {
         width: 100%;
+    }
+
+    /* ⭐ 생년월일 선택창 */
+
+    .birth-box select {
+        height: 50px;
+
+        padding: 0 10px;
+
+        font-size: 14px;
     }
 }
 
@@ -907,6 +1066,7 @@ body {
     background-color: #fff;
 
     display: flex;
+
     flex-direction: column;
 
     align-items: center;
@@ -915,6 +1075,7 @@ body {
     gap: 5px;
 
     font-family: "Maplestory", sans-serif;
+
     font-size: 14px;
 
     color: #333;
@@ -940,11 +1101,11 @@ body {
    ======================================== */
 
 .sport-choice-box button.selected {
-    border: 2px solid #4CAF50;
+    border: 2px solid #01A17F;
 
-    background-color: #f3faf3;
+    background-color: #E8F6F2;
 
-    color: #4CAF50;
+    color: #01A17F;
 
     font-weight: 600;
 }
@@ -962,6 +1123,7 @@ body {
     text-align: left;
 
     font-family: "Maplestory", sans-serif;
+
     font-size: 13px;
 
     color: #666;
@@ -1020,6 +1182,7 @@ body {
     margin: 0 auto;
 
     font-size: 28px;
+
     line-height: 1.3;
 
     font-weight: 700;
@@ -1041,7 +1204,7 @@ body {
 
     font-size: 14px;
 
-    color: #888;
+    color: #777;
 }
 
 
@@ -1062,6 +1225,7 @@ body {
     margin: 0 0 10px;
 
     font-size: 18px;
+
     font-weight: 600;
 
     color: #333;
@@ -1093,6 +1257,7 @@ body {
     padding: 10px 15px;
 
     border: 1px solid #ddd;
+
     border-radius: 10px;
 
     background-color: #fff;
@@ -1143,15 +1308,15 @@ body {
    ======================================== */
 
 .level-box button.selected {
-    border: 2px solid #4CAF50;
+    border: 2px solid #01A17F;
 
-    background-color: #f3faf3;
+    background-color: #E8F6F2;
 }
 
 .level-box button.selected .check-box {
-    border-color: #4CAF50;
+    border-color: #01A17F;
 
-    background-color: #4CAF50;
+    background-color: #01A17F;
 }
 
 
@@ -1170,7 +1335,7 @@ body {
 }
 
 .level-box button.selected strong {
-    color: #4CAF50;
+    color: #01A17F;
 }
 
 .level-box p {
@@ -1272,6 +1437,7 @@ body {
     margin: 0 0 8px;
 
     font-size: 14px;
+
     font-weight: 600;
 
     color: #333;
@@ -1286,11 +1452,13 @@ body {
     box-sizing: border-box;
 
     border: 1px solid #ddd;
+
     border-radius: 10px;
 
     background-color: #fff;
 
     font-family: "Maplestory", sans-serif;
+
     font-size: 16px;
 
     color: #333;
@@ -1301,7 +1469,7 @@ body {
 }
 
 .location-select select:focus {
-    border-color: #4CAF50;
+    border-color: #01A17F;
 }
 
 
@@ -1319,6 +1487,7 @@ body {
     margin: 0 0 10px;
 
     font-size: 14px;
+
     font-weight: 600;
 
     color: #333;
@@ -1341,13 +1510,13 @@ body {
 .selected-location-item {
     padding: 8px 12px;
 
-    border: 1px solid #4CAF50;
+    border: 1px solid #01A17F;
 
     border-radius: 20px;
 
-    background-color: #f3faf3;
+    background-color: #E8F6F2;
 
-    color: #4CAF50;
+    color: #01A17F;
 
     font-family: "Maplestory", sans-serif;
 
@@ -1362,7 +1531,7 @@ body {
 .location-remove {
     margin-left: 4px;
 
-    color: #4CAF50;
+    color: #01A17F;
 
     font-weight: bold;
 }
@@ -1389,7 +1558,7 @@ body {
 
     border-radius: 10px;
 
-    background-color: #f8f8f8;
+    background-color: #F7F7F7;
 }
 
 .location-icon {
@@ -1421,6 +1590,7 @@ body {
     margin: 0 0 10px;
 
     font-size: 14px;
+
     font-weight: 600;
 
     color: #333;
@@ -1447,6 +1617,7 @@ body {
     padding: 0 15px;
 
     border: 1px solid #ddd;
+
     border-radius: 10px;
 
     background-color: #fff;
@@ -1470,11 +1641,11 @@ body {
 /* 선택된 거리 */
 
 .distance-list button.selected {
-    border: 2px solid #4CAF50;
+    border: 2px solid #01A17F;
 
-    background-color: #f3faf3;
+    background-color: #E8F6F2;
 
-    color: #4CAF50;
+    color: #01A17F;
 
     font-weight: 600;
 }
@@ -1542,6 +1713,7 @@ body {
     margin: 8px auto 25px;
 
     font-size: 13px;
+
     font-weight: 400;
 
     color: #888;
@@ -1560,13 +1732,13 @@ body {
     width: 100%;
     height: 50px;
 
-    border: 1px dashed #ccc;
+    border: 1px dashed #B8DCD4;
 
     border-radius: 10px;
 
     background-color: #fff;
 
-    color: #4CAF50;
+    color: #01A17F;
 
     font-family: "Maplestory", sans-serif;
 
@@ -1591,7 +1763,7 @@ body {
 
     border-radius: 10px;
 
-    background-color: #fafafa;
+    background-color: #FAFAFA;
 }
 
 
@@ -1618,7 +1790,7 @@ body {
 }
 
 .time-select:focus {
-    border-color: #4CAF50;
+    border-color: #01A17F;
 }
 
 
@@ -1634,7 +1806,7 @@ body {
 
     border-radius: 8px;
 
-    background-color: #4CAF50;
+    background-color: #01A17F;
 
     color: #fff;
 
@@ -1643,6 +1815,12 @@ body {
     font-size: 14px;
 
     cursor: pointer;
+
+    transition: background-color 0.15s ease;
+}
+
+.time-confirm-btn:active {
+    background-color: #008A6D;
 }
 
 
@@ -1798,7 +1976,7 @@ body {
     width: 16px;
     height: 16px;
 
-    accent-color: #4CAF50;
+    accent-color: #01A17F;
 
     cursor: pointer;
 }
@@ -1807,11 +1985,11 @@ body {
 /* 선택된 항목 */
 
 .frequency-option:has(input:checked) {
-    border: 2px solid #4CAF50;
+    border: 2px solid #01A17F;
 
-    background-color: #f3faf3;
+    background-color: #E8F6F2;
 
-    color: #4CAF50;
+    color: #01A17F;
 
     font-weight: 600;
 }
@@ -1914,7 +2092,7 @@ body {
 
     margin: 0 10px 0 0;
 
-    accent-color: #4CAF50;
+    accent-color: #01A17F;
 
     cursor: pointer;
 }
@@ -1923,11 +2101,11 @@ body {
 /* 선택된 항목 */
 
 .club-preference-option:has(input:checked) {
-    border: 2px solid #4CAF50;
+    border: 2px solid #01A17F;
 
-    background-color: #f3faf3;
+    background-color: #E8F6F2;
 
-    color: #4CAF50;
+    color: #01A17F;
 
     font-weight: 600;
 }

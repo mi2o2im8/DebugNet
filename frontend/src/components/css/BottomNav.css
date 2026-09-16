@@ -1,0 +1,85 @@
+/* ========================================
+   PlayBridge 하단 네비게이션
+======================================== */
+
+.bottom-nav {
+  position: fixed;
+
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 100%;
+  max-width: 430px;
+
+  height: 68px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+
+  background-color: #ffffff;
+
+  border-top: 1px solid #e8e8e8;
+
+  z-index: 1000;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   하단 메뉴 각각
+======================================== */
+
+.bottom-nav-item {
+  flex: 1;
+
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  align-items: center;
+
+  gap: 4px;
+
+  color: #9a9a9a;
+
+  text-decoration: none;
+
+  font-size: 11px;
+  font-weight: 500;
+
+  transition: 0.15s;
+}
+
+
+/* ========================================
+   아이콘
+======================================== */
+
+.bottom-nav-icon {
+  width: 22px;
+  height: 22px;
+}
+
+
+/* ========================================
+   현재 선택된 메뉴
+======================================== */
+
+.bottom-nav-item.active {
+  color: #20b26b;
+  font-weight: 600;
+}
+
+
+/* ========================================
+   클릭 효과
+======================================== */
+
+.bottom-nav-item:active {
+  transform: scale(0.95);
+}

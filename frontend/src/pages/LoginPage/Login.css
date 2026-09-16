@@ -4,6 +4,37 @@
 }
 
 /* ========================================
+   ⭐ Login 클래스 목록
+
+   .Login-container       → 로그인 전체 화면 영역
+   .Login-top             → 상단 로고/제목 영역
+   .logo-title            → 로고 + 서비스 제목 영역
+   .Home-logo             → 서비스 로고 이미지
+   .logo-title h1         → 서비스 제목
+   .Home-subtitle         → 서비스 설명 문구
+
+   .Login-middle          → 로그인 폼 전체 영역
+   .login-form            → 로그인 폼
+   .input-group           → 입력창 한 개의 전체 영역
+   .input-label           → 입력창 제목/라벨
+   .label-row             → 라벨 + 비밀번호 찾기 영역
+   .pw-find-link          → 비밀번호 찾기 링크
+
+   .login-input           → 이메일 입력창
+   .pw-input              → 비밀번호 입력창
+   .password-input-wrapper
+                           → 비밀번호 입력 + 눈 버튼 영역
+   .password-eye          → 비밀번호 보기/숨기기 버튼
+   .password-eye svg      → 눈 아이콘
+
+   .login-btn             → 로그인 버튼
+
+   .Login-bottom          → 하단 회원가입 영역
+   .signup-text           → 회원가입 안내 문구
+   .signup-text a         → 회원가입 링크
+   ======================================== */
+
+/* ========================================
    ⭐ 전체 레이아웃
    ======================================== */
 
@@ -179,7 +210,7 @@
 
 .login-input:focus,
 .pw-input:focus {
-    border-color: #008006;
+    border-color: #008A6D;
 }
 
 /* 비밀번호 + 눈 버튼 위치 */
@@ -238,7 +269,7 @@
     margin-top: clamp(4px, 1vh, 10px);
     border: none;
     border-radius: 10px;
-    background-color: #4CAF50;
+    background-color: #008A6D;
     color: #fff;
     font-family: "Maplestory", sans-serif;
 
@@ -250,12 +281,13 @@
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-.login-btn:hover {
+/* .login-btn:hover {
     background-color: #86da00;
-}
-
+} */
 .login-btn:active {
-    transform: translateY(1px);
+    transform: scale(0.98);
+    color: #008A6D;
+    background-color:  #ffffff;
 }
 
 /* ========================================
@@ -286,7 +318,7 @@
 
 .signup-text a {
     margin-left: 7px;
-    color: #008006;
+    color: #008A6D;
     font-weight: bold;
     text-decoration: none;
 }
