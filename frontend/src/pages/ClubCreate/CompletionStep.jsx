@@ -13,6 +13,7 @@ import basketballIcon from "../../assets/img/sports/basketball.png";
 import volleyballIcon from "../../assets/img/sports/volleyball-ball.png";
 import pingPongIcon from "../../assets/img/sports/ping-pong.png";
 import tennisIcon from "../../assets/img/sports/tennis-ball.png";
+import { useNavigate } from "react-router-dom";
 
 const SPORT_ICONS = {
     "축구/풋살": footballIcon,
@@ -43,7 +44,9 @@ const NEXT_ACTIONS = [
     }
 ];
 
-function CompletionStep({ formData, onRestart }) {
+function CompletionStep({ formData, clubID, onRestart }) {
+    const navigate = useNavigate();
+
     const sportIcon = SPORT_ICONS[formData.sport];
 
     const coverImage =
@@ -64,9 +67,14 @@ function CompletionStep({ formData, onRestart }) {
     };
 
     const handleGoHome = () => {
-        alert(
-            "동호회 홈 화면은 이후 라우터 작업에서 연결할 예정입니다."
-        );
+        if (!clubId) {
+            alert(
+                "생성된 동호회 번호를 확인할 수 없습니다."
+            );
+            return;
+        }
+
+        navigate(`/clubs/${clubId}/manage`);
     };
 
     return (

@@ -185,3 +185,12 @@ export const createClub = async (formData) => {
         throw error;
     }
 };
+
+export async function getClubDashboard(clubId) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/dashboard`,
+        {
+            method: "GET"
+        }
+    );
+}

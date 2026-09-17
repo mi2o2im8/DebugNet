@@ -238,3 +238,198 @@ class ClubRepository:
             "club_id",
             club_id,
         ).execute()
+
+    # -----------------------------------------------------
+    # 동호회 허브 기본 정보 조회
+    # -----------------------------------------------------
+    def find_club_by_id(
+        self,
+        club_id: int,
+    ) -> dict | None:
+        response = (
+            self.admin_client
+            .table("clubs")
+            .select(
+                (
+                    "club_id, club_name, club_intro, "
+                    "max_members, activity_frequency, status"
+                )
+            )
+            .eq("club_id", club_id)
+            .eq("status", True)
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 로그인 사용자의 동호회 권한 조회
+    # -----------------------------------------------------
+    def find_active_membership(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> dict | None:
+        response = (
+            self.admin_client
+            .table("club_members")
+            .select("role, status")
+            .eq("club_id", club_id)
+            .eq("user_id", user_id)
+            .eq("status", "active")
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 동호회 종목명 조회
+    # -----------------------------------------------------
+    def find_club_sport_name(
+        self,
+        club_id: int,
+    ) -> str | None:
+        club_sport_response = (
+            self.admin_client
+            .table("club_sports")
+            .select("sport_id")
+            .eq("club_id", club_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not club_sport_response.data:
+            return None
+
+        sport_id = club_sport_response.data[0]["sport_id"]
+
+        sport_response = (
+            self.admin_client
+            .table("sports")
+            .select("sport_name")
+            .eq("sport_id", sport_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not sport_response.data:
+            return None
+
+        return sport_response.data[0]["sport_name"]
+
+    # -----------------------------------------------------
+    # 동호회 대표 지역 조회
+    # -----------------------------------------------------
+    def find_club_region(
+        self,
+        club_id: int,
+    ) -> str | None:
+        response = (
+            self.admin_client
+            .table("club_regions")
+            .select("region")
+            .eq("club_id", club_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]["region"]
+
+    # -----------------------------------------------------
+    # 동호회 활동 장소 조회
+    # -----------------------------------------------------
+    def find_club_venue(
+        self,
+        club_id: int,
+    ) -> str | None:
+        response = (
+            self.admin_client
+            .table("club_venues")
+            .select("venue_name")
+            .eq("club_id", club_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]["venue_name"]
+
+    # -----------------------------------------------------
+    # 동호회 이미지 조회
+    # -----------------------------------------------------
+    def find_club_images(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+        response = (
+            self.admin_client
+            .table("club_images")
+            .select(
+                "image_url, image_type, display_order"
+            )
+            .eq("club_id", club_id)
+            .order("display_order")
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 동호회 정기 일정 조회
+    # -----------------------------------------------------
+    def find_club_schedules(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+        response = (
+            self.admin_client
+            .table("club_schedules")
+            .select(
+                (
+                    "club_schedule_id, day_of_week, "
+                    "start_time, end_time"
+                )
+            )
+            .eq("club_id", club_id)
+            .order("club_schedule_id")
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 활동 중인 회원 수 조회
+    # -----------------------------------------------------
+    def count_active_members(
+        self,
+        club_id: int,
+    ) -> int:
+        response = (
+            self.admin_client
+            .table("club_members")
+            .select(
+                "club_member_id",
+                count="exact",
+            )
+            .eq("club_id", club_id)
+            .eq("status", "active")
+            .execute()
+        )
+
+        if response.count is not None:
+            return response.count
+
+        return len(response.data or [])

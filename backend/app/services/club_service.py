@@ -4,6 +4,7 @@ from app.repositories.club_repository import (
 from app.schemas.clubs import (
     ClubCreateRequest,
     ClubCreateResponse,
+    ClubDashboardResponse,
 )
 
 
@@ -371,4 +372,97 @@ class ClubService:
             club_id=club_id,
             owner_id=owner_id,
             message="동호회가 생성되었습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 운영진 동호회 허브 조회
+    # -----------------------------------------------------
+    def get_dashboard(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> ClubDashboardResponse:
+        club = self.club_repository.find_club_by_id(
+            club_id
+        )
+
+        if club is None:
+            raise LookupError(
+                "존재하지 않거나 비활성화된 동호회입니다."
+            )
+
+        membership = (
+            self.club_repository.find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is None:
+            raise PermissionError(
+                "이 동호회의 운영 권한이 없습니다."
+            )
+
+        user_role = membership["role"]
+
+        if user_role not in {
+            "owner",
+            "manager",
+        }:
+            raise PermissionError(
+                "동호회장 또는 운영진만 접근할 수 있습니다."
+            )
+
+        images = self.club_repository.find_club_images(
+            club_id
+        )
+
+        representative_image_url = next(
+            (
+                image["image_url"]
+                for image in images
+                if image["image_type"] == "representative"
+            ),
+            None,
+        )
+
+        activity_image_urls = [
+            image["image_url"]
+            for image in images
+            if image["image_type"] == "activity"
+        ]
+
+        return ClubDashboardResponse(
+            club_id=club["club_id"],
+            club_name=club["club_name"],
+            club_intro=club.get("club_intro"),
+            sport_name=(
+                self.club_repository
+                .find_club_sport_name(club_id)
+            ),
+            region=(
+                self.club_repository
+                .find_club_region(club_id)
+            ),
+            venue_name=(
+                self.club_repository
+                .find_club_venue(club_id)
+            ),
+            representative_image_url=(
+                representative_image_url
+            ),
+            activity_image_urls=activity_image_urls,
+            current_members=(
+                self.club_repository
+                .count_active_members(club_id)
+            ),
+            max_members=club.get("max_members"),
+            activity_frequency=club.get(
+                "activity_frequency"
+            ),
+            user_role=user_role,
+            schedules=(
+                self.club_repository
+                .find_club_schedules(club_id)
+            ),
         )

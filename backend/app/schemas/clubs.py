@@ -353,3 +353,35 @@ class ClubCreateResponse(BaseModel):
     club_id: int
     owner_id: str
     message: str
+
+
+class ClubDashboardSchedule(BaseModel):
+    club_schedule_id: int
+    day_of_week: str
+    start_time: time
+    end_time: time
+
+
+class ClubDashboardResponse(BaseModel):
+    club_id: int
+    club_name: str
+    club_intro: str | None = None
+
+    sport_name: str | None = None
+    region: str | None = None
+    venue_name: str | None = None
+
+    representative_image_url: str | None = None
+    activity_image_urls: list[str] = Field(
+        default_factory=list
+    )
+
+    current_members: int = 0
+    max_members: int | None = None
+    activity_frequency: str | None = None
+
+    user_role: str
+
+    schedules: list[ClubDashboardSchedule] = Field(
+        default_factory=list
+    )

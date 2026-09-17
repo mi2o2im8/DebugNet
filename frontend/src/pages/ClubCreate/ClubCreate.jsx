@@ -250,7 +250,7 @@ function ClubCreate() {
                     {currentStep === 6 && (
                         <CompletionStep
                             formData={clubForm}
-                            createResult={createResult}
+                            clubId={createResult?.club_id}
                             onRestart={() => setCurrentStep(1)}
                         />
                     )}
