@@ -1,13 +1,6 @@
 from typing import Optional
-from app.repositories.club_repository import ClubRepository
 
-# ---------------------------------------------------------
-# 동호회 관련 비즈니스 로직을 담당하는 Service
-# ---------------------------------------------------------
-class ClubService:
-from app.repositories.club_repository import (
-    ClubRepository,
-)
+from app.repositories.club_repository import ClubRepository
 from app.schemas.clubs import (
     ClubCreateRequest,
     ClubCreateResponse,
@@ -15,6 +8,9 @@ from app.schemas.clubs import (
 )
 
 
+# ---------------------------------------------------------
+# 동호회 관련 비즈니스 로직을 담당하는 Service
+# ---------------------------------------------------------
 class ClubService:
 
     def __init__(self):
@@ -24,12 +20,12 @@ class ClubService:
     # 동호회 검색
     # -----------------------------------------------------
     def search_clubs(
-            self,
-            keyword: Optional[str] = None,
-            sport_name: Optional[str] = None,
-            region: Optional[str] = None,
-            day_of_week: Optional[str] = None,
-            atmosphere: Optional[str] = None,
+        self,
+        keyword: Optional[str] = None,
+        sport_name: Optional[str] = None,
+        region: Optional[str] = None,
+        day_of_week: Optional[str] = None,
+        atmosphere: Optional[str] = None,
     ):
         return self.club_repository.search_clubs(
             keyword=keyword,
@@ -38,7 +34,7 @@ class ClubService:
             day_of_week=day_of_week,
             atmosphere=atmosphere,
         )
-    
+
     # -----------------------------------------------------
     # 동호회 상세 조회
     # -----------------------------------------------------
@@ -94,6 +90,9 @@ class ClubService:
             user_id=user_id,
             application_message=application_message,
             answers=answers,
+        )
+
+    # -----------------------------------------------------
     # 프론트 가입 대상값을 DB 코드로 변환
     # -----------------------------------------------------
     @staticmethod
