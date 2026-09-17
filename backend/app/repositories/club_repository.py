@@ -216,7 +216,7 @@ class ClubRepository:
             .table("club_members")
             .select("status")
             .eq("club_id", club_id)
-            .eq("user_id", user_id)
+            .eq("user_id", user_id))
 from app.core.supabase import (
     get_supabase_admin_client,
 )
