@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { FiBell } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
-import communityPosts from "./JS/communityPosts";
+import { supabase } from "../../../supabaseClient";
 import "./CSS/Community.css";
 
 const boards = [
@@ -12,6 +12,39 @@ const boards = [
   { id: "recruit", name: "홍보·회원구인" },
   { id: "notice", name: "공지사항" },
 ];
+
+const formatDateTime = (dateString) => {
+  if (!dateString) {
+    return "";
+  }
+
+  const date = new Date(dateString);
+
+  const year =
+    date.getFullYear();
+
+  const month =
+    String(
+      date.getMonth() + 1
+    ).padStart(2, "0");
+
+  const day =
+    String(
+      date.getDate()
+    ).padStart(2, "0");
+
+  const hours =
+    String(
+      date.getHours()
+    ).padStart(2, "0");
+
+  const minutes =
+    String(
+      date.getMinutes()
+    ).padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
 
 const POSTS_PER_PAGE = 10;
 
@@ -23,6 +56,15 @@ function Community() {
 
   // 정렬
   const [sortType, setSortType] = useState("latest");
+
+  // 종목별게시판에서 선택한 종목
+  // null = 전체 종목
+  const [selectedSportId, setSelectedSportId] =
+    useState(null);
+
+  // 실제 종목 목록
+  const [sports, setSports] =
+    useState([]);
 
   // 검색할 게시판
   const [searchBoard, setSearchBoard] = useState("free");
@@ -39,14 +81,186 @@ function Community() {
   // 현재 페이지
   const [currentPage, setCurrentPage] = useState(1);
 
-  // 백엔드 권한 API 연결 전에는 제한 게시판 작성 권한을 잠금 처리
-  // 이후 관리자 여부 / 운영진 동호회 보유 여부 API 결과로 교체
-  const canWriteNotice = false;
-  const canWriteRecruit = false;
+  // 백엔드에서 받아온 게시글
+  const [posts, setPosts] = useState([]);
 
+  // 백엔드에서 받아온 전체 페이지 수
+  const [totalPages, setTotalPages] = useState(0);
+
+  // 목록 로딩 여부
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 목록 조회 오류
+  const [listError, setListError] = useState("");
+
+
+  // =========================
+  // 종목 목록 불러오기
+  // =========================
   useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedBoard, sortType, searchKeyword, searchType]);
+    const fetchSports = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          return;
+        }
+
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/posts/write-options",
+          {
+            headers: {
+              Authorization:
+                `Bearer ${session.access_token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "종목 목록을 불러오지 못했습니다."
+          );
+        }
+
+        const data =
+          await response.json();
+
+        setSports(
+          data.sports || []
+        );
+
+      } catch (error) {
+        console.error(
+          "종목 목록 조회 오류:",
+          error
+        );
+      }
+    };
+
+    fetchSports();
+
+  }, []);
+
+
+  // =========================
+  // 게시글 목록 API 조회
+  // =========================
+  useEffect(() => {
+    const fetchPosts = async () => {
+      setIsLoading(true);
+      setListError("");
+
+      try {
+        // 현재 로그인 세션 가져오기
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          navigate("/Login", {
+            replace: true,
+          });
+
+          return;
+        }
+
+        // GET /api/posts Query 생성
+        const params = new URLSearchParams({
+          board_type: selectedBoard,
+          page: String(currentPage),
+          size: String(POSTS_PER_PAGE),
+          sort: sortType,
+        });
+
+        // 종목별게시판에서 특정 종목을 선택했을 때만
+        if (
+          selectedBoard === "sports" &&
+          selectedSportId
+        ) {
+          params.set(
+            "sport_id",
+            String(selectedSportId)
+          );
+        }
+
+        // 검색 중일 때만 검색 조건 추가
+        if (searchKeyword) {
+          params.set(
+            "search_type",
+            searchType
+          );
+
+          params.set(
+            "keyword",
+            searchKeyword
+          );
+        }
+
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/posts?${params.toString()}`,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${session.access_token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorData =
+            await response
+              .json()
+              .catch(() => null);
+
+          throw new Error(
+            errorData?.detail ||
+              "게시글 목록을 불러오지 못했습니다."
+          );
+        }
+
+        const data =
+          await response.json();
+
+        setPosts(
+          data.items || []
+        );
+
+        setTotalPages(
+          data.totalPages || 0
+        );
+
+      } catch (error) {
+        console.error(
+          "게시글 목록 조회 오류:",
+          error
+        );
+
+        setPosts([]);
+        setTotalPages(0);
+
+        setListError(
+          error.message ||
+            "게시글 목록을 불러오지 못했습니다."
+        );
+
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPosts();
+
+  }, [
+    selectedBoard,
+    selectedSportId,
+    currentPage,
+    sortType,
+    searchKeyword,
+    searchType,
+    navigate,
+  ]);
 
   // =========================
   // 게시판 변경
@@ -56,34 +270,35 @@ function Community() {
     setSearchBoard(boardId);
     setSearchInput("");
     setSearchKeyword("");
+    setSelectedSportId(null);
+    setCurrentPage(1);
   };
 
   // =========================
   // 새 게시글
   // =========================
   const handleWritePost = () => {
-    if (selectedBoard === "notice" && !canWriteNotice) {
-      alert(
-        "공지사항은 관리자만 작성할 수 있습니다.\n백엔드 권한 확인 연결 후 관리자 계정에서 활성화됩니다."
-      );
-      return;
-    }
-
-    if (selectedBoard === "recruit" && !canWriteRecruit) {
-      alert(
-        "홍보·회원구인 글은 동호회 운영진만 작성할 수 있습니다.\n백엔드 권한 확인 연결 후 운영진 계정에서 활성화됩니다."
-      );
-      return;
-    }
-
     navigate("/community/write", {
       state: {
         board: selectedBoard,
-        canWriteNotice,
-        canWriteRecruit,
       },
     });
   };
+
+
+
+
+
+  // =========================
+  // 정렬 변경
+  // =========================
+  const handleSortChange = (
+    nextSortType
+  ) => {
+    setSortType(nextSortType);
+    setCurrentPage(1);
+  };
+
 
   // =========================
   // 검색
@@ -91,6 +306,7 @@ function Community() {
   const handleSearch = () => {
     setSelectedBoard(searchBoard);
     setSearchKeyword(searchInput.trim());
+    setCurrentPage(1);
   };
 
   const handleSearchKeyDown = (e) => {
@@ -99,69 +315,6 @@ function Community() {
     }
   };
 
-  // =========================
-  // 게시글 필터 + 정렬
-  // =========================
-  const visiblePosts = useMemo(() => {
-    let result = communityPosts.filter(
-      (post) => post.board === selectedBoard
-    );
-
-    if (searchKeyword) {
-      const keyword = searchKeyword.toLowerCase();
-
-      result = result.filter((post) => {
-        if (searchType === "title") {
-          return post.title.toLowerCase().includes(keyword);
-        }
-
-        if (searchType === "content") {
-          return post.content.toLowerCase().includes(keyword);
-        }
-
-        if (searchType === "titleContent") {
-          return (
-            post.title.toLowerCase().includes(keyword) ||
-            post.content.toLowerCase().includes(keyword)
-          );
-        }
-
-        return true;
-      });
-    }
-
-    result = [...result];
-
-    if (sortType === "latest") {
-      result.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-    }
-
-    if (sortType === "views") {
-      result.sort((a, b) => b.views - a.views);
-    }
-
-    if (sortType === "comments") {
-      result.sort((a, b) => b.comments - a.comments);
-    }
-
-    return result;
-  }, [selectedBoard, sortType, searchKeyword, searchType]);
-
-  // =========================
-  // 페이지네이션
-  // =========================
-  const totalPages = Math.ceil(
-    visiblePosts.length / POSTS_PER_PAGE
-  );
-
-  const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
-
-  const paginatedPosts = visiblePosts.slice(
-    startIndex,
-    startIndex + POSTS_PER_PAGE
-  );
 
   const getVisiblePages = () => {
     if (totalPages <= 3) {
@@ -223,14 +376,70 @@ function Community() {
           ))}
         </nav>
 
+          {/* =========================
+                      종목별게시판 종목 탭
+                  ========================= */}
+                  {selectedBoard === "sports" && (
+
+                    <div className="community-sport-tabs">
+
+                      {/* 전체 종목 */}
+                      <button
+                        type="button"
+                        className={
+                          selectedSportId === null
+                            ? "community-sport-tab active"
+                            : "community-sport-tab"
+                        }
+                        onClick={() => {
+                          setSelectedSportId(null);
+                          setCurrentPage(1);
+                        }}
+                      >
+                        전체
+                      </button>
+
+
+                      {/* 실제 종목 목록 */}
+                      {sports.map((sport) => (
+
+                        <button
+                          key={sport.sport_id}
+                          type="button"
+                          className={
+                            selectedSportId === sport.sport_id
+                              ? "community-sport-tab active"
+                              : "community-sport-tab"
+                          }
+                          onClick={() => {
+                            setSelectedSportId(
+                              sport.sport_id
+                            );
+
+                            setCurrentPage(1);
+                          }}
+                        >
+                          {sport.sport_name}
+                        </button>
+
+                      ))}
+
+                    </div>
+
+                  )}
+
+
         <section className="community-board-section">
+
+
+
           {/* 정렬 + 새 게시글 */}
           <div className="community-list-tools">
             <div className="community-sort">
               <button
                 type="button"
                 className={sortType === "latest" ? "active" : ""}
-                onClick={() => setSortType("latest")}
+                onClick={() => handleSortChange("latest")}
               >
                 최신순
               </button>
@@ -238,7 +447,7 @@ function Community() {
               <button
                 type="button"
                 className={sortType === "views" ? "active" : ""}
-                onClick={() => setSortType("views")}
+                onClick={() => handleSortChange("views")}
               >
                 조회수순
               </button>
@@ -246,7 +455,7 @@ function Community() {
               <button
                 type="button"
                 className={sortType === "comments" ? "active" : ""}
-                onClick={() => setSortType("comments")}
+                onClick={() => handleSortChange("comments")}
               >
                 댓글순
               </button>
@@ -296,30 +505,72 @@ function Community() {
             </button>
           </div>
 
-          {/* 게시글 목록 */}
           <div className="community-post-list">
-            {visiblePosts.length === 0 ? (
-              <p>게시글이 없습니다.</p>
+
+            {isLoading ? (
+
+              <p>
+                게시글을 불러오는 중입니다.
+              </p>
+
+            ) : listError ? (
+
+              <p>
+                {listError}
+              </p>
+
+            ) : posts.length === 0 ? (
+
+              <p>
+                게시글이 없습니다.
+              </p>
+
             ) : (
-              paginatedPosts.map((post) => (
+
+              posts.map((post) => (
+
                 <article
                   key={post.id}
                   className="community-post-item"
                   onClick={() =>
-                    navigate(`/community/post/${post.id}`)
+                    navigate(
+                      `/community/post/${post.id}`
+                    )
                   }
                 >
-                  <h3>{post.title}</h3>
+
+                  <h3>
+                    {post.title}
+                  </h3>
 
                   <div className="community-post-info">
-                    <span>{post.author}</span>
-                    <span>{post.createdAt}</span>
-                    <span>조회 {post.views}</span>
-                    <span>댓글 {post.comments}</span>
+
+                    <span>
+                      {post.author}
+                    </span>
+
+                    <span>
+                      {formatDateTime(
+                        post.createdAt
+                      )}
+                    </span>
+
+                    <span>
+                      조회 {post.views}
+                    </span>
+
+                    <span>
+                      댓글 {post.comments}
+                    </span>
+
                   </div>
+
                 </article>
+
               ))
+
             )}
+
           </div>
 
           {/* 페이지네이션 */}

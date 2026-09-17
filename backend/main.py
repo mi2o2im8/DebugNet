@@ -6,6 +6,15 @@ from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
 from app.routers.clubs import router as clubs_router
 
+# 게시글 API Router 가져오기
+from app.routers.posts import router as posts_router
+
+# 게시글 댓글 API Router 가져오기
+from app.routers.comments import router as comments_router
+
+# 유저 차단 API Router 가져오기
+from app.routers.blocks import router as blocks_router
+
 
 # ---------------------------------------------------------
 # PlayBridge FastAPI 애플리케이션 생성
@@ -43,8 +52,13 @@ app.add_middleware(
 # ---------------------------------------------------------
 app.include_router(auth_router)
 app.include_router(users_router)
+
 app.include_router(clubs_router)
 
+
+app.include_router(posts_router)
+app.include_router(comments_router)
+app.include_router(blocks_router)
 
 # ---------------------------------------------------------
 # 서버 실행 확인용 기본 API

@@ -1,27 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
+import { supabase } from "../../../supabaseClient";
 import "./CSS/PostWrite.css";
 
 function PostWrite() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 백엔드 권한 확인 연결 후 Community에서 전달하거나 API 결과로 교체
-  const canWriteRecruit = location.state?.canWriteRecruit === true;
-  const canWriteNotice = location.state?.canWriteNotice === true;
 
   // 커뮤니티 화면에서 선택했던 게시판
   const receivedBoard = location.state?.board || "free";
 
   // 권한이 필요한 게시판을 직접 열었을 경우 안전하게 자유게시판으로 시작
-  const initialBoard =
-    receivedBoard === "recruit" && !canWriteRecruit
-      ? "free"
-      : receivedBoard === "notice" && !canWriteNotice
-      ? "free"
-      : receivedBoard;
+  const initialBoard = receivedBoard;
 
   // 게시판
   const [boardType, setBoardType] = useState(initialBoard);
@@ -40,6 +33,109 @@ function PostWrite() {
 
   // 홍보·회원구인 게시판에서 선택한 동호회의 club_id 저장
   const [selectedClubId, setSelectedClubId] = useState(null);
+
+  // 백엔드에서 받아온 종목 목록
+  const [sports, setSports] =
+    useState([]);
+
+  // 내가 운영할 수 있는 동호회 목록
+  const [managedClubs, setManagedClubs] =
+    useState([]);
+
+  // 홍보·회원구인 작성 권한
+  const [canWriteRecruit, setCanWriteRecruit] =
+    useState(false);
+
+  // 공지사항 작성 권한
+  const [canWriteNotice, setCanWriteNotice] =
+    useState(false);
+
+  // 글쓰기 옵션 로딩 여부
+  const [isLoadingOptions, setIsLoadingOptions] =
+    useState(true);
+
+
+
+  // =========================
+  // 글쓰기 옵션 불러오기
+  // =========================
+  useEffect(() => {
+    const fetchWriteOptions = async () => {
+      setIsLoadingOptions(true);
+
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          navigate("/Login", {
+            replace: true,
+          });
+
+          return;
+        }
+
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/posts/write-options",
+          {
+            headers: {
+              Authorization:
+                `Bearer ${session.access_token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorData =
+            await response
+              .json()
+              .catch(() => null);
+
+          throw new Error(
+            errorData?.detail ||
+              "글쓰기 정보를 불러오지 못했습니다."
+          );
+        }
+
+        const data =
+          await response.json();
+
+        setSports(
+          data.sports || []
+        );
+
+        setManagedClubs(
+          data.managedClubs || []
+        );
+
+        setCanWriteRecruit(
+          data.canWriteRecruit === true
+        );
+
+        setCanWriteNotice(
+          data.canWriteNotice === true
+        );
+
+      } catch (error) {
+        console.error(
+          "글쓰기 옵션 조회 오류:",
+          error
+        );
+
+        alert(
+          error.message ||
+            "글쓰기 정보를 불러오지 못했습니다."
+        );
+
+      } finally {
+        setIsLoadingOptions(false);
+      }
+    };
+
+    fetchWriteOptions();
+
+  }, [navigate]);
 
   // =========================
   // 게시판 변경
@@ -70,52 +166,174 @@ function PostWrite() {
     setShowPreview(true);
   };
 
+
   // =========================
   // 게시글 등록
   // =========================
   const handleSubmit = async () => {
-    if (boardType === "notice" && !canWriteNotice) {
-      alert("공지사항은 관리자만 작성할 수 있습니다.");
+
+    // 글쓰기 옵션을 아직 불러오는 중
+    if (isLoadingOptions) {
+      alert("글쓰기 정보를 불러오는 중입니다.");
       return;
     }
 
-    if (boardType === "recruit" && !canWriteRecruit) {
-      alert("홍보·회원구인 글은 동호회 운영진만 작성할 수 있습니다.");
-      return;
-    }
 
-    if (boardType === "sports" && !selectedSportId) {
+    // 종목별 게시판
+    if (
+      boardType === "sports" &&
+      !selectedSportId
+    ) {
       alert("종목을 선택해주세요.");
       return;
     }
 
-    if (boardType === "recruit" && !selectedClubId) {
+
+    // 홍보·회원구인 권한
+    if (
+      boardType === "recruit" &&
+      !canWriteRecruit
+    ) {
+      alert(
+        "홍보·회원구인 게시판은 동호회장 또는 운영진만 작성할 수 있습니다."
+      );
+      return;
+    }
+
+
+    // 홍보·회원구인 동호회 선택
+    if (
+      boardType === "recruit" &&
+      !selectedClubId
+    ) {
       alert("동호회를 선택해주세요.");
       return;
     }
 
+
+    // 공지사항 권한
+    if (
+      boardType === "notice" &&
+      !canWriteNotice
+    ) {
+      alert(
+        "공지사항은 관리자만 작성할 수 있습니다."
+      );
+      return;
+    }
+
+
+    // 제목
     if (!title.trim()) {
       alert("제목을 입력해주세요.");
       return;
     }
 
+
+    // 내용
     if (!content.trim()) {
       alert("내용을 입력해주세요.");
       return;
     }
 
-    // 백엔드 posts 테이블에 맞춰 전송할 게시글 데이터
-    const requestData = {
-      board_type: boardType,
-      sport_id: selectedSportId,
-      club_id: selectedClubId,
-      title: title.trim(),
-      content: content.trim(),
-    };
 
-    console.log("게시글 등록 데이터:", requestData);
+    try {
 
-    alert("현재는 프론트 확인 단계입니다.");
+      // 현재 로그인 세션
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+
+      if (!session?.access_token) {
+        navigate("/Login", {
+          replace: true,
+        });
+
+        return;
+      }
+
+
+      // Backend Request
+      const requestData = {
+        board_type: boardType,
+
+        sport_id:
+          boardType === "sports"
+            ? selectedSportId
+            : null,
+
+        club_id:
+          boardType === "recruit"
+            ? selectedClubId
+            : null,
+
+        title: title.trim(),
+
+        content: content.trim(),
+      };
+
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/posts",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Authorization:
+              `Bearer ${session.access_token}`,
+          },
+
+          body: JSON.stringify(
+            requestData
+          ),
+        }
+      );
+
+
+      if (!response.ok) {
+
+        const errorData =
+          await response
+            .json()
+            .catch(() => null);
+
+
+        throw new Error(
+          errorData?.detail ||
+            "게시글 등록에 실패했습니다."
+        );
+      }
+
+
+      const data =
+        await response.json();
+
+
+      // 등록된 게시글 상세화면으로 이동
+      navigate(
+        `/community/post/${data.id}`,
+        {
+          replace: true,
+        }
+      );
+
+    } catch (error) {
+
+      console.error(
+        "게시글 등록 오류:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+          "게시글 등록에 실패했습니다."
+      );
+    }
   };
 
   return (
@@ -163,13 +381,24 @@ function PostWrite() {
               id="sport"
               value={selectedSportId || ""}
               onChange={(e) =>
-                setSelectedSportId(Number(e.target.value))
+                setSelectedSportId(
+                  Number(e.target.value)
+                )
               }
-              disabled
+              disabled={isLoadingOptions}
             >
               <option value="">
-                종목 목록은 백엔드 연결 후 불러옵니다.
+                종목을 선택해주세요.
               </option>
+
+              {sports.map((sport) => (
+                <option
+                  key={sport.sport_id}
+                  value={sport.sport_id}
+                >
+                  {sport.sport_name}
+                </option>
+              ))}
             </select>
           </div>
         )}
@@ -183,13 +412,29 @@ function PostWrite() {
               id="club"
               value={selectedClubId || ""}
               onChange={(e) =>
-                setSelectedClubId(Number(e.target.value))
+                setSelectedClubId(
+                  Number(e.target.value)
+                )
               }
-              disabled
+              disabled={
+                isLoadingOptions ||
+                !canWriteRecruit
+              }
             >
               <option value="">
-                운영 중인 동호회 목록은 백엔드 연결 후 불러옵니다.
+                {canWriteRecruit
+                  ? "동호회를 선택해주세요."
+                  : "운영 가능한 동호회가 없습니다."}
               </option>
+
+              {managedClubs.map((club) => (
+                <option
+                  key={club.club_id}
+                  value={club.club_id}
+                >
+                  {club.club_name}
+                </option>
+              ))}
             </select>
           </div>
         )}
