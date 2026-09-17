@@ -1,0 +1,419 @@
+
+
+.club-detail-page {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: #ffffff;
+  padding-bottom: 85px;
+  box-sizing: border-box;
+
+  font-family: "MaplestoryOTFBold", sans-serif;
+  color: #222222;
+}
+
+
+/* =========================
+   상단 헤더
+========================= */
+
+.club-detail-header {
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 14px;
+
+  background: #ffffff;
+  border-bottom: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+}
+
+.club-detail-header h1 {
+  margin: 0;
+
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.club-detail-header-btn {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  background: transparent;
+
+  color: #333333;
+  font-size: 21px;
+
+  cursor: pointer;
+}
+
+.club-detail-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+/* =========================
+    배너 이미지
+========================= */
+
+.club-detail-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* =========================
+   대표 이미지
+========================= */
+
+.club-detail-cover {
+  width: 100%;
+  height: 190px;
+}
+
+.club-detail-cover-placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #eeeeee;
+
+  color: #999999;
+  font-size: 14px;
+}
+
+
+/* =========================
+   기본 정보
+========================= */
+
+.club-detail-main-info {
+  padding: 20px 18px 22px;
+}
+
+.club-detail-title-area {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.club-detail-logo {
+  width: 64px;
+  height: 64px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #e9f7f3;
+
+  font-size: 30px;
+}
+
+.club-detail-title {
+  flex: 1;
+  margin-right: 65px;
+  font-weight: bold;
+}
+
+.club-detail-sport {
+  display: block;
+
+  margin-bottom: 2px;
+
+  color: #008a6d;
+  font-size: 12px;
+}
+
+.club-detail-title h2 {
+  margin: 0 0 5px;
+
+  font-size: 21px;
+}
+
+.club-detail-title p {
+  margin: 0;
+
+  color: #777777;
+  font-size: 13px;
+}
+
+
+/* 소개 */
+
+.club-detail-intro {
+  margin: 18px 0 14px;
+
+  color: #555555;
+
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+
+/* =========================
+   태그
+========================= */
+
+.club-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+
+  margin-bottom: 18px;
+}
+
+.club-detail-tags span {
+  padding: 6px 10px;
+
+  border-radius: 15px;
+
+  background: #eaf7f3;
+
+  color: #008a6d;
+
+  font-size: 12px;
+}
+
+
+/* =========================
+   가입 버튼
+========================= */
+
+.club-detail-join-btn {
+  width: 100%;
+  height: 46px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #008a6d;
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+/* =========================
+   탭
+========================= */
+
+.club-detail-tabs {
+  height: 48px;
+
+  display: flex;
+
+  border-top: 1px solid #eeeeee;
+  border-bottom: 1px solid #eeeeee;
+
+  background: #ffffff;
+}
+
+.club-detail-tabs button {
+  position: relative;
+
+  flex: 1;
+
+  border: none;
+  background: transparent;
+
+  color: #999999;
+
+  font-family: inherit;
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.club-detail-tabs button.active {
+  color: #008a6d;
+  font-weight: 600;
+}
+
+.club-detail-tabs button.active::after {
+  content: "";
+
+  position: absolute;
+
+  left: 20%;
+  right: 20%;
+  bottom: 0;
+
+  height: 2px;
+
+  background: #008a6d;
+}
+
+
+/* =========================
+   공통 섹션
+========================= */
+
+.club-detail-section {
+  padding: 22px 18px;
+
+  border-bottom: 1px solid #eeeeee;
+}
+
+.club-detail-section h3 {
+  margin: 0 0 14px;
+
+  font-size: 17px;
+}
+
+
+/* =========================
+   소개 내용
+========================= */
+
+.club-detail-description {
+  margin: 0;
+
+  color: #666666;
+
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+
+/* =========================
+   기본 정보
+========================= */
+
+.club-detail-info-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.club-detail-info-item {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 11px 0;
+}
+
+.club-detail-info-item > svg {
+  width: 20px;
+  height: 20px;
+
+  color: #008a6d;
+
+  flex-shrink: 0;
+}
+
+.club-detail-info-item div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.club-detail-info-item span {
+  color: #999999;
+  font-size: 12px;
+}
+
+.club-detail-info-item strong {
+  color: #333333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+
+/* =========================
+   활동 일정
+========================= */
+
+.club-detail-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 10px;
+}
+
+.club-detail-section-title h3 {
+  margin: 0;
+}
+
+.club-detail-section-title button {
+  border: none;
+  background: transparent;
+
+  color: #777777;
+
+  font-family: inherit;
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+.club-detail-schedule {
+  display: flex;
+  align-items: center;
+
+  padding: 13px 0;
+
+  border-top: 1px solid #eeeeee;
+}
+
+.club-detail-date {
+  width: 55px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  flex-shrink: 0;
+}
+
+.club-detail-date strong {
+  color: #222222;
+  font-size: 17px;
+}
+
+.club-detail-date span {
+  margin-top: 2px;
+
+  color: #999999;
+  font-size: 12px;
+}
+
+.club-detail-schedule-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.club-detail-schedule-info strong {
+  font-size: 14px;
+}
+
+.club-detail-schedule-info span {
+  color: #777777;
+  font-size: 12px;
+}

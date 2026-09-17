@@ -1,4 +1,6 @@
+import BottomNav from "../../components/BottomNav";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   MdHome,
   MdGroups,
@@ -9,9 +11,11 @@ import {
 import "./ClubHome.css";
 
 function ClubHome() {
+  const navigate = useNavigate();
   const [clubs, setClubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  
 
   useEffect(() => {
     const fetchClubs = async () => {
@@ -158,6 +162,7 @@ function ClubHome() {
             <div
                 className="Club-card"
                 key={club.club_id}
+                onClick={() => navigate(`/clubs/${club.club_id}`)}
             >
                 <div className="Club-card-image">
                 {club.image_url ? (
@@ -252,36 +257,9 @@ function ClubHome() {
         <span className="ClubHome-chatbot-icon">🤖</span>
         <span className="ClubHome-chatbot-text">이용 도우미</span>
         </button>
-
-        {/* 하단 네비게이션 */}
-        <nav className="ClubHome-bottom-nav">
-
-        <button className="ClubHome-nav-item">
-            <MdHome className="ClubHome-nav-icon" />
-            <span>내활동</span>
-        </button>
-
-        <button className="ClubHome-nav-item active">
-            <MdGroups className="ClubHome-nav-icon" />
-            <span>동호회찾기</span>
-        </button>
-
-        <button className="ClubHome-nav-item">
-            <MdCalendarMonth className="ClubHome-nav-icon" />
-            <span>팀매칭</span>
-        </button>
-
-        <button className="ClubHome-nav-item">
-            <MdForum className="ClubHome-nav-icon" />
-            <span>소통하기</span>
-        </button>
-
-        <button className="ClubHome-nav-item">
-            <MdPerson className="ClubHome-nav-icon" />
-            <span>내 정보</span>
-        </button>
-
-        </nav>
+        
+        {/* 하단 네비게이션 바 */}
+        <BottomNav />
 
     </div>
   );

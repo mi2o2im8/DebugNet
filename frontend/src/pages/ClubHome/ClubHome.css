@@ -614,7 +614,7 @@
    하단 네비게이션
    ======================================== */
 
-.ClubHome-bottom-nav {
+/* .ClubHome-bottom-nav {
     position: fixed;
 
     left: 50%;
@@ -636,12 +636,12 @@
     border-top: 1px solid #e5e5e5;
 
     z-index: 99;
-}
+} */
 
 
 /* 네비게이션 메뉴 하나 */
 
-.ClubHome-nav-item {
+/* .ClubHome-nav-item {
     width: 20%;
     height: 100%;
 
@@ -662,25 +662,25 @@
     color: #999;
 
     cursor: pointer;
-}
+} */
 
 
 /* 네비게이션 아이콘 */
 
-.ClubHome-nav-icon {
+/* .ClubHome-nav-icon {
     font-size: 30px;
-}
+} */
 
 
 /* 현재 선택된 메뉴 */
 
-.ClubHome-nav-item.active {
+/* .ClubHome-nav-item.active {
     color: #008A6D;
-}
+} */
 
 
 /* 클릭했을 때 */
 
-.ClubHome-nav-item:active {
+/* .ClubHome-nav-item:active {
     transform: scale(0.95);
-}
+} */

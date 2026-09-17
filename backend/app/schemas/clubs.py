@@ -12,3 +12,19 @@ class ClubSearchRequest(BaseModel):
     region: Optional[str] = None
     day_of_week: Optional[str] = None
     atmosphere: Optional[str] = None
+
+# -----------------------------------------------------
+# 가입 질문 답변
+# -----------------------------------------------------
+class JoinAnswer(BaseModel):
+    question_id: int
+    answer_text: str
+
+
+# -----------------------------------------------------
+# 동호회 가입 신청
+# -----------------------------------------------------
+class ClubApplicationRequest(BaseModel):
+    user_id: str
+    application_message: str
+    answers: list[JoinAnswer] = []

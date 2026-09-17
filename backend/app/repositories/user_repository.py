@@ -245,3 +245,31 @@ class UserRepository:
         ).eq(
             "user_id", user_id
         ).execute()
+
+    # -----------------------------------------------------
+    # 동호회 가입 신청
+    #
+    # 로그인한 사용자가 특정 동호회에 가입 신청한다.
+    # status = pending → 운영자 승인 대기
+    # -----------------------------------------------------
+    def create_join_request(
+        self,
+        club_id: int,
+        user_id: str,
+    ):
+        data = {
+            "club_id": club_id,
+            "user_id": user_id,
+            "role": "member",
+            "status": "pending",
+            "join_source": "club_detail",
+        }
+
+        response = (
+            self.supabase
+            .table("club_members")
+            .insert(data)
+            .execute()
+        )
+
+        return response.data
