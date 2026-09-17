@@ -11,8 +11,21 @@
 .club-manage-layout-content {
     width: 100%;
     height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    /* BottomNav 68px + 추가 여백 20px */
     padding-bottom:
-        calc(68px + env(safe-area-inset-bottom));
-    overflow: hidden;
+        calc(
+            88px +
+            env(safe-area-inset-bottom)
+        );
+
     box-sizing: border-box;
+    overscroll-behavior-y: contain;
+    scrollbar-width: none;
+}
+
+.club-manage-layout-content::-webkit-scrollbar {
+    display: none;
 }
