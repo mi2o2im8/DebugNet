@@ -3,9 +3,15 @@
 import "./Signup.css";
 import { useNavigate } from "react-router-dom";
 import { useSignup } from "./SignupContext";
+import { useState } from "react";
 
 // 뒤로가기 버튼 소환
 import backIcon from "../../assets/img/back.png";
+
+// 화살표 이미지
+import down_arrow from "../../assets/img/down_arrow.png";
+// 위치 아이콘 이미지
+import location_pin_icon from "../../assets/img/location_pin_icon.png";
 
 function SignupLocation() {
     const navigate = useNavigate();
@@ -14,6 +20,8 @@ function SignupLocation() {
     // 서울 구/군
     const districts = ["종로구","중구","용산구","성동구","광진구","동대문구","중랑구","성북구","강북구","도봉구",
         "노원구","은평구","서대문구","마포구","양천구","강서구","구로구","금천구","영등포구","동작구","관악구","서초구","강남구","송파구","강동구"];
+    // 시도 선택시 구군 선택 나오도록
+    const [selectedCity, setSelectedCity] = useState("");
 
     // 구/군 선택
     const handLocation = (district) => {
@@ -68,7 +76,7 @@ function SignupLocation() {
 
     return (
         // 헤더
-        <div>
+        <div className="signup-container">
             {/* 뒤로가기 버튼 */}
             <button
                 type="button"
@@ -91,8 +99,12 @@ function SignupLocation() {
                 <div className="regions-select">
                     <p>시도 선택</p>
 
-                    <select>
+                    <select
+                        value={selectedCity}
+                        onChange={(e) => setSelectedCity(e.target.value)}
+                    >
                         <option value="">시/도 선택</option>
+
                         {cities.map((city) => (
                             <option key={city} value={city}>
                                 {city}
@@ -100,13 +112,24 @@ function SignupLocation() {
                         ))}
                     </select>
                 </div>
-
+                <img
+                src={down_arrow}
+                    alt="아래 화살표"
+                    className="down-arrow"
+                />
                 {/* 구/군 선택 */}
                 <div className="regions-select">
                     <p>구/군 선택</p>
 
-                    <select onChange={(e) => handLocation(e.target.value)}>
+                    <select
+                        disabled={!selectedCity}
+                        onChange={(e) => {
+                            if (e.target.value === "") return;
+                            handLocation(e.target.value);
+                        }}
+                    >
                         <option value="">구/군 선택</option>
+
                         {districts.map((district) => (
                             <option key={district} value={district}>
                                 {district}
@@ -117,14 +140,8 @@ function SignupLocation() {
 
             </div>
 
-            <img
-                src={down_arrow}
-                alt="아래 화살표"
-                className="down-arrow"
-            />
-
             <div className="selected-regions">
-                <p>선택된 지역</p>
+                <h4>선택된 지역</h4>
 
                 <div className="selected-regions-list">
                     {signupData.regions.map((district) => (
@@ -142,7 +159,13 @@ function SignupLocation() {
             </div>
 
             <div className="regions-guide">
-                <span className="regions-icon">📍</span>
+                <span className="regions-icon">
+                    <img
+                        src={location_pin_icon}
+                        alt="위치 아이콘"
+                        className="location-icon"
+                    />
+                </span>
                 <p>
                     선택된 지역을 기준으로<br />
                     주변 운동을 추천해드려요
@@ -151,7 +174,7 @@ function SignupLocation() {
 
             {/* 이동 가능 거리 선택 */}
             <div className="distance-select">
-                <p>이동 가능한 범위는 어느 정도인가요?</p>
+                <h4>이동 가능한 범위는 어느 정도인가요?</h4>
 
                 <div className="distance-list">
                     {distanceOptions.map((option) => (

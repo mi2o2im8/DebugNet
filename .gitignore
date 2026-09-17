@@ -153,3 +153,5 @@ __pycache__/
 # React / Vite
 node_modules/
 dist/
+
+# uvicorn main:app --reload

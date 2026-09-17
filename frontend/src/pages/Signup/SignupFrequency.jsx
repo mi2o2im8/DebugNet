@@ -25,18 +25,22 @@ function SignupFrequency() {
     };
 
     return (
-        <div>
+        <div className="signup-container">
+
             {/* 뒤로가기 버튼 */}
             <button
                 type="button"
                 className="Back-btn"
                 onClick={() => navigate("/signup/basic/SignupTime")}
+                aria-label="뒤로가기"
             >
-                뒤로가기
+                <img src={backIcon} alt="뒤로가기" />
             </button>
-            
-            <h1 className="signup-level-title">얼마나 자주</h1>
-            <h1 className="signup-level-title">활동하고 싶나요?</h1>
+
+            <div className="signup-header06">
+                <h2>얼마나 자주</h2>
+                <h2>활동하고 싶나요?</h2>
+            </div>
 
             {/* 활동 빈도 선택 */}
             <div className="frequency-options">
@@ -54,8 +58,14 @@ function SignupFrequency() {
                             })
                         }
                     />
+
+                    <span className="check-box">
+                        {signupData.frequency === "주 1회 이하" && "✓"}
+                    </span>
+
                     주 1회 이하
                 </label>
+
 
                 <label className="frequency-option">
                     <input
@@ -70,8 +80,14 @@ function SignupFrequency() {
                             })
                         }
                     />
+
+                    <span className="check-box">
+                        {signupData.frequency === "주 1~2회" && "✓"}
+                    </span>
+
                     주 1~2회
                 </label>
+
 
                 <label className="frequency-option">
                     <input
@@ -86,8 +102,14 @@ function SignupFrequency() {
                             })
                         }
                     />
+
+                    <span className="check-box">
+                        {signupData.frequency === "주 3~4회" && "✓"}
+                    </span>
+
                     주 3~4회
                 </label>
+
 
                 <label className="frequency-option">
                     <input
@@ -102,8 +124,14 @@ function SignupFrequency() {
                             })
                         }
                     />
+
+                    <span className="check-box">
+                        {signupData.frequency === "주 5회 이상" && "✓"}
+                    </span>
+
                     주 5회 이상
                 </label>
+
 
                 <label className="frequency-option">
                     <input
@@ -118,6 +146,11 @@ function SignupFrequency() {
                             })
                         }
                     />
+
+                    <span className="check-box">
+                        {signupData.frequency === "상관없음" && "✓"}
+                    </span>
+
                     상관없음
                 </label>
 
@@ -125,9 +158,11 @@ function SignupFrequency() {
 
             {/* 다음 버튼 */}
             <p></p>
+
             <button className="Next-btn" onClick={handleNext}>
                 다음
             </button>
+
         </div>
     );
 }
