@@ -7,6 +7,7 @@ import ConditionStep from "./ConditionStep";
 import IntroductionStep from "./IntroductionStep";
 import OperationStep from "./OperationStep";
 import CompletionStep from "./CompletionStep";
+import { createClub } from "../../api/clubApi";
 
 import "./ClubCreate.css";
 
@@ -25,9 +26,18 @@ function ClubCreate() {
     // 현재 페이지 단계
     const [currentStep, setCurrentStep] = useState(1);
 
+    // API 요청 중 중복 클릭 방지
+    const [isSubmitting, setIsSubmitting] =
+        useState(false);
+
+    // 생성된 동호회 API 응답 저장
+    const [createResult, setCreateResult] =
+        useState(null);
+
     const [clubForm, setClubForm] = useState({
     // 1단계
     representativeImage: "",
+    representativeImageFile: null,
     clubName: "",
     sport: "",
     city: "서울특별시",
@@ -84,6 +94,7 @@ function ClubCreate() {
         ],
         clubDescription: "",
         activityImages: [],
+        activityImageFiles: [],
 
         // 5단계
         joinMethod: "approval",
@@ -113,13 +124,38 @@ function ClubCreate() {
     };
 
     // 다음 버튼
-    const handleNext = () => {
-        if (currentStep >= 6) {
+    const handleNext = async () => {
+        if (currentStep >= 6 || isSubmitting) {
             return;
         }
 
-        setCurrentStep(currentStep + 1);
-        window.scrollTo(0, 0);
+        if (currentStep < 5) {
+            setCurrentStep(currentStep + 1);
+            window.scrollTo(0, 0);
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const result = await createClub(clubForm);
+
+            setCreateResult(result);
+            setCurrentStep(6);
+            window.scrollTo(0, 0);
+        } catch (error) {
+            console.error(
+                "동호회 개설 오류:",
+                error
+            );
+
+            alert(
+                error.message ||
+                "동호회 개설 중 오류가 발생했습니다."
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -214,6 +250,7 @@ function ClubCreate() {
                     {currentStep === 6 && (
                         <CompletionStep
                             formData={clubForm}
+                            createResult={createResult}
                             onRestart={() => setCurrentStep(1)}
                         />
                     )}
@@ -237,8 +274,13 @@ function ClubCreate() {
                             type="button"
                             className="club-create-button next"
                             onClick={handleNext}
+                            disabled={isSubmitting}
                         >
-                            {currentStep === 5 ? "동호회 개설하기" : "다음"}
+                            {isSubmitting
+                                ? "개설 중..."
+                                : currentStep === 5
+                                    ? "동호회 개설하기"
+                                    : "다음"}
                         </button>
                     )}
 

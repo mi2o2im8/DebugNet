@@ -26,6 +26,8 @@ function IntroductionStep({ formData, onChange }) {
 
     const selectedKeywords = formData.introKeywords ?? [];
     const activityImages = formData.activityImages ?? [];
+    const activityImageFiles =
+    formData.activityImageFiles ?? [];
 
     const visibleKeywords = [
         ...SUGGESTED_KEYWORDS,
@@ -135,6 +137,11 @@ function IntroductionStep({ formData, onChange }) {
             ...imageDataList
         ]);
 
+        onChange("activityImageFiles", [
+            ...activityImageFiles,
+            ...validFiles
+        ]);
+
         event.target.value = "";
     };
 
@@ -143,7 +150,16 @@ function IntroductionStep({ formData, onChange }) {
             (_, index) => index !== imageIndex
         );
 
+        const updatedImageFiles =
+            activityImageFiles.filter(
+                (_, index) => index !== imageIndex
+            );
+
         onChange("activityImages", updatedImages);
+        onChange(
+            "activityImageFiles",
+            updatedImageFiles
+        );
     };
 
     return (
@@ -352,7 +368,7 @@ function IntroductionStep({ formData, onChange }) {
                             <input
                                 id="clubActivityImages"
                                 type="file"
-                                accept="image/png, image/jpeg"
+                                accept="image/png, image/jpeg, image/webp"
                                 multiple
                                 onChange={handleImageChange}
                             />
