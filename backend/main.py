@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # 회원가입 API Router 가져오기
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
+from app.routers.clubs import router as clubs_router
 
 
 # ---------------------------------------------------------
@@ -42,6 +43,7 @@ app.add_middleware(
 # ---------------------------------------------------------
 app.include_router(auth_router)
 app.include_router(users_router)
+app.include_router(clubs_router)
 
 
 # ---------------------------------------------------------
