@@ -17,6 +17,10 @@ import SignupReview from './pages/Signup/SignupReview'
 import ClubDashboard from "./pages/ClubDashboard/ClubDashboard";
 import Main from "./pages/Main/Main";
 
+import ClubHome from './pages/ClubHome/ClubHome';
+import ClubDetail from "./pages/ClubDetail/ClubDetail";
+import ClubApplication from "./pages/ClubApplication/ClubApplication";
+
 // // 동호회
 // import BasicInfoStep from './pages/ClubCreate/BasicInfoStep'
 import ClubCreate from './pages/ClubCreate/ClubCreate'
@@ -63,6 +67,13 @@ function App() {
           {/* 월 회비 - 가입완료 마지막 페이지 */}
           <Route path='/signup/basic/SignupFee' element={<SignupFee />} />
           <Route path='/signup/basic/review' element={<SignupReview />} />
+
+          {/* 동호회 찾기 홈 화면 페이지 */}
+          <Route path='/clubs' element={<ClubHome />} />
+          {/* 동호회 상세 페이지 */}
+          <Route path="/clubs/:clubId" element={<ClubDetail />} />
+          {/* 동호회 가입 페이지 */}
+          <Route path="/clubs/:clubId/application" element={<ClubApplication />}/>
 
           {/* 동호회 만들기 페이지 */}
           <Route path="/clubs/create" element={<ClubCreate />} />

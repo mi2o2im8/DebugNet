@@ -1,0 +1,353 @@
+/* =========================================
+   동호회 가입 신청 페이지
+========================================= */
+
+.club-application-page {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+
+  margin: 0 auto;
+
+  background: #ffffff;
+  color: #222222;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================
+   상단 헤더
+========================================= */
+
+.club-application-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  width: 100%;
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+  border-bottom: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+}
+
+.club-application-header button {
+  position: absolute;
+  left: 16px;
+
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #222222;
+  font-size: 22px;
+
+  cursor: pointer;
+}
+
+.club-application-header h1 {
+  margin: 0;
+
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+
+/* =========================================
+   동호회 정보
+========================================= */
+
+.club-application-club-info {
+  margin: 16px;
+
+  padding: 14px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+.club-application-club-info h2 {
+  margin: 0 0 7px;
+
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.club-application-club-info p {
+  margin: 0;
+
+  font-size: 13px;
+  line-height: 1.5;
+
+  color: #777777;
+}
+
+
+/* =========================================
+   가입 신청 폼
+========================================= */
+
+.club-application-page form {
+  width: 100%;
+
+  padding: 0 16px 32px;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================
+   공통 섹션
+========================================= */
+
+.club-application-section {
+  margin-bottom: 28px;
+  padding: 0;
+
+  border: none;
+}
+
+.club-application-section > label {
+  display: block;
+
+  margin-bottom: 10px;
+
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+
+  color: #222222;
+}
+
+
+/* =========================================
+   자기소개 / 가입 이유 입력창
+========================================= */
+
+.club-application-section textarea {
+  display: block;
+
+  width: 100%;
+  min-height: 120px;
+
+  padding: 14px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+
+  background: #fafafa;
+
+  color: #333333;
+
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+
+  outline: none;
+
+  resize: none;
+
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.club-application-section textarea::placeholder {
+  color: #aaaaaa;
+}
+
+.club-application-section textarea:focus {
+  border-color: #00a88f;
+  background: #ffffff;
+}
+
+
+/* =========================================
+   글자 수
+========================================= */
+
+.club-application-count {
+  margin-top: 7px;
+
+  text-align: right;
+
+  font-size: 12px;
+  line-height: 1.4;
+
+  color: #999999;
+}
+
+
+/* =========================================
+   추가 질문
+========================================= */
+
+.club-application-section h2 {
+  margin: 0 0 12px;
+
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.club-application-question {
+  margin-bottom: 20px;
+}
+
+.club-application-question:last-child {
+  margin-bottom: 0;
+}
+
+.club-application-question label {
+  display: block;
+
+  margin-bottom: 9px;
+
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+
+  color: #333333;
+}
+
+.club-application-question label span {
+  color: #00a88f;
+}
+
+.club-application-question textarea {
+  min-height: 100px;
+}
+
+
+/* =========================================
+   운영 안내 동의
+========================================= */
+
+.club-application-agreement {
+  margin: 4px 0 24px;
+
+  padding: 0;
+}
+
+.club-application-agreement label {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  cursor: pointer;
+}
+
+.club-application-agreement input {
+  width: 18px;
+  height: 18px;
+
+  flex-shrink: 0;
+
+  margin: 2px 0 0;
+
+  accent-color: #00a88f;
+
+  cursor: pointer;
+}
+
+.club-application-agreement span {
+  font-size: 13px;
+  line-height: 1.6;
+
+  color: #666666;
+}
+
+
+/* =========================================
+   가입 신청 버튼
+========================================= */
+
+.club-application-submit-btn {
+  display: block;
+
+  width: 100%;
+  height: 52px;
+
+  margin: 0;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #00a88f;
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.club-application-submit-btn:hover {
+  background: #008f7a;
+}
+
+.club-application-submit-btn:active {
+  transform: translateY(1px);
+}
+
+
+/* =========================================
+   작은 모바일 화면
+========================================= */
+
+@media (max-width: 360px) {
+  .club-application-header {
+    height: 54px;
+  }
+
+  .club-application-header h1 {
+    font-size: 16px;
+  }
+
+  .club-application-club-info {
+    margin: 14px;
+    padding: 13px;
+  }
+
+  .club-application-page form {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .club-application-section {
+    margin-bottom: 24px;
+  }
+
+  .club-application-section textarea {
+    min-height: 110px;
+  }
+}
