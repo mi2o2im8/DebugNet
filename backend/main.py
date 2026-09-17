@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # 회원가입 API Router 가져오기
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
-
+from app.routers.clubs import router as clubs_router
 
 # ---------------------------------------------------------
 # PlayBridge FastAPI 애플리케이션 생성
