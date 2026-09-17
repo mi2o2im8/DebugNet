@@ -10,7 +10,7 @@
   transform: translateX(-50%);
 
   width: 100%;
-  max-width: 430px;
+  max-width: 412px;
 
   height: 68px;
 
@@ -27,6 +27,11 @@
   box-sizing: border-box;
 }
 
+/* safe area 대응 */
+/* .bottom-nav {
+  height: calc(68px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+} */
 
 /* ========================================
    하단 메뉴 각각

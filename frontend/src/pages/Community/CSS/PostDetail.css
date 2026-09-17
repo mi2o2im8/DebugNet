@@ -205,6 +205,7 @@
 
 .comment-item {
   padding: 14px 2px;
+  text-align: left;
 
   border-bottom: 1px solid #eeeeee;
 }
@@ -619,6 +620,7 @@
 .comment-author-text {
   display: flex;
   flex-direction: column;
+  text-align: left;
 
   gap: 3px;
 }

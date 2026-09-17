@@ -7,22 +7,26 @@
 
 @font-face {
     font-family: "Maplestory";
-    src: url("../font/Maplestory-Light.ttf") format("truetype");
+    src: url("../../assets/font/Maplestory-Light.ttf") format("truetype");
 }
 
 
 /* ========================================
    ⭐ Signup 공통 클래스 목록
-
    .signup-container        → 회원가입 전체 영역
    .Back-btn                → 뒤로가기 버튼
+   .Back-btn img            → 뒤로가기 아이콘
    .signup-header           → 회원가입 상단 제목/설명
-   .signup-header02         → 이름 닉네임 페이지 상단 제목/설명
-   .signup-header03         → 종목 선택 페이지 상단 제목/설명
-   .signup-header04         → 운동 레벨 페이지 상단 제목/설명
-   .email-label             → 입력창 제목(이메일/비밀번호)
+   .signup-header02         → 기본정보 페이지 상단 제목/설명
+   .signup-header03         → 운동 종목 선택 페이지 상단 제목/설명
+   .signup-header04         → 운동 레벨 선택 페이지 상단 제목/설명
+   .signup-header05         → 활동 지역 선택 페이지 상단 제목/설명
+   .signup-header06         → 활동 가능 시간/빈도/선호 페이지 상단 제목/설명
+   .signup-header07         → 최대 가능 회비 페이지 상단 제목/설명
+   .ex-title                → 추가 설명/안내 문구
+   .email-label             → 이메일/비밀번호 입력창 제목
    .email-check-wrapper     → 이메일 입력 + 중복확인 영역
-   .login-input             → 이메일 입력창
+   .login-input             → 이메일 및 일반 입력창
    .email-check-btn         → 이메일 중복확인 버튼
    .email-check-success     → 이메일 중복확인 성공 메시지
    .email-check-error       → 이메일 중복확인 실패 메시지
@@ -30,82 +34,84 @@
    .pw-input                → 비밀번호 입력창
    .password-eye-signup     → 비밀번호 보기/숨기기 버튼
    .password-guide          → 비밀번호 조건 안내
-   .valid                   → 조건 충족 시 적용
-   .Next-btn                → 다음 버튼
-   ======================================== */
+   .password-guide p.valid  → 비밀번호 조건 충족 상태
+   .password-guide p.valid span → 조건 충족 강조 텍스트
+   .Next-btn               → 다음 버튼
+*/
 
 
 /* ========================================
-   ⭐ 2번 기본정보 페이지 추가 클래스
-
+   ⭐ 2. 기본정보 페이지
    .profile-image-area      → 프로필 이미지 전체 영역
-   .profile-image-wrapper   → 프로필 이미지 위치 영역
+   .profile-image-wrapper  → 프로필 이미지 위치 영역
    .profile-image           → 프로필 이미지
    .profile-image-remove    → 프로필 이미지 삭제 버튼
    .profile-image-input     → 프로필 사진 선택 영역
-
    .name-box                → 이름 입력 영역
    .name-label              → 이름 라벨
    .nickname-box            → 닉네임 입력 영역
    .nickname-label          → 닉네임 라벨
+   .nickname-check-wrapper  → 닉네임 입력 + 중복확인 영역
    .nickname-check-btn      → 닉네임 중복확인 버튼
+   .nickname-check-message  → 닉네임 중복확인 결과 메시지
    .birth-box               → 생년월일 입력 영역
    .gender-title            → 성별 제목
    .gender-box              → 성별 선택 영역
    .selected                → 선택된 상태
-   ---------++ 09 16 11:16  추가
-   nickname-check-btn -> 중복 확인 버튼
-   ======================================== */
+*/
 
 
 /* ========================================
    ⭐ 3. 운동 종목 선택 페이지
-
    .sport-choice-box        → 운동 종목 전체 영역
    .sport-choice-box button → 운동 종목 선택 버튼
    .sport-choice-box img    → 운동 종목 이미지
-   .sport-choice-box button.selected
-                            → 선택된 운동 종목
+   .sport-choice-box button.selected → 선택된 운동 종목
    .select-count            → 선택된 종목 개수
-   ======================================== */
+*/
 
 
 /* ========================================
    ⭐ 4. 종목별 운동 수준 선택
-
    .signup-level-title      → 운동 수준 페이지 제목
    .sport-level-box         → 종목별 운동 수준 전체 영역
    .sport-level-box h3      → 운동 종목 이름
-   .level-box               → 수준 선택 영역
-   .level-box button        → 수준 선택 버튼
+   .level-box               → 운동 수준 선택 영역
+   .level-box button        → 운동 수준 선택 버튼
    .check-box               → 선택 체크 표시
-   .level-box button.selected
-                            → 선택된 운동 수준
-   ======================================== */
+   .level-box strong        → 운동 수준 이름
+   .level-box button.selected → 선택된 운동 수준
+   .level-box button.selected strong → 선택된 수준 이름
+   .level-box p             → 운동 수준 설명
+   .level-box ~ .Next-btn   → 운동 수준 선택 후 다음 버튼
+*/
 
 
 /* ========================================
    ⭐ 5. 활동 가능 지역 선택
-
    .regions-select-row      → 시/도 + 구/군 선택 영역
    .regions-select          → 시/도, 구/군 선택 영역
+   .regions-select select   → 지역 선택 드롭다운
    .selected-regions        → 선택된 지역 전체 영역
-   .selected-regions-list   → 지역 태그 목록 영역
+   .selected-regions-list   → 지역 태그 목록
    .selected-regions-item   → 선택된 지역 태그
    .regions-remove          → 선택된 지역 삭제 버튼
    .location-guide          → 지역 선택 안내 영역
    .location-icon           → 지역 안내 아이콘
+   .regions-guide           → 활동 지역 안내 문구
+   .regions-icon            → 활동 지역 안내 아이콘
+   .location_pin             → 위치 표시 아이콘
+   .down-arrow              → 아래 방향 화살표
    .distance-select         → 이동 가능 거리 영역
    .distance-list           → 거리 선택 영역
    .distance-list button    → 거리 선택 버튼
-   .distance-list button.selected
-                            → 선택된 이동 가능 거리
-   ======================================== */
+   .distance-list button.selected → 선택된 이동 가능 거리
+*/
 
 
 /* ========================================
    ⭐ 6. 활동 가능 시간 선택
-
+   .time-box                → 활동 가능 시간 전체 영역
    .time-example            → 시간 선택 예시/안내
    .time-add-box            → 시간대 추가 영역
    .time-add-btn            → 시간대 추가 버튼
@@ -115,32 +121,52 @@
    .selected-time-box       → 선택한 시간대 전체 영역
    .selected-time-item      → 선택한 시간대 한 개
    .time-delete-btn         → 시간대 삭제 버튼
-   ======================================== */
+*/
 
 
 /* ========================================
    ⭐ 7. 활동 빈도 선택
-
    .frequency-options       → 활동 빈도 전체 영역
    .frequency-option        → 빈도 선택 항목
    .frequency-option input  → 빈도 라디오 버튼
-   .frequency-option:has(input:checked)
-                            → 선택된 빈도 항목
-   ======================================== */
+   .frequency-option input[type="radio"] → 활동 빈도 라디오 버튼
+   .frequency-option .check-box → 선택 체크 표시
+   .frequency-option:has(input[type="radio"]:checked) → 선택된 빈도 항목
+*/
 
 
 /* ========================================
    ⭐ 8. 동호회 선호 선택
-
-   .club-preference-example
-                            → 복수 선택 안내
+   .club-preference-example → 복수 선택 안내
    .club-preference-options → 선호 선택 전체 영역
    .club-preference-option  → 선호 선택 항목
-   .club-preference-option input
-                            → 선호 선택 체크박스
-   .club-preference-option:has(input:checked)
-                            → 선택된 선호 항목
-   ======================================== */
+   .club-preference-option input → 선호 선택 체크박스
+   .club-preference-option:has(input:checked) → 선택된 선호 항목
+*/
+
+
+/* ========================================
+   ⭐ 9. 종합 확인 페이지
+   .review-profile-section → 프로필 + 계정 정보 전체 영역
+   .review-profile         → 프로필 이미지
+   .review-account         → 계정 정보 영역
+   .review-account h3      → 계정 정보 제목
+   .review-account p       → 계정 정보 내용
+   .review-account button  → 계정 정보 수정 버튼
+   .review-grid            → 회원가입 정보 전체 목록
+   .review-card            → 회원가입 정보 한 항목
+   .review-category        → 정보 카테고리
+   .review-content         → 입력 정보 내용 영역
+   .review-content p       → 입력된 정보 표시
+   .review-card button     → 해당 항목 수정 버튼
+*/
+
+
+/* ========================================
+   ⭐ 10. 반응형 / 모바일
+   @media (max-width: 500px) → 회원가입 모바일 대응
+   @media (max-width: 480px) → 종합 확인 페이지 모바일 대응
+*/
 
 
 /* ========================================
@@ -166,50 +192,62 @@ body {
    ======================================== */
 
 .signup-container {
-    position: relative;
-
-    width: clamp(260px, 100vw, 390px);
+    width: 100%;
+    max-width: 400px;
+    min-height: 100vh;
 
     margin: 0 auto;
-    padding: 0;
+    padding: 0 20px;
 
     box-sizing: border-box;
 }
 
-
 /* ========================================
-   ⭐ 뒤로가기 버튼
+   ⭐ 뒤로가기 상단 헤더
    ======================================== */
 
 .Back-btn {
     position: fixed;
 
-    top: 20px;
-    left: 20px;
+    top: 0;
+    left: 50%;
 
-    width: 52px;
-    height: 90px;
+    /* ⭐ 헤더를 화면 가운데에 정확하게 배치 */
+    transform: translateX(-50%);
+
+    width: 100%;
+    max-width: 390px;
+    height: 80px;
 
     padding: 0;
 
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
 
     border: none;
-    background: transparent;
+    background-color: #fff;
 
     cursor: pointer;
 
     z-index: 1001;
+
+    box-sizing: border-box;
 }
+
+
+/* ⭐ 뒤로가기 아이콘 */
 
 .Back-btn img {
     width: 30px;
     height: 30px;
 
+    margin-left: 20px;
+
     object-fit: contain;
     display: block;
+
+    transform: translateY(10px);
 }
 
 
@@ -226,11 +264,14 @@ body {
 .signup-header h2 {
     margin: 0;
 
-    font-size: 32px;
+    font-size: 30px;
     line-height: 1.3;
     font-weight: 700;
 
     color: #222;
+
+    /* ⭐ 큰 제목 왼쪽 정렬 */
+    text-align: left;
 }
 
 .signup-header p {
@@ -240,6 +281,12 @@ body {
     color: #777;
 
     line-height: 1.5;
+
+    /* ⭐ 소제목 왼쪽 정렬 */
+    text-align: left;
+
+    /* ⭐ 소제목 왼쪽 5px 여유 */
+    margin-left: 5px;
 }
 
 
@@ -247,93 +294,234 @@ body {
 
 .signup-header02 {
     width: 320px;
-    margin: 80px auto 35px;
+
+    /* ⭐ 상단 고정 헤더(60px) 아래에서 시작 */
+    margin: 60px auto 35px;
+
+    padding-top: 30px;
+
+    box-sizing: border-box;
 }
 
 .signup-header02 h2 {
     margin: 0;
-    font-size: 32px;
+
+    font-size: 30px;
     line-height: 1.3;
     font-weight: 700;
+
     color: #222;
+
+    /* ⭐ 큰 제목 왼쪽 정렬 */
+    text-align: left;
 }
 
 .signup-header02 p {
-    margin: 6px 0 0;
+    margin: 6px 0 0 5px;
+
     font-size: 15px;
     color: #777;
+
     line-height: 1.5;
+
+    /* ⭐ 소제목 왼쪽 정렬 */
+    text-align: left;
 }
+
 
 /* ------------3번 관심종목 위치조절-------------- */
 
 .signup-header03 {
     width: 320px;
-    margin: 80px auto 35px;
+
+    /* ⭐ 상단 고정 헤더 아래에서 시작 */
+    margin: 60px auto 35px;
+
+    padding-top: 30px;
+
+    box-sizing: border-box;
 }
 
 .signup-header03 h2 {
     margin: 0;
-    font-size: 32px;
+
+    font-size: 30px;
     line-height: 1.3;
     font-weight: 700;
 
     color: #222;
+
+    /* ⭐ 큰 제목 왼쪽 정렬 */
+    text-align: left;
 }
 
 .signup-header03 p {
-    margin: 6px 0 0;
+    margin: 6px 0 0 5px;
+
     font-size: 15px;
     color: #777;
+
     line-height: 1.5;
+
+    /* ⭐ 소제목 왼쪽 정렬 */
+    text-align: left;
 }
+
 
 /* ------------4번 관심종목 위치조절-------------- */
 
 .signup-header04 {
     width: 320px;
-    margin: 80px auto 35px;
+
+    /* ⭐ 상단 고정 헤더 아래에서 시작 */
+    margin: 60px auto 35px;
+
+    padding-top: 30px;
+
+    box-sizing: border-box;
 }
 
 .signup-header04 h2 {
     margin: 0;
 
-    font-size: 32px;
+    font-size: 30px;
     line-height: 1.3;
     font-weight: 700;
 
     color: #222;
+
+    /* ⭐ 큰 제목 왼쪽 정렬 */
+    text-align: left;
 }
 
 .signup-header04 p {
-    margin: 6px 0 0;
+    margin: 6px 0 0 5px;
+
     font-size: 15px;
     color: #777;
+
     line-height: 1.5;
+
+    /* ⭐ 소제목 왼쪽 정렬 */
+    text-align: left;
 }
+
 
 /* ------------5 관심종목 위치조절-------------- */
 
 .signup-header05 {
     width: 320px;
-    margin: 80px auto 35px;
+
+    /* ⭐ 상단 고정 헤더 아래에서 시작 */
+    margin: 60px auto 35px;
+
+    padding-top: 30px;
+
+    box-sizing: border-box;
 }
 
 .signup-header05 h2 {
     margin: 0;
 
-    font-size: 32px;
+    font-size: 30px;
     line-height: 1.3;
     font-weight: 700;
 
     color: #222;
+
+    /* ⭐ 큰 제목 왼쪽 정렬 */
+    text-align: left;
 }
 
 .signup-header05 p {
-    margin: 6px 0 0;
+    margin: 6px 0 0 5px;
+
     font-size: 15px;
     color: #777;
+
     line-height: 1.5;
+
+    /* ⭐ 소제목 왼쪽 정렬 */
+    text-align: left;
+}
+
+
+/* ------------6 활동 시간대 위치조절-------------- */
+
+.signup-header06 {
+    width: 320px;
+
+    /* ⭐ 상단 고정 헤더 아래에서 시작 */
+    margin: 60px auto 35px;
+
+    padding-top: 30px;
+
+    box-sizing: border-box;
+}
+
+.signup-header06 h2 {
+    margin: 0;
+
+    font-size: 30px;
+    line-height: 1.3;
+    font-weight: 700;
+
+    color: #222;
+
+    /* ⭐ 큰 제목 왼쪽 정렬 */
+    text-align: left;
+}
+
+.ex-title {
+    margin: 6px 0 0 5px;
+
+    font-size: 26px;
+    color: #a7a7a7;
+
+    line-height: 1.5;
+
+    font-family: sans-serif;
+
+    /* ⭐ 예시 문구 왼쪽 정렬 */
+    text-align: left;
+}
+
+/* ------------7 회비 제목 위치조절-------------- */
+
+.signup-header07 {
+    width: 320px;
+
+    /* ⭐ 상단 고정 헤더 아래에서 시작 */
+    margin: 60px auto 35px;
+    padding-top: 30px;
+    box-sizing: border-box;
+}
+
+.signup-header07 h2 {
+    margin: 0;
+
+    font-size: 30px;
+    line-height: 1.3;
+    font-weight: 700;
+
+    color: #222;
+
+    /* ⭐ 큰 제목 왼쪽 정렬 */
+    text-align: left;
+}
+
+.ex-title {
+    margin: 6px 0 0 5px;
+
+    font-size: 26px;
+    color: #a7a7a7;
+
+    line-height: 1.5;
+
+    font-family: sans-serif;
+
+    /* ⭐ 예시 문구 왼쪽 정렬 */
+    text-align: left;
 }
 
 
@@ -532,8 +720,10 @@ body {
 
 .password-eye-signup {
     position: absolute;
+
     right: 8px;
     top: 53px;
+
     transform: translateY(-40%);
 
     width: 38px;
@@ -662,13 +852,27 @@ body {
         width: calc(100% - 40px);
     }
 
+
+    /* ⭐ 모바일 상단 헤더 */
+
     .Back-btn {
-        left: 15px;
-        top: 15px;
+        top: 0;
+        left: 0;                     /* ⭐ 왼쪽 끝에 붙임 */
+        transform: none;             /* ⭐ 가운데 정렬 제거 */
+
+        width: 100%;
+        max-width: 390px;
+        height: 70px;
+    }
+
+    /* ⭐ 화살표만 아래로 이동 */
+    .Back-btn img {
+        margin-left: 20px;
+        transform: translateY(10px);
     }
 
     .Back-btn:active {
-        transform: scale(0.92);
+        transform: none;
     }
 
     .Back-btn:active img {
@@ -703,7 +907,7 @@ body {
 
 .profile-image-wrapper {
     position: relative;
-
+    top: -15px;
     width: 100px;
     height: 100px;
 }
@@ -855,17 +1059,11 @@ body {
     align-items: center;
 
     gap: 8px;
-
     transform: translateX(5px);
-
     padding: 8px 12px;
-
     border-radius: 14px;
-
     background-color: #F4FBF9;
-
     border: 1px solid #CDEBE4;
-
     box-shadow: 0 3px 8px rgba(1, 161, 127, 0.08);
 }
 
@@ -976,7 +1174,6 @@ body {
     background-color: #fff;
 
     font-family: "Maplestory", sans-serif;
-
     font-size: 15px;
 
     color: #555;
@@ -986,7 +1183,6 @@ body {
     cursor: pointer;
 
     flex: 1;
-
     width: 0;
 }
 
@@ -1042,9 +1238,11 @@ body {
     height: 50px;
 
     border: 1px solid #ddd;
+
     border-radius: 10px;
 
     background-color: #fff;
+
     color: #555;
 
     font-family: "Maplestory", sans-serif;
@@ -1091,11 +1289,8 @@ body {
     /* ⭐ 생년월일 선택창 */
 
     .birth-box select {
-        height: 50px;
-
-        padding: 0 10px;
-
-        font-size: 14px;
+        text-align: center;
+        text-align-last: center;
     }
 }
 
@@ -1208,13 +1403,17 @@ body {
 
     .sport-choice-box {
         width: calc(100% - 40px);
+
         grid-template-columns: repeat(2, 1fr);
+
         gap: 8px;
     }
 
     .sport-choice-box button {
         height: 120px;
+
         border-radius: 10px;
+
         font-size: 12px;
     }
 
@@ -1225,7 +1424,9 @@ body {
 
     .select-count {
         width: calc(100% - 40px);
+
         margin-top: 10px;
+
         font-size: 12px;
     }
 }
@@ -1234,42 +1435,6 @@ body {
 /* ==============================================
    여기까지 운동 3번
    ============================================== */
-
-
-/* ========================================
-   ⭐ 운동 수준 페이지 제목
-   ======================================== */
-
-.signup-level-title {
-    width: 320px;
-
-    margin: 0 auto;
-
-    font-size: 28px;
-
-    line-height: 1.3;
-
-    font-weight: 700;
-
-    color: #222;
-}
-
-.signup-level-title:first-child {
-    margin-top: 90px;
-}
-
-
-/* 복수 선택 가능 */
-
-.signup-level-title + p {
-    width: 320px;
-
-    margin: 8px auto 25px;
-
-    font-size: 14px;
-
-    color: #777;
-}
 
 
 /* ========================================
@@ -1283,16 +1448,10 @@ body {
 }
 
 
-/* 운동 종목 이름 */
+/* ⭐ 운동 레벨 페이지 큰 제목 */
 
-.sport-level-box h3 {
-    margin: 0 0 10px;
-
-    font-size: 18px;
-
-    font-weight: 600;
-
-    color: #333;
+.signup-level-title {
+    text-align: left;
 }
 
 
@@ -1342,28 +1501,40 @@ body {
    ⭐ 체크 박스
    ======================================== */
 
-.check-box {
-    width: 24px;
-    height: 24px;
+.check-box { 
+    width: 24px; 
+    height: 24px; 
+    margin-right: 12px; 
 
-    margin-right: 12px;
+    border: 1px solid #ccc; 
+    border-radius: 50%; 
 
-    border: 1px solid #ccc;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
 
+    box-sizing: border-box; 
+
+    color: transparent; 
+    font-size: 0;
+
+    flex-shrink: 0; 
+}
+
+/* ⭐ 선택됐을 때 */
+.level-box button.selected .check-box {
+    border: 2px solid #01A17F;
+    background-color: #01A17F;
+    position: relative;
+}
+
+/* ⭐ 초록색 원 안의 흰색 동그라미 */
+.level-box button.selected .check-box::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background-color: #fff;
     border-radius: 50%;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    box-sizing: border-box;
-
-    color: #fff;
-
-    font-size: 14px;
-
-    flex-shrink: 0;
 }
 
 
@@ -1396,6 +1567,8 @@ body {
     font-size: 15px;
 
     color: #333;
+
+    text-align: left;
 }
 
 .level-box button.selected strong {
@@ -1408,6 +1581,8 @@ body {
     font-size: 12px;
 
     color: #888;
+
+    text-align: left;
 }
 
 
@@ -1430,6 +1605,8 @@ body {
         width: calc(100% - 40px);
 
         font-size: 26px;
+
+        text-align: left;
     }
 
     .signup-level-title:first-child {
@@ -1438,6 +1615,10 @@ body {
 
     .signup-level-title + p {
         width: calc(100% - 40px);
+
+        text-align: left;
+
+        margin-left: 5px;
     }
 
     .sport-level-box {
@@ -1448,6 +1629,8 @@ body {
 
     .sport-level-box h3 {
         font-size: 16px;
+
+        text-align: left;
     }
 
     .level-box button {
@@ -1484,40 +1667,84 @@ body {
 
 .regions-select-row {
     display: flex;
-    gap: 10px;
+
+    /* ⭐ 선택창 아래쪽 기준으로 정렬 */
+    align-items: flex-end;
+
+    gap: 6px;
+
     width: 320px;
+
     margin: 0 auto 20px;
 }
 
+
 .regions-select {
     flex: 1;
+
     min-width: 0;
 }
 
-.regions-select p,
-.selected-regions > p {
-    margin: 0 0 10px;
-    font-size: 16px;
-    font-weight: 700;
+.regions-select select:disabled {
+    background-color: #F1F1F1;
+
+    color: #AAAAAA;
+
+    cursor: not-allowed;
 }
 
 
-/* 시/도, 구/군 선택 박스 */
+/* ⭐ 시도 선택 / 구군 선택 제목 */
+
+.regions-select p,
+.selected-regions > p {
+    margin: 0 0 10px 5px;
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    text-align: left;
+}
+
+
+/* ⭐ 공통 소제목 */
+
+.signup-subtitle {
+    margin-left: 5px;
+
+    text-align: left;
+}
+
+
+/* ⭐ 시/도, 구/군 선택 박스 */
 
 .regions-select select {
     width: 100%;
+
     height: 52px;
+
     padding: 0 10px;
+
     border: 1.5px solid #d9d9d9;
+
     border-radius: 10px;
+
     background-color: #fff;
+
     font-family: "Maplestory", sans-serif;
+
     font-size: 15px;
+
     color: #333;
+
     outline: none;
+
     cursor: pointer;
+
     box-sizing: border-box;
 }
+
 
 .regions-select select:focus {
     border-color: #01A17F;
@@ -1527,8 +1754,10 @@ body {
 /* ========================================
    ⭐ 선택된 지역
    ======================================== */
+
 .selected-regions {
     width: 320px;
+
     margin: 30px auto 0;
 }
 
@@ -1536,23 +1765,45 @@ body {
 /* ========================================
    ⭐ 지역 안내
    ======================================== */
-.location-guide {
-    width: 320px;
+
+.regions-guide {
+    width: fit-content;
+
     margin: 20px auto 25px;
-    padding: 12px 15px;
-    box-sizing: border-box;
+
+    padding: 4px 12px;
+
     display: flex;
+
+    flex-direction: row;
+
     align-items: center;
-    gap: 10px;
-    border-radius: 10px;
-    background-color: #F7F7F7;
+    justify-content: center;
+
+    gap: 8px;
+
+    border-radius: 5px;
+
+    background-color: #dbffc64f;
 }
 
-.location-icon {
-    font-size: 20px;
+.regions-icon {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
 }
 
-.location-guide p {
+.location_pin {
+    width: 20px;
+    height: 20px;
+
+    object-fit: contain;
+
+    display: block;
+}
+
+.regions-guide p {
     margin: 0;
 
     font-size: 12px;
@@ -1560,6 +1811,54 @@ body {
     line-height: 1.5;
 
     color: #777;
+
+    text-align: center;
+}
+
+
+/* ========================================
+   ⭐ 가운데 화살표
+   ======================================== */
+
+.down-arrow {
+    width: 22px;
+    height: 22px;
+
+    object-fit: contain;
+
+    /* ⭐ PNG 화살표 색상 → 초록색 */
+
+    filter: brightness(0) saturate(100%)
+            invert(45%) sepia(90%)
+            saturate(900%) hue-rotate(120deg)
+            brightness(90%);
+
+    /* ⭐ ↓ → 방향으로 회전 */
+
+    transform: rotate(-90deg);
+
+    /* ⭐ 선택창 높이의 정중앙에 맞춤 */
+
+    margin-bottom: 15px;
+
+    flex-shrink: 0;
+}
+
+
+/* ⭐ 위치 아이콘 이미지 */
+
+.location-icon {
+    width: 20px;
+    height: 20px;
+
+    object-fit: contain;
+
+    display: block;
+
+    filter: brightness(0) saturate(100%)
+            invert(45%) sepia(90%)
+            saturate(900%) hue-rotate(120deg)
+            brightness(90%);
 }
 
 
@@ -1573,18 +1872,21 @@ body {
     margin: 0 auto;
 }
 
+
 .distance-select > p {
-    margin: 0 0 10px;
+    margin: 0 0 10px 5px;
 
     font-size: 14px;
 
     font-weight: 600;
 
     color: #333;
+
+    text-align: left;
 }
 
 
-/* 거리 버튼 영역 */
+/* ⭐ 거리 버튼 영역 */
 
 .distance-list {
     display: flex;
@@ -1595,10 +1897,11 @@ body {
 }
 
 
-/* 거리 버튼 */
+/* ⭐ 거리 버튼 */
 
 .distance-list button {
     width: 100%;
+
     height: 50px;
 
     padding: 0 15px;
@@ -1625,7 +1928,7 @@ body {
 }
 
 
-/* 선택된 거리 */
+/* ⭐ 선택된 거리 */
 
 .distance-list button.selected {
     border: 2px solid #01A17F;
@@ -1638,11 +1941,65 @@ body {
 }
 
 
-/* 체크 */
+/* ⭐ 체크 */
 
 .distance-list button.selected span {
     font-size: 16px;
 
+    font-weight: bold;
+}
+
+
+/* ⭐ 선택된 지역 태그 */
+
+.selected-regions-item {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    height: 24px;
+
+    padding: 0 8px;
+
+    margin: 0 4px 4px 0;
+
+    border: 1.5px solid #01A17F;
+
+    border-radius: 6px;
+
+    background-color: #fff;
+
+    color: #01A17F;
+
+    font-family: "Maplestory", sans-serif;
+
+    font-size: 12px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: transform 0.1s ease, background-color 0.1s ease;
+}
+
+
+/* ⭐ 지역 태그를 눌렀을 때 */
+
+.selected-regions-item:active {
+    transform: scale(0.96);
+
+    background-color: #E0F3EE;
+}
+
+
+/* ⭐ 지역 삭제 X */
+
+.regions-remove {
+    margin-left: 5px;
+
+    color: #01A17F;
+
+    font-size: 11px;
     font-weight: bold;
 }
 
@@ -1660,18 +2017,31 @@ body {
         width: calc(100% - 40px);
     }
 
+
     .regions-select select {
         height: 50px;
     }
+
 
     .location-guide {
         padding: 10px 12px;
     }
 
+
     .distance-list button {
         height: 48px;
 
         font-size: 14px;
+    }
+
+
+    /* ⭐ 모바일에서도 화살표를 선택창 가운데에 유지 */
+
+    .down-arrow {
+        width: 20px;
+        height: 20px;
+
+        margin-bottom: 15px;
     }
 }
 
@@ -1686,106 +2056,167 @@ body {
    ======================================== */
 
 
-/* 시간 예시 */
+/* ⭐ 활동 시간 선택 영역 */
 
-.time-example {
+.time-box {
     width: 320px;
 
-    margin: 8px auto 25px;
-
-    font-size: 13px;
-
-    font-weight: 400;
-
-    color: #888;
+    margin: 20px auto 25px;
 }
 
 
-/* 시간대 추가 버튼 */
+/* ⭐ 시간대 선택 영역 */
 
-.time-add-box {
-    width: 320px;
+.time-box > div {
+    display: flex;
 
-    margin: 0 auto;
+    align-items: center;
+
+    gap: 6px;
+
+    flex-wrap: wrap;
 }
 
-.time-add-btn {
-    width: 100%;
+
+/* ⭐ 요일 / 시간 선택창 */
+
+.time-box select {
     height: 50px;
 
-    border: 1px dashed #B8DCD4;
+    padding: 0 10px;
+
+    box-sizing: border-box;
+
+    border: 1.5px solid #d9d9d9;
 
     border-radius: 10px;
 
     background-color: #fff;
-
-    color: #01A17F;
 
     font-family: "Maplestory", sans-serif;
 
     font-size: 14px;
 
-    cursor: pointer;
-}
+    color: #555;
 
-
-/* 요일 / 시간 선택 영역 */
-
-.time-select-box {
-    width: 320px;
-
-    margin: 15px auto 0;
-
-    padding: 15px;
-
-    box-sizing: border-box;
-
-    border: 1px solid #ddd;
-
-    border-radius: 10px;
-
-    background-color: #FAFAFA;
-}
-
-
-/* 요일 / 시간 선택창 */
-
-.time-select {
-    height: 45px;
-
-    padding: 0 10px;
-
-    border: 1px solid #ddd;
-
-    border-radius: 8px;
-
-    background-color: #fff;
-
-    font-family: "Maplestory", sans-serif;
-
-    font-size: 13px;
+    text-align: center;
 
     outline: none;
 
     cursor: pointer;
 }
 
-.time-select:focus {
+
+/* ⭐ 선택창 클릭 */
+
+.time-box select:focus {
     border-color: #01A17F;
 }
 
 
-/* 시간 선택 완료 버튼 */
+/* ⭐ 선택창 hover */
 
-.time-confirm-btn {
+.time-box select:hover {
+    border-color: #01A17F;
+}
+
+
+/* ⭐ 요일 선택 */
+
+.time-box select:first-child {
+    flex: 1;
+
+    min-width: 80px;
+}
+
+
+/* ⭐ 시작 / 종료 시간 */
+
+.time-box select:not(:first-child) {
+    flex: 1;
+
+    min-width: 90px;
+}
+
+
+/* ⭐ ~ 기호 */
+
+.time-box span {
+    font-family: "Maplestory", sans-serif;
+
+    font-size: 14px;
+
+    color: #555;
+}
+
+
+/* ========================================
+   ⭐ 시간대 추가 버튼
+   ======================================== */
+
+
+/* ⭐ 처음 보이는 + 시간대 추가 버튼 */
+
+.time-box > button {
     width: 100%;
+
+    height: 50px;
+
+    border: 1.5px solid #CDEBE4;
+
+    border-radius: 10px;
+
+    background-color: #F4FBF9;
+
+    color: #01A17F;
+
+    font-family: "Maplestory", sans-serif;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: 0.15s;
+}
+
+
+/* ⭐ 시간대 추가 버튼 hover */
+
+.time-box > button:hover {
+    background-color: #E8F6F2;
+
+    border-color: #01A17F;
+}
+
+
+/* ⭐ 시간대 추가 버튼 클릭 */
+
+.time-box > button:active {
+    transform: scale(0.97);
+
+    background-color: #E0F3EE;
+}
+
+
+/* ========================================
+   ⭐ 선택 완료 버튼
+   ======================================== */
+
+
+/* ⭐ 선택창을 열었을 때 나오는 + 시간대 추가 버튼 */
+
+.time-box > div > button {
+    width: 100%;
+
     height: 45px;
 
-    margin-top: 12px;
+    margin-top: 4px;
 
     border: none;
 
-    border-radius: 8px;
+    border-radius: 10px;
 
     background-color: #01A17F;
 
@@ -1795,78 +2226,170 @@ body {
 
     font-size: 14px;
 
+    font-weight: bold;
+
     cursor: pointer;
 
-    transition: background-color 0.15s ease;
+    transition: 0.15s;
 }
 
-.time-confirm-btn:active {
+
+/* ⭐ 선택 완료 버튼 hover */
+
+.time-box > div > button:hover {
+    background-color: #008F72;
+}
+
+
+/* ⭐ 선택 완료 버튼 클릭 */
+
+.time-box > div > button:active {
+    transform: scale(0.97);
+
     background-color: #008A6D;
 }
 
 
-/* 선택한 시간대 */
+/* ========================================
+   ⭐ 선택한 시간대
+   ======================================== */
 
-.selected-time-box {
+
+/* ⭐ 선택한 시간대 전체 영역 */
+
+.time-box + div {
     width: 320px;
 
-    margin: 25px auto 0;
-}
-
-.selected-time-box h3 {
-    margin: 0 0 10px;
-
-    font-size: 16px;
-
-    font-weight: 600;
-
-    color: #333;
+    margin: 0 auto 25px;
 }
 
 
-/* 선택한 시간대 한 개 */
+/* ⭐ "선택한 시간대" 제목 */
 
-.selected-time-item {
+.time-box + div h3 {
+    margin: 50px 0 10px 5px;
+
+    font-family: "Maplestory", sans-serif;
+
+    text-align: left;
+}
+
+
+/* ⭐ 선택한 시간대 한 줄 */
+
+.time-box + div > div {
     width: 100%;
 
-    min-height: 48px;
+    min-height: 50px;
 
-    margin-bottom: 8px;
-
-    padding: 0 12px;
+    padding: 0 18px;
 
     box-sizing: border-box;
-
-    border: 1px solid #ddd;
-
-    border-radius: 10px;
-
-    background-color: #fff;
 
     display: flex;
 
     align-items: center;
 
-    justify-content: space-between;
+    margin-bottom: 10px;
 
-    font-size: 14px;
+    border: 1.5px solid #CDEBE4;
 
-    color: #333;
+    border-radius: 8px;
+
+    background-color: #ffffff;
+
+    font-family: "Maplestory", sans-serif;
+
+    font-size: 15px;
+
+    color: #555;
 }
 
 
-/* 시간 삭제 버튼 */
+/* ⭐ 시간 텍스트 */
 
-.time-delete-btn {
+.time-box + div > div span {
+    flex: 1;
+
+    text-align: left;
+
+    letter-spacing: 1px;
+}
+
+
+/* ⭐ 삭제 X 버튼 */
+
+.time-box + div > div button {
+    width: 20px;
+
+    height: 20px;
+
+    padding: 0;
+
+    margin-left: 10px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
     border: none;
 
-    background: none;
+    background: transparent;
 
-    color: #999;
+    color: #01A17F;
+
+    font-family: Arial, sans-serif;
 
     font-size: 16px;
 
+    font-weight: normal;
+
     cursor: pointer;
+}
+
+
+/* ⭐ 삭제 버튼 클릭 */
+
+.time-box + div > div button:active {
+    transform: scale(0.85);
+}
+
+
+/* ⭐ 삭제 X 버튼 */
+
+.time-box + div > div button {
+    width: 20px;
+    height: 20px;
+
+    padding: 0;
+    margin: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    background: transparent;
+
+    color: #01A17F;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 16px;
+
+    font-weight: normal;
+
+    cursor: pointer;
+}
+
+
+/* ⭐ 삭제 버튼 클릭 */
+
+.time-box + div > div button:active {
+    transform: scale(0.85);
 }
 
 
@@ -1899,11 +2422,6 @@ body {
 }
 
 
-/* =====================================
-   여기까지 활동시간 6번
-   ===================================== */
-
-
 /* ========================================
    ⭐ 활동 빈도
    ======================================== */
@@ -1911,33 +2429,33 @@ body {
 .frequency-options {
     width: 320px;
 
-    margin: 30px auto 0;
+    margin: 0 auto 25px;
 
     display: flex;
 
     flex-direction: column;
 
-    gap: 10px;
+    gap: 8px;
 }
 
 .frequency-option {
     width: 100%;
 
-    min-height: 50px;
+    min-height: 60px;
 
-    padding: 0 15px;
-
-    box-sizing: border-box;
+    padding: 10px 15px;
 
     border: 1px solid #ddd;
 
     border-radius: 10px;
 
+    background-color: #fff;
+
     display: flex;
 
     align-items: center;
 
-    background-color: #fff;
+    box-sizing: border-box;
 
     font-family: "Maplestory", sans-serif;
 
@@ -1948,51 +2466,111 @@ body {
     cursor: pointer;
 }
 
-
-/* 라디오 버튼 */
-
-.frequency-option input {
-    margin: 0 10px 0 0;
-
-    width: 16px;
-    height: 16px;
-
-    accent-color: #01A17F;
-
-    cursor: pointer;
+/* ⭐ 기본 라디오 버튼 숨기기 */
+.frequency-option input[type="radio"] {
+    display: none;
 }
 
+/* ⭐ 선택 원 */
+.frequency-option .check-box {
+    width: 24px;
+    height: 24px;
 
-/* 선택된 항목 */
+    margin-right: 12px;
 
-.frequency-option:has(input:checked) {
+    border: 1px solid #ccc;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    flex-shrink: 0;
+
+    position: relative;
+}
+
+/* ⭐ 선택된 박스 */
+.frequency-option:has(input[type="radio"]:checked) {
     border: 2px solid #01A17F;
 
     background-color: #E8F6F2;
 
     color: #01A17F;
 
-    font-weight: 600;
+    font-weight: bold;
+}
+
+/* ⭐ 선택된 초록색 원 */
+.frequency-option:has(input[type="radio"]:checked) .check-box {
+    border-color: #01A17F;
+
+    background-color: #01A17F;
+}
+
+/* ⭐ 초록색 원 안의 흰색 작은 원 */
+.frequency-option:has(input[type="radio"]:checked) .check-box::after {
+    content: "";
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background-color: #fff;
+
+    position: absolute;
+
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
 }
 
 
-/* 모바일 */
+/* ========================================
+   ⭐ 다음 버튼
+   ======================================== */
+
+.frequency-options ~ .Next-btn {
+    margin-top: 30px;
+}
+
+
+/* ========================================
+   ⭐ 모바일
+   ======================================== */
 
 @media (max-width: 500px) {
 
     .frequency-options {
         width: calc(100% - 40px);
 
-        margin-top: 25px;
+        margin-bottom: 20px;
+
+        gap: 8px;
     }
 
     .frequency-option {
-        min-height: 48px;
+        min-height: 60px;
 
-        font-size: 14px;
+        padding: 8px 12px;
+    }
+
+    .frequency-option .check-box {
+        width: 22px;
+        height: 22px;
+
+        margin-right: 10px;
+    }
+
+    .frequency-option:has(input[type="radio"]:checked) .check-box::after {
+        width: 7px;
+        height: 7px;
     }
 }
-
 
 /* ==============================
    여기까지 활동 빈도
@@ -2016,6 +2594,8 @@ body {
     font-weight: 400;
 
     color: #888;
+
+    text-align: left;
 }
 
 
@@ -2039,7 +2619,7 @@ body {
 .club-preference-option {
     width: 100%;
 
-    min-height: 50px;
+    min-height: 60px;
 
     padding: 0 15px;
 
@@ -2107,9 +2687,9 @@ body {
     }
 
     .club-preference-option {
-        min-height: 48px;
+        min-height: 60px;
 
-        font-size: 14px;
+        font-size: 15px;
     }
 }
 
@@ -2117,3 +2697,497 @@ body {
 /* ==========================================
    여기까지 선호 동호회
    ========================================== */
+
+
+   /* ========================================
+   ⭐ SignupReview⭐
+   입력 정보 확인 페이지
+======================================== */
+
+/* ======================================== 
+   ⭐ 프로필 + 계정 정보 
+======================================== */
+
+.review-profile-section {
+
+    width: calc(100% - 40px);
+
+    max-width: 600px;
+
+    margin: 0 auto 28px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 35px;
+
+}
+
+
+/* ======================================== 
+   ⭐ 프로필 이미지 
+======================================== */
+
+.review-profile {
+
+    flex-shrink: 0;
+
+    width: 115px;
+    height: 115px;
+
+    border-radius: 50%;
+
+    overflow: hidden;
+
+    background-color: #f7f7f7;
+
+    border: 3px solid #f1f1f1;
+
+}
+
+
+.review-profile img {
+
+    width: 100%;
+    height: 100%;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    display: block;
+
+}
+
+
+/* ======================================== 
+   ⭐ 계정 정보 
+======================================== */
+
+.review-account {
+
+    flex: 1;
+
+    min-width: 0;
+
+    /* ⭐ 계정 정보 전체 왼쪽 정렬 */
+    text-align: left;
+
+}
+
+
+.review-account h3 {
+
+    margin: 0 0 13px;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    color: #666;
+
+    /* ⭐ 왼쪽 정렬 */
+    text-align: left;
+
+}
+
+
+.review-account p {
+
+    margin: 0 0 12px;
+
+    font-size: 15px;
+
+    line-height: 1.5;
+
+    color: #555;
+
+    word-break: break-all;
+
+    /* ⭐ 왼쪽 정렬 */
+    text-align: left;
+
+}
+
+
+/* ======================================== 
+   ⭐ 계정 정보 수정 버튼 
+======================================== */
+
+.review-account button {
+
+    border: 1px solid #ddd;
+
+    background-color: #fff;
+
+    border-radius: 5px;
+
+    padding: 5px 12px;
+
+    font-family: inherit;
+
+    font-size: 15px;
+
+    color: #555;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+
+    /* ⭐ 버튼 왼쪽 배치 */
+    display: block;
+
+    margin-left: 0;
+
+    margin-right: auto;
+
+}
+
+
+.review-account button:hover {
+
+    background-color: #f7f7f7;
+
+}
+
+
+.review-account button:active {
+
+    transform: scale(0.97);
+
+}
+
+
+/* ======================================== 
+   ⭐ 정보 전체 영역 
+======================================== */
+
+.review-grid {
+
+    width: calc(100% - 40px);
+
+    max-width: 600px;
+
+    margin: 0 auto;
+
+    padding-top: 0;
+
+    border-top: 1.5px solid #e5e5e5;
+
+    display: block;
+
+}
+
+
+/* ======================================== 
+   ⭐ 정보 카드 
+   카테고리 | 내용 | 수정
+======================================== */
+
+.review-card {
+
+    position: relative;
+
+    width: 100%;
+
+    min-height: 78px;
+
+    box-sizing: border-box;
+
+    display: grid;
+
+    grid-template-columns: 110px 1fr 42px;
+
+    column-gap: 15px;
+
+    align-items: center;
+
+    padding: 18px 0;
+
+    border-bottom: 1px solid #eeeeee;
+
+}
+
+
+/* ======================================== 
+   ⭐ 카테고리 
+======================================== */
+
+.review-category {
+
+    align-self: start;
+
+    padding-top: 2px;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    color: #666;
+
+    line-height: 1.5;
+
+    word-break: keep-all;
+
+    /* ⭐ 왼쪽 정렬 */
+    text-align: left;
+
+}
+
+
+/* ======================================== 
+   ⭐ 내용 
+======================================== */
+
+.review-content {
+
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    gap: 4px;
+
+    /* ⭐ 내용 전체 왼쪽 정렬 */
+    text-align: left;
+
+}
+
+
+.review-content p {
+
+    margin: 0;
+
+    font-size: 15px;
+
+    line-height: 1.5;
+
+    color: #555;
+
+    word-break: keep-all;
+
+    /* ⭐ 내용 왼쪽 정렬 */
+    text-align: left;
+
+}
+
+
+/* ======================================== 
+   ⭐ 수정 버튼 
+======================================== */
+
+.review-card button {
+
+    width: 50px;
+
+    height: 30px;
+
+    padding: 0;
+
+    border: 1px solid #ddd;
+
+    border-radius: 5px;
+
+    background-color: #fff;
+
+    font-family: inherit;
+
+    font-size: 15px;
+
+    color: #555;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+
+    align-self: center;
+
+}
+
+
+.review-card button:hover {
+
+    background-color: #f7f7f7;
+
+}
+
+
+.review-card button:active {
+
+    transform: scale(0.97);
+
+}
+
+
+/* ======================================== 
+   ⭐ 모바일 
+======================================== */
+
+@media (max-width: 480px) {
+
+
+    /* ========================================
+       ⭐ 프로필 + 계정
+    ======================================== */
+
+    .review-profile-section {
+
+        width: calc(100% - 40px);
+
+        gap: 24px;
+
+        margin-bottom: 25px;
+
+    }
+
+
+    /* ========================================
+       ⭐ 프로필
+    ======================================== */
+
+    .review-profile {
+
+        width: 100px;
+
+        height: 100px;
+
+    }
+
+
+    /* ========================================
+       ⭐ 계정
+    ======================================== */
+
+    .review-account {
+
+        /* ⭐ 모바일에서도 왼쪽 정렬 */
+        text-align: left;
+
+    }
+
+
+    .review-account h3 {
+
+        font-size: 15px;
+
+        /* ⭐ 왼쪽 정렬 */
+        text-align: left;
+
+    }
+
+
+    .review-account p {
+
+        font-size: 15px;
+
+        /* ⭐ 왼쪽 정렬 */
+        text-align: left;
+
+    }
+
+
+    .review-account button {
+
+        /* ⭐ 모바일에서도 왼쪽 배치 */
+        display: block;
+
+        margin-left: 0;
+
+        margin-right: auto;
+
+        font-size: 15px;
+
+    }
+
+
+    /* ========================================
+       ⭐ 정보 영역
+    ======================================== */
+
+    .review-grid {
+
+        width: calc(100% - 40px);
+
+        padding-top: 0;
+
+    }
+
+
+    /* ========================================
+       ⭐ 정보 카드
+    ======================================== */
+
+    .review-card {
+
+        min-height: 72px;
+
+        grid-template-columns: 82px 1fr 50px;
+
+        column-gap: 10px;
+
+        padding: 15px 0;
+
+    }
+
+
+    /* ========================================
+       ⭐ 카테고리
+    ======================================== */
+
+    .review-category {
+
+        font-size: 15px;
+
+        line-height: 1.4;
+
+        /* ⭐ 왼쪽 정렬 */
+        text-align: left;
+
+    }
+
+
+    /* ========================================
+       ⭐ 내용
+    ======================================== */
+
+    .review-content {
+
+        gap: 3px;
+
+        /* ⭐ 왼쪽 정렬 */
+        text-align: left;
+
+    }
+
+
+    .review-content p {
+
+        font-size: 15px;
+
+        line-height: 1.5;
+
+        /* ⭐ 왼쪽 정렬 */
+        text-align: left;
+
+    }
+
+
+    /* ========================================
+       ⭐ 수정 버튼
+    ======================================== */
+
+    .review-card button {
+
+        width: 50px;
+
+        height: 30px;
+
+        font-size: 15px;
+
+    }
+
+}

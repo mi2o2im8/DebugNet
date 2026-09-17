@@ -16,7 +16,7 @@ import tennisIcon from "../../assets/img/sports/tennis-ball.png";
 
 const SPORT_OPTIONS = [
         {
-            value: "축구/풋살",
+            value: "축구·풋살",
             label: "축구/풋살",
             icon: footballIcon
         },
@@ -84,6 +84,8 @@ function BasicInfoStep({ formData, onChange }) {
             return;
         }
 
+        onChange("representativeImageFile", file);
+
         const reader = new FileReader();
 
         reader.onload = () => {
@@ -112,7 +114,7 @@ function BasicInfoStep({ formData, onChange }) {
                 <input
                     id="clubRepresentativeImage"
                     type="file"
-                    accept="image/png, image/jpeg"
+                    accept="image/png, image/jpeg, image/webp"
                     onChange={handleImageChange}
                 />
 

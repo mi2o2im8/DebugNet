@@ -37,19 +37,22 @@ function SignupClubPreference() {
  
     return (
         // 헤더
-        <div>
+        <div className="signup-container">
             {/* 뒤로가기 버튼 */}
             <button
                 type="button"
                 className="Back-btn"
                 onClick={() => navigate("/signup/basic/SignupFrequency")}
+                aria-label="뒤로가기"
             >
-                뒤로가기
+                <img src={backIcon} alt="뒤로가기" />
             </button>
             
-            <h1 className="signup-level-title">어떤 동호회를</h1>
-            <h1 className="signup-level-title">원하시나요?</h1>
-            <h4 className="club-preference-example">(복수 선택 가능)</h4>
+            <div className="signup-header03">
+                <h2>어떤 동호회를</h2>
+                <h2>원하시나요?</h2>
+                <p>(복수 선택 가능)</p>
+            </div>
              
             {/* 선호 활동 선택 */}
             <div className="club-preference-options">

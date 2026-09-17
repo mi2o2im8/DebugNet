@@ -128,25 +128,32 @@ function SignupTime() {
  
     return ( 
         // 헤더 
-        <div>
+        <div className="signup-container">
             {/* 뒤로가기 버튼 */}
             <button
                 type="button"
                 className="Back-btn"
-                onClick={() => navigate("/signup/basic/SignupLocation")}
+                onClick={() => navigate("/signup/basic/sport")}
+                aria-label="뒤로가기"
             >
-                뒤로가기
+                <img src={backIcon} alt="뒤로가기" />
             </button>
             
-            <h1 className="signup-level-title">활동 가능한 시간을</h1> 
-            <h1 className="signup-level-title">선택해주세요</h1>
-            <h4 className="time-example">(예)월19:00~22:00</h4>
+            <div className="signup-header06">
+                <h2>활동 가능한 시간을</h2> 
+                <h2>선택해주세요</h2>
+                <h3 className="ex-title">
+                    (예)월19:00~22:00,<br/>
+                    토 13:00~1800
+                </h3>
+            </div>
              
             {/* 요일/시간 선택 */}
-            <div>
+            <div className="time-box">
                 {/* 처음에는 선택창을 숨기고 + 시간대 추가 버튼만 보여줌 */}
                 {!showTimeSelect && (
                     <button
+                        className=""
                         type="button"
                         onClick={() => setShowTimeSelect(true)}
                     >
@@ -218,19 +225,27 @@ function SignupTime() {
             <div>
                 <h3>선택한 시간대</h3>
 
-                {(signupData.availableTimes || []).map((time, index) => (
-                    <div key={index}>
-                        <span>
-                            {time.day} {time.startTime} ~ {time.endTime}
-                        </span> 
+                {(signupData.availableTimes || []).map((time, index) => ( 
+                    <div 
+                        key={index}
+                        className="selected-time-item"
+                    > 
+                        <span className="time-day">
+                            {time.day}
+                        </span>
 
-                        <button 
-                            type="button" 
-                            onClick={() => handleDeleteTime(index)}
-                        >
-                            x
-                        </button>
-                    </div>
+                        <span className="time-range">
+                            {time.startTime} ~ {time.endTime}
+                        </span>
+
+                        <button  
+                            type="button"
+                            className="time-delete-btn"
+                            onClick={() => handleDeleteTime(index)} 
+                        > 
+                            ×
+                        </button> 
+                    </div> 
                 ))}
             </div>
              

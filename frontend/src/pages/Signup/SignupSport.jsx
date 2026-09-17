@@ -46,7 +46,7 @@ function Signup() {
     };
     return (
         // 헤더
-        <div>
+        <div className="signup-container">
             {/* 뒤로가기 버튼 */}
             <button
                 type="button"

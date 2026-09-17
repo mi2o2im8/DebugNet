@@ -347,7 +347,7 @@
 
 .community-post-item {
   padding: 15px 4px;
-
+  text-align: left;
   border-bottom: 1px solid #eeeeee;
 
   cursor: pointer;
@@ -530,4 +530,73 @@
   color: #999999;
 
   font-size: 13px;
+}
+
+
+/* ========================================
+   종목별게시판 하위 종목 탭
+======================================== */
+.community-sport-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+  height: 40px;
+
+  padding: 0 18px;
+
+  overflow-x: auto;
+
+  border-bottom: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+
+  scrollbar-width: none;
+}
+
+.community-sport-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.community-sport-tab {
+  position: relative;
+
+  flex-shrink: 0;
+
+  height: 40px;
+
+  padding: 0 6px;
+
+  border: none;
+
+  background: transparent;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  color: #888888;
+
+  cursor: pointer;
+}
+
+.community-sport-tab.active {
+  font-weight: 700;
+  color: #20b26b;
+}
+
+.community-sport-tab.active::after {
+  content: "";
+
+  position: absolute;
+
+  left: 4px;
+  right: 4px;
+  bottom: 0;
+
+  height: 2px;
+
+  background-color: #20b26b;
+
+  border-radius: 2px;
 }

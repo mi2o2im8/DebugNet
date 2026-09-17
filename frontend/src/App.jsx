@@ -14,6 +14,7 @@ import SignupFrequency from './pages/Signup/SignupFrequency'
 import SignupClubPreference from './pages/Signup/SignupClubPreference'
 import SignupFee from './pages/Signup/SignupFee'
 import SignupReview from './pages/Signup/SignupReview'
+import ClubDashboard from "./pages/ClubDashboard/ClubDashboard";
 import Main from "./pages/Main/Main";
 
 import ClubHome from './pages/ClubHome/ClubHome';
@@ -31,6 +32,7 @@ import ClubCreate from './pages/ClubCreate/ClubCreate'
 import Community from "./pages/Community/Community";
 import PostDetail from './pages/Community/PostDetail';
 import PostWrite from './pages/Community/PostWrite';
+import ClubManageLayout from "./layouts/ClubManageLayout";
 
 
 import './App.css'
@@ -83,6 +85,14 @@ function App() {
           <Route path="/community/post/:postId" element={<PostDetail />} />
           {/* 커뮤니티 게시글 작성하기 */}
           <Route path="/community/write" element={<PostWrite />} />
+
+          {/* 동호회 운영 기능: BottomNav 공통 적용 */}
+          <Route element={<ClubManageLayout />}>
+              <Route path="/clubs/:clubId/manage" element={<ClubDashboard />}/> 
+              
+              {/* 이후 아래 위치에 동호회 운영 기능 관련 화면들을 추가 */}
+              
+          </Route>
 
         </Routes>
       </SignupProvider>
