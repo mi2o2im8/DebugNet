@@ -208,48 +208,39 @@ body {
 
 .Back-btn {
     position: fixed;
-
     top: 0;
     left: 50%;
-
-    /* ⭐ 헤더를 화면 가운데에 정확하게 배치 */
     transform: translateX(-50%);
 
     width: 100%;
-    max-width: 390px;
+    max-width: 400px; /* ⭐ signup-container와 동일 */
     height: 80px;
 
-    padding: 0;
-
+    padding: 0 15px; /* ⭐ signup-container와 동일 */
     display: flex;
     justify-content: flex-start;
     align-items: center;
 
     border: none;
     background-color: #fff;
-
     cursor: pointer;
-
     z-index: 1001;
-
     box-sizing: border-box;
 }
 
-
-/* ⭐ 뒤로가기 아이콘 */
-
 .Back-btn img {
-    width: 30px;
-    height: 30px;
-
-    margin-left: 20px;
+    width: 35px;
+    height: 35px;
+    transform: translateY(10px);
 
     object-fit: contain;
     display: block;
 
-    transform: translateY(10px);
+    filter: brightness(0) saturate(100%)
+            invert(45%) sepia(90%)
+            saturate(900%) hue-rotate(120deg)
+            brightness(90%);
 }
-
 
 /* ========================================
    ⭐ 회원가입 상단 영역

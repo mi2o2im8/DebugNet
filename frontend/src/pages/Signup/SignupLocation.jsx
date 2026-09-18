@@ -22,6 +22,9 @@ function SignupLocation() {
         "노원구","은평구","서대문구","마포구","양천구","강서구","구로구","금천구","영등포구","동작구","관악구","서초구","강남구","송파구","강동구"];
     // 시도 선택시 구군 선택 나오도록
     const [selectedCity, setSelectedCity] = useState("");
+    const [selectedDistance, setSelectedDistance] = useState(
+        signupData.travel_distance_km
+    );
 
     // 구/군 선택
     const handLocation = (district) => {
@@ -46,33 +49,41 @@ function SignupLocation() {
     //나중에 Supabase에 회원가입 요청을 넣으면서 await를 사용하게 되면 그때 다시
     // const handleSignup = async ()
     const handleNext = () => {
-        if (signupData.regions.length === 0){
-            alert("활동 지역을 하나 이상 선택해주세요.");
+    // ⭐ 활동 지역 선택 여부 확인
+    if (!signupData.regions || signupData.regions.length === 0) {
+        alert("활동 지역을 하나 이상 선택해주세요.");
+        return;
+        }
+
+        // ⭐ 이동 가능 범위 선택 여부 확인
+        if (signupData.travel_distance_km == null) {
+            alert("이동 가능한 범위를 선택해주세요.");
             return;
         }
-        // 이동 가능 거리 선택 확인
-        if (signupData.travel_distance_km === undefined){
-            alert("이동 가능한 범위를 선택해주세요.")
-            return;
-        }
-        // 활동 가능 시간 페이지로 이동
+
+        // ⭐ 모두 선택했으면 다음 페이지
         navigate("/signup/basic/SignupTime");
     };
     
-    // 거리 선택
+    // ⭐ 거리 선택
     const distanceOptions = [
         { label: "1km 이내", value: 1 },
         { label: "3km 이내", value: 3 },
         { label: "5km 이내", value: 5 },
         { label: "10km 이내", value: 10 },
-        { label: "거리 상관없음", value: null },
+        { label: "거리 상관없음", value: 999 },
     ];
+
     const handleDistance = (distance) => {
+        // ⭐ 사용자가 현재 페이지에서 선택한 거리
+        setSelectedDistance(distance);
+
+        // ⭐ 회원가입 데이터 저장
         setSignupData({
             ...signupData,
             travel_distance_km: distance
-        })
-    }
+        });
+    };
 
     return (
         // 헤더

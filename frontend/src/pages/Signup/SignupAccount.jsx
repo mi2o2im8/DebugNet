@@ -304,10 +304,8 @@ function Signup() {
                                 : ""
                         }
                     </span>
-
                     비밀번호가 일치합니다.
                 </p>
-
             </div>
 
 

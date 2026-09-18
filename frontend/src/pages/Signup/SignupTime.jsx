@@ -133,7 +133,7 @@ function SignupTime() {
             <button
                 type="button"
                 className="Back-btn"
-                onClick={() => navigate("/signup/basic/sport")}
+                onClick={() => navigate("/signup/basic/SignupLocation")}
                 aria-label="뒤로가기"
             >
                 <img src={backIcon} alt="뒤로가기" />
