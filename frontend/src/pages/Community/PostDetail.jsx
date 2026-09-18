@@ -37,6 +37,39 @@ const formatDateTime = (dateString) => {
 };
 
 
+const parsePostContent = (content) => {
+  if (!content) {
+    return [];
+  }
+
+  const parts = content.split(
+    /(\[\[IMAGE:[^\]]+\]\])/g
+  );
+
+  return parts
+    .filter((part) => part !== "")
+    .map((part, index) => {
+      const imageMatch = part.match(
+        /^\[\[IMAGE:(.+)\]\]$/
+      );
+
+      if (imageMatch) {
+        return {
+          id: `image-${index}`,
+          type: "image",
+          imageUrl: imageMatch[1],
+        };
+      }
+
+      return {
+        id: `text-${index}`,
+        type: "text",
+        text: part,
+      };
+    });
+};
+
+
 
 function PostDetail() {
   const navigate = useNavigate();
@@ -60,6 +93,23 @@ function PostDetail() {
   // 댓글 목록 중복 조회 방지
   const lastFetchedCommentsPostId =
     useRef(null);
+
+
+  // =========================
+  // 댓글 수정
+  // =========================
+
+  // 현재 수정 중인 댓글 ID
+  const [editingCommentId, setEditingCommentId] =
+    useState(null);
+
+  // 수정할 댓글 내용
+  const [editingCommentContent, setEditingCommentContent] =
+    useState("");
+
+  // 댓글 수정 요청 중 여부
+  const [isUpdatingComment, setIsUpdatingComment] =
+    useState(false);
 
   // =========================
   // 현재 게시글
@@ -472,104 +522,247 @@ function PostDetail() {
     }
   };
 
-  // =========================
-  // 댓글 작성
-  // =========================
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault();
+    // =========================
+    // 댓글 작성
+    // =========================
+    const handleCommentSubmit = async (e) => {
+      e.preventDefault();
 
-    const content =
-      commentInput.trim();
-
-
-    if (!content) {
-      alert("댓글 내용을 입력해주세요.");
-      return;
-    }
+      const content =
+        commentInput.trim();
 
 
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-
-      if (!session?.access_token) {
-        navigate("/Login", {
-          replace: true,
-        });
-
+      if (!content) {
+        alert("댓글 내용을 입력해주세요.");
         return;
       }
 
 
-      const response = await fetch(
-        `http://127.0.0.1:8000/api/posts/${postId}/comments`,
-        {
-          method: "POST",
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-          headers: {
-            "Content-Type":
-              "application/json",
 
-            Authorization:
-              `Bearer ${session.access_token}`,
-          },
+        if (!session?.access_token) {
+          navigate("/Login", {
+            replace: true,
+          });
 
-          body: JSON.stringify({
-            content: content,
-          }),
+          return;
         }
-      );
 
 
-      if (!response.ok) {
-        const errorData =
-          await response
-            .json()
-            .catch(() => null);
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/posts/${postId}/comments`,
+          {
+            method: "POST",
 
-        throw new Error(
-          errorData?.detail ||
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${session.access_token}`,
+            },
+
+            body: JSON.stringify({
+              content: content,
+            }),
+          }
+        );
+
+
+        if (!response.ok) {
+          const errorData =
+            await response
+              .json()
+              .catch(() => null);
+
+          throw new Error(
+            errorData?.detail ||
+              "댓글 등록에 실패했습니다."
+          );
+        }
+
+
+        const data =
+          await response.json();
+
+
+        // Backend에서 반환한 실제 댓글 추가
+        setComments((prevComments) => [
+          ...prevComments,
+          data.comment,
+        ]);
+
+
+        // 게시글의 댓글 수 화면에서도 +1
+        setPost((prevPost) => ({
+          ...prevPost,
+          comments:
+            (prevPost.comments || 0) + 1,
+        }));
+
+
+        // 입력창 초기화
+        setCommentInput("");
+
+      } catch (error) {
+        console.error(
+          "댓글 등록 오류:",
+          error
+        );
+
+        alert(
+          error.message ||
             "댓글 등록에 실패했습니다."
         );
       }
+    };
 
 
-      const data =
-        await response.json();
+    // =========================
+    // 댓글 수정 저장
+    // =========================
+    const handleUpdateComment = async (
+      commentId
+    ) => {
+      const content =
+        editingCommentContent.trim();
 
 
-      // Backend에서 반환한 실제 댓글 추가
-      setComments((prevComments) => [
-        ...prevComments,
-        data.comment,
-      ]);
+      if (!content) {
+        alert("댓글 내용을 입력해주세요.");
+        return;
+      }
 
 
-      // 게시글의 댓글 수 화면에서도 +1
-      setPost((prevPost) => ({
-        ...prevPost,
-        comments:
-          (prevPost.comments || 0) + 1,
-      }));
+      if (content.length > 1000) {
+        alert(
+          "댓글은 최대 1000자까지 입력할 수 있습니다."
+        );
+        return;
+      }
 
 
-      // 입력창 초기화
-      setCommentInput("");
+      setIsUpdatingComment(true);
 
-    } catch (error) {
-      console.error(
-        "댓글 등록 오류:",
-        error
+
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+
+        if (!session?.access_token) {
+          navigate("/Login", {
+            replace: true,
+          });
+
+          return;
+        }
+
+
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/comments/${commentId}`,
+          {
+            method: "PATCH",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${session.access_token}`,
+            },
+
+            body: JSON.stringify({
+              content: content,
+            }),
+          }
+        );
+
+
+        if (!response.ok) {
+          const errorData =
+            await response
+              .json()
+              .catch(() => null);
+
+
+          throw new Error(
+            errorData?.detail ||
+              "댓글 수정에 실패했습니다."
+          );
+        }
+
+
+        const data =
+          await response.json();
+
+
+        // 화면의 댓글도 바로 수정
+        setComments((prevComments) =>
+          prevComments.map((comment) =>
+            comment.id === commentId
+              ? {
+                  ...comment,
+                  content: data.content,
+                  updatedAt: data.updatedAt,
+                }
+              : comment
+          )
+        );
+
+
+        // 수정 상태 종료
+        setEditingCommentId(null);
+        setEditingCommentContent("");
+
+      } catch (error) {
+        console.error(
+          "댓글 수정 오류:",
+          error
+        );
+
+
+        alert(
+          error.message ||
+            "댓글 수정에 실패했습니다."
+        );
+
+      } finally {
+        setIsUpdatingComment(false);
+      }
+    };
+
+
+
+    // =========================
+    // 댓글 수정 시작
+    // =========================
+    const handleStartEditComment = (comment) => {
+      setEditingCommentId(comment.id);
+
+      setEditingCommentContent(
+        comment.content
       );
 
-      alert(
-        error.message ||
-          "댓글 등록에 실패했습니다."
-      );
-    }
+      // ... 메뉴 닫기
+      setOpenCommentMenuId(null);
+    };
+
+
+  // =========================
+  // 댓글 수정 취소
+  // =========================
+  const handleCancelEditComment = () => {
+    setEditingCommentId(null);
+    setEditingCommentContent("");
   };
+
+
 
 
   // =========================
@@ -782,6 +975,27 @@ function PostDetail() {
 
                   {showPostMenu && (
                     <div className="post-more-menu">
+
+                      {/* 게시글 수정 */}
+                      <button
+                        type="button"
+                        className="edit-menu-btn"
+                        onClick={() => {
+                          setShowPostMenu(false);
+
+                          navigate("/community/write", {
+                            state: {
+                              board: post.board,
+                              editPost: post,
+                            },
+                          });
+                        }}
+                      >
+                        수정하기
+                      </button>
+
+
+                      {/* 게시글 삭제 */}
                       <button
                         type="button"
                         className="delete-menu-btn"
@@ -789,6 +1003,7 @@ function PostDetail() {
                       >
                         게시글 삭제
                       </button>
+
                     </div>
                   )}
                 </div>
@@ -798,7 +1013,31 @@ function PostDetail() {
 
           {/* 게시글 본문 */}
           <div className="post-detail-content">
-            <p>{post.content}</p>
+            {parsePostContent(post.content).map((block) => {
+              if (block.type === "text") {
+                return (
+                  <div
+                    key={block.id}
+                    className="post-detail-text-block"
+                  >
+                    {block.text}
+                  </div>
+                );
+              }
+
+              if (block.type === "image") {
+                return (
+                  <img
+                    key={block.id}
+                    src={block.imageUrl}
+                    alt="게시글 첨부 이미지"
+                    className="post-detail-image"
+                  />
+                );
+              }
+
+              return null;
+            })}
           </div>
         </article>
 
@@ -887,17 +1126,35 @@ function PostDetail() {
                         <div className="comment-more-menu">
                           {currentUserId &&
                           comment.author_id === currentUserId ? (
-                            <button
-                              type="button"
-                              className="delete-menu-btn"
-                              onClick={() =>
-                                handleDeleteComment(
-                                  comment.id
-                                )
-                              }
-                            >
-                              댓글 삭제
-                            </button>
+
+                            <>
+                              {/* 댓글 수정 */}
+                              <button
+                                type="button"
+                                className="edit-menu-btn"
+                                onClick={() =>
+                                  handleStartEditComment(
+                                    comment
+                                  )
+                                }
+                              >
+                                수정하기
+                              </button>
+
+
+                              {/* 댓글 삭제 */}
+                              <button
+                                type="button"
+                                className="delete-menu-btn"
+                                onClick={() =>
+                                  handleDeleteComment(
+                                    comment.id
+                                  )
+                                }
+                              >
+                                댓글 삭제
+                              </button>
+                            </>
                           ) : (
                             <button
                               type="button"
@@ -918,9 +1175,80 @@ function PostDetail() {
                     </div>
                   </div>
 
-                  <p className="comment-content">
-                    {comment.content}
-                  </p>
+                  {editingCommentId === comment.id ? (
+
+                    // =========================
+                    // 댓글 수정 모드
+                    // =========================
+                    <div className="comment-edit-area">
+
+                      <textarea
+                        value={editingCommentContent}
+                        maxLength={1000}
+                        onChange={(e) =>
+                          setEditingCommentContent(
+                            e.target.value
+                          )
+                        }
+                      />
+
+
+                      <div className="comment-edit-bottom">
+
+                        <span className="comment-edit-count">
+                          {editingCommentContent.length}/1000
+                        </span>
+
+
+                        <div className="comment-edit-actions">
+
+                          <button
+                            type="button"
+                            className="comment-edit-cancel-btn"
+                            onClick={
+                              handleCancelEditComment
+                            }
+                            disabled={
+                              isUpdatingComment
+                            }
+                          >
+                            취소
+                          </button>
+
+
+                          <button
+                            type="button"
+                            className="comment-edit-save-btn"
+                            onClick={() =>
+                              handleUpdateComment(
+                                comment.id
+                              )
+                            }
+                            disabled={
+                              isUpdatingComment
+                            }
+                          >
+                            {isUpdatingComment
+                              ? "저장 중..."
+                              : "저장"}
+                          </button>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  ) : (
+
+                    // =========================
+                    // 일반 댓글 표시
+                    // =========================
+                    <p className="comment-content">
+                      {comment.content}
+                    </p>
+
+                  )}
                 </article>
               ))}
             </div>

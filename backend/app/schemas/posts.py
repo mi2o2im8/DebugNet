@@ -454,3 +454,55 @@ class CommunityWriteOptionsResponse(BaseModel):
     canWriteRecruit: bool
 
     canWriteNotice: bool
+
+
+# =========================================================
+# 게시글 이미지 업로드 Response
+# =========================================================
+
+class PostImageUploadResponse(BaseModel):
+    image_url: str
+
+
+# =========================================================
+# 게시글 수정 Request
+# =========================================================
+
+class PostUpdateRequest(BaseModel):
+
+    # 제목 수정
+    title: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=100,
+    )
+
+    # 본문 수정
+    content: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=3000,
+    )
+
+    # 종목별게시판에서 사용
+    sport_id: int | None = Field(
+        default=None,
+        gt=0,
+    )
+
+    # 동호회 홍보·회원구인에서 사용
+    club_id: int | None = Field(
+        default=None,
+        gt=0,
+    )
+
+
+# =========================================================
+# 게시글 수정 Response
+# =========================================================
+
+class PostUpdateResponse(BaseModel):
+
+    id: int
+
+    message: str = "게시글이 수정되었습니다."

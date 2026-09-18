@@ -278,6 +278,58 @@ class PostRepository:
         return response.count or 0
 
 
+    # =========================================================
+    # 게시글 이미지 Storage 업로드
+    # =========================================================
+
+    def upload_post_image(
+        self,
+        storage_path: str,
+        file_bytes: bytes,
+        content_type: str,
+    ) -> str:
+
+        bucket = self.admin_client.storage.from_("post_images")
+
+        # Storage에 이미지 업로드
+        bucket.upload(
+            path=storage_path,
+            file=file_bytes,
+            file_options={
+                "content-type": content_type,
+                "upsert": "false",
+            },
+        )
+
+        # Public Bucket이므로 영구 Public URL 반환
+        image_url = bucket.get_public_url(
+            storage_path
+        )
+
+        return image_url
+
+
+    # =========================================================
+    # 게시글 이미지 Storage 삭제
+    # =========================================================
+
+    def delete_post_images(
+        self,
+        storage_paths: list[str],
+    ) -> None:
+
+        # 삭제할 이미지가 없으면 아무 것도 하지 않는다.
+        if not storage_paths:
+            return
+
+        bucket = self.admin_client.storage.from_("post_images")
+
+        # Supabase Storage에서 여러 파일 삭제
+        bucket.remove(storage_paths)
+
+        
+
+
     # -----------------------------------------------------
     # 댓글순 정렬용 게시글 조회
     #
@@ -445,6 +497,32 @@ class PostRepository:
             )
             .execute()
         )
+
+
+
+    # =========================================================
+    # 게시글 수정
+    # =========================================================
+
+    def update_post(
+        self,
+        post_id: int,
+        update_data: dict,
+    ):
+
+        response = (
+            self.admin_client
+            .table("posts")
+            .update(update_data)
+            .eq("post_id", post_id)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
 
 
     # =====================================================

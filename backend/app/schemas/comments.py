@@ -25,6 +25,33 @@ class CommentCreateRequest(BaseModel):
         min_length=1,
     )
 
+# =========================================================
+# 댓글 수정 Request
+# =========================================================
+
+class CommentUpdateRequest(BaseModel):
+
+    content: str = Field(
+        min_length=1,
+        max_length=1000,
+    )
+
+
+# =========================================================
+# 댓글 수정 Response
+# =========================================================
+
+class CommentUpdateResponse(BaseModel):
+
+    id: int
+
+    content: str
+
+    updatedAt: datetime
+
+    message: str = "댓글이 수정되었습니다."
+
+
 
 # =========================================================
 # 댓글 Response

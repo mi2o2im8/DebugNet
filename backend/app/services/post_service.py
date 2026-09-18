@@ -1,6 +1,7 @@
+import re
 import math
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.repositories.post_repository import PostRepository
 from fastapi import HTTPException, status
@@ -10,8 +11,12 @@ from app.schemas.posts import (
     PostCreateRequest,
     PostCreateResponse,
     PostDetailResponse,
+    PostImageUploadResponse,
     PostListResponse,
+    PostUpdateRequest,
+    PostUpdateResponse,
 )
+from uuid import uuid4
 
 
 # ---------------------------------------------------------
@@ -170,6 +175,113 @@ class PostService:
 
             "canWriteNotice": can_write_notice,
         }
+
+
+    # =========================================================
+    # 게시글 이미지 업로드
+    # =========================================================
+
+    def upload_post_image(
+        self,
+        user_id: str,
+        file_name: str | None,
+        content_type: str | None,
+        file_bytes: bytes,
+    ) -> PostImageUploadResponse:
+
+        # -----------------------------------------------------
+        # 1. 업로드된 파일이 비어있는지 확인
+        # -----------------------------------------------------
+        if not file_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="이미지 파일이 비어 있습니다.",
+            )
+
+
+        # -----------------------------------------------------
+        # 2. 허용 이미지 형식
+        #
+        # content-type을 기준으로 실제 저장 확장자를 결정한다.
+        # -----------------------------------------------------
+        allowed_types = {
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+        }
+
+        if content_type not in allowed_types:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="JPG, JPEG, PNG, WEBP 이미지만 업로드할 수 있습니다.",
+            )
+
+
+        # -----------------------------------------------------
+        # 3. 파일 크기 검사
+        #
+        # 최대 5MB
+        # -----------------------------------------------------
+        max_file_size = 5 * 1024 * 1024
+
+        if len(file_bytes) > max_file_size:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="이미지는 최대 5MB까지 업로드할 수 있습니다.",
+            )
+
+
+        # -----------------------------------------------------
+        # 4. 파일 확장자 결정
+        # -----------------------------------------------------
+        extension = allowed_types[content_type]
+
+
+        # -----------------------------------------------------
+        # 5. Storage 내부 파일 경로 생성
+        #
+        # 원본 파일명을 그대로 사용하지 않고 UUID를 사용한다.
+        #
+        # 예:
+        # posts/
+        #   사용자UUID/
+        #       68e2324d....jpg
+        # -----------------------------------------------------
+        random_file_name = f"{uuid4().hex}.{extension}"
+
+        storage_path = (
+            f"posts/{user_id}/{random_file_name}"
+        )
+
+
+        # -----------------------------------------------------
+        # 6. Repository를 통해 Supabase Storage에 업로드
+        # -----------------------------------------------------
+        try:
+            image_url = (
+                self.post_repository.upload_post_image(
+                    storage_path=storage_path,
+                    file_bytes=file_bytes,
+                    content_type=content_type,
+                )
+            )
+
+        except Exception as e:
+            print("게시글 이미지 업로드 실패:", e)
+
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="이미지 업로드 중 오류가 발생했습니다.",
+            )
+
+
+        # -----------------------------------------------------
+        # 7. Frontend에 Public URL 반환
+        # -----------------------------------------------------
+        return PostImageUploadResponse(
+            image_url=image_url,
+        )
+    
 
 
     # =====================================================
@@ -867,6 +979,344 @@ class PostService:
         )
 
 
+    # =========================================================
+    # 게시글 수정
+    # =========================================================
+
+    def update_post(
+        self,
+        post_id: int,
+        user_id: str,
+        post_data: PostUpdateRequest,
+    ) -> PostUpdateResponse:
+
+        # -----------------------------------------------------
+        # 1. 기존 게시글 조회
+        # -----------------------------------------------------
+        post = self.post_repository.get_post_by_id(
+            post_id=post_id
+        )
+
+        if not post:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="게시글을 찾을 수 없습니다.",
+            )
+
+
+        # -----------------------------------------------------
+        # 2. 본인 게시글인지 확인
+        # -----------------------------------------------------
+        if str(post["author_id"]) != str(user_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="게시글을 수정할 권한이 없습니다.",
+            )
+
+
+        # -----------------------------------------------------
+        # 3. 실제로 프론트에서 보낸 필드만 가져오기
+        #
+        # PATCH이므로 보내지 않은 값은 기존 값 유지
+        # -----------------------------------------------------
+        update_data = post_data.model_dump(
+            exclude_unset=True
+        )
+
+        if not update_data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="수정할 내용이 없습니다.",
+            )
+
+
+        board_type = post["board_type"]
+
+
+        # -----------------------------------------------------
+        # 4. 제목 수정 검사
+        # -----------------------------------------------------
+        if "title" in update_data:
+
+            title = update_data["title"]
+
+            if title is None or not title.strip():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="제목을 입력해주세요.",
+                )
+
+            update_data["title"] = title.strip()
+
+
+        # -----------------------------------------------------
+        # 5. 본문 수정 검사
+        # -----------------------------------------------------
+        old_content = post.get("content") or ""
+
+        if "content" in update_data:
+
+            content = update_data["content"]
+
+            if content is None or not content.strip():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="내용을 입력해주세요.",
+                )
+
+            content = content.strip()
+
+            # content 안의 이미지 개수 확인
+            image_urls = re.findall(
+                r"\[\[IMAGE:(https?://[^\]]+)\]\]",
+                content,
+            )
+
+            if len(image_urls) > 5:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="게시글에는 이미지를 최대 5장까지 첨부할 수 있습니다.",
+                )
+
+            update_data["content"] = content
+
+
+        # -----------------------------------------------------
+        # 6. 게시판별 수정 규칙
+        # -----------------------------------------------------
+
+        # 자유게시판
+        if board_type == "free":
+
+            if update_data.get("sport_id") is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="자유게시판에는 종목을 지정할 수 없습니다.",
+                )
+
+            if update_data.get("club_id") is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="자유게시판에는 동호회를 지정할 수 없습니다.",
+                )
+
+
+        # 종목별게시판
+        elif board_type == "sports":
+
+            # sport_id를 수정하려고 보낸 경우
+            if "sport_id" in update_data:
+
+                sport_id = update_data["sport_id"]
+
+                if sport_id is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="종목별게시판은 종목 선택이 필요합니다.",
+                    )
+
+                sport = self.post_repository.get_sport_by_id(
+                    sport_id=sport_id
+                )
+
+                if not sport:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="종목을 찾을 수 없습니다.",
+                    )
+
+                if sport.get("status") is False:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="현재 사용할 수 없는 종목입니다.",
+                    )
+
+            if update_data.get("club_id") is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="종목별게시판에는 동호회를 지정할 수 없습니다.",
+                )
+
+
+        # 동호회 홍보·회원구인
+        elif board_type == "recruit":
+
+            if update_data.get("sport_id") is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="동호회 홍보 게시글에는 종목을 직접 지정할 수 없습니다.",
+                )
+
+            # club_id를 새로 보냈다면 새 값,
+            # 보내지 않았다면 기존 club_id 사용
+            if "club_id" in update_data:
+                target_club_id = update_data["club_id"]
+
+                if target_club_id is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="동호회를 선택해주세요.",
+                    )
+
+            else:
+                target_club_id = post.get("club_id")
+
+            if target_club_id is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="동호회 정보가 없습니다.",
+                )
+
+            # 현재도 해당 동호회의 owner 또는 manager인지 확인
+            is_owner = self.post_repository.is_club_owner(
+                club_id=target_club_id,
+                user_id=user_id,
+            )
+
+            is_staff = self.post_repository.is_club_staff(
+                club_id=target_club_id,
+                user_id=user_id,
+            )
+
+            if not is_owner and not is_staff:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="해당 동호회의 게시글을 수정할 권한이 없습니다.",
+                )
+
+
+        # 공지사항
+        elif board_type == "notice":
+
+            # 관리자 권한 구조는 현재 보류 중
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="공지사항 수정 권한 기능은 현재 준비 중입니다.",
+            )
+
+
+        # -----------------------------------------------------
+        # 7. 수정 시간 갱신
+        # -----------------------------------------------------
+        update_data["updated_at"] = datetime.now(
+            timezone.utc
+        ).isoformat()
+
+
+        # -----------------------------------------------------
+        # 8. 본문에서 삭제된 이미지 찾기
+        #
+        # 기존 content:
+        # 이미지 A, B, C
+        #
+        # 수정 content:
+        # 이미지 A, C
+        #
+        # → 이미지 B를 Storage에서 삭제
+        # -----------------------------------------------------
+        removed_image_urls = []
+
+        if "content" in update_data:
+
+            new_content = update_data["content"]
+
+            old_image_urls = set(
+                re.findall(
+                    r"\[\[IMAGE:(https?://[^\]]+)\]\]",
+                    old_content,
+                )
+            )
+
+            new_image_urls = set(
+                re.findall(
+                    r"\[\[IMAGE:(https?://[^\]]+)\]\]",
+                    new_content,
+                )
+            )
+
+            removed_image_urls = list(
+                old_image_urls - new_image_urls
+            )
+
+
+        # -----------------------------------------------------
+        # 9. DB 게시글 수정
+        # -----------------------------------------------------
+        updated_post = self.post_repository.update_post(
+            post_id=post_id,
+            update_data=update_data,
+        )
+
+        if not updated_post:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="게시글 수정 중 오류가 발생했습니다.",
+            )
+
+
+        # -----------------------------------------------------
+        # 10. 본문에서 제거된 Storage 이미지 정리
+        # -----------------------------------------------------
+        storage_paths = []
+
+        marker = (
+            "/storage/v1/object/public/"
+            "post-images/"
+        )
+
+        for image_url in removed_image_urls:
+
+            if marker not in image_url:
+                continue
+
+            storage_path = image_url.split(
+                marker,
+                1,
+            )[1]
+
+            storage_path = storage_path.split(
+                "?",
+                1,
+            )[0]
+
+            # 본인이 올린 이미지만 삭제 가능
+            expected_prefix = f"posts/{user_id}/"
+
+            if storage_path.startswith(
+                expected_prefix
+            ):
+                storage_paths.append(
+                    storage_path
+                )
+
+
+        storage_paths = list(
+            dict.fromkeys(storage_paths)
+        )
+
+        if storage_paths:
+
+            try:
+                self.post_repository.delete_post_images(
+                    storage_paths=storage_paths
+                )
+
+            except Exception as e:
+                print(
+                    "게시글 수정 후 Storage 이미지 정리 실패:",
+                    e,
+                )
+
+
+        # -----------------------------------------------------
+        # 11. 수정 완료 Response
+        # -----------------------------------------------------
+        return PostUpdateResponse(
+            id=post_id,
+        )
+    
+
+
     # =====================================================
     # 게시글 작성
     # =====================================================
@@ -895,6 +1345,26 @@ class PostService:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="게시글 내용을 입력해주세요.",
+            )
+
+
+        # =====================================================
+        # 게시글 이미지 개수 검사
+        # =====================================================
+
+        # content 안의
+        # [[IMAGE:https://...]]
+        # 형태를 모두 찾는다.
+        image_urls = re.findall(
+            r"\[\[IMAGE:(https?://[^\]]+)\]\]",
+            content,
+        )
+
+        # 게시글당 최대 5장
+        if len(image_urls) > 5:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="게시글에는 이미지를 최대 5장까지 첨부할 수 있습니다.",
             )
 
 
@@ -1054,51 +1524,138 @@ class PostService:
         )
 
 
-    # =====================================================
-    # 게시글 삭제
-    # =====================================================
-
     def delete_post(
         self,
         post_id: int,
         user_id: str,
     ) -> None:
 
-        # -------------------------------------------------
-        # 1. 게시글 존재 확인
-        # -------------------------------------------------
+        # -----------------------------------------------------
+        # 1. 게시글 조회
+        # -----------------------------------------------------
         post = self.post_repository.get_post_by_id(
-            post_id=post_id,
+            post_id=post_id
         )
 
-        if post is None:
+        if not post:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="게시글을 찾을 수 없습니다.",
             )
 
 
-        # -------------------------------------------------
-        # 2. 작성자 확인
-        #
-        # Frontend가 보내는 user_id를 신뢰하지 않는다.
-        #
-        # JWT에서 얻은 현재 로그인 사용자 UUID와
-        # posts.author_id가 같은지 비교한다.
-        # -------------------------------------------------
-        if post["author_id"] != user_id:
+        # -----------------------------------------------------
+        # 2. 본인 게시글인지 확인
+        # -----------------------------------------------------
+        if str(post["author_id"]) != str(user_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="본인이 작성한 게시글만 삭제할 수 있습니다.",
+                detail="게시글을 삭제할 권한이 없습니다.",
             )
 
 
-        # -------------------------------------------------
-        # 3. 게시글 삭제
-        # -------------------------------------------------
-        self.post_repository.delete_post(
-            post_id=post_id,
+        # -----------------------------------------------------
+        # 3. content 안의 이미지 URL 추출
+        #
+        # [[IMAGE:https://...]]
+        # -----------------------------------------------------
+        content = post.get("content") or ""
+
+        image_urls = re.findall(
+            r"\[\[IMAGE:(https?://[^\]]+)\]\]",
+            content,
         )
+
+
+        # -----------------------------------------------------
+        # 4. Public URL → Storage 내부 경로로 변환
+        #
+        # 예:
+        #
+        # https://.../storage/v1/object/public/post-images/
+        # posts/사용자UUID/abc.jpg
+        #
+        # ↓
+        #
+        # posts/사용자UUID/abc.jpg
+        # -----------------------------------------------------
+        storage_paths = []
+
+        marker = (
+            "/storage/v1/object/public/"
+            "post-images/"
+        )
+
+        for image_url in image_urls:
+
+            if marker not in image_url:
+                continue
+
+            storage_path = image_url.split(
+                marker,
+                1,
+            )[1]
+
+            # 혹시 URL 뒤에 query parameter가 있으면 제거
+            storage_path = storage_path.split(
+                "?",
+                1,
+            )[0]
+
+
+            # -------------------------------------------------
+            # 보안 검사
+            #
+            # 현재 사용자가 직접 업로드한 이미지 경로만 삭제한다.
+            #
+            # 다른 사용자의 이미지 URL을 content에 넣어서
+            # 그 이미지까지 삭제시키는 것을 방지한다.
+            # -------------------------------------------------
+            expected_prefix = f"posts/{user_id}/"
+
+            if storage_path.startswith(
+                expected_prefix
+            ):
+                storage_paths.append(
+                    storage_path
+                )
+
+
+        # 중복 URL이 들어있을 수도 있으므로 중복 제거
+        storage_paths = list(
+            dict.fromkeys(storage_paths)
+        )
+
+
+        # -----------------------------------------------------
+        # 5. 게시글 DB 삭제
+        #
+        # comments는 FK ON DELETE CASCADE로 같이 삭제된다.
+        # -----------------------------------------------------
+        self.post_repository.delete_post(
+            post_id=post_id
+        )
+
+
+        # -----------------------------------------------------
+        # 6. Storage 이미지 삭제
+        #
+        # 게시글 삭제 자체는 이미 성공했으므로
+        # Storage 정리 오류 때문에 게시글 삭제가
+        # 실패한 것처럼 보이지 않도록 별도로 처리한다.
+        # -----------------------------------------------------
+        if storage_paths:
+
+            try:
+                self.post_repository.delete_post_images(
+                    storage_paths=storage_paths
+                )
+
+            except Exception as e:
+                print(
+                    "게시글 Storage 이미지 삭제 실패:",
+                    e,
+                )
 
 
     # =====================================================

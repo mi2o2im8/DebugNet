@@ -238,3 +238,27 @@ class CommentRepository:
             )
             .execute()
         )
+
+
+    # =========================================================
+    # 댓글 수정
+    # =========================================================
+
+    def update_comment(
+        self,
+        comment_id: int,
+        update_data: dict,
+    ):
+
+        response = (
+            self.admin_client
+            .table("comments")
+            .update(update_data)
+            .eq("comment_id", comment_id)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]

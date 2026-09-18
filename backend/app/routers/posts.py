@@ -1,4 +1,11 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Query,
+    UploadFile,
+    status,
+)
 
 from app.core.security import get_current_user_id
 from app.schemas.posts import (
@@ -7,7 +14,10 @@ from app.schemas.posts import (
     PostCreateRequest,
     PostCreateResponse,
     PostDetailResponse,
+    PostImageUploadResponse,
     PostListResponse,
+    PostUpdateRequest,
+    PostUpdateResponse,
     PostSearchType,
     PostSortType,
 )
@@ -201,6 +211,41 @@ def get_write_options(
 
 
 
+# =========================================================
+# 게시글 이미지 업로드
+# =========================================================
+
+@router.post(
+    "/images",
+    response_model=PostImageUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def upload_post_image(
+    file: UploadFile = File(...),
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    # UploadFile의 실제 파일 데이터를 bytes로 읽는다.
+    file_bytes = await file.read()
+
+    post_service = PostService()
+
+    result = post_service.upload_post_image(
+        user_id=user_id,
+        file_name=file.filename,
+        content_type=file.content_type,
+        file_bytes=file_bytes,
+    )
+
+    await file.close()
+
+    return result
+
+
+
 
 # ---------------------------------------------------------
 # 게시글 상세 조회
@@ -265,6 +310,33 @@ def create_post(
         user_id=user_id,
         post_data=post_data,
     )
+
+
+# =========================================================
+# 게시글 수정
+# =========================================================
+
+@router.patch(
+    "/{post_id}",
+    response_model=PostUpdateResponse,
+)
+def update_post(
+    post_id: int,
+    post_data: PostUpdateRequest,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    post_service = PostService()
+
+    return post_service.update_post(
+        post_id=post_id,
+        user_id=user_id,
+        post_data=post_data,
+    )
+
 
 
 # ---------------------------------------------------------

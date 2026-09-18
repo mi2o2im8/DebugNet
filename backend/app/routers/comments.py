@@ -6,6 +6,8 @@ from app.schemas.comments import (
     CommentCreateRequest,
     CommentCreateResponse,
     CommentListResponse,
+    CommentUpdateRequest,
+    CommentUpdateResponse,
 )
 
 from app.services.comment_service import CommentService
@@ -128,3 +130,28 @@ def delete_comment(
     )
 
     return None
+
+# =========================================================
+# 댓글 수정
+# =========================================================
+
+@router.patch(
+    "/api/comments/{comment_id}",
+    response_model=CommentUpdateResponse,
+)
+def update_comment(
+    comment_id: int,
+    comment_data: CommentUpdateRequest,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    comment_service = CommentService()
+
+    return comment_service.update_comment(
+        comment_id=comment_id,
+        user_id=user_id,
+        comment_data=comment_data,
+    )

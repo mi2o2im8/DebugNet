@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from datetime import datetime, timezone
 
 from app.repositories.comment_repository import CommentRepository
 from app.repositories.post_repository import PostRepository
@@ -8,6 +9,8 @@ from app.schemas.comments import (
     CommentCreateResponse,
     CommentListResponse,
     CommentResponse,
+    CommentUpdateRequest,
+    CommentUpdateResponse,
 )
 
 
@@ -312,6 +315,94 @@ class CommentService:
         self.comment_repository.delete_comment(
             comment_id=comment_id,
         )
+
+
+    # =========================================================
+    # 댓글 수정
+    # =========================================================
+
+    def update_comment(
+        self,
+        comment_id: int,
+        user_id: str,
+        comment_data: CommentUpdateRequest,
+    ) -> CommentUpdateResponse:
+
+        # -----------------------------------------------------
+        # 1. 기존 댓글 조회
+        # -----------------------------------------------------
+        comment = self.comment_repository.get_comment_by_id(
+            comment_id=comment_id
+        )
+
+        if not comment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="댓글을 찾을 수 없습니다.",
+            )
+
+
+        # -----------------------------------------------------
+        # 2. 본인 댓글인지 확인
+        # -----------------------------------------------------
+        if str(comment["author_id"]) != str(user_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="댓글을 수정할 권한이 없습니다.",
+            )
+
+
+        # -----------------------------------------------------
+        # 3. 댓글 내용 정리
+        # -----------------------------------------------------
+        content = comment_data.content.strip()
+
+        if not content:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="댓글 내용을 입력해주세요.",
+            )
+
+
+        # -----------------------------------------------------
+        # 4. 수정 시간 생성
+        # -----------------------------------------------------
+        updated_at = datetime.now(
+            timezone.utc
+        ).isoformat()
+
+
+        # -----------------------------------------------------
+        # 5. DB 수정
+        # -----------------------------------------------------
+        updated_comment = (
+            self.comment_repository.update_comment(
+                comment_id=comment_id,
+                update_data={
+                    "content": content,
+                    "updated_at": updated_at,
+                },
+            )
+        )
+
+
+        if not updated_comment:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="댓글 수정 중 오류가 발생했습니다.",
+            )
+
+
+        # -----------------------------------------------------
+        # 6. Response 반환
+        # -----------------------------------------------------
+        return CommentUpdateResponse(
+            id=comment_id,
+            content=updated_comment["content"],
+            updatedAt=updated_comment["updated_at"],
+        )
+
+    
 
 
     # =====================================================
