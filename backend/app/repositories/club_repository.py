@@ -10,7 +10,7 @@ class ClubRepository:
 
     def __init__(self):
         self.supabase = get_supabase_admin_client()
-        self.admin_client = get_supabase_admin_client()
+        self.admin_client = self.supabase
 
     # -----------------------------------------------------
     # 동호회 검색
@@ -545,75 +545,76 @@ class ClubRepository:
 
         return sport_response.data[0]["sport_name"]
 
-    # -----------------------------------------------------
-    # 동호회 대표 지역 조회
-    # -----------------------------------------------------
-    def find_club_region(
-        self,
-        club_id: int,
-    ) -> str | None:
+# -----------------------------------------------------
+# 동호회 대표 지역 조회
+# -----------------------------------------------------
+def find_club_region(
+    self,
+    club_id: int,
+) -> str | None:
+    response = (
+        self.admin_client
+        .table("club_regions")
+        .select("region")
+        .eq("club_id", club_id)
+        .limit(1)
+        .execute()
+    )
 
-        response = (
-            self.admin_client
-            .table("club_regions")
-            .select("region")
-            .eq("club_id", club_id)
-            .limit(1)
-            .execute()
+    if not response.data:
+        return None
+
+    return response.data[0]["region"]
+
+
+# -----------------------------------------------------
+# 동호회 활동 장소 조회
+# -----------------------------------------------------
+def find_club_venue(
+    self,
+    club_id: int,
+) -> str | None:
+    response = (
+        self.admin_client
+        .table("club_venues")
+        .select("venue_name")
+        .eq("club_id", club_id)
+        .limit(1)
+        .execute()
+    )
+
+    if not response.data:
+        return None
+
+    return response.data[0]["venue_name"]
+
+
+# -----------------------------------------------------
+# 동호회 가입 질문 조회
+# -----------------------------------------------------
+def get_join_questions(
+    self,
+    club_id: int,
+):
+    response = (
+        self.supabase
+        .table("club_join_questions")
+        .select(
+            "question_id, club_id, question_text, "
+            "question_type, required, display_order"
         )
+        .eq("club_id", club_id)
+        .order("display_order")
+        .execute()
+    )
 
-        if not response.data:
-            return None
+    return response.data or []
 
-        return response.data[0]["region"]
 
-    # -----------------------------------------------------
-    # 동호회 활동 장소 조회
-    # -----------------------------------------------------
-    def find_club_venue(
-        self,
-        club_id: int,
-    ) -> str | None:
-
-        response = (
-            self.admin_client
-            .table("club_venues")
-            .select("venue_name")
-            .eq("club_id", club_id)
-            .limit(1)
-            .execute()
-        )
-
-        if not response.data:
-            return None
-
-        return response.data[0]["venue_name"]
-
-    # -----------------------------------------------------
-    # 동호회 가입 질문 조회
-    # -----------------------------------------------------
-    def get_join_questions(
-        self,
-        club_id: int,
-    ):
-        response = (
-            self.supabase
-            .table("club_join_questions")
-            .select(
-                "question_id, club_id, question_text, "
-                "question_type, required, display_order"
-            )
-            .eq("club_id", club_id)
-            .order("display_order")
-            .execute()
-        )
-
-        return response.data or []
-
-    # -----------------------------------------------------
-    # 동호회 이미지 조회
-    # -----------------------------------------------------
-    def find_club_images(
+# -----------------------------------------------------
+# 동호회 이미지 조회
+# -----------------------------------------------------
+def find_club_images(
         self,
         club_id: int,
     ) -> list[dict]:
@@ -631,13 +632,13 @@ class ClubRepository:
 
         return response.data
 
-    # -----------------------------------------------------
-    # 동호회 가입 신청서 저장
-    #
-    # 1. club_applications에 가입 신청 생성
-    # 2. club_join_answers에 추가 질문 답변 저장
-    # -----------------------------------------------------
-    def create_application(
+# -----------------------------------------------------
+# 동호회 가입 신청서 저장
+#
+# 1. club_applications에 가입 신청 생성
+# 2. club_join_answers에 추가 질문 답변 저장
+# -----------------------------------------------------
+def create_application(
         self,
         club_id: int,
         user_id: str,
@@ -692,10 +693,10 @@ class ClubRepository:
 
         return application
 
-    # -----------------------------------------------------
-    # 동호회 정기 일정 조회
-    # -----------------------------------------------------
-    def find_club_schedules(
+# -----------------------------------------------------
+# 동호회 정기 일정 조회
+# -----------------------------------------------------
+def find_club_schedules(
         self,
         club_id: int,
     ) -> list[dict]:
@@ -714,10 +715,10 @@ class ClubRepository:
 
         return response.data or []
 
-    # -----------------------------------------------------
-    # 활동 중인 회원 수 조회
-    # -----------------------------------------------------
-    def count_active_members(
+# -----------------------------------------------------
+# 활동 중인 회원 수 조회
+# -----------------------------------------------------
+def count_active_members(
         self,
         club_id: int,
     ) -> int:
