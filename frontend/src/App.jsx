@@ -15,19 +15,19 @@ import SignupClubPreference from './pages/Signup/SignupClubPreference'
 import SignupFee from './pages/Signup/SignupFee'
 import SignupReview from './pages/Signup/SignupReview'
 import ClubDashboard from "./pages/ClubDashboard/ClubDashboard";
-import Main from "./pages/Main/Main";
+
 
 import ClubHome from './pages/ClubHome/ClubHome';
 import ClubDetail from "./pages/ClubDetail/ClubDetail";
 import ClubApplication from "./pages/ClubApplication/ClubApplication";
 
+// 동호회 가입 전 후 메인페이지들
+// import Home from "./pages/Home/Home";
+import Main from "./pages/Main/Main";
+import MainHome from "./pages/MainHome/MainHome"; 
+
 // // 동호회
-// import BasicInfoStep from './pages/ClubCreate/BasicInfoStep'
-import ClubCreate from './pages/ClubCreate/ClubCreate'
-// import ScheduleStep from './pages/ClubCreate/ScheduleStep';
-// // components
-// import CustomSelect from './components/common/CustomSelect';
-// import BottomNav from './components/BottomNav';
+import ClubCreate from './pages/ClubCreate/ClubCreate';
 
 import Community from "./pages/Community/Community";
 import PostDetail from './pages/Community/PostDetail';
@@ -46,8 +46,10 @@ function App() {
           <Route path='/' element={<Home/>}/>
           {/* 로그인 페이지 */}
           <Route path='/Login' element={<Login/>}/>
-          {/* 로그인 후 메인 페이지 */}
+          {/* 동호회 가입 전 메인 페이지 */}
           <Route path="/main" element={<Main/>} />
+          {/* 가입 후 메인 홈 */}
+          <Route path="/mainhome" element={<MainHome />} />
           {/* 회원가입 버튼 연동 */}
           <Route path='/signup' element={<Signup/>}/>
           {/* 기본 정보 입력 페이지 */}

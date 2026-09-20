@@ -1,15 +1,16 @@
 // 1. 이메일, 비밀번호 입력 (계정생성)
-// 터미널 설치 npm install react-router-dom
 
 import "./Signup.css";
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSignup } from "./SignupContext";
-// 눈.. 설치파일 npm install react-icons
+
+// ⭐ 눈 아이콘
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
-// 뒤로가기 버튼 소환
-import backIcon from "../../assets/img/back.png";
+// ⭐ 공통 뒤로가기 버튼
+import BackButton from "../../components/BackButton/BackButton";
 
 function Signup() {
     // 비밀번호 보여주는 함수(눈)
@@ -22,7 +23,6 @@ function Signup() {
     const { signupData, setSignupData } = useSignup();
     const navigate = useNavigate();
 
-
     // 이메일 입력값 변경
     const handleEmailChange = (e) => {
         setSignupData({
@@ -34,7 +34,6 @@ function Signup() {
         setEmailChecked(false);
         setEmailMessage("");
     };
-
 
     // 이메일 중복 확인
     const handleEmailCheck = async () => {
@@ -55,7 +54,7 @@ function Signup() {
         }
 
         try {
-            // 백엔드 이메일 중복 확인 API
+            // ⭐ 백엔드 이메일 중복 확인 API
             const response = await fetch(
                 `http://127.0.0.1:8000/api/auth/check-email?email=${encodeURIComponent(email)}`
             );
@@ -73,21 +72,17 @@ function Signup() {
                 setEmailChecked(false);
                 setEmailMessage(data.message);
             }
-
         } catch (error) {
             console.error("이메일 중복 확인 오류:", error);
             alert("서버와 연결할 수 없습니다.");
         }
     };
 
-
     // 다음 버튼
     const handleNext = () => {
-
         // 현재 Context에 저장된 이메일/비밀번호 확인
         console.log("1단계 이메일:", signupData.email);
         console.log("1단계 비밀번호:", signupData.password);
-
 
         // 이메일 확인
         if (!signupData.email) {
@@ -95,20 +90,17 @@ function Signup() {
             return;
         }
 
-
         // ⭐ 이메일 중복확인 여부
         if (!emailChecked) {
             alert("이메일 중복확인을 해주세요.");
             return;
         }
 
-
         // 비밀번호 확인
         if (signupData.password.length < 8) {
             alert("비밀번호는 8자 이상 입력해주세요.");
             return;
         }
-
 
         // 영문 + 숫자 + 특수문자 확인
         if (
@@ -120,32 +112,21 @@ function Signup() {
             return;
         }
 
-
         // 비밀번호 확인
         if (signupData.password !== signupData.passwordConfirm) {
             alert("비밀번호가 일치하지 않습니다.");
             return;
         }
 
-
         // 모든 조건 통과
         navigate("/signup/basic");
-    }
-
+    };
 
     return (
         <div className="signup-container">
 
-            {/* 뒤로가기 버튼 */}
-            <button
-                type="button"
-                className="Back-btn"
-                onClick={() => navigate("/Login")}
-                aria-label="뒤로가기"
-            >
-                <img src={backIcon} alt="뒤로가기" />
-            </button>
-
+            {/* ⭐ 공통 뒤로가기 버튼 */}
+            <BackButton />
 
             <div className="signup-header">
                 <h2>계정을 생성해주세요</h2>
@@ -153,14 +134,12 @@ function Signup() {
                 <p>더 즐거운 운동 생활을 시작하세요.</p>
             </div>
 
-
             {/* 이메일 */}
             <div>
                 <p className="email-label">이메일</p>
 
                 {/* 이메일 + 중복확인 버튼 */}
                 <div className="email-check-wrapper">
-
                     <input
                         type="email"
                         name="email"
@@ -177,9 +156,7 @@ function Signup() {
                     >
                         중복확인
                     </button>
-
                 </div>
-
 
                 {/* 이메일 중복 확인 결과 */}
                 {emailMessage && (
@@ -193,13 +170,10 @@ function Signup() {
                         {emailMessage}
                     </p>
                 )}
-
             </div>
-
 
             {/* 비밀번호 */}
             <div className="password-box">
-
                 <p className="email-label">비밀번호</p>
 
                 <input
@@ -216,6 +190,7 @@ function Signup() {
                     }
                 />
 
+                {/* ⭐ 비밀번호 보기/숨기기 */}
                 <button
                     type="button"
                     className="password-eye-signup"
@@ -225,8 +200,8 @@ function Signup() {
                 >
                     {showPassword ? <FiEye /> : <FiEyeOff />}
                 </button>
+
                 {/* 비밀번호 확인 */}
-            
                 <p className="email-label">비밀번호 확인</p>
 
                 <input
@@ -244,10 +219,10 @@ function Signup() {
                 />
             </div>
 
-
             {/* 비밀번호 조건 */}
             <div className="password-guide">
 
+                {/* 8자 이상 */}
                 <p
                     className={
                         signupData.password.length >= 8
@@ -258,11 +233,10 @@ function Signup() {
                     <span>
                         {signupData.password.length >= 8 ? "✓" : ""}
                     </span>
-
                     8자 이상 입력해주세요
                 </p>
 
-
+                {/* 영문 + 숫자 + 특수문자 */}
                 <p
                     className={
                         /[A-Za-z]/.test(signupData.password) &&
@@ -281,11 +255,10 @@ function Signup() {
                                 : ""
                         }
                     </span>
-
                     영문, 숫자, 특수문자를 포함해주세요.
                 </p>
 
-
+                {/* 비밀번호 일치 */}
                 <p
                     className={
                         signupData.password &&
@@ -306,8 +279,8 @@ function Signup() {
                     </span>
                     비밀번호가 일치합니다.
                 </p>
-            </div>
 
+            </div>
 
             {/* 다음 버튼 */}
             <button
