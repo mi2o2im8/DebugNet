@@ -12,12 +12,9 @@ function ClubHome() {
   const [clubs, setClubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-<<<<<<< Updated upstream
-=======
   
   // 검색 결과 화면 표시 여부
   const [isSearchResult, setIsSearchResult] = useState(false);
->>>>>>> Stashed changes
 
   // 회원 모집중 더보기 상태
   const [showAllClubs, setShowAllClubs] = useState(false);
