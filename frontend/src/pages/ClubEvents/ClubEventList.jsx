@@ -14,9 +14,13 @@ import {
     FiChevronLeft,
     FiChevronRight,
     FiClock,
+    FiCopy,
+    FiEdit2,
     FiList,
     FiMapPin,
+    FiMoreVertical,
     FiPlus,
+    FiTrash2,
     FiUsers
 } from "react-icons/fi";
 
@@ -98,6 +102,18 @@ function ClubEventCard({
     event,
     isPast = false
 }) {
+    const [isMenuOpen, setIsMenuOpen] =
+        useState(false);
+
+    const showPendingAction = (
+        actionName
+    ) => {
+        setIsMenuOpen(false);
+
+        alert(
+            `${actionName} 기능은 다음 단계에서 연결합니다.`
+        );
+    };
     const formattedDate =
         formatEventDate(event.event_date);
 
@@ -145,7 +161,72 @@ function ClubEventCard({
             </div>
 
             <div className="club-event-card-content">
-                <h3>{event.title}</h3>
+                <div className="club-event-card-title-row">
+                    <h3>{event.title}</h3>
+
+                    <div className="club-event-more-menu">
+                        <button
+                            type="button"
+                            className="club-event-more-button"
+                            aria-label="일정 메뉴 열기"
+                            aria-expanded={isMenuOpen}
+                            onClick={() =>
+                                setIsMenuOpen(
+                                    (current) => !current
+                                )
+                            }
+                        >
+                            <FiMoreVertical />
+                        </button>
+
+                        {isMenuOpen && (
+                            <div
+                                className="club-event-menu-popup"
+                                role="menu"
+                            >
+                                <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() =>
+                                        showPendingAction(
+                                            "일정 수정"
+                                        )
+                                    }
+                                >
+                                    <FiEdit2 />
+                                    일정 수정
+                                </button>
+
+                                <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() =>
+                                        showPendingAction(
+                                            "일정 복사"
+                                        )
+                                    }
+                                >
+                                    <FiCopy />
+                                    일정 복사
+                                </button>
+
+                                <button
+                                    type="button"
+                                    role="menuitem"
+                                    className="danger"
+                                    onClick={() =>
+                                        showPendingAction(
+                                            "일정 삭제"
+                                        )
+                                    }
+                                >
+                                    <FiTrash2 />
+                                    일정 삭제
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
                 <p className="club-event-card-information">
                     <FiClock />
@@ -221,6 +302,21 @@ function ClubEventCard({
                             게스트 최대 {event.max_guests}명
                         </span>
                     )}
+                </div>
+
+                <div className="club-event-card-actions">
+                    <button
+                        type="button"
+                        className="club-event-participants-button"
+                        onClick={() =>
+                            showPendingAction(
+                                "참가자 관리"
+                            )
+                        }
+                    >
+                        <FiUsers />
+                        참가자 관리
+                    </button>
                 </div>
             </div>
         </article>

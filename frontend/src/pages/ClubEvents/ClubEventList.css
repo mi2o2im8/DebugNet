@@ -528,3 +528,104 @@
     font-size: 12px;
     text-align: center;
 }
+
+.club-event-card-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.club-event-card-title-row h3 {
+    flex: 1;
+    margin: 0;
+}
+
+.club-event-more-menu {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.club-event-more-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid #dbe3dd;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #4c5650;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.club-event-more-button:hover {
+    border-color: #008006;
+    color: #008006;
+}
+
+.club-event-menu-popup {
+    position: absolute;
+    top: 36px;
+    right: 0;
+    z-index: 20;
+    width: 126px;
+    overflow: hidden;
+    border: 1px solid #dce4de;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.club-event-menu-popup button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 13px;
+    border: 0;
+    background: #ffffff;
+    color: #303832;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.club-event-menu-popup button:hover {
+    background: #f3f8f4;
+}
+
+.club-event-menu-popup button + button {
+    border-top: 1px solid #edf0ee;
+}
+
+.club-event-menu-popup button.danger {
+    color: #dc3f3f;
+}
+
+.club-event-card-actions {
+    margin-top: 13px;
+}
+
+.club-event-participants-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid #008006;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #008006;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.club-event-participants-button:hover {
+    background: #edf8ef;
+}

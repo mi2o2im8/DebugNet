@@ -12,6 +12,7 @@ from app.schemas.club_events import (
     ClubEventCreateRequest,
     ClubEventCreateResponse,
     ClubEventListResponse,
+    ClubEventParticipantListResponse,
 )
 from app.services.club_event_service import (
     ClubEventService,
@@ -127,5 +128,59 @@ def get_club_events(
             ),
             detail=(
                 "일정 목록 조회 중 오류가 발생했습니다."
+            ),
+        ) from error
+
+# ---------------------------------------------------------
+# 일정 참가자 관리 목록 조회
+#
+# GET /api/clubs/{club_id}/events/{event_id}/participants
+# ---------------------------------------------------------
+@router.get(
+    "/{event_id}/participants",
+    response_model=ClubEventParticipantListResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_club_event_participants(
+    club_id: int,
+    event_id: int,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
+        return event_service.get_event_participants(
+            club_id=club_id,
+            event_id=event_id,
+            user_id=user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "일정 참가자 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "일정 참가자 목록 조회 중 "
+                "오류가 발생했습니다."
             ),
         ) from error

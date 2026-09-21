@@ -11,6 +11,8 @@ from app.schemas.club_events import (
     ClubEventCreateResponse,
     ClubEventListItemResponse,
     ClubEventListResponse,
+    ClubEventParticipantItemResponse,
+    ClubEventParticipantListResponse,
 )
 
 
@@ -474,6 +476,230 @@ class ClubEventService:
             # 기존 undecided_count를 그대로 유지
 
         return counts
+
+    # -----------------------------------------------------
+    # 일정별 사용자 참석 상태 구성
+    # -----------------------------------------------------
+    def build_attendance_status_by_user(
+        self,
+        event_id: int,
+    ) -> dict[str, str]:
+        vote_rows = (
+            self.event_repository
+            .find_attendance_votes_by_event_ids(
+                [event_id]
+            )
+        )
+
+        if not vote_rows:
+            return {}
+
+        latest_vote_id = max(
+            int(vote_row["vote_id"])
+            for vote_row in vote_rows
+        )
+
+        option_rows = (
+            self.event_repository
+            .find_vote_options_by_vote_ids(
+                [latest_vote_id]
+            )
+        )
+
+        response_rows = (
+            self.event_repository
+            .find_vote_responses_by_vote_ids(
+                [latest_vote_id]
+            )
+        )
+
+        status_by_option_text = {
+            "참석": "attending",
+            "불참": "absent",
+            "미정": "undecided",
+            "attending": "attending",
+            "absent": "absent",
+            "undecided": "undecided",
+        }
+
+        status_by_option_id = {}
+
+        for option_row in option_rows:
+            option_text = str(
+                option_row["option_text"]
+            ).strip()
+
+            attendance_status = (
+                status_by_option_text.get(
+                    option_text
+                )
+            )
+
+            if attendance_status is not None:
+                status_by_option_id[
+                    int(option_row["option_id"])
+                ] = attendance_status
+
+        attendance_status_by_user = {}
+
+        # response_id 오름차순이므로 같은 사용자의
+        # 응답이 여러 개라면 마지막 응답이 최종값이 됨
+        for response_row in response_rows:
+            option_id = int(
+                response_row["option_id"]
+            )
+
+            attendance_status = (
+                status_by_option_id.get(
+                    option_id
+                )
+            )
+
+            if attendance_status is None:
+                continue
+
+            attendance_status_by_user[
+                str(response_row["user_id"])
+            ] = attendance_status
+
+        return attendance_status_by_user
+
+    # -----------------------------------------------------
+    # 일정 참가자 관리 목록 조회
+    # -----------------------------------------------------
+    def get_event_participants(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> ClubEventParticipantListResponse:
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            raise LookupError(
+                "존재하지 않는 일정입니다."
+            )
+
+        participant_rows = (
+            self.event_repository
+            .find_participant_details(
+                event_id
+            )
+        )
+
+        attendance_by_user = (
+            self.build_attendance_status_by_user(
+                event_id
+            )
+        )
+
+        participants = []
+        joined_member_count = 0
+        joined_guest_count = 0
+        pending_guest_count = 0
+
+        for participant_row in participant_rows:
+            participant_type = (
+                participant_row["participant_type"]
+            )
+
+            participation_status = (
+                participant_row["status"]
+            )
+
+            participant_user_id = str(
+                participant_row["user_id"]
+            )
+
+            user_data = (
+                participant_row.get("user")
+                or {}
+            )
+
+            attendance_status = None
+
+            if participation_status == "joined":
+                attendance_status = (
+                    attendance_by_user.get(
+                        participant_user_id,
+                        "undecided",
+                    )
+                )
+
+            if (
+                participant_type == "member"
+                and participation_status == "joined"
+            ):
+                joined_member_count += 1
+
+            elif (
+                participant_type == "guest"
+                and participation_status == "joined"
+            ):
+                joined_guest_count += 1
+
+            elif (
+                participant_type == "guest"
+                and participation_status == "pending"
+            ):
+                pending_guest_count += 1
+
+            participants.append(
+                ClubEventParticipantItemResponse(
+                    event_participant_id=int(
+                        participant_row[
+                            "event_participant_id"
+                        ]
+                    ),
+                    user_id=participant_user_id,
+                    name=user_data.get(
+                        "name",
+                        "알 수 없는 사용자",
+                    ),
+                    nickname=user_data.get(
+                        "nickname",
+                        "알 수 없음",
+                    ),
+                    profile_image=user_data.get(
+                        "profile_image"
+                    ),
+                    participant_type=(
+                        participant_type
+                    ),
+                    participation_status=(
+                        participation_status
+                    ),
+                    attendance_status=(
+                        attendance_status
+                    ),
+                )
+            )
+
+        return ClubEventParticipantListResponse(
+            event_id=event_id,
+            participants=participants,
+            total=len(participants),
+            joined_member_count=(
+                joined_member_count
+            ),
+            joined_guest_count=(
+                joined_guest_count
+            ),
+            pending_guest_count=(
+                pending_guest_count
+            ),
+        )
 
     # -----------------------------------------------------
     # 동호회 일정 목록 조회

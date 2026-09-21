@@ -324,3 +324,38 @@ class ClubEventRepository:
             "event_id",
             event_id,
         ).execute()
+
+    # -----------------------------------------------------
+    # 일정 참가자 및 사용자 기본 정보 조회
+    # -----------------------------------------------------
+    def find_participant_details(
+        self,
+        event_id: int,
+    ) -> list[dict]:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .select(
+                (
+                    "event_participant_id, "
+                    "event_id, "
+                    "user_id, "
+                    "participant_type, "
+                    "status, "
+                    "user:users!"
+                    "event_participants_user_id_fkey("
+                    "name, "
+                    "nickname, "
+                    "profile_image"
+                    ")"
+                )
+            )
+            .eq("event_id", event_id)
+            .order(
+                "event_participant_id",
+                desc=False,
+            )
+            .execute()
+        )
+
+        return response.data or []

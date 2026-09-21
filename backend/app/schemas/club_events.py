@@ -5,6 +5,8 @@ from datetime import (
 )
 from typing import Literal
 
+from uuid import UUID
+
 from pydantic import (
     AliasChoices,
     BaseModel,
@@ -361,3 +363,41 @@ class ClubEventListItemResponse(BaseModel):
 class ClubEventListResponse(BaseModel):
     events: list[ClubEventListItemResponse]
     total: int
+
+class ClubEventParticipantItemResponse(BaseModel):
+    event_participant_id: int
+    user_id: UUID
+
+    name: str
+    nickname: str
+    profile_image: str | None = None
+
+    participant_type: Literal[
+        "member",
+        "guest",
+    ]
+
+    participation_status: Literal[
+        "pending",
+        "joined",
+        "rejected",
+        "cancelled",
+    ]
+
+    attendance_status: Literal[
+        "attending",
+        "absent",
+        "undecided",
+    ] | None = None
+
+
+class ClubEventParticipantListResponse(BaseModel):
+    event_id: int
+    participants: list[
+        ClubEventParticipantItemResponse
+    ]
+
+    total: int
+    joined_member_count: int
+    joined_guest_count: int
+    pending_guest_count: int
