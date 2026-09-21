@@ -26,7 +26,7 @@ import ClubApplication from "./pages/ClubApplication/ClubApplication";
 import Main from "./pages/Main/Main";
 import MainHome from "./pages/MainHome/MainHome"; 
 
-// // 동호회
+// 동호회
 import ClubCreate from './pages/ClubCreate/ClubCreate';
 
 import Community from "./pages/Community/Community";
@@ -42,6 +42,9 @@ import MatchTeamDetail from "./pages/Match/MatchTeamDetail";
 
 import ClubManageLayout from "./layouts/ClubManageLayout";
 
+// 내 정보
+import Mypage from "./pages/Mypage/Mypage";
+
 
 import './App.css'
 
@@ -53,11 +56,13 @@ function App() {
           {/* 시작 페이지 */}
           <Route path='/' element={<Home/>}/>
           {/* 로그인 페이지 */}
+
           <Route path='/Login' element={<Login/>}/>
           {/* 동호회 가입 전 메인 페이지 */}
           <Route path="/main" element={<Main/>} />
           {/* 가입 후 메인 홈 */}
           <Route path="/mainhome" element={<MainHome />} />
+          
           {/* 회원가입 버튼 연동 */}
           <Route path='/signup' element={<Signup/>}/>
           {/* 기본 정보 입력 페이지 */}
@@ -98,7 +103,7 @@ function App() {
 
           {/* 동호회 운영 기능: BottomNav 공통 적용 */}
           <Route element={<ClubManageLayout />}>
-              <Route path="/clubs/:clubId/manage" element={<ClubDashboard />}/> 
+          <Route path="/clubs/:clubId/manage" element={<ClubDashboard />}/> 
               
               {/* 이후 아래 위치에 동호회 운영 기능 관련 화면들을 추가 */}
 
@@ -123,6 +128,10 @@ function App() {
           
               
           </Route>
+
+          {/* 내 정보 */}
+          <Route path="/mypage" element={<Mypage />} />
+          
 
         </Routes>
       </SignupProvider>

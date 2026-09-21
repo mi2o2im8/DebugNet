@@ -72,7 +72,7 @@ function BottomNav() {
 
       {/* 내 정보 */}
       <NavLink
-        to="/my"
+        to="/mypage"
         className={({ isActive }) =>
           isActive
             ? "bottom-nav-item active"
