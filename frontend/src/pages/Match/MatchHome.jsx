@@ -15,6 +15,38 @@ import MatchCalendar from "./components/MatchCalendar";
 import "./CSS/MatchHome.css";
 
 
+// 서울 25개 자치구
+const SEOUL_DISTRICTS = [
+  "전체",
+  "강남구",
+  "강동구",
+  "강북구",
+  "강서구",
+  "관악구",
+  "광진구",
+  "구로구",
+  "금천구",
+  "노원구",
+  "도봉구",
+  "동대문구",
+  "동작구",
+  "마포구",
+  "서대문구",
+  "서초구",
+  "성동구",
+  "성북구",
+  "송파구",
+  "양천구",
+  "영등포구",
+  "용산구",
+  "은평구",
+  "종로구",
+  "중구",
+  "중랑구",
+];
+
+
+
 // TODO: 백엔드 연결 후 GET /api/... 결과로 교체
 const SAMPLE_MY_AVAILABILITIES = [
   {
@@ -105,6 +137,16 @@ function MatchHome() {
   const [selectedSport, setSelectedSport] =
     useState("전체");
 
+  // 현재 사용자가 선택한 팀매칭 검색 지역
+  const [selectedDistrict, setSelectedDistrict] =
+    useState("관악구");
+
+  // 지역 선택 드롭다운 열림 여부
+  const [
+    isDistrictOpen,
+    setIsDistrictOpen,
+  ] = useState(false);
+
 
   const myAvailabilityDates =
     useMemo(
@@ -116,18 +158,38 @@ function MatchHome() {
     );
 
 
-  const opponentAvailableDates =
-    useMemo(
-      () =>
-        [
-          ...new Set(
-            SAMPLE_TEAMS.map(
-              (team) => team.date
-            )
-          ),
-        ],
-      []
+  // 선택한 지역에서 경기 가능한 팀이 존재하는 날짜만 추출
+  const opponentAvailableDates = useMemo(() => {
+
+    // 현재 선택한 지역에 맞는 팀만 먼저 필터링
+    const regionTeams = SAMPLE_TEAMS.filter(
+      (team) => {
+
+        // "전체"를 선택한 경우 모든 지역의 팀 포함
+        if (selectedDistrict === "전체") {
+          return true;
+        }
+
+        // 더미데이터의 region이 "서울 관악구" 형식이므로
+        // 현재 선택한 구와 맞는 팀만 남긴다.
+        return (
+          team.region ===
+          `서울 ${selectedDistrict}`
+        );
+      }
     );
+
+
+    // 같은 날짜가 여러 번 있을 수 있으므로 중복 제거
+    return [
+      ...new Set(
+        regionTeams.map(
+          (team) => team.date
+        )
+      ),
+    ];
+
+  }, [selectedDistrict]);
 
 
   const selectedAvailability =
@@ -157,15 +219,26 @@ function MatchHome() {
 
   const filteredTeams =
     SAMPLE_TEAMS.filter((team) => {
+      // 선택한 날짜가 아니면 제외
       if (
         team.date !== selectedDate
       ) {
         return false;
       }
 
+      // 선택한 종목이 아니면 제외
       if (
         selectedSport !== "전체" &&
         team.sport !== selectedSport
+      ) {
+        return false;
+      }
+
+      // 선택한 지역이 아니면 제외
+      // "전체"일 때는 모든 구 표시
+      if (
+        selectedDistrict !== "전체" &&
+        team.region !== `서울 ${selectedDistrict}`
       ) {
         return false;
       }
@@ -188,15 +261,74 @@ function MatchHome() {
       {/* 상단 */}
       <header className="match-home-header">
 
-        <button
-          type="button"
-          className="match-region-btn"
-        >
-          서울
-          <span className="match-region-arrow">
-            ▾
-          </span>
-        </button>
+        {/* ========================================
+            팀매칭 검색 지역 선택
+        ======================================== */}
+        <div className="match-home-district">
+
+          {/* 현재 선택된 지역 */}
+          <button
+            type="button"
+            className="match-home-district-button"
+            onClick={() =>
+              setIsDistrictOpen(
+                !isDistrictOpen
+              )
+            }
+          >
+            <span>
+              {selectedDistrict}
+            </span>
+
+            <span
+              className={
+                isDistrictOpen
+                  ? "district-arrow open"
+                  : "district-arrow"
+              }
+            >
+              ▾
+            </span>
+          </button>
+
+
+          {/* 지역 목록 */}
+          {isDistrictOpen && (
+            <div className="match-home-district-menu">
+
+              {SEOUL_DISTRICTS.map(
+                (district) => (
+
+                  <button
+                    key={district}
+                    type="button"
+
+                    className={
+                      selectedDistrict === district
+                        ? "active"
+                        : ""
+                    }
+
+                    onClick={() => {
+                      // 선택한 구 저장
+                      setSelectedDistrict(
+                        district
+                      );
+
+                      // 선택 후 드롭다운 닫기
+                      setIsDistrictOpen(false);
+                    }}
+                  >
+                    {district}
+                  </button>
+
+                )
+              )}
+
+            </div>
+          )}
+
+        </div>
 
 
         <h1>
@@ -506,25 +638,18 @@ function MatchHome() {
           </div>
 
 
+          {/* 경기 등록 여부와 관계없이 상대팀 목록으로 이동 */}
           {filteredTeams.length > 0 && (
             <button
               type="button"
               className="match-team-more-btn"
-              onClick={() => {
-                const availabilityId =
-                  selectedAvailability?.id;
-
-                if (!availabilityId) {
-                  alert(
-                    "먼저 해당 날짜의 경기 가능일을 등록해주세요."
-                  );
-                  return;
-                }
-
+              onClick={() =>
                 navigate(
-                  `/matches/availability/${availabilityId}/teams`
-                );
-              }}
+                  `/matches/teams?district=${encodeURIComponent(
+                    selectedDistrict
+                  )}`
+                )
+              }
             >
               경기 가능한 팀 더보기
               <FiChevronRight />

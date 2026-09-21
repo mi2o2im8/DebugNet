@@ -41,6 +41,7 @@ import MatchTeamList from "./pages/Match/MatchTeamList";
 import MatchTeamDetail from "./pages/Match/MatchTeamDetail";
 
 
+
 import ClubManageLayout from "./layouts/ClubManageLayout";
 
 // 내 정보
@@ -129,6 +130,9 @@ function App() {
 
           {/* 해당 조건으로 상대팀 찾기 */}
           <Route path="/matches/availability/:availabilityId/teams" element={<MatchTeamList />} />
+
+          {/* 경기 등록 여부와 관계없이 상대팀 검색 */}
+          <Route path="/matches/teams" element={<MatchTeamList />} />
 
           {/* 상대팀 경기 가능일 상세 */}
           <Route path="/matches/team/:availabilityId" element={<MatchTeamDetail />} />

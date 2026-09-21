@@ -50,6 +50,7 @@ function MatchCalendar({
   onSelectDate,
   myAvailabilityDates = [],
   opponentAvailableDates = [],
+  showLegend = true,
 }) {
   const initialMonth =
     getInitialMonth(
@@ -311,19 +312,21 @@ function MatchCalendar({
       </div>
 
 
-      <div className="match-calendar-legend">
+      {showLegend && (
+        <div className="match-calendar-legend">
 
-        <span>
-          <i className="mine" />
-          내가 등록한 경기
-        </span>
+          <span>
+            <i className="mine" />
+            내가 등록한 경기
+          </span>
 
-        <span>
-          <i className="team" />
-          경기 가능한 팀 있음
-        </span>
+          <span>
+            <i className="team" />
+            경기 가능한 팀 있음
+          </span>
 
-      </div>
+        </div>
+      )}
 
     </section>
   );

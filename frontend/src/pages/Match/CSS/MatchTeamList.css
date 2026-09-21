@@ -1,0 +1,417 @@
+/* ========================================
+   전체 화면
+======================================== */
+
+.match-team-list-container {
+  width: 100%;
+  max-width: 412px;
+  min-height: 100vh;
+
+  margin: 0 auto;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   상단 헤더
+======================================== */
+
+.match-team-list-header {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 56px;
+
+  padding: 0 16px;
+
+  border-bottom: 1px solid #eeeeee;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+
+/* 뒤로가기 버튼 */
+.match-team-list-header > button {
+  position: absolute;
+  left: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #333333;
+
+  font-size: 25px;
+
+  cursor: pointer;
+}
+
+
+/* 페이지 제목 */
+.match-team-list-header h1 {
+  margin: 0;
+
+  font-size: 17px;
+  font-weight: 700;
+
+  color: #222222;
+}
+
+
+/* ========================================
+   메인 영역
+======================================== */
+
+.match-team-list-main {
+  padding: 20px 16px 90px;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   상대팀 목록 제목
+======================================== */
+
+.match-team-result-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 16px;
+}
+
+
+.match-team-result-header h2 {
+  margin: 0;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  color: #222222;
+}
+
+
+.match-team-result-header p {
+  margin: 5px 0 0;
+
+  font-size: 11px;
+  line-height: 1.5;
+
+  color: #888888;
+}
+
+
+/* 검색된 팀 개수 */
+.match-team-result-header > strong {
+  flex-shrink: 0;
+
+  padding-bottom: 2px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  color: #20b26b;
+}
+
+
+/* ========================================
+   상대팀 목록
+======================================== */
+
+.match-team-search-list {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+
+  gap: 12px;
+}
+
+
+/* 상대팀 카드 */
+.match-team-search-card {
+  width: 100%;
+
+  padding: 16px;
+
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.035);
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   클럽 프로필 영역
+======================================== */
+
+.match-team-card-header {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+
+/* 실제 프로필 사진 */
+.match-team-profile-image {
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  border: 1px solid #eeeeee;
+  border-radius: 50%;
+
+  object-fit: cover;
+}
+
+
+/* 프로필 사진이 없을 때 */
+.match-team-profile-fallback {
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #eef9f3;
+
+  color: #20b26b;
+
+  font-size: 16px;
+  font-weight: 700;
+}
+
+
+/* 클럽 이름 + 기본 정보 */
+.match-team-club-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  min-width: 0;
+}
+
+
+.match-team-club-info strong {
+  font-size: 15px;
+  font-weight: 700;
+
+  color: #222222;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.match-team-club-info span {
+  font-size: 11px;
+
+  color: #888888;
+}
+
+
+/* ========================================
+   한 줄 소개
+======================================== */
+
+.match-team-intro {
+  margin: 13px 0 0;
+
+  padding: 10px 11px;
+
+  border-radius: 8px;
+
+  background: #fafafa;
+
+  color: #555555;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+
+/* ========================================
+   경기 시간 / 장소
+======================================== */
+
+.match-team-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 9px;
+
+  margin-top: 14px;
+}
+
+
+.match-team-info > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+}
+
+
+/* 왼쪽 항목명 */
+.match-team-info span {
+  flex-shrink: 0;
+
+  font-size: 11px;
+
+  color: #999999;
+}
+
+
+/* 오른쪽 값 */
+.match-team-info strong {
+  min-width: 0;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  color: #333333;
+
+  text-align: right;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* ========================================
+   추가 조건 태그
+======================================== */
+
+.match-team-tags {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 6px;
+
+  margin-top: 14px;
+}
+
+
+.match-team-tags span {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 27px;
+
+  padding: 0 9px;
+
+  border: 1px solid #d8eee4;
+  border-radius: 20px;
+
+  background: #f4fbf7;
+
+  color: #16945a;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+
+/* ========================================
+   상세보기 버튼
+======================================== */
+
+.match-team-detail-button {
+  width: 100%;
+  height: 42px;
+
+  margin-top: 15px;
+
+  border: 1px solid #20b26b;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #20b26b;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+/* 버튼을 눌렀을 때 */
+.match-team-detail-button:active {
+  background: #eef9f3;
+}
+
+/* ========================================
+   뒤로가기 버튼
+======================================== */
+
+.match-team-list-back-button {
+  position: absolute;
+
+  left: 14px;
+  top: 50%;
+
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #333333;
+
+  font-size: 28px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transform: translateY(-50%);
+}
+
+
+/* 버튼을 눌렀을 때 */
+.match-team-list-back-button:active {
+  border-radius: 50%;
+
+  background: #f5f5f5;
+}
