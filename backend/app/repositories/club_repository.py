@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from app.core.supabase import get_supabase_admin_client
 
@@ -18,9 +18,10 @@ class ClubRepository:
     def search_clubs(
         self,
         keyword: Optional[str] = None,
-        sport_name: Optional[str] = None,
-        region: Optional[str] = None,
-        day_of_week: Optional[str] = None,
+        sport_name: Optional[List[str]] = None,
+        region: Optional[List[str]] = None,
+        day_of_week: Optional[List[str]] = None,
+        time_slot: Optional[List[str]] = None,
         atmosphere: Optional[str] = None,
     ):
         params = {
@@ -28,6 +29,7 @@ class ClubRepository:
             "p_sport_name": sport_name,
             "p_region": region,
             "p_day_of_week": day_of_week,
+            "p_time_slot": time_slot,
             "p_atmosphere": atmosphere,
         }
 

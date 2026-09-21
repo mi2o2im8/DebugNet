@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import (
     APIRouter,
@@ -39,18 +39,30 @@ club_service = ClubService()
 #
 # 검색 조건:
 # - keyword
-# - sport_name
-# - region
-# - day_of_week
+# - sport_name (복수 선택)
+# - region (복수 선택)
+# - day_of_week (복수 선택)
+# - time_slot (복수 선택)
 # - atmosphere
 # =========================================================
 
 @router.get("/search")
 def search_clubs(
     keyword: Optional[str] = Query(default=None),
-    sport_name: Optional[str] = Query(default=None),
-    region: Optional[str] = Query(default=None),
-    day_of_week: Optional[str] = Query(default=None),
+
+    # 복수 종목 선택
+    sport_name: Optional[List[str]] = Query(default=None),
+
+    # 복수 지역 선택
+    region: Optional[List[str]] = Query(default=None),
+
+    # 복수 활동 요일 선택
+    day_of_week: Optional[List[str]] = Query(default=None),
+
+    # 복수 활동 시간대 선택
+    time_slot: Optional[List[str]] = Query(default=None),
+
+    # 동호회 분위기
     atmosphere: Optional[str] = Query(default=None),
 ):
     return club_service.search_clubs(
@@ -58,9 +70,9 @@ def search_clubs(
         sport_name=sport_name,
         region=region,
         day_of_week=day_of_week,
+        time_slot=time_slot,
         atmosphere=atmosphere,
     )
-
 
 # =========================================================
 # 동호회 생성

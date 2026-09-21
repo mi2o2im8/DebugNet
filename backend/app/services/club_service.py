@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from app.repositories.club_repository import ClubRepository
 from app.schemas.clubs import (
@@ -22,9 +22,10 @@ class ClubService:
     def search_clubs(
         self,
         keyword: Optional[str] = None,
-        sport_name: Optional[str] = None,
-        region: Optional[str] = None,
-        day_of_week: Optional[str] = None,
+        sport_name: Optional[List[str]] = None,
+        region: Optional[List[str]] = None,
+        day_of_week: Optional[List[str]] = None,
+        time_slot: Optional[List[str]] = None,
         atmosphere: Optional[str] = None,
     ):
         return self.club_repository.search_clubs(
@@ -32,9 +33,9 @@ class ClubService:
             sport_name=sport_name,
             region=region,
             day_of_week=day_of_week,
+            time_slot=time_slot,
             atmosphere=atmosphere,
         )
-
     # -----------------------------------------------------
     # 동호회 상세 조회
     # -----------------------------------------------------
