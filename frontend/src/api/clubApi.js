@@ -194,3 +194,12 @@ export async function getClubDashboard(clubId) {
         }
     );
 }
+
+export async function getClubEvents(clubId) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events`,
+        {
+            method: "GET"
+        }
+    );
+}

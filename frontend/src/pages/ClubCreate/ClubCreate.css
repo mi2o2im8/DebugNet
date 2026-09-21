@@ -201,12 +201,15 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+    margin-top: 5px;
 }
 
 .club-create-step-number {
     width: 28px;
     height: 28px;
-
+    margin-left: 8px;
+    padding-top: 2px;
+    
     flex-shrink: 0;
 
     display: flex;
@@ -220,6 +223,7 @@ body {
 
     font-size: 14px;
     font-weight: 700;
+    
 }
 
 .club-create-progress-track {
@@ -232,6 +236,8 @@ body {
     border-radius: 999px;
 
     background-color: #e7edf7;
+
+    margin-right: 8px;
 }
 
 .club-create-progress-bar {
@@ -859,7 +865,7 @@ body {
 /* 상세 장소 */
 
 .club-schedule-step .club-create-icon-input {
-    margin-top: 8px;
+    margin-top: 0px;
 }
 
 

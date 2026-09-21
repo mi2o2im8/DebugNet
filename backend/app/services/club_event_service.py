@@ -9,6 +9,8 @@ from app.repositories.club_repository import (
 from app.schemas.club_events import (
     ClubEventCreateRequest,
     ClubEventCreateResponse,
+    ClubEventListItemResponse,
+    ClubEventListResponse,
 )
 
 
@@ -216,4 +218,32 @@ class ClubEventService:
             event_id=event_id,
             club_id=club_id,
             message="일정이 생성되었습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 동호회 일정 목록 조회
+    # -----------------------------------------------------
+    def get_events(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> ClubEventListResponse:
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        event_rows = (
+            self.event_repository
+            .find_events_by_club(club_id)
+        )
+
+        events = [
+            ClubEventListItemResponse(**event_row)
+            for event_row in event_rows
+        ]
+
+        return ClubEventListResponse(
+            events=events,
+            total=len(events),
         )

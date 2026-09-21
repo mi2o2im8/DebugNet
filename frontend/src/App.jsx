@@ -20,6 +20,7 @@ import ClubDashboard from "./pages/ClubDashboard/ClubDashboard";
 import ClubHome from './pages/ClubHome/ClubHome';
 import ClubDetail from "./pages/ClubDetail/ClubDetail";
 import ClubApplication from "./pages/ClubApplication/ClubApplication";
+import ClubEventList from "./pages/ClubEvents/ClubEventList";
 
 // 동호회 가입 전 후 메인페이지들
 // import Home from "./pages/Home/Home";
@@ -103,7 +104,13 @@ function App() {
 
           {/* 동호회 운영 기능: BottomNav 공통 적용 */}
           <Route element={<ClubManageLayout />}>
+<<<<<<< HEAD
           <Route path="/clubs/:clubId/manage" element={<ClubDashboard />}/> 
+=======
+              <Route path="/clubs/:clubId/manage" element={<ClubDashboard />}/> 
+
+              <Route path="/clubs/:clubId/manage/events"element={<ClubEventList />}/>
+>>>>>>> 45dea70 (동호회 일정 확인 관련 진행중)
               
               {/* 이후 아래 위치에 동호회 운영 기능 관련 화면들을 추가 */}
 

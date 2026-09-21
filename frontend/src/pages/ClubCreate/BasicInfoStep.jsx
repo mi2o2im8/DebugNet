@@ -1,10 +1,9 @@
-import { useState } from "react";
+// import { useState } from "react";
 import CustomSelect from "../../components/common/CustomSelect";
 
 import {
     FiChevronDown,
     FiImage,
-    FiMapPin,
     FiUploadCloud
 } from "react-icons/fi";
 
@@ -42,27 +41,27 @@ const SPORT_OPTIONS = [
         }
     ];
 
-    const CITY_OPTIONS = [
-        {
-            value: "서울특별시",
-            label: "서울특별시"
-        }
-    ];
+    // const CITY_OPTIONS = [
+    //     {
+    //         value: "서울특별시",
+    //         label: "서울특별시"
+    //     }
+    // ];
 
-    const DISTRICT_OPTIONS = [
-        { value: "마포구", label: "마포구" },
-        { value: "영등포구", label: "영등포구" },
-        { value: "용산구", label: "용산구" },
-        { value: "성동구", label: "성동구" }
-    ];
+    // const DISTRICT_OPTIONS = [
+    //     { value: "마포구", label: "마포구" },
+    //     { value: "영등포구", label: "영등포구" },
+    //     { value: "용산구", label: "용산구" },
+    //     { value: "성동구", label: "성동구" }
+    // ];
 
 function BasicInfoStep({ formData, onChange }) {
 
-    const [isSportOpen, setIsSportOpen] = useState(false);
+    // const [isSportOpen, setIsSportOpen] = useState(false);
 
-    const selectedSport = SPORT_OPTIONS.find(
-        (sport) => sport.value === formData.sport
-    );
+    // const selectedSport = SPORT_OPTIONS.find(
+    //     (sport) => sport.value === formData.sport
+    // );
 
     // 대표 이미지 선택
     const handleImageChange = (event) => {
@@ -179,7 +178,7 @@ function BasicInfoStep({ formData, onChange }) {
                 />
             </div>
 
-            {/* 주요 활동 지역 */}
+            {/* 주요 활동 지역
             <div className="club-create-field">
                 <label>
                     주요 활동 지역 <em>*</em>
@@ -219,7 +218,7 @@ function BasicInfoStep({ formData, onChange }) {
                         }
                     />
                 </div>
-            </div>
+            </div> */}
 
             {/* 운영자 정보 */}
             <div className="club-create-field">

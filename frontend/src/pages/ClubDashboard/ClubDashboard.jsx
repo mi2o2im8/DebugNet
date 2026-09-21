@@ -216,8 +216,8 @@ function ClubDashboard() {
 
     const handleManagementMenu = (menuId) => {
         if (menuId === "schedules") {
-            alert(
-                "다음 단계에서 일정 관리 화면을 연결합니다."
+            navigate(
+                `/clubs/${clubId}/manage/events`
             );
             return;
         }

@@ -31,6 +31,20 @@ const TIME_OPTIONS = Array.from(
     }
 );
 
+const CITY_OPTIONS = [
+    {
+        value: "서울특별시",
+        label: "서울특별시"
+    }
+];
+
+const DISTRICT_OPTIONS = [
+    { value: "마포구", label: "마포구" },
+    { value: "영등포구", label: "영등포구" },
+    { value: "용산구", label: "용산구" },
+    { value: "성동구", label: "성동구" }
+];
+
 const PLACE_OPTIONS = [
     {
         value: "여의도 한강공원",
@@ -250,6 +264,30 @@ function ScheduleStep({ formData, onChange }) {
                     주요 활동 장소 <em>*</em>
                 </label>
 
+                {/* 시·도 / 구·군 */}
+                <div className="club-basic-region-row">
+                    <CustomSelect
+                        value={formData.city}
+                        options={CITY_OPTIONS}
+                        placeholder="시·도 선택"
+                        ariaLabel="시도 선택"
+                        onChange={(value) =>
+                            onChange("city", value)
+                        }
+                    />
+
+                    <CustomSelect
+                        value={formData.district}
+                        options={DISTRICT_OPTIONS}
+                        placeholder="구·군 선택"
+                        ariaLabel="구군 선택"
+                        onChange={(value) =>
+                            onChange("district", value)
+                        }
+                    />
+                </div>
+
+                {/* 실제 활동 장소 */}
                 <CustomSelect
                     value={formData.activityPlace}
                     options={PLACE_OPTIONS}
@@ -260,6 +298,7 @@ function ScheduleStep({ formData, onChange }) {
                     }
                 />
 
+                {/* 상세 주소 */}
                 <div className="club-create-icon-input">
                     <FiMapPin />
 

@@ -53,37 +53,36 @@ function ClubCreate() {
                 endTime: "21:00",
                 enabled: true
             },
-            {
-                id: 2,
-                day: "수요일",
-                startTime: "19:00",
-                endTime: "21:00",
-                enabled: true
-            },
-            {
-                id: 3,
-                day: "토요일",
-                startTime: "08:00",
-                endTime: "10:00",
-                enabled: true
-            }
+            // {
+            //     id: 2,
+            //     day: "수요일",
+            //     startTime: "19:00",
+            //     endTime: "21:00",
+            //     enabled: true
+            // },
+            // {
+            //     id: 3,
+            //     day: "토요일",
+            //     startTime: "08:00",
+            //     endTime: "10:00",
+            //     enabled: true
+            // }
         ],
 
         activityPlace: "여의도 한강공원",
         activityPlaceDetail: "",
-        activityFrequency: "주 2회",
+        activityFrequency: "주 1회",
 
         // 3단계
-        activityLevels: [
-            "입문 가능",
-            "초급 중심"
-        ],
+        // activityLevels: [
+        //     "수준 무관",
+        // ],
         joinTarget: "모두",
-        ageGroups: [
-            "20대",
-            "30대",
-            "50대"
-        ],
+        // ageGroups: [
+        //     "연령 제한 없음",
+        //     "30대",
+        //     "50대"
+        // ],
         noAgeLimit: false,
 
         // 4단계
