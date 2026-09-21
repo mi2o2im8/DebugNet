@@ -109,7 +109,6 @@ function App() {
 
           {/* 동호회 운영 기능: BottomNav 공통 적용 */}
           <Route element={<ClubManageLayout />}>
-
             <Route
               path="/clubs/:clubId/manage"
               element={<ClubDashboard />}
