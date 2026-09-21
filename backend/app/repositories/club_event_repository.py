@@ -128,6 +128,137 @@ class ClubEventRepository:
         return response.data or []
 
     # -----------------------------------------------------
+    # 일정별 활성 참가자 조회
+    # -----------------------------------------------------
+    def find_participants_by_event_ids(
+        self,
+        event_ids: list[int],
+    ) -> list[dict]:
+        if not event_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .select(
+                (
+                    "event_id, user_id, "
+                    "participant_type, status"
+                )
+            )
+            .in_(
+                "event_id",
+                event_ids,
+            )
+            .in_(
+                "status",
+                [
+                    "pending",
+                    "joined",
+                ],
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 일정별 참석 투표 조회
+    # -----------------------------------------------------
+    def find_attendance_votes_by_event_ids(
+        self,
+        event_ids: list[int],
+    ) -> list[dict]:
+        if not event_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("event_votes")
+            .select(
+                "vote_id, event_id"
+            )
+            .in_(
+                "event_id",
+                event_ids,
+            )
+            .eq(
+                "vote_type",
+                "attendance",
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 여러 투표의 선택지 조회
+    # -----------------------------------------------------
+    def find_vote_options_by_vote_ids(
+        self,
+        vote_ids: list[int],
+    ) -> list[dict]:
+        if not vote_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("event_vote_options")
+            .select(
+                (
+                    "option_id, vote_id, "
+                    "option_text, display_order"
+                )
+            )
+            .in_(
+                "vote_id",
+                vote_ids,
+            )
+            .order(
+                "display_order",
+                desc=False,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 여러 투표의 사용자 응답 조회
+    # -----------------------------------------------------
+    def find_vote_responses_by_vote_ids(
+        self,
+        vote_ids: list[int],
+    ) -> list[dict]:
+        if not vote_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("event_vote_responses")
+            .select(
+                (
+                    "response_id, vote_id, "
+                    "option_id, user_id, created_at"
+                )
+            )
+            .in_(
+                "vote_id",
+                vote_ids,
+            )
+            .order(
+                "response_id",
+                desc=False,
+            )
+            .execute()
+        )
+
+        return response.data or []
+    
+
+    # 기존 find_attendance_vote 관련 코드가 이어지는 위치
+
+    # -----------------------------------------------------
     # 참석 투표와 선택 항목 조회
     # -----------------------------------------------------
     def find_attendance_vote(

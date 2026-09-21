@@ -105,13 +105,16 @@ function App() {
 
           {/* 동호회 운영 기능: BottomNav 공통 적용 */}
           <Route element={<ClubManageLayout />}>
-<<<<<<< HEAD
-          <Route path="/clubs/:clubId/manage" element={<ClubDashboard />}/> 
-=======
-              <Route path="/clubs/:clubId/manage" element={<ClubDashboard />}/> 
 
-              <Route path="/clubs/:clubId/manage/events"element={<ClubEventList />}/>
->>>>>>> 45dea70 (동호회 일정 확인 관련 진행중)
+            <Route
+              path="/clubs/:clubId/manage"
+              element={<ClubDashboard />}
+            />
+
+            <Route
+              path="/clubs/:clubId/manage/events"
+              element={<ClubEventList />}
+            />
               
               {/* 이후 아래 위치에 동호회 운영 기능 관련 화면들을 추가 */}
 

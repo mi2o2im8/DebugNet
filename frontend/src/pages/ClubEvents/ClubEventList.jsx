@@ -13,8 +13,11 @@ import {
     FiCalendar,
     FiChevronLeft,
     FiChevronRight,
+    FiClock,
     FiList,
-    FiPlus
+    FiMapPin,
+    FiPlus,
+    FiUsers
 } from "react-icons/fi";
 
 import {
@@ -55,6 +58,172 @@ function getTodayKey() {
         today.getFullYear(),
         today.getMonth(),
         today.getDate()
+    );
+}
+
+function formatEventDate(dateString) {
+    const [
+        year,
+        month,
+        day
+    ] = dateString
+        .split("-")
+        .map(Number);
+
+    const date = new Date(
+        year,
+        month - 1,
+        day
+    );
+
+    const weekdayLabels = [
+        "일",
+        "월",
+        "화",
+        "수",
+        "목",
+        "금",
+        "토"
+    ];
+
+    return {
+        month: `${month}월`,
+        day,
+        weekday:
+            `${weekdayLabels[date.getDay()]}요일`
+    };
+}
+
+function ClubEventCard({
+    event,
+    isPast = false
+}) {
+    const formattedDate =
+        formatEventDate(event.event_date);
+
+    const startTime =
+        event.start_time.slice(0, 5);
+
+    const endTime = event.end_time
+        ? event.end_time.slice(0, 5)
+        : null;
+
+    return (
+        <article
+            className={[
+                "club-event-card",
+                isPast ? "past" : ""
+            ]
+                .filter(Boolean)
+                .join(" ")}
+        >
+            <div className="club-event-card-image">
+                {event.event_image_url ? (
+                    <img
+                        src={event.event_image_url}
+                        alt=""
+                    />
+                ) : (
+                    <div className="club-event-image-placeholder">
+                        <FiCalendar />
+                    </div>
+                )}
+
+                <div className="club-event-date-badge">
+                    <strong>
+                        {formattedDate.day}
+                    </strong>
+
+                    <span>
+                        {formattedDate.month}
+                    </span>
+
+                    <small>
+                        {formattedDate.weekday}
+                    </small>
+                </div>
+            </div>
+
+            <div className="club-event-card-content">
+                <h3>{event.title}</h3>
+
+                <p className="club-event-card-information">
+                    <FiClock />
+
+                    <span>
+                        {startTime}
+                        {endTime
+                            ? ` ~ ${endTime}`
+                            : ""}
+                    </span>
+                </p>
+
+                <p className="club-event-card-information">
+                    <FiMapPin />
+
+                    <span>
+                        {event.location || "장소 미정"}
+                    </span>
+                </p>
+
+                <div className="club-event-attendance-summary">
+                    <div className="attending">
+                        <strong>
+                            {event.attending_count ?? 0}
+                        </strong>
+
+                        <span>참여</span>
+                    </div>
+
+                    <div className="absent">
+                        <strong>
+                            {event.absent_count ?? 0}
+                        </strong>
+
+                        <span>불참</span>
+                    </div>
+
+                    <div className="undecided">
+                        <strong>
+                            {event.undecided_count ?? 0}
+                        </strong>
+
+                        <span>미정</span>
+                    </div>
+
+                    <div className="guest">
+                        <strong>
+                            {event.guest_count ?? 0}
+                        </strong>
+
+                        <span>게스트</span>
+                    </div>
+                </div>
+
+                {(event.pending_guest_count ?? 0) > 0 && (
+                    <p className="club-event-pending-guests">
+                        승인 대기 게스트
+                        {" "}
+                        {event.pending_guest_count}명
+                    </p>
+                )}
+
+                <div className="club-event-card-tags">
+                    {event.max_participants && (
+                        <span>
+                            <FiUsers />
+                            정원 {event.max_participants}명
+                        </span>
+                    )}
+
+                    {event.guest_allowed && (
+                        <span className="guest">
+                            게스트 최대 {event.max_guests}명
+                        </span>
+                    )}
+                </div>
+            </div>
+        </article>
     );
 }
 
@@ -404,20 +573,10 @@ function ClubEventList() {
                             <p>선택한 날짜에 일정이 없습니다.</p>
                         ) : (
                             selectedEvents.map((event) => (
-                                <article key={event.event_id}>
-                                    <h2>{event.title}</h2>
-
-                                    <p>
-                                        {event.start_time.slice(0, 5)}
-                                        {event.end_time
-                                            ? ` ~ ${event.end_time.slice(0, 5)}`
-                                            : ""}
-                                    </p>
-
-                                    <p>
-                                        {event.location || "장소 미정"}
-                                    </p>
-                                </article>
+                                <ClubEventCard
+                                    key={event.event_id}
+                                    event={event}
+                                />
                             ))
                         )}
                     </div>
@@ -449,33 +608,10 @@ function ClubEventList() {
                                     </p>
                                 ) : (
                                     upcomingEvents.map((event) => (
-                                        <article
-                                            className="club-event-card"
+                                        <ClubEventCard
                                             key={event.event_id}
-                                        >
-                                            <h3>{event.title}</h3>
-
-                                            <p>
-                                                {event.event_date}
-                                                {" · "}
-                                                {event.start_time.slice(0, 5)}
-                                                {event.end_time
-                                                    ? ` ~ ${event.end_time.slice(0, 5)}`
-                                                    : ""}
-                                            </p>
-
-                                            <p>
-                                                {event.location || "장소 미정"}
-                                            </p>
-
-                                            {event.guest_allowed && (
-                                                <p className="club-event-guest">
-                                                    게스트 모집 가능
-                                                    {" · "}
-                                                    최대 {event.max_guests}명
-                                                </p>
-                                            )}
-                                        </article>
+                                            event={event}
+                                        />
                                     ))
                                 )}
                             </section>
@@ -495,25 +631,11 @@ function ClubEventList() {
                                     </p>
                                 ) : (
                                     pastEvents.map((event) => (
-                                        <article
-                                            className="club-event-card past"
+                                        <ClubEventCard
                                             key={event.event_id}
-                                        >
-                                            <h3>{event.title}</h3>
-
-                                            <p>
-                                                {event.event_date}
-                                                {" · "}
-                                                {event.start_time.slice(0, 5)}
-                                                {event.end_time
-                                                    ? ` ~ ${event.end_time.slice(0, 5)}`
-                                                    : ""}
-                                            </p>
-
-                                            <p>
-                                                {event.location || "장소 미정"}
-                                            </p>
-                                        </article>
+                                            event={event}
+                                            isPast
+                                        />
                                     ))
                                 )}
                             </section>

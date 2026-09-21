@@ -332,6 +332,31 @@ class ClubEventListItemResponse(BaseModel):
 
     registration_deadline: datetime | None = None
 
+    attending_count: int = Field(
+        default=0,
+        ge=0,
+    )
+
+    absent_count: int = Field(
+        default=0,
+        ge=0,
+    )
+
+    undecided_count: int = Field(
+        default=0,
+        ge=0,
+    )
+
+    guest_count: int = Field(
+        default=0,
+        ge=0,
+    )
+
+    pending_guest_count: int = Field(
+        default=0,
+        ge=0,
+    )
+
 
 class ClubEventListResponse(BaseModel):
     events: list[ClubEventListItemResponse]
