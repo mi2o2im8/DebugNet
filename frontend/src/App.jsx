@@ -46,6 +46,10 @@ import ClubManageLayout from "./layouts/ClubManageLayout";
 
 // 내 정보
 import Mypage from "./pages/Mypage/Mypage";
+// 성정 페이지
+import Settings from './pages/Settings/Settings';
+// 내 동호회 일정 전체보기
+import MySchedule from "./pages/MySchedule/MySchedule";
 
 
 import './App.css'
@@ -145,6 +149,11 @@ function App() {
 
           {/* 내 정보 */}
           <Route path="/mypage" element={<Mypage />} />
+          {/* 설정 페이지 */}
+          <Route path="/mypage/settings" element={<Settings />} />
+          {/* 내 동호회 전체보기 페이지 */}
+          <Route path="/myschedule" element={<MySchedule />} />
+
           
 
         </Routes>

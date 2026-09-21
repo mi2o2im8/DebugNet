@@ -15,7 +15,6 @@ function ClubHome() {
   const [clubs, setClubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
 
   useEffect(() => {
     const fetchClubs = async () => {

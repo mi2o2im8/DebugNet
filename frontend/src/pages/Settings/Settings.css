@@ -1,0 +1,456 @@
+/* ========================================
+   ⭐ 설정 페이지
+======================================== */
+
+.settings-page {
+    min-height: 100vh;
+
+    background: #ffffff;
+    color: #071b41;
+
+    transition:
+        background 0.3s ease,
+        color 0.3s ease;
+}
+
+
+/* ========================================
+   ⭐ 상단
+======================================== */
+
+.settings-header {
+    position: relative;
+
+    height: 70px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-header h2 {
+    margin: 0;
+
+    font-size: 18px;
+    font-weight: 700;
+}
+
+
+/* ========================================
+   ⭐ 전체 콘텐츠
+======================================== */
+
+.settings-content {
+    width: 100%;
+    max-width: 400px;
+
+    margin: 0 auto;
+
+    padding: 0 27px 100px;
+
+    box-sizing: border-box;
+}
+
+
+/* ========================================
+   ⭐ 설정 섹션
+======================================== */
+
+.settings-section {
+    margin-bottom: 25px;
+}
+
+.settings-section h3 {
+    margin: 0 0 10px;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+
+/* ========================================
+   ⭐ 설정 카드
+======================================== */
+
+.settings-card {
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid #e1e6ed;
+    border-radius: 12px;
+
+    transition:
+        background 0.3s ease,
+        border-color 0.3s ease;
+}
+
+
+/* ========================================
+   ⭐ 설정 행
+======================================== */
+
+.settings-row {
+    width: 100%;
+    min-height: 58px;
+
+    padding: 0 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    box-sizing: border-box;
+
+    color: #172b4d;
+
+    font-size: 13px;
+}
+
+
+/* ========================================
+   ⭐ 메뉴 버튼
+======================================== */
+
+.settings-button {
+    border: none;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    text-align: left;
+
+    transition: background 0.2s ease;
+}
+
+.settings-button:hover {
+    background: #f8fafc;
+}
+
+
+/* ========================================
+   ⭐ 오른쪽 화살표
+======================================== */
+
+.row-arrow {
+    font-size: 17px;
+
+    color: #60708c;
+
+    transition: color 0.3s ease;
+}
+
+
+/* ========================================
+   ⭐ 구분선
+======================================== */
+
+.settings-divider {
+    height: 1px;
+
+    margin: 0 14px;
+
+    background: #e1e6ed;
+
+    transition: background 0.3s ease;
+}
+
+
+/* ========================================
+   ⭐ ON / OFF 스위치
+======================================== */
+
+.settings-switch {
+    position: relative;
+
+    width: 38px;
+    height: 22px;
+
+    flex-shrink: 0;
+}
+
+.settings-switch input {
+    display: none;
+}
+
+
+/* 스위치 배경 */
+
+.switch-slider {
+    position: absolute;
+
+    inset: 0;
+
+    background: #d9dee5;
+
+    border-radius: 20px;
+
+    cursor: pointer;
+
+    transition: 0.25s ease;
+}
+
+
+/* 스위치 원 */
+
+.switch-slider::before {
+    content: "";
+
+    position: absolute;
+
+    width: 18px;
+    height: 18px;
+
+    left: 2px;
+    top: 2px;
+
+    background: #ffffff;
+
+    border-radius: 50%;
+
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.15);
+
+    transition: 0.25s ease;
+}
+
+
+/* ON */
+
+.settings-switch input:checked + .switch-slider {
+    background: #01a17f;
+}
+
+
+/* ON 상태 원 이동 */
+
+.settings-switch input:checked + .switch-slider::before {
+    transform: translateX(16px);
+}
+
+
+/* ========================================
+   ⭐ 로그아웃
+======================================== */
+
+.logout-button {
+    width: 100%;
+    height: 48px;
+
+    margin-top: 5px;
+
+    border: 1px solid #ffb5b5;
+    border-radius: 10px;
+
+    background: #fff7f7;
+
+    color: #e84b4b;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.logout-button:hover {
+    background: #fff0f0;
+}
+
+
+/* ========================================
+   ⭐ 다크모드
+======================================== */
+
+.dark-mode .settings-page {
+    background: #12161c;
+
+    color: #f1f4f8;
+}
+
+
+/* 상단 제목 */
+
+.dark-mode .settings-header {
+    color: #f1f4f8;
+}
+
+
+/* 섹션 제목 */
+
+.dark-mode .settings-section h3 {
+    color: #f1f4f8;
+}
+
+
+/* 카드 */
+
+.dark-mode .settings-card {
+    background: #1b2129;
+
+    border-color: #303844;
+}
+
+
+/* 행 */
+
+.dark-mode .settings-row {
+    color: #e9edf2;
+}
+
+
+/* 메뉴 hover */
+
+.dark-mode .settings-button:hover {
+    background: #242b34;
+}
+
+
+/* 화살표 */
+
+.dark-mode .row-arrow {
+    color: #9ba7b7;
+}
+
+
+/* 구분선 */
+
+.dark-mode .settings-divider {
+    background: #303844;
+}
+
+
+/* 로그아웃 */
+
+.dark-mode .logout-button {
+    background: #291d1d;
+
+    border-color: #713c3c;
+
+    color: #ff8585;
+}
+
+
+/* ========================================
+   ⭐ 모바일
+======================================== */
+
+@media (max-width: 400px) {
+
+    .settings-content {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .settings-section {
+        margin-bottom: 22px;
+    }
+
+}
+
+
+/* ========================================
+   ⭐ 로그아웃 확인 모달
+   ======================================== */
+
+.logout-modal-overlay {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    z-index: 9999;
+}
+
+.logout-modal {
+    width: calc(100% - 40px);
+    max-width: 340px;
+
+    padding: 28px 24px 22px;
+
+    background: #ffffff;
+    border-radius: 16px;
+
+    text-align: center;
+
+    box-sizing: border-box;
+}
+
+.logout-modal h3 {
+    margin: 0 0 10px;
+
+    font-size: 18px;
+    font-weight: 700;
+    color: #222;
+}
+
+.logout-modal p {
+    margin: 0 0 24px;
+
+    font-size: 14px;
+    color: #777;
+    line-height: 1.5;
+}
+
+.logout-modal-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.logout-modal-buttons button {
+    flex: 1;
+
+    height: 44px;
+
+    border: none;
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.logout-cancel {
+    background: #f1f1f1;
+    color: #555;
+}
+
+.logout-confirm {
+    background: #01A17F;
+    color: #fff;
+}
+
+.logout-cancel:hover {
+    background: #e5e5e5;
+}
+
+.logout-confirm:hover {
+    background: #008f70;
+}
+
+/* ⭐ 다크모드 */
+.dark-mode .logout-modal {
+    background: #2b2b2b;
+}
+
+.dark-mode .logout-modal h3 {
+    color: #fff;
+}
+
+.dark-mode .logout-modal p {
+    color: #aaa;
+}
+
+.dark-mode .logout-cancel {
+    background: #444;
+    color: #ddd;
+}
