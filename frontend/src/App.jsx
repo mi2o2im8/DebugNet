@@ -32,6 +32,14 @@ import ClubCreate from './pages/ClubCreate/ClubCreate';
 import Community from "./pages/Community/Community";
 import PostDetail from './pages/Community/PostDetail';
 import PostWrite from './pages/Community/PostWrite';
+
+import MatchHome from "./pages/Match/MatchHome";
+import MatchAvailabilityForm from "./pages/Match/MatchAvailabilityForm";
+import MatchAvailabilityDetail from "./pages/Match/MatchAvailabilityDetail";
+import MatchTeamList from "./pages/Match/MatchTeamList";
+import MatchTeamDetail from "./pages/Match/MatchTeamDetail";
+
+
 import ClubManageLayout from "./layouts/ClubManageLayout";
 
 
@@ -93,6 +101,26 @@ function App() {
               <Route path="/clubs/:clubId/manage" element={<ClubDashboard />}/> 
               
               {/* 이후 아래 위치에 동호회 운영 기능 관련 화면들을 추가 */}
+
+
+          {/* 팀 매칭 홈 */}
+          <Route path="/matches" element={<MatchHome />} />
+
+          {/* 경기 가능일 등록 */}
+          <Route path="/matches/availability/new" element={<MatchAvailabilityForm />} />
+
+          {/* 경기 가능일 상세 */}
+          <Route path="/matches/availability/:availabilityId" element={<MatchAvailabilityDetail />} />
+
+          {/* 경기 가능일 수정 */}
+          <Route path="/matches/availability/:availabilityId/edit" element={<MatchAvailabilityForm />} />
+
+          {/* 해당 조건으로 상대팀 찾기 */}
+          <Route path="/matches/availability/:availabilityId/teams" element={<MatchTeamList />} />
+
+          {/* 상대팀 경기 가능일 상세 */}
+          <Route path="/matches/team/:availabilityId" element={<MatchTeamDetail />} />
+          
               
           </Route>
 
