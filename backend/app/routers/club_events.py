@@ -12,6 +12,7 @@ from app.schemas.club_events import (
     ClubEventCreateRequest,
     ClubEventCreateResponse,
     ClubEventListResponse,
+    ClubEventDetailResponse,
     ClubEventParticipantListResponse,
     ClubEventGuestDecisionRequest,
     ClubEventGuestDecisionResponse,
@@ -130,6 +131,235 @@ def get_club_events(
             ),
             detail=(
                 "일정 목록 조회 중 오류가 발생했습니다."
+            ),
+        ) from error
+
+# ---------------------------------------------------------
+# 일정 단건 조회
+#
+# GET /api/clubs/{club_id}/events/{event_id}
+# ---------------------------------------------------------
+@router.get(
+    "/{event_id}",
+    response_model=ClubEventDetailResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_club_event(
+    club_id: int,
+    event_id: int,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
+        return event_service.get_event(
+            club_id=club_id,
+            event_id=event_id,
+            user_id=user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "일정 단건 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "일정 조회 중 오류가 발생했습니다."
+            ),
+        ) from error
+
+
+# ---------------------------------------------------------
+# 일정 수정
+#
+# PUT /api/clubs/{club_id}/events/{event_id}
+# ---------------------------------------------------------
+@router.put(
+    "/{event_id}",
+    response_model=ClubEventCreateResponse,
+    status_code=status.HTTP_200_OK,
+)
+def update_club_event(
+    club_id: int,
+    event_id: int,
+    request_data: ClubEventCreateRequest,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
+        return event_service.update_event(
+            club_id=club_id,
+            event_id=event_id,
+            user_id=user_id,
+            request_data=request_data,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "일정 수정 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "일정 수정 중 오류가 발생했습니다."
+            ),
+        ) from error
+
+
+# ---------------------------------------------------------
+# 일정 복사
+#
+# POST /api/clubs/{club_id}/events/{event_id}/copy
+# ---------------------------------------------------------
+@router.post(
+    "/{event_id}/copy",
+    response_model=ClubEventCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def copy_club_event(
+    club_id: int,
+    event_id: int,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
+        return event_service.copy_event(
+            club_id=club_id,
+            event_id=event_id,
+            user_id=user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "일정 복사 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "일정 복사 중 오류가 발생했습니다."
+            ),
+        ) from error
+
+
+# ---------------------------------------------------------
+# 일정 삭제
+#
+# DELETE /api/clubs/{club_id}/events/{event_id}
+# ---------------------------------------------------------
+@router.delete(
+    "/{event_id}",
+    response_model=ClubEventCreateResponse,
+    status_code=status.HTTP_200_OK,
+)
+def delete_club_event(
+    club_id: int,
+    event_id: int,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
+        return event_service.cancel_event(
+            club_id=club_id,
+            event_id=event_id,
+            user_id=user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "일정 삭제 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "일정 삭제 중 오류가 발생했습니다."
             ),
         ) from error
 

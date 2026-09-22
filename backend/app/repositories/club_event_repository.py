@@ -114,6 +114,7 @@ class ClubEventRepository:
             .table("club_events")
             .select("*")
             .eq("club_id", club_id)
+            .neq("status", "cancelled")
             .order(
                 "event_date",
                 desc=False,
@@ -126,6 +127,82 @@ class ClubEventRepository:
         )
 
         return response.data or []
+
+    # -----------------------------------------------------
+    # 일정 기본 정보 수정
+    # -----------------------------------------------------
+    def update_event(
+        self,
+        club_id: int,
+        event_id: int,
+        event_data: dict,
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("club_events")
+            .update(event_data)
+            .eq("club_id", club_id)
+            .eq("event_id", event_id)
+            .neq("status", "cancelled")
+            .execute()
+        )
+
+        if not response.data:
+            raise LookupError(
+                "존재하지 않거나 삭제된 일정입니다."
+            )
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 참석 투표 마감일 수정
+    # -----------------------------------------------------
+    def update_attendance_vote_deadline(
+        self,
+        event_id: int,
+        deadline: str | None,
+    ) -> None:
+        (
+            self.admin_client
+            .table("event_votes")
+            .update(
+                {
+                    "deadline": deadline,
+                }
+            )
+            .eq("event_id", event_id)
+            .eq("vote_type", "attendance")
+            .execute()
+        )
+
+    # -----------------------------------------------------
+    # 일정 소프트 삭제
+    # -----------------------------------------------------
+    def cancel_event(
+        self,
+        club_id: int,
+        event_id: int,
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("club_events")
+            .update(
+                {
+                    "status": "cancelled",
+                }
+            )
+            .eq("club_id", club_id)
+            .eq("event_id", event_id)
+            .neq("status", "cancelled")
+            .execute()
+        )
+
+        if not response.data:
+            raise LookupError(
+                "존재하지 않거나 이미 삭제된 일정입니다."
+            )
+
+        return response.data[0]
 
     # -----------------------------------------------------
     # 일정별 활성 참가자 조회

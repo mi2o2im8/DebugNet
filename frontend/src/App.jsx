@@ -21,6 +21,7 @@ import ClubHome from './pages/ClubHome/ClubHome';
 import ClubDetail from "./pages/ClubDetail/ClubDetail";
 import ClubApplication from "./pages/ClubApplication/ClubApplication";
 import ClubEventList from "./pages/ClubEvents/ClubEventList";
+import ClubEventForm from "./pages/ClubEvents/ClubEventForm";
 
 // 동호회 가입 전 후 메인페이지들
 // import Home from "./pages/Home/Home";
@@ -121,6 +122,16 @@ function App() {
             <Route
               path="/clubs/:clubId/manage/events"
               element={<ClubEventList />}
+            />
+
+            <Route
+              path="/clubs/:clubId/manage/events/new"
+              element={<ClubEventForm />}
+            />
+
+            <Route
+              path="/clubs/:clubId/manage/events/:eventId/edit"
+              element={<ClubEventForm />}
             />
 
             <Route

@@ -9,6 +9,7 @@ from app.repositories.club_repository import (
 from app.schemas.club_events import (
     ClubEventCreateRequest,
     ClubEventCreateResponse,
+    ClubEventDetailResponse,
     ClubEventListItemResponse,
     ClubEventListResponse,
     ClubEventParticipantItemResponse,
@@ -222,6 +223,362 @@ class ClubEventService:
             event_id=event_id,
             club_id=club_id,
             message="일정이 생성되었습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 일정 단건 조회
+    # -----------------------------------------------------
+    def get_event(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> ClubEventDetailResponse:
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if (
+            event is None
+            or event.get("status") == "cancelled"
+        ):
+            raise LookupError(
+                "존재하지 않거나 삭제된 일정입니다."
+            )
+
+        attendance_vote = (
+            self.event_repository
+            .find_attendance_vote(event_id)
+        )
+
+        vote_options = []
+
+        if attendance_vote is not None:
+            option_rows = (
+                self.event_repository
+                .find_vote_options(
+                    int(attendance_vote["vote_id"])
+                )
+            )
+
+            vote_options = [
+                str(option_row["option_text"])
+                for option_row in option_rows
+            ]
+
+        return ClubEventDetailResponse(
+            **event,
+            vote_options=vote_options,
+        )
+
+    # -----------------------------------------------------
+    # 일정 수정
+    # -----------------------------------------------------
+    def update_event(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+        request_data: ClubEventCreateRequest,
+    ) -> ClubEventCreateResponse:
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        current_event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if (
+            current_event is None
+            or current_event.get("status")
+                == "cancelled"
+        ):
+            raise LookupError(
+                "존재하지 않거나 삭제된 일정입니다."
+            )
+
+        participant_rows = (
+            self.event_repository
+            .find_participant_details(event_id)
+        )
+
+        active_guest_rows = [
+            participant_row
+            for participant_row in participant_rows
+            if (
+                participant_row.get(
+                    "participant_type"
+                ) == "guest"
+                and participant_row.get("status") in {
+                    "pending",
+                    "joined",
+                }
+            )
+        ]
+
+        joined_guest_count = sum(
+            1
+            for participant_row in active_guest_rows
+            if participant_row.get("status") == "joined"
+        )
+
+        if (
+            not request_data.guest_allowed
+            and active_guest_rows
+        ):
+            raise ValueError(
+                "대기 또는 승인된 게스트가 있어 "
+                "게스트 모집을 해제할 수 없습니다."
+            )
+
+        if (
+            request_data.guest_allowed
+            and request_data.max_guests
+                < joined_guest_count
+        ):
+            raise ValueError(
+                "최대 게스트 인원은 현재 승인된 "
+                "게스트 수보다 적을 수 없습니다."
+            )
+
+        recurrence_group_id = (
+            current_event.get(
+                "recurrence_group_id"
+            )
+        )
+
+        if request_data.recurrence_type == "none":
+            recurrence_group_id = None
+
+        elif recurrence_group_id is None:
+            recurrence_group_id = str(uuid4())
+
+        registration_deadline = (
+            request_data
+            .registration_deadline
+            .isoformat()
+            if request_data.registration_deadline
+            else None
+        )
+
+        self.event_repository.update_event(
+            club_id=club_id,
+            event_id=event_id,
+            event_data={
+                "title": request_data.title,
+                "description": (
+                    request_data.description
+                ),
+                "event_date": (
+                    request_data
+                    .event_date
+                    .isoformat()
+                ),
+                "start_time": (
+                    request_data
+                    .start_time
+                    .isoformat()
+                ),
+                "end_time": (
+                    request_data
+                    .end_time
+                    .isoformat()
+                    if request_data.end_time
+                    else None
+                ),
+                "location": request_data.location,
+                "max_participants": (
+                    request_data.max_participants
+                ),
+                "event_type": (
+                    request_data.event_type
+                ),
+                "event_image_url": (
+                    request_data.event_image_url
+                ),
+                "recurrence_group_id": (
+                    recurrence_group_id
+                ),
+                "recurrence_type": (
+                    request_data.recurrence_type
+                ),
+                "participation_method": (
+                    request_data
+                    .participation_method
+                ),
+                "guest_allowed": (
+                    request_data.guest_allowed
+                ),
+                "max_guests": (
+                    request_data.max_guests
+                ),
+                "registration_deadline": (
+                    registration_deadline
+                ),
+            },
+        )
+
+        self.event_repository \
+            .update_attendance_vote_deadline(
+                event_id=event_id,
+                deadline=registration_deadline,
+            )
+
+        return ClubEventCreateResponse(
+            event_id=event_id,
+            club_id=club_id,
+            message="일정이 수정되었습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 일정 복사
+    # -----------------------------------------------------
+    def copy_event(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> ClubEventCreateResponse:
+        source_event = self.get_event(
+            club_id=club_id,
+            event_id=event_id,
+            user_id=user_id,
+        )
+
+        copy_suffix = " (복사본)"
+
+        copied_title = (
+            source_event.title[
+                : 50 - len(copy_suffix)
+            ]
+            + copy_suffix
+        )
+
+        request_data = (
+            ClubEventCreateRequest.model_validate(
+                {
+                    "title": copied_title,
+                    "event_type": (
+                        source_event.event_type
+                    ),
+                    "description": (
+                        source_event.description
+                    ),
+                    "event_image_url": (
+                        source_event.event_image_url
+                    ),
+                    "event_date": (
+                        source_event.event_date
+                    ),
+                    "start_time": (
+                        source_event.start_time
+                    ),
+                    "end_time": (
+                        source_event.end_time
+                    ),
+                    "recurrence_type": (
+                        source_event.recurrence_type
+                    ),
+                    "location": (
+                        source_event.location
+                    ),
+                    "max_participants": (
+                        source_event.max_participants
+                    ),
+                    "participation_method": (
+                        source_event
+                        .participation_method
+                    ),
+                    "guest_allowed": (
+                        source_event.guest_allowed
+                    ),
+                    "max_guests": (
+                        source_event.max_guests
+                    ),
+                    "registration_deadline": (
+                        source_event
+                        .registration_deadline
+                    ),
+                    "vote_options": (
+                        source_event.vote_options
+                        or [
+                            "참석",
+                            "불참",
+                            "미정",
+                        ]
+                    ),
+                }
+            )
+        )
+
+        copied_event = self.create_event(
+            club_id=club_id,
+            user_id=user_id,
+            request_data=request_data,
+        )
+
+        return ClubEventCreateResponse(
+            event_id=copied_event.event_id,
+            club_id=club_id,
+            message="일정이 복사되었습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 일정 삭제
+    #
+    # 실제 행은 삭제하지 않고 status만 cancelled로 변경
+    # -----------------------------------------------------
+    def cancel_event(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> ClubEventCreateResponse:
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if (
+            event is None
+            or event.get("status") == "cancelled"
+        ):
+            raise LookupError(
+                "존재하지 않거나 이미 삭제된 일정입니다."
+            )
+
+        self.event_repository.cancel_event(
+            club_id=club_id,
+            event_id=event_id,
+        )
+
+        return ClubEventCreateResponse(
+            event_id=event_id,
+            club_id=club_id,
+            message="일정이 삭제되었습니다.",
         )
 
     # -----------------------------------------------------
@@ -588,7 +945,10 @@ class ClubEventService:
             )
         )
 
-        if event is None:
+        if (
+            event is None
+            or event.get("status") == "cancelled"
+        ):
             raise LookupError(
                 "존재하지 않는 일정입니다."
             )
@@ -768,7 +1128,10 @@ class ClubEventService:
             )
         )
 
-        if event is None:
+        if (
+            event is None
+            or event.get("status") == "cancelled"
+        ):
             raise LookupError(
                 "존재하지 않는 일정입니다."
             )

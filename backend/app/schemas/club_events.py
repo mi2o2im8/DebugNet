@@ -310,6 +310,36 @@ class ClubEventCreateResponse(BaseModel):
     club_id: int
     message: str
 
+class ClubEventDetailResponse(BaseModel):
+    event_id: int
+    club_id: int
+
+    title: str
+    description: str | None = None
+
+    event_date: date
+    start_time: time
+    end_time: time | None = None
+
+    location: str | None = None
+    max_participants: int | None = None
+
+    event_type: str
+    status: str
+    event_image_url: str | None = None
+
+    recurrence_type: str
+    participation_method: str
+
+    guest_allowed: bool
+    max_guests: int
+
+    registration_deadline: datetime | None = None
+
+    vote_options: list[str] = Field(
+        default_factory=list,
+    )
+
 class ClubEventListItemResponse(BaseModel):
     event_id: int
     club_id: int

@@ -25,6 +25,8 @@ import {
 } from "react-icons/fi";
 
 import {
+    copyClubEvent,
+    deleteClubEvent,
     getClubEvents
 } from "../../api/clubApi";
 
@@ -100,7 +102,8 @@ function formatEventDate(dateString) {
 
 function ClubEventCard({
     event,
-    isPast = false
+    isPast = false,
+    onChanged
 }) {
     const navigate = useNavigate();
     const { clubId } = useParams();
@@ -108,15 +111,72 @@ function ClubEventCard({
     const [isMenuOpen, setIsMenuOpen] =
         useState(false);
 
-    const showPendingAction = (
-        actionName
-    ) => {
+    const [isProcessing, setIsProcessing] =
+        useState(false);
+
+    const handleCopy = async () => {
         setIsMenuOpen(false);
 
-        alert(
-            `${actionName} 기능은 다음 단계에서 연결합니다.`
+        const confirmed = window.confirm(
+            `“${event.title}” 일정을 복사할까요?`
         );
+
+        if (!confirmed) {
+            return;
+        }
+
+        setIsProcessing(true);
+
+        try {
+            const result = await copyClubEvent(
+                clubId,
+                event.event_id
+            );
+
+            alert(result.message);
+            onChanged();
+        } catch (error) {
+            alert(
+                error.message ||
+                "일정을 복사하지 못했습니다."
+            );
+        } finally {
+            setIsProcessing(false);
+        }
     };
+
+    const handleDelete = async () => {
+        setIsMenuOpen(false);
+
+        const confirmed = window.confirm(
+            `“${event.title}” 일정을 삭제할까요?\n`
+            + "참가 및 투표 기록은 보존됩니다."
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        setIsProcessing(true);
+
+        try {
+            const result = await deleteClubEvent(
+                clubId,
+                event.event_id
+            );
+
+            alert(result.message);
+            onChanged();
+        } catch (error) {
+            alert(
+                error.message ||
+                "일정을 삭제하지 못했습니다."
+            );
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     const formattedDate =
         formatEventDate(event.event_date);
 
@@ -173,6 +233,7 @@ function ClubEventCard({
                             className="club-event-more-button"
                             aria-label="일정 메뉴 열기"
                             aria-expanded={isMenuOpen}
+                            disabled={isProcessing}
                             onClick={() =>
                                 setIsMenuOpen(
                                     (current) => !current
@@ -191,8 +252,9 @@ function ClubEventCard({
                                     type="button"
                                     role="menuitem"
                                     onClick={() =>
-                                        showPendingAction(
-                                            "일정 수정"
+                                        navigate(
+                                            `/clubs/${clubId}/manage/events/`
+                                            + `${event.event_id}/edit`
                                         )
                                     }
                                 >
@@ -203,11 +265,7 @@ function ClubEventCard({
                                 <button
                                     type="button"
                                     role="menuitem"
-                                    onClick={() =>
-                                        showPendingAction(
-                                            "일정 복사"
-                                        )
-                                    }
+                                    onClick={handleCopy}
                                 >
                                     <FiCopy />
                                     일정 복사
@@ -217,11 +275,7 @@ function ClubEventCard({
                                     type="button"
                                     role="menuitem"
                                     className="danger"
-                                    onClick={() =>
-                                        showPendingAction(
-                                            "일정 삭제"
-                                        )
-                                    }
+                                    onClick={handleDelete}
                                 >
                                     <FiTrash2 />
                                     일정 삭제
@@ -335,6 +389,8 @@ function ClubEventList() {
     const [errorMessage, setErrorMessage] = useState("");
     const [viewMode, setViewMode] = useState("list");
 
+    const [reloadKey, setReloadKey] = useState(0);
+
     const [calendarDate, setCalendarDate] =
         useState(() => new Date());
 
@@ -376,7 +432,13 @@ function ClubEventList() {
         return () => {
             cancelled = true;
         };
-    }, [clubId]);
+    }, [clubId, reloadKey]);
+
+    const handleEventsChanged = () => {
+        setReloadKey(
+            (current) => current + 1
+        );
+    };
 
     const calendarData = useMemo(() => {
         const year = calendarDate.getFullYear();
@@ -574,8 +636,8 @@ function ClubEventList() {
                     type="button"
                     className="club-events-create-button"
                     onClick={() =>
-                        alert(
-                            "다음 단계에서 일정 만들기 화면을 연결합니다."
+                        navigate(
+                            `/clubs/${clubId}/manage/events/new`
                         )
                     }
                 >
@@ -675,6 +737,7 @@ function ClubEventList() {
                                 <ClubEventCard
                                     key={event.event_id}
                                     event={event}
+                                    onChanged={handleEventsChanged}
                                 />
                             ))
                         )}
@@ -710,6 +773,7 @@ function ClubEventList() {
                                         <ClubEventCard
                                             key={event.event_id}
                                             event={event}
+                                            onChanged={handleEventsChanged}
                                         />
                                     ))
                                 )}
@@ -734,6 +798,7 @@ function ClubEventList() {
                                             key={event.event_id}
                                             event={event}
                                             isPast
+                                            onChanged={handleEventsChanged}
                                         />
                                     ))
                                 )}
