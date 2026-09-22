@@ -101,7 +101,7 @@ function Mypage() {
                 {/* 내 동호회 */}
                 <div className="club-card">
 
-                    {/* ⭐ 개별 동호회 선택은 기존대로 유지 */}
+                    {/* ⭐ 개별 동호회 선택 */}
                     <button
                         type="button"
                         onClick={() =>
@@ -141,7 +141,7 @@ function Mypage() {
                         type="button"
                         className="activity-item"
                         onClick={() =>
-                            navigate("/mypage/activity/matches")
+                            navigate("/myactivity")
                         }
                     >
                         <img
