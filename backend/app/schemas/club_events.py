@@ -449,3 +449,27 @@ class ClubEventGuestDecisionResponse(BaseModel):
     ]
 
     message: str
+
+class ClubEventAttendanceRequest(BaseModel):
+    attendance_status: Literal[
+        "attending",
+        "absent",
+        "undecided",
+    ] = Field(
+        validation_alias=AliasChoices(
+            "attendance_status",
+            "attendanceStatus",
+        ),
+    )
+
+
+class ClubEventAttendanceResponse(BaseModel):
+    event_id: int
+
+    attendance_status: Literal[
+        "attending",
+        "absent",
+        "undecided",
+    ]
+
+    message: str

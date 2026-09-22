@@ -607,23 +607,41 @@
 }
 
 .club-event-card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
     margin-top: 13px;
 }
 
+.club-event-attendance-button,
 .club-event-participants-button {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
+    gap: 6px;
     width: 100%;
     min-height: 40px;
-    border: 1px solid #008006;
+    padding: 8px 6px;
     border-radius: 9px;
-    background: #ffffff;
-    color: #008006;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     cursor: pointer;
+}
+
+.club-event-attendance-button {
+    border: 1px solid #008c33;
+    background: #008c33;
+    color: #ffffff;
+}
+
+.club-event-attendance-button:hover {
+    background: #00752b;
+}
+
+.club-event-participants-button {
+    border: 1px solid #008006;
+    background: #ffffff;
+    color: #008006;
 }
 
 .club-event-participants-button:hover {

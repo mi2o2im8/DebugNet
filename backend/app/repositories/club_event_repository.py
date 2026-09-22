@@ -472,6 +472,153 @@ class ClubEventRepository:
         return response.data[0]
 
     # -----------------------------------------------------
+    # 사용자의 활성 일정 참가 정보 조회
+    # -----------------------------------------------------
+    def find_user_event_participant(
+        self,
+        event_id: int,
+        user_id: str,
+    ) -> dict | None:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .select(
+                (
+                    "event_participant_id, "
+                    "event_id, "
+                    "user_id, "
+                    "participant_type, "
+                    "status"
+                )
+            )
+            .eq("event_id", event_id)
+            .eq("user_id", user_id)
+            .in_(
+                "status",
+                [
+                    "pending",
+                    "joined",
+                ],
+            )
+            .order(
+                "event_participant_id",
+                desc=True,
+            )
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 참석 응답 회원을 일정 참가자로 등록
+    # -----------------------------------------------------
+    def create_member_event_participant(
+        self,
+        event_id: int,
+        user_id: str,
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .insert(
+                {
+                    "event_id": event_id,
+                    "user_id": user_id,
+                    "participant_type": "member",
+                    "status": "joined",
+                }
+            )
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError(
+                "일정 참가 정보 생성에 실패했습니다."
+            )
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 사용자의 기존 참석 응답 조회
+    # -----------------------------------------------------
+    def find_user_vote_response(
+        self,
+        vote_id: int,
+        user_id: str,
+    ) -> dict | None:
+        response = (
+            self.admin_client
+            .table("event_vote_responses")
+            .select(
+                (
+                    "response_id, "
+                    "vote_id, "
+                    "option_id, "
+                    "user_id"
+                )
+            )
+            .eq("vote_id", vote_id)
+            .eq("user_id", user_id)
+            .order(
+                "response_id",
+                desc=True,
+            )
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 사용자의 참석 응답 저장
+    #
+    # 현재 DB의 UNIQUE가
+    # (vote_id, option_id, user_id)이므로
+    # 기존 응답 삭제 후 새 응답을 저장
+    # -----------------------------------------------------
+    def replace_vote_response(
+        self,
+        vote_id: int,
+        option_id: int,
+        user_id: str,
+    ) -> dict:
+        (
+            self.admin_client
+            .table("event_vote_responses")
+            .delete()
+            .eq("vote_id", vote_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+
+        response = (
+            self.admin_client
+            .table("event_vote_responses")
+            .insert(
+                {
+                    "vote_id": vote_id,
+                    "option_id": option_id,
+                    "user_id": user_id,
+                }
+            )
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError(
+                "참석 응답 저장에 실패했습니다."
+            )
+
+        return response.data[0]
+
+    # -----------------------------------------------------
     # 승인된 게스트 인원 조회
     # -----------------------------------------------------
     def count_joined_guests(

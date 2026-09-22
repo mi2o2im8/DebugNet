@@ -10,6 +10,7 @@ import {
 } from "react-router-dom";
 
 import {
+    FiCheckCircle,
     FiCalendar,
     FiChevronLeft,
     FiChevronRight,
@@ -364,10 +365,30 @@ function ClubEventCard({
                 <div className="club-event-card-actions">
                     <button
                         type="button"
+                        className="club-event-attendance-button"
+                        onClick={() =>
+                            navigate(
+                                `/clubs/${clubId}/events/`
+                                + `${event.event_id}/attendance`,
+                                {
+                                    state: {
+                                        eventTitle: event.title,
+                                    },
+                                }
+                            )
+                        }
+                    >
+                        <FiCheckCircle />
+                        내 참석 응답
+                    </button>
+
+                    <button
+                        type="button"
                         className="club-event-participants-button"
                         onClick={() =>
                             navigate(
-                                `/clubs/${clubId}/manage/events/${event.event_id}/participants`
+                                `/clubs/${clubId}/manage/events/`
+                                + `${event.event_id}/participants`
                             )
                         }
                     >

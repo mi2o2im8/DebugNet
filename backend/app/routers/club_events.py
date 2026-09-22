@@ -9,14 +9,17 @@ from app.core.security import (
     get_current_user_id,
 )
 from app.schemas.club_events import (
+    ClubEventAttendanceRequest,
+    ClubEventAttendanceResponse,
     ClubEventCreateRequest,
     ClubEventCreateResponse,
-    ClubEventListResponse,
     ClubEventDetailResponse,
+    ClubEventListResponse,
     ClubEventParticipantListResponse,
     ClubEventGuestDecisionRequest,
     ClubEventGuestDecisionResponse,
 )
+
 from app.services.club_event_service import (
     ClubEventService,
 )
@@ -360,6 +363,123 @@ def delete_club_event(
             ),
             detail=(
                 "일정 삭제 중 오류가 발생했습니다."
+            ),
+        ) from error
+
+# ---------------------------------------------------------
+# 내 참석 응답 조회
+#
+# GET /api/clubs/{club_id}/events/{event_id}/attendance
+# ---------------------------------------------------------
+@router.get(
+    "/{event_id}/attendance",
+    response_model=ClubEventAttendanceResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_my_club_event_attendance(
+    club_id: int,
+    event_id: int,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
+        return event_service.get_my_attendance(
+            club_id=club_id,
+            event_id=event_id,
+            user_id=user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "참석 응답 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "참석 응답 조회 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+
+# ---------------------------------------------------------
+# 내 참석 응답 저장 또는 변경
+#
+# PUT /api/clubs/{club_id}/events/{event_id}/attendance
+# ---------------------------------------------------------
+@router.put(
+    "/{event_id}/attendance",
+    response_model=ClubEventAttendanceResponse,
+    status_code=status.HTTP_200_OK,
+)
+def update_my_club_event_attendance(
+    club_id: int,
+    event_id: int,
+    request_data: ClubEventAttendanceRequest,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
+        return event_service.update_my_attendance(
+            club_id=club_id,
+            event_id=event_id,
+            user_id=user_id,
+            request_data=request_data,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "참석 응답 변경 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "참석 응답 변경 중 "
+                "오류가 발생했습니다."
             ),
         ) from error
 

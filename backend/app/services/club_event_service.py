@@ -7,6 +7,8 @@ from app.repositories.club_repository import (
     ClubRepository,
 )
 from app.schemas.club_events import (
+    ClubEventAttendanceRequest,
+    ClubEventAttendanceResponse,
     ClubEventCreateRequest,
     ClubEventCreateResponse,
     ClubEventDetailResponse,
@@ -922,6 +924,232 @@ class ClubEventService:
             ] = attendance_status
 
         return attendance_status_by_user
+
+    # -----------------------------------------------------
+    # 일정 참석 응답 권한 확인
+    #
+    # 반환값
+    # - 기존 참가자: 참가 정보
+    # - 활동 회원이지만 아직 참가 정보 없음: None
+    # -----------------------------------------------------
+    def validate_attendance_access(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> dict | None:
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if (
+            event is None
+            or event.get("status") == "cancelled"
+        ):
+            raise LookupError(
+                "존재하지 않거나 종료된 일정입니다."
+            )
+
+        participant = (
+            self.event_repository
+            .find_user_event_participant(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        if participant is not None:
+            if participant["status"] != "joined":
+                raise PermissionError(
+                    "승인된 참가자만 "
+                    "참석 여부를 선택할 수 있습니다."
+                )
+
+            return participant
+
+        membership = (
+            self.club_repository
+            .find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is None:
+            raise PermissionError(
+                "동호회 회원 또는 승인된 게스트만 "
+                "참석 여부를 선택할 수 있습니다."
+            )
+
+        return None
+
+    # -----------------------------------------------------
+    # 참석 투표와 선택 항목 조회
+    # -----------------------------------------------------
+    def get_attendance_vote_data(
+        self,
+        event_id: int,
+    ) -> tuple[dict, list[dict]]:
+        vote = (
+            self.event_repository
+            .find_attendance_vote(event_id)
+        )
+
+        if vote is None:
+            raise LookupError(
+                "이 일정에는 참석 투표가 없습니다."
+            )
+
+        option_rows = (
+            self.event_repository
+            .find_vote_options(
+                int(vote["vote_id"])
+            )
+        )
+
+        if not option_rows:
+            raise LookupError(
+                "참석 투표 선택 항목이 없습니다."
+            )
+
+        return vote, option_rows
+
+    # -----------------------------------------------------
+    # 내 현재 참석 응답 조회
+    # -----------------------------------------------------
+    def get_my_attendance(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> ClubEventAttendanceResponse:
+        self.validate_attendance_access(
+            club_id=club_id,
+            event_id=event_id,
+            user_id=user_id,
+        )
+
+        self.get_attendance_vote_data(
+            event_id
+        )
+
+        attendance_by_user = (
+            self.build_attendance_status_by_user(
+                event_id
+            )
+        )
+
+        attendance_status = (
+            attendance_by_user.get(
+                str(user_id),
+                "undecided",
+            )
+        )
+
+        return ClubEventAttendanceResponse(
+            event_id=event_id,
+            attendance_status=attendance_status,
+            message="현재 참석 응답입니다.",
+        )
+
+    # -----------------------------------------------------
+    # 내 참석 응답 저장 또는 변경
+    # -----------------------------------------------------
+    def update_my_attendance(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+        request_data: ClubEventAttendanceRequest,
+    ) -> ClubEventAttendanceResponse:
+        participant = (
+            self.validate_attendance_access(
+                club_id=club_id,
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        vote, option_rows = (
+            self.get_attendance_vote_data(
+                event_id
+            )
+        )
+
+        option_texts_by_status = {
+            "attending": {
+                "참석",
+                "attending",
+            },
+            "absent": {
+                "불참",
+                "absent",
+            },
+            "undecided": {
+                "미정",
+                "undecided",
+            },
+        }
+
+        accepted_option_texts = (
+            option_texts_by_status[
+                request_data.attendance_status
+            ]
+        )
+
+        selected_option = None
+
+        for option_row in option_rows:
+            option_text = str(
+                option_row["option_text"]
+            ).strip()
+
+            if option_text in accepted_option_texts:
+                selected_option = option_row
+                break
+
+        if selected_option is None:
+            raise ValueError(
+                "선택한 참석 상태에 해당하는 "
+                "투표 항목이 없습니다."
+            )
+
+        # 기존 참가 정보가 없는 동호회 회원은
+        # 첫 응답 시 member + joined로 등록
+        if participant is None:
+            self.event_repository \
+                .create_member_event_participant(
+                    event_id=event_id,
+                    user_id=user_id,
+                )
+
+        self.event_repository.replace_vote_response(
+            vote_id=int(vote["vote_id"]),
+            option_id=int(
+                selected_option["option_id"]
+            ),
+            user_id=user_id,
+        )
+
+        status_messages = {
+            "attending": "참석으로 응답했습니다.",
+            "absent": "불참으로 응답했습니다.",
+            "undecided": "미정으로 응답했습니다.",
+        }
+
+        return ClubEventAttendanceResponse(
+            event_id=event_id,
+            attendance_status=(
+                request_data.attendance_status
+            ),
+            message=status_messages[
+                request_data.attendance_status
+            ],
+        )
 
     # -----------------------------------------------------
     # 일정 참가자 관리 목록 조회

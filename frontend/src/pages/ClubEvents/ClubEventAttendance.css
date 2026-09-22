@@ -1,0 +1,325 @@
+/* =========================================================
+   참석 여부 페이지
+========================================================= */
+
+.club-attendance-page {
+    width: 100%;
+    max-width: 412px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding: 0 0 40px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    background: #f7faf8;
+    color: #171d19;
+}
+
+.club-attendance-state {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    max-width: 412px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding: 24px;
+    box-sizing: border-box;
+    background: #f7faf8;
+    color: #68736c;
+    font-size: 14px;
+    text-align: center;
+}
+
+
+/* =========================================================
+   헤더
+========================================================= */
+
+.club-attendance-header {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    min-height: 68px;
+    padding: 14px 18px;
+    box-sizing: border-box;
+    background: #ffffff;
+    border-bottom: 1px solid #e5ece7;
+}
+
+.club-attendance-back-button {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #dce5df;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1b241e;
+    font: inherit;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.club-attendance-back-button:hover {
+    background: #f2f7f3;
+}
+
+.club-attendance-back-button svg {
+    width: 21px;
+    height: 21px;
+}
+
+.club-attendance-header-text {
+    min-width: 0;
+}
+
+.club-attendance-header-text h1 {
+    margin: 0;
+    color: #171d19;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.club-attendance-header-text p {
+    overflow: hidden;
+    margin: 4px 0 0;
+    color: #7a857e;
+    font-size: 12px;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   본문
+========================================================= */
+
+.club-attendance-content {
+    width: 100%;
+    padding: 22px 18px 40px;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   안내 카드
+========================================================= */
+
+.club-attendance-guide {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 0 0 18px;
+    padding: 17px;
+    box-sizing: border-box;
+    border: 1px solid #dce9df;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.club-attendance-guide > svg {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
+    color: #008c33;
+}
+
+.club-attendance-guide > div {
+    min-width: 0;
+}
+
+.club-attendance-guide h2 {
+    margin: 0 0 6px;
+    color: #1b241e;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.club-attendance-guide p {
+    margin: 0;
+    color: #68736c;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   오류
+========================================================= */
+
+.club-attendance-error {
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #fff0f0;
+    color: #c53b3b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   참석 선택지
+========================================================= */
+
+.club-attendance-options {
+    display: grid;
+    gap: 12px;
+}
+
+.club-attendance-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 82px;
+    margin: 0;
+    padding: 14px;
+    box-sizing: border-box;
+    border: 1px solid #dce5df;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #1b241e;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.club-attendance-option:hover {
+    transform: translateY(-1px);
+}
+
+.club-attendance-option:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.club-attendance-option-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #eef4f0;
+    color: #58635c;
+}
+
+.club-attendance-option-icon svg {
+    width: 21px;
+    height: 21px;
+}
+
+.club-attendance-option-content {
+    display: grid;
+    flex: 1;
+    gap: 4px;
+    min-width: 0;
+}
+
+.club-attendance-option-title {
+    color: #1b241e;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.club-attendance-option-description {
+    color: #78827c;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.club-attendance-option-selected {
+    flex: 0 0 auto;
+    min-width: 36px;
+    margin-left: auto;
+    color: #008c33;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: right;
+}
+
+
+/* =========================================================
+   선택 상태
+========================================================= */
+
+.club-attendance-option.attending.selected {
+    border-color: #009b3a;
+    background: #effaf3;
+}
+
+.club-attendance-option.attending.selected
+.club-attendance-option-icon {
+    background: #dff5e7;
+    color: #008c33;
+}
+
+.club-attendance-option.absent.selected {
+    border-color: #e05a5a;
+    background: #fff2f2;
+}
+
+.club-attendance-option.absent.selected
+.club-attendance-option-icon {
+    background: #ffe1e1;
+    color: #d43f3f;
+}
+
+.club-attendance-option.undecided.selected {
+    border-color: #d49312;
+    background: #fff8e8;
+}
+
+.club-attendance-option.undecided.selected
+.club-attendance-option-icon {
+    background: #ffedbd;
+    color: #b97700;
+}
+
+
+/* =========================================================
+   작은 화면
+========================================================= */
+
+@media (max-width: 360px) {
+    .club-attendance-header {
+        padding-right: 14px;
+        padding-left: 14px;
+    }
+
+    .club-attendance-content {
+        padding-right: 14px;
+        padding-left: 14px;
+    }
+
+    .club-attendance-option {
+        gap: 9px;
+        padding-right: 11px;
+        padding-left: 11px;
+    }
+
+    .club-attendance-option-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .club-attendance-option-selected {
+        min-width: 32px;
+        font-size: 10px;
+    }
+}

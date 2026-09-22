@@ -301,3 +301,37 @@ export async function decideClubEventGuest(
         }
     );
 }
+
+export async function getClubEventAttendance(
+    clubId,
+    eventId
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/`
+            + `${eventId}/attendance`
+        ),
+        {
+            method: "GET"
+        }
+    );
+}
+
+export async function updateClubEventAttendance(
+    clubId,
+    eventId,
+    attendanceStatus
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/`
+            + `${eventId}/attendance`
+        ),
+        {
+            method: "PUT",
+            body: {
+                attendanceStatus
+            }
+        }
+    );
+}
