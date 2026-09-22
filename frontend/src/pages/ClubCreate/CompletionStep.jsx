@@ -44,7 +44,7 @@ const NEXT_ACTIONS = [
     }
 ];
 
-function CompletionStep({ formData, clubID, onRestart }) {
+function CompletionStep({ formData, clubId, onRestart }) {
     const navigate = useNavigate();
 
     const sportIcon = SPORT_ICONS[formData.sport];
