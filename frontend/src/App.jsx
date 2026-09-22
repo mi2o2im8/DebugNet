@@ -42,6 +42,8 @@ import MatchTeamDetail from "./pages/Match/MatchTeamDetail";
 
 import ClubManageLayout from "./layouts/ClubManageLayout";
 
+import ClubEventParticipants from "./pages/ClubEvents/ClubEventParticipants";
+
 // 내 정보
 import Mypage from "./pages/Mypage/Mypage";
 // 성정 페이지
@@ -109,6 +111,8 @@ function App() {
 
           {/* 동호회 운영 기능: BottomNav 공통 적용 */}
           <Route element={<ClubManageLayout />}>
+
+            {/* 이후 아래 위치에 동호회 운영 기능 관련 화면들을 추가 */}
             <Route
               path="/clubs/:clubId/manage"
               element={<ClubDashboard />}
@@ -118,8 +122,12 @@ function App() {
               path="/clubs/:clubId/manage/events"
               element={<ClubEventList />}
             />
+
+            <Route
+              path="/clubs/:clubId/manage/events/:eventId/participants"
+              element={<ClubEventParticipants />}
+            />
               
-              {/* 이후 아래 위치에 동호회 운영 기능 관련 화면들을 추가 */}
 
 
           {/* 팀 매칭 홈 */}

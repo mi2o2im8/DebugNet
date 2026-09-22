@@ -102,6 +102,9 @@ function ClubEventCard({
     event,
     isPast = false
 }) {
+    const navigate = useNavigate();
+    const { clubId } = useParams();
+
     const [isMenuOpen, setIsMenuOpen] =
         useState(false);
 
@@ -309,8 +312,8 @@ function ClubEventCard({
                         type="button"
                         className="club-event-participants-button"
                         onClick={() =>
-                            showPendingAction(
-                                "참가자 관리"
+                            navigate(
+                                `/clubs/${clubId}/manage/events/${event.event_id}/participants`
                             )
                         }
                     >

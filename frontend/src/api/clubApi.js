@@ -203,3 +203,35 @@ export async function getClubEvents(clubId) {
         }
     );
 }
+
+export async function getClubEventParticipants(
+    clubId,
+    eventId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/${eventId}/participants`,
+        {
+            method: "GET"
+        }
+    );
+}
+
+export async function decideClubEventGuest(
+    clubId,
+    eventId,
+    eventParticipantId,
+    decision
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/${eventId}` +
+            `/participants/${eventParticipantId}/decision`
+        ),
+        {
+            method: "PATCH",
+            body: {
+                decision
+            }
+        }
+    );
+}
