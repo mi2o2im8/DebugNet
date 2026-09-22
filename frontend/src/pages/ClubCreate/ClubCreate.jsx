@@ -8,6 +8,7 @@ import IntroductionStep from "./IntroductionStep";
 import OperationStep from "./OperationStep";
 import CompletionStep from "./CompletionStep";
 import { createClub } from "../../api/clubApi";
+import { getMyGender } from "../../api/userApi";
 
 import "./ClubCreate.css";
 
@@ -122,10 +123,62 @@ function ClubCreate() {
         window.scrollTo(0, 0);
     };
 
+    // 로그인 사용자의 성별과 가입 대상 비교
+    const confirmGenderTarget = async () => {
+        const selectedTarget = clubForm.joinTarget;
+
+        // 남녀 모두라면 별도 확인이 필요하지 않음
+        if (selectedTarget === "all") {
+            return true;
+        }
+
+        try {
+            const userData = await getMyGender();
+            const userGender = userData.gender;
+
+            // 로그인 사용자 성별과 선택 조건이 같음
+            if (userGender === selectedTarget) {
+                return true;
+            }
+
+            const targetLabel = {
+                male: "남성만",
+                female: "여성만"
+            }[selectedTarget];
+
+            return window.confirm(
+                `회원님의 성별과 다른 가입 대상을 선택했습니다.\n` +
+                `현재 선택: ${targetLabel}\n\n` +
+                `그래도 이 조건으로 계속하시겠습니까?`
+            );
+        } catch (error) {
+            console.error(
+                "사용자 성별 확인 오류:",
+                error
+            );
+
+            alert(
+                error.message ||
+                "회원 성별 정보를 확인할 수 없습니다."
+            );
+
+            return false;
+        }
+    };
+
     // 다음 버튼
     const handleNext = async () => {
         if (currentStep >= 6 || isSubmitting) {
             return;
+        }
+
+        if (currentStep === 3) {
+            const canContinue =
+                await confirmGenderTarget();
+
+            if (!canContinue) {
+                return;
+            }
         }
 
         if (currentStep < 5) {

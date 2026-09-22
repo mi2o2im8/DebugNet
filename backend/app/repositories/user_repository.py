@@ -228,6 +228,39 @@ class UserRepository:
         return len(response.data) > 0
 
     # ---------------------------------------------------------
+    # 로그인 사용자의 성별 조회
+    # ---------------------------------------------------------
+    def get_user_gender(
+        self,
+        user_id: str,
+    ) -> str:
+
+        response = (
+            self.admin_client
+            .table("users")
+            .select("gender")
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            raise LookupError(
+                "사용자 정보를 찾을 수 없습니다."
+            )
+
+        gender = str(
+            response.data[0].get("gender", "")
+        ).strip()
+
+        if not gender:
+            raise ValueError(
+                "사용자의 성별 정보가 없습니다."
+            )
+
+        return gender
+
+    # ---------------------------------------------------------
     # 프로필 이미지 URL 수정
     # ---------------------------------------------------------
     def update_profile_image(
