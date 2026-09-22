@@ -44,15 +44,15 @@ const LEVEL_OPTIONS = [
 
 const GENDER_OPTIONS = [
     {
-        value: "모두",
+        value: "all",
         label: "남녀 모두"
     },
     {
-        value: "남성",
+        value: "male",
         label: "남성만"
     },
     {
-        value: "여성",
+        value: "female",
         label: "여성만"
     }
 ];

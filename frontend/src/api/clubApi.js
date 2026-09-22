@@ -203,3 +203,135 @@ export async function getClubEvents(clubId) {
         }
     );
 }
+
+export async function createClubEvent(
+    clubId,
+    requestData
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events`,
+        {
+            method: "POST",
+            body: requestData
+        }
+    );
+}
+
+export async function getClubEvent(
+    clubId,
+    eventId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/${eventId}`,
+        {
+            method: "GET"
+        }
+    );
+}
+
+export async function updateClubEvent(
+    clubId,
+    eventId,
+    requestData
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/${eventId}`,
+        {
+            method: "PUT",
+            body: requestData
+        }
+    );
+}
+
+export async function copyClubEvent(
+    clubId,
+    eventId
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/` +
+            `${eventId}/copy`
+        ),
+        {
+            method: "POST"
+        }
+    );
+}
+
+export async function deleteClubEvent(
+    clubId,
+    eventId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/${eventId}`,
+        {
+            method: "DELETE"
+        }
+    );
+}
+
+export async function getClubEventParticipants(
+    clubId,
+    eventId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/${eventId}/participants`,
+        {
+            method: "GET"
+        }
+    );
+}
+
+export async function decideClubEventGuest(
+    clubId,
+    eventId,
+    eventParticipantId,
+    decision
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/${eventId}` +
+            `/participants/${eventParticipantId}/decision`
+        ),
+        {
+            method: "PATCH",
+            body: {
+                decision
+            }
+        }
+    );
+}
+
+export async function getClubEventAttendance(
+    clubId,
+    eventId
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/`
+            + `${eventId}/attendance`
+        ),
+        {
+            method: "GET"
+        }
+    );
+}
+
+export async function updateClubEventAttendance(
+    clubId,
+    eventId,
+    attendanceStatus
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/`
+            + `${eventId}/attendance`
+        ),
+        {
+            method: "PUT",
+            body: {
+                attendanceStatus
+            }
+        }
+    );
+}

@@ -5,6 +5,8 @@ from datetime import (
 )
 from typing import Literal
 
+from uuid import UUID
+
 from pydantic import (
     AliasChoices,
     BaseModel,
@@ -308,6 +310,36 @@ class ClubEventCreateResponse(BaseModel):
     club_id: int
     message: str
 
+class ClubEventDetailResponse(BaseModel):
+    event_id: int
+    club_id: int
+
+    title: str
+    description: str | None = None
+
+    event_date: date
+    start_time: time
+    end_time: time | None = None
+
+    location: str | None = None
+    max_participants: int | None = None
+
+    event_type: str
+    status: str
+    event_image_url: str | None = None
+
+    recurrence_type: str
+    participation_method: str
+
+    guest_allowed: bool
+    max_guests: int
+
+    registration_deadline: datetime | None = None
+
+    vote_options: list[str] = Field(
+        default_factory=list,
+    )
+
 class ClubEventListItemResponse(BaseModel):
     event_id: int
     club_id: int
@@ -361,3 +393,83 @@ class ClubEventListItemResponse(BaseModel):
 class ClubEventListResponse(BaseModel):
     events: list[ClubEventListItemResponse]
     total: int
+
+class ClubEventParticipantItemResponse(BaseModel):
+    event_participant_id: int
+    user_id: UUID
+
+    name: str
+    nickname: str
+    profile_image: str | None = None
+
+    participant_type: Literal[
+        "member",
+        "guest",
+    ]
+
+    participation_status: Literal[
+        "pending",
+        "joined",
+        "rejected",
+        "cancelled",
+    ]
+
+    attendance_status: Literal[
+        "attending",
+        "absent",
+        "undecided",
+    ] | None = None
+
+
+class ClubEventParticipantListResponse(BaseModel):
+    event_id: int
+    participants: list[
+        ClubEventParticipantItemResponse
+    ]
+
+    total: int
+    joined_member_count: int
+    joined_guest_count: int
+    pending_guest_count: int
+
+class ClubEventGuestDecisionRequest(BaseModel):
+    decision: Literal[
+        "approve",
+        "reject",
+    ]
+
+
+class ClubEventGuestDecisionResponse(BaseModel):
+    event_participant_id: int
+    event_id: int
+
+    participation_status: Literal[
+        "joined",
+        "rejected",
+    ]
+
+    message: str
+
+class ClubEventAttendanceRequest(BaseModel):
+    attendance_status: Literal[
+        "attending",
+        "absent",
+        "undecided",
+    ] = Field(
+        validation_alias=AliasChoices(
+            "attendance_status",
+            "attendanceStatus",
+        ),
+    )
+
+
+class ClubEventAttendanceResponse(BaseModel):
+    event_id: int
+
+    attendance_status: Literal[
+        "attending",
+        "absent",
+        "undecided",
+    ]
+
+    message: str

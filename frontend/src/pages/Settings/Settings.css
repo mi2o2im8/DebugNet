@@ -1,12 +1,20 @@
 /* ========================================
    ⭐ 설정 페이지
-======================================== */
+   ======================================== */
+
+@font-face {
+    font-family: "Maplestory";
+    src: url("../../assets/font/Maplestory-Light.ttf") format("truetype");
+}
 
 .settings-page {
+    width: 100%;
     min-height: 100vh;
 
     background: #ffffff;
     color: #071b41;
+
+    font-family: "Maplestory", sans-serif;
 
     transition:
         background 0.3s ease,
@@ -16,12 +24,16 @@
 
 /* ========================================
    ⭐ 상단
-======================================== */
+   ======================================== */
 
 .settings-header {
     position: relative;
 
+    width: 100%;
+    max-width: 400px;
     height: 70px;
+
+    margin: 0 auto;
 
     display: flex;
     align-items: center;
@@ -31,14 +43,17 @@
 .settings-header h2 {
     margin: 0;
 
-    font-size: 18px;
+    font-size: 21px;
     font-weight: 700;
+    line-height: 1.3;
+
+    color: #071b41;
 }
 
 
 /* ========================================
    ⭐ 전체 콘텐츠
-======================================== */
+   ======================================== */
 
 .settings-content {
     width: 100%;
@@ -46,7 +61,7 @@
 
     margin: 0 auto;
 
-    padding: 0 27px 100px;
+    padding: 0 20px 100px;
 
     box-sizing: border-box;
 }
@@ -54,7 +69,7 @@
 
 /* ========================================
    ⭐ 설정 섹션
-======================================== */
+   ======================================== */
 
 .settings-section {
     margin-bottom: 25px;
@@ -63,22 +78,27 @@
 .settings-section h3 {
     margin: 0 0 10px;
 
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
+    line-height: 1.3;
+
+    color: #071b41;
 }
 
 
 /* ========================================
    ⭐ 설정 카드
-======================================== */
+   ======================================== */
 
 .settings-card {
+    width: 100%;
+
     overflow: hidden;
 
     background: #ffffff;
 
     border: 1px solid #e1e6ed;
-    border-radius: 12px;
+    border-radius: 10px;
 
     transition:
         background 0.3s ease,
@@ -88,7 +108,7 @@
 
 /* ========================================
    ⭐ 설정 행
-======================================== */
+   ======================================== */
 
 .settings-row {
     width: 100%;
@@ -104,22 +124,28 @@
 
     color: #172b4d;
 
-    font-size: 13px;
+    font-family: "Maplestory", sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+
+    line-height: 1.3;
 }
 
 
 /* ========================================
    ⭐ 메뉴 버튼
-======================================== */
+   ======================================== */
 
 .settings-button {
     border: none;
-
     background: transparent;
 
     cursor: pointer;
 
     text-align: left;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 15px;
 
     transition: background 0.2s ease;
 }
@@ -131,10 +157,10 @@
 
 /* ========================================
    ⭐ 오른쪽 화살표
-======================================== */
+   ======================================== */
 
 .row-arrow {
-    font-size: 17px;
+    font-size: 20px;
 
     color: #60708c;
 
@@ -144,7 +170,7 @@
 
 /* ========================================
    ⭐ 구분선
-======================================== */
+   ======================================== */
 
 .settings-divider {
     height: 1px;
@@ -159,13 +185,13 @@
 
 /* ========================================
    ⭐ ON / OFF 스위치
-======================================== */
+   ======================================== */
 
 .settings-switch {
     position: relative;
 
-    width: 38px;
-    height: 22px;
+    width: 42px;
+    height: 24px;
 
     flex-shrink: 0;
 }
@@ -175,7 +201,7 @@
 }
 
 
-/* 스위치 배경 */
+/* ⭐ 스위치 배경 */
 
 .switch-slider {
     position: absolute;
@@ -192,15 +218,15 @@
 }
 
 
-/* 스위치 원 */
+/* ⭐ 스위치 원 */
 
 .switch-slider::before {
     content: "";
 
     position: absolute;
 
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
 
     left: 2px;
     top: 2px;
@@ -216,27 +242,27 @@
 }
 
 
-/* ON */
+/* ⭐ ON */
 
 .settings-switch input:checked + .switch-slider {
-    background: #01a17f;
+    background: #01A17F;
 }
 
 
-/* ON 상태 원 이동 */
+/* ⭐ ON 상태 원 이동 */
 
 .settings-switch input:checked + .switch-slider::before {
-    transform: translateX(16px);
+    transform: translateX(18px);
 }
 
 
 /* ========================================
    ⭐ 로그아웃
-======================================== */
+   ======================================== */
 
 .logout-button {
     width: 100%;
-    height: 48px;
+    height: 50px;
 
     margin-top: 5px;
 
@@ -247,7 +273,8 @@
 
     color: #e84b4b;
 
-    font-size: 14px;
+    font-family: "Maplestory", sans-serif;
+    font-size: 15px;
     font-weight: 700;
 
     cursor: pointer;
@@ -264,30 +291,33 @@
 
 /* ========================================
    ⭐ 다크모드
-======================================== */
+   ======================================== */
 
 .dark-mode .settings-page {
     background: #12161c;
-
     color: #f1f4f8;
 }
 
 
-/* 상단 제목 */
+/* ⭐ 상단 제목 */
 
 .dark-mode .settings-header {
     color: #f1f4f8;
 }
 
+.dark-mode .settings-header h2 {
+    color: #f1f4f8;
+}
 
-/* 섹션 제목 */
+
+/* ⭐ 섹션 제목 */
 
 .dark-mode .settings-section h3 {
     color: #f1f4f8;
 }
 
 
-/* 카드 */
+/* ⭐ 카드 */
 
 .dark-mode .settings-card {
     background: #1b2129;
@@ -296,35 +326,39 @@
 }
 
 
-/* 행 */
+/* ⭐ 행 */
 
 .dark-mode .settings-row {
     color: #e9edf2;
 }
 
 
-/* 메뉴 hover */
+/* ⭐ 메뉴 버튼 */
+
+.dark-mode .settings-button {
+    color: #e9edf2;
+}
 
 .dark-mode .settings-button:hover {
     background: #242b34;
 }
 
 
-/* 화살표 */
+/* ⭐ 화살표 */
 
 .dark-mode .row-arrow {
     color: #9ba7b7;
 }
 
 
-/* 구분선 */
+/* ⭐ 구분선 */
 
 .dark-mode .settings-divider {
     background: #303844;
 }
 
 
-/* 로그아웃 */
+/* ⭐ 로그아웃 */
 
 .dark-mode .logout-button {
     background: #291d1d;
@@ -336,29 +370,12 @@
 
 
 /* ========================================
-   ⭐ 모바일
-======================================== */
-
-@media (max-width: 400px) {
-
-    .settings-content {
-        padding-left: 20px;
-        padding-right: 20px;
-    }
-
-    .settings-section {
-        margin-bottom: 22px;
-    }
-
-}
-
-
-/* ========================================
    ⭐ 로그아웃 확인 모달
    ======================================== */
 
 .logout-modal-overlay {
     position: fixed;
+
     inset: 0;
 
     display: flex;
@@ -376,58 +393,89 @@
 
     padding: 28px 24px 22px;
 
+    box-sizing: border-box;
+
     background: #ffffff;
+
     border-radius: 16px;
 
     text-align: center;
 
-    box-sizing: border-box;
+    font-family: "Maplestory", sans-serif;
 }
+
+
+/* ⭐ 모달 제목 */
 
 .logout-modal h3 {
     margin: 0 0 10px;
 
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
+    line-height: 1.3;
+
     color: #222;
 }
+
+
+/* ⭐ 모달 설명 */
 
 .logout-modal p {
     margin: 0 0 24px;
 
-    font-size: 14px;
-    color: #777;
+    font-size: 15px;
+    font-weight: 400;
     line-height: 1.5;
+
+    color: #777;
 }
+
+
+/* ========================================
+   ⭐ 모달 버튼
+   ======================================== */
 
 .logout-modal-buttons {
     display: flex;
+
     gap: 10px;
 }
 
 .logout-modal-buttons button {
     flex: 1;
 
-    height: 44px;
+    height: 50px;
 
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
 
-    font-size: 14px;
-    font-weight: 600;
+    font-family: "Maplestory", sans-serif;
+    font-size: 15px;
+    font-weight: 700;
 
     cursor: pointer;
 }
 
+
+/* ⭐ 취소 */
+
 .logout-cancel {
     background: #f1f1f1;
+
     color: #555;
 }
 
+
+/* ⭐ 로그아웃 */
+
 .logout-confirm {
     background: #01A17F;
-    color: #fff;
+
+    color: #ffffff;
 }
+
+
+/* ⭐ 버튼 hover */
 
 .logout-cancel:hover {
     background: #e5e5e5;
@@ -437,20 +485,88 @@
     background: #008f70;
 }
 
-/* ⭐ 다크모드 */
+
+/* ========================================
+   ⭐ 모달 다크모드
+   ======================================== */
+
 .dark-mode .logout-modal {
     background: #2b2b2b;
 }
 
 .dark-mode .logout-modal h3 {
-    color: #fff;
+    color: #ffffff;
 }
 
 .dark-mode .logout-modal p {
-    color: #aaa;
+    color: #aaaaaa;
 }
 
 .dark-mode .logout-cancel {
-    background: #444;
-    color: #ddd;
+    background: #444444;
+
+    color: #dddddd;
+}
+
+
+/* ========================================
+   ⭐ 모바일
+   ======================================== */
+
+@media (max-width: 400px) {
+
+    .settings-content {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .settings-section {
+        margin-bottom: 22px;
+    }
+
+    .settings-header {
+        height: 65px;
+    }
+
+    .settings-header h2 {
+        font-size: 21px;
+    }
+
+    .settings-row {
+        min-height: 58px;
+
+        font-size: 15px;
+    }
+
+    .settings-button {
+        font-size: 15px;
+    }
+
+    .settings-section h3 {
+        font-size: 16px;
+    }
+
+    .logout-button {
+        height: 50px;
+
+        font-size: 15px;
+    }
+
+    .logout-modal {
+        padding: 26px 20px 20px;
+    }
+
+    .logout-modal h3 {
+        font-size: 19px;
+    }
+
+    .logout-modal p {
+        font-size: 14px;
+    }
+
+    .logout-modal-buttons button {
+        height: 50px;
+
+        font-size: 15px;
+    }
 }

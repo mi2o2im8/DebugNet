@@ -1,0 +1,210 @@
+.club-event-form-page,
+.club-event-form-state {
+    min-height: 100%;
+    background: #f7faf8;
+    color: #151a17;
+}
+
+.club-event-form-state {
+    display: grid;
+    place-items: center;
+    min-height: 70vh;
+    font-size: 14px;
+    color: #6b756f;
+}
+
+.club-event-form-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: #ffffff;
+    border-bottom: 1px solid #e8eee9;
+}
+
+.club-event-form-header > button {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid #dce5df;
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 22px;
+}
+
+.club-event-form-header h1,
+.club-event-form-header p {
+    margin: 0;
+}
+
+.club-event-form-header h1 {
+    font-size: 21px;
+}
+
+.club-event-form-header p {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #7b8580;
+}
+
+.club-event-form {
+    display: grid;
+    gap: 12px;
+    padding: 16px 16px 110px;
+}
+
+.club-event-form section {
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid #e1e9e3;
+    border-radius: 16px;
+    background: #ffffff;
+}
+
+.club-event-form section h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 16px;
+}
+
+.club-event-form section h2 svg {
+    color: #009b3a;
+}
+
+.club-event-form label {
+    display: grid;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.club-event-form label > span > strong {
+    color: #e94c4c;
+}
+
+.club-event-form input,
+.club-event-form textarea,
+.club-event-form select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 13px;
+    border: 1px solid #d9e3dc;
+    border-radius: 10px;
+    outline: none;
+    background: #ffffff;
+    color: #151a17;
+    font: inherit;
+    font-weight: 400;
+}
+
+.club-event-form textarea {
+    resize: vertical;
+}
+
+.club-event-form input:focus,
+.club-event-form textarea:focus,
+.club-event-form select:focus {
+    border-color: #00a23d;
+    box-shadow:
+        0 0 0 3px rgba(0, 162, 61, 0.1);
+}
+
+.club-event-form-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+    gap: 10px;
+}
+
+.club-event-toggle-row {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 14px;
+    border-radius: 12px;
+    background: #f2f8f4;
+}
+
+.club-event-toggle-row > span {
+    display: grid;
+    gap: 4px;
+}
+
+.club-event-toggle-row small {
+    color: #758078;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.club-event-toggle-row input {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    accent-color: #009b3a;
+}
+
+.club-event-form-error {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #fff0f0;
+    color: #d83b3b;
+    font-size: 13px;
+}
+
+.club-event-form-actions {
+    position: sticky;
+    bottom: 72px;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid #e2e9e4;
+    border-radius: 14px;
+    background:
+        rgba(255, 255, 255, 0.96);
+    box-shadow:
+        0 8px 24px
+        rgba(20, 55, 32, 0.09);
+}
+
+.club-event-form-actions button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 46px;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+.club-event-form-actions .secondary {
+    border: 1px solid #d8e1db;
+    background: #ffffff;
+    color: #465049;
+}
+
+.club-event-form-actions .primary {
+    border: 1px solid #009b3a;
+    background: #009b3a;
+    color: #ffffff;
+}
+
+.club-event-form-actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+@media (max-width: 380px) {
+    .club-event-form-grid {
+        grid-template-columns: 1fr;
+    }
+}

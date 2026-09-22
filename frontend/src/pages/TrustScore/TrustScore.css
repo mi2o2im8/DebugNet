@@ -1,0 +1,271 @@
+@font-face {
+    font-family: "Maplestory";
+    src: url("../../assets/font/Maplestory-Light.ttf") format("truetype");
+}
+
+.trust-score-page {
+    width: 100%;
+    max-width: 400px;
+    min-height: 100vh;
+
+    margin: 0 auto;
+    padding: 10px 20px 90px;
+
+    box-sizing: border-box;
+
+    background: #fff;
+
+    font-family: "Maplestory", sans-serif;
+}
+
+
+/* =========================
+   ⭐ 전체 컨테이너
+========================= */
+
+.trust-score-container {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* =========================
+   ⭐ 헤더
+========================= */
+
+.trust-score-header {
+    position: relative;
+
+    width: 100%;
+    height: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+}
+
+
+/* ⭐ 뒤로가기 */
+
+.trust-score-back-btn {
+    position: absolute;
+
+    left: 0;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 32px !important;
+    height: 32px !important;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 2;
+}
+
+
+/* ⭐ 제목 */
+
+.trust-score-header h2 {
+    margin: 0;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    line-height: 1;
+
+    color: #071a4d;
+
+    text-align: center;
+
+    white-space: nowrap;
+
+    z-index: 1;
+}
+
+
+
+/* =========================
+   ⭐ 신뢰점수 박스
+========================= */
+
+.trust-score-box {
+    width: 100%;
+    height: 146px;
+
+    box-sizing: border-box;
+
+    margin-top: 10px;
+    padding: 24px 22px 20px;
+
+    border: 1px solid #cfe4da;
+    border-radius: 12px;
+
+    /* ⭐ 기존 색상 그대로 */
+    background: #f7fbf9;
+
+    text-align: center;
+}
+
+
+/* =========================
+   ⭐ 점수
+========================= */
+
+.trust-score-number {
+    font-size: 48px;
+    line-height: 48px;
+
+    font-weight: 700;
+
+    color: #009b6b;
+}
+
+
+/* =========================
+   ⭐ 점수 설명
+========================= */
+
+.trust-score-message {
+    margin-top: 6px;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    color: #071a4d;
+}
+
+
+/* =========================
+   ⭐ 게이지
+========================= */
+
+.trust-score-gauge {
+    width: 100%;
+    height: 7px;
+
+    margin-top: 12px;
+
+    border-radius: 10px;
+
+    background: #dfe9e5;
+
+    overflow: hidden;
+}
+
+.trust-score-gauge-fill {
+    height: 100%;
+
+    border-radius: 10px;
+
+    background: #08a875;
+
+    transition: width 0.5s ease;
+}
+
+
+/* =========================
+   ⭐ 신뢰 데이터 제목
+========================= */
+
+.trust-data-title {
+    margin: 24px 0 11px;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    color: #071a4d;
+}
+
+
+/* =========================
+   ⭐ 신뢰 데이터 박스
+========================= */
+
+.trust-data-box {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 7px 13px;
+
+    border: 1px solid #dce3ed;
+    border-radius: 12px;
+
+    background: #fff;
+}
+
+
+/* =========================
+   ⭐ 데이터 한 줄
+========================= */
+
+.trust-data-row {
+    min-height: 47px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    border-bottom: 1px solid #dce3ed;
+}
+
+
+/* ⭐ 마지막 줄 */
+
+.trust-data-row:last-child {
+    border-bottom: none;
+}
+
+
+/* =========================
+   ⭐ 항목명
+========================= */
+
+.trust-data-row span {
+    font-size: 14px;
+
+    color: #071a4d;
+}
+
+
+/* =========================
+   ⭐ 값
+========================= */
+
+.trust-data-row strong {
+    font-size: 14px;
+    font-weight: 700;
+
+    color: #071a4d;
+}
+
+
+/* =========================
+   ⭐ 모바일
+========================= */
+
+@media (max-width: 400px) {
+
+    .trust-score-page {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .trust-score-header h2 {
+        font-size: 18px;
+    }
+
+    .trust-data-title {
+        font-size: 17px;
+    }
+
+    .trust-data-row span,
+    .trust-data-row strong {
+        font-size: 14px;
+    }
+}

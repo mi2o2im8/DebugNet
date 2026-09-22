@@ -21,6 +21,8 @@ import ClubHome from './pages/ClubHome/ClubHome';
 import ClubDetail from "./pages/ClubDetail/ClubDetail";
 import ClubApplication from "./pages/ClubApplication/ClubApplication";
 import ClubEventList from "./pages/ClubEvents/ClubEventList";
+import ClubEventForm from "./pages/ClubEvents/ClubEventForm";
+import ClubEventAttendance from "./pages/ClubEvents/ClubEventAttendance";
 
 // 동호회 가입 전 후 메인페이지들
 // import Home from "./pages/Home/Home";
@@ -42,9 +44,11 @@ import MatchAvailabilityDetail from "./pages/Match/MatchAvailabilityDetail";
 import MatchTeamList from "./pages/Match/MatchTeamList";
 import MatchTeamDetail from "./pages/Match/MatchTeamDetail";
 
-
-
 import ClubManageLayout from "./layouts/ClubManageLayout";
+
+import ClubEventParticipants from "./pages/ClubEvents/ClubEventParticipants";
+
+
 
 // 내 정보
 import Mypage from "./pages/Mypage/Mypage";
@@ -52,6 +56,13 @@ import Mypage from "./pages/Mypage/Mypage";
 import Settings from './pages/Settings/Settings';
 // 내 동호회 일정 전체보기
 import MySchedule from "./pages/MySchedule/MySchedule";
+// 내 활동
+import MyActivity from "./pages/MyActivity/MyActivity";
+// 신뢰점수
+import TrustScore from './pages/TrustScore/TrustScore';
+
+// 알림 페이지
+import Notification from './pages/Notification/Notification';
 
 
 import './App.css'
@@ -101,7 +112,8 @@ function App() {
           <Route path="/clubs/:clubId" element={<ClubDetail />} />
           {/* 동호회 가입 페이지 */}
           <Route path="/clubs/:clubId/application" element={<ClubApplication />}/>
-
+          {/* 동호회 참석 응답 */}
+          <Route path="/clubs/:clubId/events/:eventId/attendance" element={<ClubEventAttendance />}/>
           {/* 동호회 만들기 페이지 */}
           <Route path="/clubs/create" element={<ClubCreate />} />
 
@@ -115,6 +127,8 @@ function App() {
 
           {/* 동호회 운영 기능: BottomNav 공통 적용 */}
           <Route element={<ClubManageLayout />}>
+
+            {/* 이후 아래 위치에 동호회 운영 기능 관련 화면들을 추가 */}
             <Route
               path="/clubs/:clubId/manage"
               element={<ClubDashboard />}
@@ -124,8 +138,22 @@ function App() {
               path="/clubs/:clubId/manage/events"
               element={<ClubEventList />}
             />
+
+            <Route
+              path="/clubs/:clubId/manage/events/new"
+              element={<ClubEventForm />}
+            />
+
+            <Route
+              path="/clubs/:clubId/manage/events/:eventId/edit"
+              element={<ClubEventForm />}
+            />
+
+            <Route
+              path="/clubs/:clubId/manage/events/:eventId/participants"
+              element={<ClubEventParticipants />}
+            />
               
-              {/* 이후 아래 위치에 동호회 운영 기능 관련 화면들을 추가 */}
 
 
           {/* 팀 매칭 홈 */}
@@ -158,6 +186,13 @@ function App() {
           <Route path="/mypage/settings" element={<Settings />} />
           {/* 내 동호회 전체보기 페이지 */}
           <Route path="/myschedule" element={<MySchedule />} />
+          {/* 내 활동 */}
+          <Route path="/myactivity" element={<MyActivity />} />
+          {/* 내 활동 */}
+          <Route path="/trustscore" element={<TrustScore />} />
+
+          {/* 알림 */}
+          <Route path="/notification" element={<Notification />} />
 
           
 

@@ -66,27 +66,22 @@ const getInitialMonth = (
 };
 
 
-/* ========================================
-   ⭐ 내 동호회 일정 페이지
-   ======================================== */
-
 function MySchedule() {
 
     const navigate = useNavigate();
 
-
     const [selectedDate, setSelectedDate] =
         useState(null);
 
-
-    /* ========================================
-       ⭐ 활동 종료 리뷰 화면 이동
-       ======================================== */
+    // ⭐ 나중에 DB에서 받아올 동호회 정보
+    const club = {
+        clubId: 1,
+        clubName: "강서 FC",
+    };
 
     const handleNext = () => {
         navigate("/review");
     };
-
 
     return (
         <div className="MySchedule-page">
@@ -98,16 +93,15 @@ function MySchedule() {
             <div className="MySchedule-header">
 
                 {/* ⭐ 뒤로가기 */}
-                <div className="MySchedule-back">
-                    <BackButton />
-                </div>
-
+                <BackButton
+                    className="MySchedule-back-btn"
+                    aria-label="뒤로가기"
+                />
 
                 {/* ⭐ 동호회 이름 */}
                 <h2 className="MySchedule-title">
-                    강서 FC
+                    {club.clubName}
                 </h2>
-
 
                 {/* ⭐ 설정 / 더보기 */}
                 <div className="MySchedule-header-right">
@@ -119,7 +113,6 @@ function MySchedule() {
                     >
                         <FiSettings />
                     </button>
-
 
                     <button
                         type="button"
@@ -241,144 +234,7 @@ function MySchedule() {
 
 
             {/* ========================================
-               ⭐ 매칭 현황
-               ======================================== */}
-
-            <div className="section-header">
-
-                <h3>
-                    매칭 현황
-                </h3>
-
-
-                {/* ⭐ 팀 매칭 전체보기 */}
-
-                <button
-                    type="button"
-                    onClick={() =>
-                        navigate("/matches")
-                    }
-                >
-                    더보기
-                </button>
-
-            </div>
-
-
-            <div className="Matching-card-list">
-
-                {/* ⭐ 받은 신청 */}
-
-                <div className="Matching-card">
-
-                    <strong>
-                        {matchingStatus.received}
-                    </strong>
-
-                    <span>
-                        받은 신청
-                    </span>
-
-                </div>
-
-
-                {/* ⭐ 보낸 신청 */}
-
-                <div className="Matching-card">
-
-                    <strong>
-                        {matchingStatus.sent}
-                    </strong>
-
-                    <span>
-                        보낸 신청
-                    </span>
-
-                </div>
-
-
-                {/* ⭐ 매칭 완료 */}
-
-                <div className="Matching-card">
-
-                    <strong>
-                        {matchingStatus.completed}
-                    </strong>
-
-                    <span>
-                        매칭 완료
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            {/* ========================================
-               ⭐ 최근 소식
-               ======================================== */}
-
-            <div className="RecentNews">
-
-                <div className="RecentNews-header">
-
-                    <h3>
-                        최근 소식
-                    </h3>
-
-
-                    {/* ⭐ 커뮤니티 전체보기 */}
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            navigate("/community")
-                        }
-                    >
-                        전체보기
-                    </button>
-
-                </div>
-
-
-                <div className="RecentNews-list">
-
-                    {/* ⭐ 소식 1 */}
-
-                    <div className="RecentNews-item">
-
-                        <h4>
-                            공지 9월 정기 모임 안내
-                        </h4>
-
-                        <p>
-                            1일 전
-                        </p>
-
-                    </div>
-
-
-                    {/* ⭐ 소식 2 */}
-
-                    <div className="RecentNews-item">
-
-                        <h4>
-                            일반 지난 경기 사진 공유합니다
-                        </h4>
-
-                        <p>
-                            2일 전
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            {/* ========================================
-               ⭐ 활동 종료 리뷰 화면
+               ⭐ 활동 종료 리뷰 버튼
                ======================================== */}
 
             <button
