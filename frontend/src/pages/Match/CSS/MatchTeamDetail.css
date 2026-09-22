@@ -38,35 +38,6 @@
 }
 
 
-/* 임시 뒤로가기 버튼
-   나중에 공용 BackButton으로 교체 예정 */
-.match-team-detail-header > button {
-  position: absolute;
-
-  left: 14px;
-  top: 50%;
-
-  width: 36px;
-  height: 36px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0;
-
-  border: none;
-  background: transparent;
-
-  color: #333333;
-
-  font-size: 28px;
-  line-height: 1;
-
-  cursor: pointer;
-
-  transform: translateY(-50%);
-}
 
 
 /* 헤더 제목 */
@@ -444,227 +415,51 @@
 }
 
 
-/* 안내 문구 */
-.match-club-select-guide {
-  margin: 6px 0 16px;
-
-  font-size: 12px;
-
-  color: #888888;
-}
 
 /* ========================================
-   내 클럽 선택 드롭다운
+   내 클럽 선택 - 공용 CustomSelect 보정
 ======================================== */
-
-.match-club-dropdown {
-  position: relative;
-
+.match-club-select-custom {
   width: 100%;
 }
 
-
-/* 현재 선택값 버튼 */
-.match-club-dropdown-button {
-  width: 100%;
+.match-club-select-custom .custom-select-trigger {
   height: 46px;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 0 13px;
-
-  border: 1px solid #dddddd;
+  border-color: #dddddd;
   border-radius: 9px;
 
-  background: #ffffff;
-
-  color: #999999;
-
   font-size: 12px;
-
-  cursor: pointer;
-
-  box-sizing: border-box;
 }
 
+.match-club-select-custom .custom-select.open .custom-select-trigger {
+  border-color: #20b26b;
 
-/* 클럽을 선택한 상태 */
-.match-club-dropdown-button span.selected {
-  color: #333333;
-
-  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(32, 178, 107, 0.08);
 }
 
-
-/* 화살표 */
-.match-club-dropdown-arrow {
-  margin-left: 8px;
-
-  color: #999999;
-
-  font-size: 10px;
-
-  transition: transform 0.2s;
+.match-club-select-custom .custom-select-arrow {
+  color: #777777;
 }
 
-
-/* 드롭다운이 열렸을 때 화살표 */
-.match-club-dropdown-arrow.open {
-  transform: rotate(180deg);
-}
-
-
-/* ========================================
-   클럽 드롭다운 목록
-======================================== */
-
-.match-club-dropdown-menu {
-  position: absolute;
-
-  top: calc(100% + 6px);
-  left: 0;
-
-  z-index: 20;
-
-  width: 100%;
+.match-club-select-custom .custom-select-menu {
   max-height: 200px;
 
-  padding: 6px;
+  border-color: #eeeeee;
 
-  border: 1px solid #eeeeee;
-  border-radius: 10px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 5px 18px rgba(0, 0, 0, 0.1);
-
-  overflow-y: auto;
-
-  box-sizing: border-box;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.1);
 }
 
-
-/* 클럽 한 개 */
-.match-club-dropdown-menu > button {
-  width: 100%;
-  height: 48px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 9px;
-
-  padding: 0 10px;
-
-  border: none;
-  border-radius: 7px;
-
-  background: transparent;
-
-  color: #333333;
-
-  text-align: left;
-
-  cursor: pointer;
-}
-
-
-/* 마우스를 올렸을 때 */
-.match-club-dropdown-menu > button:hover {
-  background: #f5faf7;
-}
-
-
-/* 현재 선택된 클럽 */
-.match-club-dropdown-menu > button.active {
-  background: #eef9f3;
-}
-
-
-/* 클럽 프로필 */
-.match-club-dropdown-profile {
-  width: 32px;
-  height: 32px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background: #eef9f3;
-
-  color: #20b26b;
+.match-club-select-custom .custom-select-option {
+  min-height: 42px;
 
   font-size: 12px;
-  font-weight: 700;
 }
 
-
-/* 클럽 이름 */
-.match-club-dropdown-menu strong {
-  flex: 1;
-
-  font-size: 12px;
-  font-weight: 600;
-}
-
-
-/* 선택 체크 */
-.match-club-dropdown-check {
+.match-club-select-custom .custom-select-option.selected {
   color: #20b26b;
-
-  font-size: 15px;
-  font-weight: 700;
-}
-
-
-/* 클럽 프로필 */
-.match-club-select-profile {
-  width: 36px;
-  height: 36px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
   background: #eef9f3;
-
-  color: #20b26b;
-
-  font-size: 14px;
-  font-weight: 700;
 }
-
-
-/* 클럽 이름 */
-.match-club-select-item strong {
-  flex: 1;
-
-  color: #333333;
-
-  font-size: 13px;
-  font-weight: 600;
-}
-
-
-/* 체크 표시 */
-.match-club-select-item > span {
-  color: #20b26b;
-
-  font-size: 16px;
-  font-weight: 700;
-}
-
 
 /* 선택 완료 버튼 */
 .match-club-select-confirm {

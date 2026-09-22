@@ -47,19 +47,6 @@
 }
 
 
-.match-availability-header > button {
-  position: absolute;
-  left: 16px;
-
-  border: none;
-  background: transparent;
-
-  font-size: 22px;
-
-  color: #333333;
-
-  cursor: pointer;
-}
 
 
 /* ========================================
@@ -1069,3 +1056,74 @@
 
   overflow: hidden;
 }
+
+
+/* ========================================
+   경기 가능일 등록 - 선택한 동호회 표시
+   - 등록 폼에 들어온 뒤에도 어떤 팀의 경기인지
+     프로필 사진 / 팀 이름으로 확인 가능
+======================================== */
+
+.match-registering-club-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  margin-bottom: 24px;
+  padding: 16px 14px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+
+/* 선택한 동호회 프로필 사진 */
+.match-registering-club-profile {
+  width: 58px;
+  height: 58px;
+
+  display: block;
+
+  border: 1px solid #eeeeee;
+  border-radius: 50%;
+
+  object-fit: cover;
+
+  background: #f7f7f7;
+}
+
+
+/* 동호회 이름 */
+.match-registering-club-info {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 3px;
+
+  text-align: center;
+}
+
+
+.match-registering-club-info strong {
+  max-width: 100%;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #222222;
+
+  font-size: 16px;
+  font-weight: 700;
+}
+

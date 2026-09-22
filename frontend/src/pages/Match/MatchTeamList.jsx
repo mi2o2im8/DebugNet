@@ -1,10 +1,28 @@
-
+import {
+  useEffect,
+  useState,
+} from "react";
 import { useNavigate, useSearchParams, } from "react-router-dom";
+import {
+  getMatchAvailabilities,
+} from "./api/matchApi";
 
 import BottomNav from "../../components/BottomNav";
+import BackButton from "../../components/BackButton/BackButton";
 
 import "./CSS/MatchTeamList.css";
+import "./CSS/MatchCommon.css";
 
+// ========================================
+// 백엔드 시간 표시
+// ========================================
+const formatMatchTime = (time) => {
+  if (!time) {
+    return "";
+  }
+
+  return time.slice(0, 5);
+};
 
 function MatchTeamList() {
   // 페이지 이동을 위한 React Router 함수
@@ -18,143 +36,85 @@ function MatchTeamList() {
     searchParams.get("district") || "전체";
 
 
-  /*
-    상대팀 목록
-    지금은 더미데이터.
-    나중에는 백엔드에서 경기 날짜, 종목, 지역,
-    시간 등의 조건으로 검색해서 받아올 예정.
-  */
-  const teams = [
-    {
-      availability_id: 101,
+  // ========================================
+  // 실제 상대팀 경기 목록
+  // ========================================
+  const [
+    teams,
+    setTeams,
+  ] = useState([]);
 
-      club_id: 11,
+  const [
+    totalCount,
+    setTotalCount,
+  ] = useState(0);
 
-      club_name: "신림 FC",
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
 
-      // 프로필 사진이 없으면 null
-      club_profile_image: null,
+  // ========================================
+  // 상대팀 경기 가능일 목록 조회
+  // ========================================
+  useEffect(() => {
 
-      sport_name: "축구/풋살",
+    const loadTeams = async () => {
 
-      skill_level: "중급",
+      setIsLoading(true);
 
-      match_date: "2026-09-26",
+      try {
 
-      start_time: "19:00",
-      end_time: "21:00",
-
-      region: "관악구",
-
-      location_name: "신림체육센터",
-
-      venue_type: "실내",
-
-      parking_available: true,
-
-      venue_cost_negotiable: true,
-
-      time_negotiable: false,
-
-      intro: "매너 있게 즐겁게 경기하실 팀 찾습니다.",
-    },
-
-    {
-      availability_id: 102,
-
-      club_id: 12,
-
-      club_name: "낙성대 유나이티드",
-
-      club_profile_image: null,
-
-      sport_name: "축구/풋살",
-
-      skill_level: "중급",
-
-      match_date: "2026-09-26",
-
-      start_time: "19:30",
-      end_time: "21:30",
-
-      region: "관악구",
-
-      location_name: "낙성대 풋살장",
-
-      venue_type: "실외",
-
-      parking_available: false,
-
-      venue_cost_negotiable: null,
-
-      time_negotiable: true,
-
-      intro: "재미있는 경기 원합니다!",
-    },
-
-    {
-      availability_id: 103,
-
-      club_id: 13,
-
-      club_name: "봉천 FC",
-
-      club_profile_image: null,
-
-      sport_name: "축구/풋살",
-
-      skill_level: "초급",
-
-      match_date: "2026-09-26",
-
-      start_time: "20:00",
-      end_time: "22:00",
-
-      region: "관악구",
-
-      location_name: "봉천동 풋살장",
-
-      venue_type: "실외",
-
-      parking_available: null,
-
-      venue_cost_negotiable: true,
-
-      time_negotiable: true,
-
-      intro: "초중급 팀 환영합니다.",
-    },
-  ];
-
-  // 선택한 지역에 맞는 경기만 화면에 표시
-  const filteredTeams = teams.filter((team) => {
-    // 전체 선택 시 모든 지역 표시
-    if (selectedDistrict === "전체") {
-      return true;
-    }
-
-    return team.region === selectedDistrict;
-  });
+        // MatchHome에서 선택한 지역을 기준으로
+        // 실제 상대팀 경기 목록 조회
+        const response =
+          await getMatchAvailabilities({
+            region: selectedDistrict,
+          });
 
 
-  /*
-    상대팀 상세보기
+        setTeams(
+          response.items || []
+        );
 
-    targetAvailabilityId:
-    상대팀이 등록한 경기 가능일 ID
+        setTotalCount(
+          response.total_count || 0
+        );
 
-    state:
-    내가 어떤 경기 가능일을 기준으로
-    상대팀을 찾고 있었는지도 같이 전달한다.
-  */
-// 상대팀이 등록한 경기 상세 페이지로 이동
-const handleTeamDetail = (
-  targetAvailabilityId
-) => {
-  navigate(
-    `/matches/team/${targetAvailabilityId}`
-  );
-};
+      } catch (error) {
+
+        console.error(
+          "상대팀 목록 조회 실패:",
+          error
+        );
+
+        setTeams([]);
+        setTotalCount(0);
+
+      } finally {
+
+        setIsLoading(false);
+      }
+    };
+
+
+    loadTeams();
+
+  }, [selectedDistrict]);
+
+
+  // ========================================
+  // 상대팀 경기 상세 페이지로 이동
+  // ========================================
+  // targetAvailabilityId는 상대팀이 등록한
+  // club_match_availabilities의 ID다.
+  const handleTeamDetail = (
+    targetAvailabilityId
+  ) => {
+    navigate(
+      `/matches/team/${targetAvailabilityId}`
+    );
+  };
 
 
   return (
@@ -163,22 +123,10 @@ const handleTeamDetail = (
       {/* ================================
           상단 헤더
       ================================= */}
-
-      {/* ================================
-          상단 헤더
-      ================================ */}
       <header className="match-team-list-header">
 
-        {/* 뒤로가기 버튼
-            이전 페이지인 MatchHome으로 돌아간다. */}
-        <button
-          type="button"
-          className="match-team-list-back-button"
-          onClick={() => navigate(-1)}
-          aria-label="뒤로가기"
-        >
-          ‹
-        </button>
+        {/* 공용 뒤로가기 버튼 */}
+        <BackButton className="match-shared-back-button" />
 
         {/* 가운데 제목 */}
         <h1>
@@ -202,14 +150,15 @@ const handleTeamDetail = (
             </h2>
 
             <p>
-              등록한 경기 조건과 비교할 수 있는
-              팀입니다.
+              {selectedDistrict === "전체"
+                ? "서울 전체에서 매칭을 등록한 팀입니다."
+                : `${selectedDistrict}에서 매칭을 등록한 팀입니다.`}
             </p>
           </div>
 
           {/* 검색 결과 개수 */}
           <strong>
-            {filteredTeams.length}팀
+            {totalCount}팀
           </strong>
 
         </section>
@@ -221,7 +170,17 @@ const handleTeamDetail = (
 
         <section className="match-team-search-list">
 
-          {filteredTeams.map((team) => (
+          {isLoading ? (
+
+            <div className="match-team-search-empty">
+              <strong>
+                경기 가능한 팀을 불러오는 중입니다.
+              </strong>
+            </div>
+
+          ) : teams.length > 0 ? (
+
+            teams.map((team) => (
 
             <article
               key={team.availability_id}
@@ -232,13 +191,13 @@ const handleTeamDetail = (
                   클럽 프로필
               ------------------------------ */}
 
-              <div className="match-team-card-header">
+              <div className="match-team-search-card-header">
 
                 {/* 클럽 프로필 이미지 */}
                 {team.club_profile_image ? (
 
                   <img
-                    className="match-team-profile-image"
+                    className="match-team-search-profile-image"
                     src={team.club_profile_image}
                     alt={`${team.club_name} 프로필`}
                   />
@@ -249,7 +208,7 @@ const handleTeamDetail = (
                     프로필 사진이 없는 경우
                     클럽 이름 첫 글자를 표시
                   */
-                  <div className="match-team-profile-fallback">
+                  <div className="match-team-search-profile-fallback">
                     {team.club_name?.charAt(0)}
                   </div>
 
@@ -257,7 +216,7 @@ const handleTeamDetail = (
 
 
                 {/* 클럽 이름 + 기본 정보 */}
-                <div className="match-team-club-info">
+                <div className="match-team-search-club-info">
 
                   <strong>
                     {team.club_name}
@@ -279,7 +238,7 @@ const handleTeamDetail = (
               ------------------------------ */}
 
               {team.intro && (
-                <p className="match-team-intro">
+                <p className="match-team-search-intro">
                   {team.intro}
                 </p>
               )}
@@ -289,17 +248,36 @@ const handleTeamDetail = (
                   경기 시간 / 장소
               ------------------------------ */}
 
-              <div className="match-team-info">
+              <div className="match-team-search-info">
 
+                {/* 경기 날짜 */}
+                <div>
+                  <span>
+                    경기 날짜
+                  </span>
+
+                  <strong>
+                    {team.match_date}
+                  </strong>
+                </div>
+
+
+                {/* 경기 시간 */}
                 <div>
                   <span>
                     경기 시간
                   </span>
 
                   <strong>
-                    {team.start_time}
+                    {formatMatchTime(
+                      team.start_time
+                    )}
+
                     {" ~ "}
-                    {team.end_time}
+
+                    {formatMatchTime(
+                      team.end_time
+                    )}
                   </strong>
                 </div>
 
@@ -323,7 +301,7 @@ const handleTeamDetail = (
                   null인 값은 표시하지 않는다.
               ------------------------------ */}
 
-              <div className="match-team-tags">
+              <div className="match-team-search-tags">
 
                 {/* 실내 / 실외 */}
                 {team.venue_type && (
@@ -383,7 +361,7 @@ const handleTeamDetail = (
 
               <button
                 type="button"
-                className="match-team-detail-button"
+                className="match-team-search-detail-button"
                 onClick={() =>
                   handleTeamDetail(
                     team.availability_id
@@ -395,7 +373,13 @@ const handleTeamDetail = (
 
             </article>
 
-          ))}
+            ))
+          ) : (
+            <div className="match-team-search-empty">
+              <strong>등록된 경기가 없습니다.</strong>
+              <span>다른 지역에서 찾아보세요.</span>
+            </div>
+          )}
 
         </section>
 

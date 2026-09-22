@@ -18,6 +18,14 @@ const getErrorMessage = (status, data) => {
         return data.detail;
     }
 
+    // FastAPI HTTPException에서
+    // detail이 객체 형태로 오는 경우
+    if (
+    typeof data?.detail?.message === "string"
+    ) {
+    return data.detail.message;
+    }
+
     if (typeof data?.message === "string") {
         return data.message;
     }
@@ -125,10 +133,27 @@ export const authenticatedRequest = async (
     }
 
     if (!response.ok) {
-        throw new Error(
-            getErrorMessage(response.status, data)
+        // ========================================
+        // HTTP 에러 정보 보존
+        // ========================================
+        // 단순 message만 던지면
+        // 409인지, 404인지 구분할 수 없으므로
+        // status와 실제 응답 data도 같이 보관한다.
+        const error = new Error(
+            getErrorMessage(
+            response.status,
+            data
+            )
         );
-    }
+
+        error.status =
+            response.status;
+
+        error.data =
+            data;
+
+        throw error;
+        }
 
     return data;
 };

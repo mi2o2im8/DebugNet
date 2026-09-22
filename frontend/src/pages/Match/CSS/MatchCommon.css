@@ -1,0 +1,132 @@
+/* ========================================
+   Match 공용 UI 보정
+   - src/components/BackButton 공용 컴포넌트를
+     Match 페이지 헤더 안에서 사용하기 위한 스타일
+======================================== */
+
+/* 공용 BackButton의 fixed/full-width 스타일을
+   Match 헤더 안의 작은 버튼 형태로 재정의 */
+.Back-btn.match-shared-back-button {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+
+  width: 36px;
+  max-width: none;
+  height: 36px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  background: transparent;
+
+  transform: translateY(-50%);
+
+  z-index: 2;
+}
+
+/* 공용 뒤로가기 이미지 크기 통일 */
+.Back-btn.match-shared-back-button img {
+  width: 24px;
+  height: 24px;
+
+  margin: 0;
+
+  object-fit: contain;
+}
+
+/* 클릭 시 공용 컴포넌트의 transform이 덮어쓰이지 않게 유지 */
+.Back-btn.match-shared-back-button:active {
+  transform: translateY(-50%);
+  background: #f5f5f5;
+  border-radius: 50%;
+}
+
+/* 공용 BackButton.css의 모바일 규칙보다 우선 적용 */
+@media (max-width: 500px) {
+  .Back-btn.match-shared-back-button {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+
+    width: 36px;
+    max-width: none;
+    height: 36px;
+
+    padding: 0;
+
+    transform: translateY(-50%);
+  }
+
+  .Back-btn.match-shared-back-button img {
+    width: 24px;
+    height: 24px;
+
+    margin: 0;
+  }
+
+  .Back-btn.match-shared-back-button:active {
+    transform: translateY(-50%);
+  }
+}
+
+
+/* ========================================
+   Match 동호회 선택 옵션
+   - 등록/신청 모달에서 동호회 이름 아래에
+     해당 동호회의 주 종목을 작게 표시
+======================================== */
+.match-club-option-label {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  gap: 2px;
+
+  line-height: 1.2;
+}
+
+.match-club-option-label strong {
+  max-width: 100%;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  color: inherit;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.match-club-option-label small {
+  color: #8b93a1;
+
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* 매칭 신청의 동호회 옵션이 두 줄로 자연스럽게 보이도록 보정 */
+.match-team-detail-container .custom-select-value {
+  overflow: visible;
+  white-space: normal;
+}
+
+.match-team-detail-container .custom-select-trigger {
+  min-height: 50px;
+  height: auto;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.match-team-detail-container .custom-select-option {
+  min-height: 50px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}

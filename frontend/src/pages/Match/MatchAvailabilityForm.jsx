@@ -6,13 +6,23 @@ import {
 import {
   useNavigate,
   useParams,
+  useSearchParams,
 } from "react-router-dom";
 
 import MatchCalendar from "./components/MatchCalendar";
 import MatchTimePicker from "./components/MatchTimePicker";
+import BackButton from "../../components/BackButton/BackButton";
+import basicProfileImg from "../../assets/img/basic_profile_img.png";
+import {
+  createMatchAvailability,
+  getMatchOptions,
+  getMatchAvailabilityDetail,
+  updateMatchAvailability,
+} from "./api/matchApi";
 
 
 import "./CSS/MatchAvailability.css";
+import "./CSS/MatchCommon.css";
 
 const extractSeoulDistrict = (address = "") => {
   const match = address.match(
@@ -22,6 +32,17 @@ const extractSeoulDistrict = (address = "") => {
   return match
     ? match[1]
     : "";
+};
+
+// ========================================
+// 백엔드 time 값 → 프론트 시간값
+// ========================================
+const normalizeTime = (time) => {
+  if (!time) {
+    return "";
+  }
+
+  return time.slice(0, 5);
 };
 
 function MatchAvailabilityForm() {
@@ -36,9 +57,52 @@ function MatchAvailabilityForm() {
     Boolean(availabilityId);
 
 
+  // MatchHome에서 선택한 등록 동호회 정보
+  // 예: /matches/availability/new?clubId=1&clubName=관악%20FC
+  const [searchParams] =
+    useSearchParams();
+
+  // ========================================
+  // 등록 / 수정 대상 동호회
+  // ========================================
+  // 신규 등록:
+  // MatchHome에서 query parameter로 전달받음.
+  //
+  // 수정:
+  // 상세조회 API 결과로 나중에 채움.
+  const [
+    selectedClubId,
+    setSelectedClubId,
+  ] = useState(
+    isEditMode
+      ? ""
+      : searchParams.get("clubId") || ""
+  );
+
+  const [
+    selectedClubName,
+    setSelectedClubName,
+  ] = useState(
+    isEditMode
+      ? ""
+      : searchParams.get("clubName") || ""
+  );
+
+  const [
+    selectedClubProfileImage,
+    setSelectedClubProfileImage,
+  ] = useState(
+    isEditMode
+      ? ""
+      : searchParams.get("clubProfileImage") || ""
+  );
+
+
   // =========================
   // 입력값
   // =========================
+  // 수정 모드에서는 기존 등록값을 초기값으로 넣어서
+  // 사용자가 작성했던 내용이 그대로 선택되어 보이게 한다.
 
   const [date, setDate] =
     useState("");
@@ -49,8 +113,199 @@ function MatchAvailabilityForm() {
   const [endTime, setEndTime] =
     useState("");
 
-  const [sport, setSport] =
-    useState("");
+  // ========================================
+  // 선택한 종목 ID
+  // ========================================
+  // 실제 DB에는 sport_name이 아니라 sport_id를 저장한다.
+  const [
+    sportId,
+    setSportId,
+  ] = useState("");
+
+  // ========================================
+  // 백엔드에서 받아온 종목 목록
+  // ========================================
+  const [
+    sports,
+    setSports,
+  ] = useState([]);
+
+  // ========================================
+  // 팀매칭 등록 옵션 조회
+  // ========================================
+  // sports 테이블의 활성 종목 목록을 가져온다.
+  useEffect(() => {
+    const loadMatchOptions =
+      async () => {
+
+        try {
+          const response =
+            await getMatchOptions();
+
+          setSports(
+            response.sports || []
+          );
+
+        } catch (error) {
+          console.error(
+            "팀매칭 등록 옵션 조회 실패:",
+            error
+          );
+        }
+      };
+
+    loadMatchOptions();
+  }, []);
+
+  // ========================================
+  // 수정할 경기 가능일 상세 조회
+  // ========================================
+  useEffect(() => {
+    // 신규 등록이면 상세조회할 필요 없음
+    if (!isEditMode) {
+      return;
+    }
+
+
+    const loadEditAvailability =
+      async () => {
+
+        try {
+          const data =
+            await getMatchAvailabilityDetail(
+              availabilityId
+            );
+
+
+          // --------------------------------
+          // 동호회 정보
+          // --------------------------------
+          setSelectedClubId(
+            String(data.club_id)
+          );
+
+          setSelectedClubName(
+            data.club_name || ""
+          );
+
+          setSelectedClubProfileImage(
+            data.club_profile_image || ""
+          );
+
+
+          // --------------------------------
+          // 날짜 / 시간
+          // --------------------------------
+          setDate(
+            data.match_date || ""
+          );
+
+          setStartTime(
+            normalizeTime(
+              data.start_time
+            )
+          );
+
+          setEndTime(
+            normalizeTime(
+              data.end_time
+            )
+          );
+
+
+          // --------------------------------
+          // 종목
+          // --------------------------------
+          setSportId(
+            data.sport_id
+              ? String(data.sport_id)
+              : ""
+          );
+
+
+          // --------------------------------
+          // 장소
+          // --------------------------------
+          setPlaceKeyword(
+            data.location_name || ""
+          );
+
+          setSelectedPlace({
+            region:
+              data.region,
+
+            location_name:
+              data.location_name,
+
+            address:
+              data.address || "",
+
+            latitude:
+              data.latitude,
+
+            longitude:
+              data.longitude,
+          });
+
+
+          // --------------------------------
+          // 경기 조건
+          // --------------------------------
+          setRequiredPlayers(
+            data.required_players != null
+              ? String(
+                  data.required_players
+                )
+              : ""
+          );
+
+          setLevel(
+            data.skill_level || ""
+          );
+
+          setParkingAvailable(
+            data.parking_available ??
+              null
+          );
+
+          setVenueType(
+            data.venue_type || null
+          );
+
+          setVenueCostNegotiable(
+            data.venue_cost_negotiable ??
+              null
+          );
+
+          setTimeNegotiable(
+            data.time_negotiable ??
+              null
+          );
+
+          setIntro(
+            data.intro || ""
+          );
+
+        } catch (error) {
+          console.error(
+            "경기 가능일 상세 조회 실패:",
+            error
+          );
+
+          alert(
+            error.message ||
+            "기존 경기 정보를 불러오지 못했습니다."
+          );
+        }
+      };
+
+
+    loadEditAvailability();
+
+  }, [
+    availabilityId,
+    isEditMode,
+  ]);
 
   // 장소 검색어
   const [placeKeyword, setPlaceKeyword] =
@@ -91,13 +346,6 @@ function MatchAvailabilityForm() {
   const [timeNegotiable, setTimeNegotiable] =
     useState(null);
 
-
-  const sports = [
-    "축구/풋살",
-    "농구",
-    "배구",
-    "탁구",
-  ];
 
   // =========================
   // 장소 검색
@@ -250,6 +498,8 @@ function MatchAvailabilityForm() {
   useEffect(() => {
     if (
       !selectedPlace ||
+      selectedPlace.latitude == null ||
+      selectedPlace.longitude == null ||
       !mapRef.current ||
       !window.kakao?.maps
     ) {
@@ -284,7 +534,15 @@ function MatchAvailabilityForm() {
   // =========================
   // 등록 / 수정
   // =========================
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // 신규 등록은 MatchHome에서 동호회를 먼저 선택해야 함
+    if (!isEditMode && !selectedClubId) {
+      alert(
+        "등록할 동호회를 먼저 선택해주세요."
+      );
+      return;
+    }
+
     if (!date) {
       alert("날짜를 선택해주세요.");
       return;
@@ -302,7 +560,7 @@ function MatchAvailabilityForm() {
       return;
     }
 
-    if (!sport) {
+    if (!sportId) {
       alert("종목을 선택해주세요.");
       return;
     }
@@ -333,12 +591,14 @@ function MatchAvailabilityForm() {
 
 
     const formData = {
+
       match_date: date,
       start_time: startTime,
       end_time: endTime,
 
-      // sport_id는 나중에 실제 sports DB 연결 후 변경
-      sport,
+      // sports 테이블의 PK
+      sport_id:
+        Number(sportId),
 
       required_players:
         Number(requiredPlayers),
@@ -372,25 +632,86 @@ function MatchAvailabilityForm() {
       time_negotiable:
         timeNegotiable,
 
-      intro,
+      intro:
+        intro || null,
     };
 
 
-    console.log(
-      "경기 가능일 입력값:",
-      formData
-    );
+    try {
+
+      // ========================================
+      // 수정
+      // ========================================
+      if (isEditMode) {
+
+        const response =
+          await updateMatchAvailability(
+            availabilityId,
+            formData
+          );
+
+        alert(
+          response.message ||
+          "경기 가능일이 수정되었습니다."
+        );
+
+        // 수정된 경기 상세로 돌아가기
+        navigate(
+          `/matches/availability/${availabilityId}`
+        );
+
+        return;
+      }
 
 
-    // TODO:
-    // 백엔드 연결 후 POST / PATCH
+      // ========================================
+      // 신규 등록
+      // ========================================
+      const createData = {
+        // 신규 등록일 때만 club_id 필요
+        club_id:
+          Number(selectedClubId),
 
-    alert(
-      isEditMode
-        ? "수정 테스트 완료"
-        : "등록 테스트 완료"
-    );
-  };
+        ...formData,
+      };
+
+
+      const response =
+        await createMatchAvailability(
+          createData
+        );
+
+
+      alert(
+        response.message ||
+        "경기 가능일이 등록되었습니다."
+      );
+
+
+      navigate(
+        `/matches/availability/${response.availability_id}`
+      );
+
+    } catch (error) {
+
+      console.error(
+        isEditMode
+          ? "경기 가능일 수정 실패:"
+          : "경기 가능일 등록 실패:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+        (
+          isEditMode
+            ? "경기 가능일 수정에 실패했습니다."
+            : "경기 가능일 등록에 실패했습니다."
+        )
+      );
+    }
+  }
 
 
   return (
@@ -401,14 +722,8 @@ function MatchAvailabilityForm() {
       ========================= */}
       <header className="match-availability-header">
 
-        <button
-          type="button"
-          onClick={() =>
-            navigate(-1)
-          }
-        >
-          ←
-        </button>
+        {/* 공용 뒤로가기 버튼 */}
+        <BackButton className="match-shared-back-button" />
 
 
         <h1>
@@ -421,6 +736,37 @@ function MatchAvailabilityForm() {
 
 
       <main className="match-availability-main">
+
+        {/* ========================================
+            등록 / 수정 동호회 표시
+            신규 등록은 MatchHome에서 고른 동호회,
+            수정은 기존 경기의 동호회 프로필 / 이름을 보여준다.
+            종목은 아래 종목 선택 항목에서 따로 수정할 수 있다.
+        ======================================== */}
+        {selectedClubName && (
+          <section className="match-registering-club-summary">
+
+            {/* 동호회 프로필 사진
+                실제 프로필 이미지가 없으면 기본 프로필 이미지 표시 */}
+            <img
+              className="match-registering-club-profile"
+              src={
+                selectedClubProfileImage ||
+                basicProfileImg
+              }
+              alt={`${selectedClubName} 프로필`}
+            />
+
+            {/* 선택한 동호회 이름 */}
+            <div className="match-registering-club-info">
+              <strong>
+                {selectedClubName}
+              </strong>
+            </div>
+
+          </section>
+        )}
+
 
         {/* 날짜 */}
         <section className="match-form-field">
@@ -490,23 +836,26 @@ function MatchAvailabilityForm() {
           <div className="match-sport-options">
 
             {sports.map(
-              (sportName) => (
+              (sportItem) => (
 
                 <button
-                  key={sportName}
+                  key={sportItem.sport_id}
                   type="button"
+
                   className={
-                    sport === sportName
+                    Number(sportId) ===
+                    sportItem.sport_id
                       ? "active"
                       : ""
                   }
+
                   onClick={() =>
-                    setSport(
-                      sportName
+                    setSportId(
+                      sportItem.sport_id
                     )
                   }
                 >
-                  {sportName}
+                  {sportItem.sport_name}
                 </button>
 
               )

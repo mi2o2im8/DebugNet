@@ -983,7 +983,7 @@ class PostRepository:
             )
             .eq(
                 "status",
-                "활동중",
+                "active",
             )
             .execute()
         )
@@ -1053,7 +1053,7 @@ class PostRepository:
             )
             .eq(
                 "status",
-                "활동중",
+                "active",
             )
             .limit(1)
             .execute()

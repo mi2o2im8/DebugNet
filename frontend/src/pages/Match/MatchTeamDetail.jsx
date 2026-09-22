@@ -3,21 +3,30 @@ import {
   useRef,
   useState,
 } from "react";
-
 import {
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+  getMatchAvailabilityDetail,
+  getRequestableClubs,
+  createMatchRequest,
+} from "./api/matchApi";
+
+import { useParams } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
+import BackButton from "../../components/BackButton/BackButton";
+import CustomSelect from "../../components/common/CustomSelect";
 
 import "./CSS/MatchTeamDetail.css";
+import "./CSS/MatchCommon.css";
 
+const formatMatchTime = (time) => {
+  if (!time) {
+    return "";
+  }
+
+  return time.slice(0, 5);
+};
 
 function MatchTeamDetail() {
-  // 페이지 이동
-  const navigate = useNavigate();
-
   // URL의 상대팀 경기 등록 ID
   // 예: /matches/team/101 → 101
   const { availabilityId } = useParams();
@@ -25,13 +34,6 @@ function MatchTeamDetail() {
   // 카카오 지도를 표시할 div 참조
   const mapRef = useRef(null);
 
-  // ========================================
-  // 내 클럽 선택 드롭다운 열림 여부
-  // ========================================
-  const [
-    isClubDropdownOpen,
-    setIsClubDropdownOpen,
-  ] = useState(false);
 
   // ========================================
   // 매칭 신청 완료 모달 열림 여부
@@ -54,88 +56,58 @@ function MatchTeamDetail() {
 
 
   // ========================================
-  // 내가 매칭을 신청할 수 있는 클럽
+  // 매칭 신청 가능한 내 동호회
   // ========================================
-  // 지금은 화면 확인용 더미데이터.
-  // 백엔드 연결 후에는 로그인 사용자가
-  // 운영하거나 매칭 권한을 가진 클럽을 조회한다.
-  const myClubs = [
-    {
-      club_id: 1,
-      club_name: "관악 FC",
-    },
-    {
-      club_id: 2,
-      club_name: "서울 플레이어스",
-    },
-  ];
+  const [
+    myClubs,
+    setMyClubs,
+  ] = useState([]);
+
+
+  // 신청 가능한 동호회 조회 중
+  const [
+    isClubLoading,
+    setIsClubLoading,
+  ] = useState(false);
+
+
+  // 실제 신청 요청 중
+  const [
+    isRequestSubmitting,
+    setIsRequestSubmitting,
+  ] = useState(false);
+
+  // ========================================
+  // 매칭 신청용 내 동호회 드롭다운
+  // ========================================
+  const myClubOptions =
+    myClubs.map((club) => ({
+      value:
+        String(club.club_id),
+
+      label:
+        club.club_name,
+    }));
 
   // 매칭 신청에 사용할 내 클럽
   const [selectedClubId, setSelectedClubId] =
     useState("");
 
+
   // ========================================
-  // 현재 선택된 내 클럽 정보
+  // 상대팀 경기 상세
   // ========================================
-  const selectedClub = myClubs.find(
-    (club) =>
-      club.club_id === Number(selectedClubId)
-  );
+  const [
+    match,
+    setMatch,
+  ] = useState(null);
 
 
-  /*
-    상대팀 경기 등록 정보 더미데이터
-
-    나중에는 availabilityId를 이용해
-    백엔드 상세조회 API에서 받아올 예정
-  */
-  const match = {
-    availability_id: availabilityId,
-
-    club_id: 11,
-
-    club_name: "신림 FC",
-
-    // 클럽 프로필 사진
-    // 실제 연결 전이므로 현재는 null
-    club_profile_image: null,
-
-    match_date: "2026-09-26",
-
-    start_time: "19:00",
-    end_time: "21:00",
-
-    sport_name: "축구/풋살",
-
-    required_players: 6,
-
-    skill_level: "중급",
-
-    region: "관악구",
-
-    location_name: "신림체육센터",
-
-    address:
-      "서울특별시 관악구 난곡로 58길",
-
-    // 현재는 더미 좌표
-    latitude: 37.4821,
-    longitude: 126.9293,
-
-    // 추가 조건
-    venue_type: "실내",
-
-    parking_available: true,
-
-    venue_cost_negotiable: null,
-
-    time_negotiable: true,
-
-    intro:
-      "매너 있게 즐겁게 경기하실 팀 찾습니다.",
-
-    status: "OPEN",
-  };
+  // 상세 조회 로딩
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
 
 
   // ========================================
@@ -145,6 +117,74 @@ function MatchTeamDetail() {
     isClubSelectOpen,
     setIsClubSelectOpen,
   ] = useState(false);
+
+  // ========================================
+  // 상대팀 경기 상세 조회
+  // ========================================
+  useEffect(() => {
+
+    const loadMatchDetail =
+      async () => {
+
+        // URL에 availabilityId가 없으면
+        // 잘못된 API 요청을 보내지 않는다.
+        if (!availabilityId) {
+          console.error(
+            "availabilityId가 없습니다."
+          );
+
+          setIsLoading(false);
+
+          return;
+        }
+
+        try {
+
+          const data =
+            await getMatchAvailabilityDetail(
+              availabilityId
+            );
+
+          // ========================================
+          // 상세 데이터 저장
+          // ========================================
+          setMatch(data);
+
+
+          // ========================================
+          // 기존 매칭 신청 여부 복원
+          // ========================================
+          // 백엔드에서 현재 로그인 사용자가
+          // 이미 이 경기에 신청했는지 알려준다.
+          //
+          // pending 또는 approved 신청이 있으면 true
+          // rejected만 있으면 false
+          setRequestSent(
+            data.has_requested === true
+          );
+
+        } catch (error) {
+
+          console.error(
+            "상대팀 경기 상세 조회 실패:",
+            error
+          );
+
+          alert(
+            error.message ||
+            "경기 정보를 불러오지 못했습니다."
+          );
+
+        } finally {
+
+          setIsLoading(false);
+        }
+      };
+
+
+    loadMatchDetail();
+
+  }, [availabilityId]);
 
 
   /*
@@ -156,8 +196,9 @@ function MatchTeamDetail() {
   useEffect(() => {
     // 좌표 또는 지도 영역이 없으면 실행하지 않음
     if (
-      !match.latitude ||
-      !match.longitude ||
+      !match ||
+      match.latitude == null ||
+      match.longitude == null ||
       !mapRef.current ||
       !window.kakao?.maps
     ) {
@@ -189,87 +230,227 @@ function MatchTeamDetail() {
       });
     });
   }, [
-    match.latitude,
-    match.longitude,
+    match?.latitude,
+    match?.longitude,
   ]);
 
 
   // ========================================
   // 매칭 신청 버튼 클릭
   // ========================================
-  const handleMatchRequest = () => {
-    // 신청 가능한 내 클럽이 없으면 진행하지 않음
-    if (myClubs.length === 0) {
-      alert(
-        "매칭 신청이 가능한 내 클럽이 없습니다."
+  const handleMatchRequest =
+    async () => {
+
+      setIsClubLoading(true);
+
+      try {
+
+        // 현재 상대 경기 기준으로
+        // 내가 신청 가능한 동호회 조회
+        const response =
+          await getRequestableClubs(
+            availabilityId
+          );
+
+
+        const clubs =
+          response.clubs || [];
+
+
+        // 신청 가능한 동호회가 없는 경우
+        if (clubs.length === 0) {
+
+          alert(
+            "매칭 신청이 가능한 내 동호회가 없습니다."
+          );
+
+          return;
+        }
+
+
+        setMyClubs(clubs);
+
+        // 이전 선택값 초기화
+        setSelectedClubId("");
+
+        // 동호회 선택 모달 열기
+        setIsClubSelectOpen(true);
+
+
+      } catch (error) {
+
+        console.error(
+          "매칭 신청 가능 동호회 조회 실패:",
+          error
+        );
+
+        alert(
+          error.message ||
+          "신청 가능한 동호회를 불러오지 못했습니다."
+        );
+
+      } finally {
+
+        setIsClubLoading(false);
+      }
+    };
+
+
+  // ========================================
+  // 내 동호회 선택 후 실제 매칭 신청
+  // ========================================
+  const handleConfirmClub =
+    async () => {
+
+      if (!selectedClubId) {
+        alert(
+          "매칭을 신청할 팀을 선택해주세요."
+        );
+        return;
+      }
+
+
+      const selectedClub =
+        myClubs.find(
+          (club) =>
+            club.club_id ===
+            Number(selectedClubId)
+        );
+
+
+      if (!selectedClub) {
+        return;
+      }
+
+
+      const confirmed =
+        window.confirm(
+          `${selectedClub.club_name} 팀으로 ${match.club_name} 팀에게 매칭 신청을 보내시겠습니까?`
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      setIsRequestSubmitting(true);
+
+
+      try {
+
+        const response =
+          await createMatchRequest({
+            availabilityId:
+              Number(availabilityId),
+
+            requesterClubId:
+              selectedClub.club_id,
+          });
+
+
+        // 신청 성공
+        setRequestSent(true);
+
+        // 선택 모달 닫기
+        setIsClubSelectOpen(false);
+
+        // 선택값 초기화
+        setSelectedClubId("");
+
+        // 완료 모달 표시
+        setIsRequestCompleteOpen(true);
+
+
+        console.log(
+          "매칭 신청 완료:",
+          response
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "매칭 신청 실패:",
+          error
+        );
+
+
+        alert(
+          error.message ||
+          "매칭 신청에 실패했습니다."
+        );
+
+      } finally {
+
+        setIsRequestSubmitting(false);
+      }
+    };
+
+    // ========================================
+    // 상세 조회 중
+    // ========================================
+    if (isLoading) {
+      return (
+        <div className="match-team-detail-container">
+
+          <header className="match-team-detail-header">
+            <BackButton
+              to="/matches"
+              className="match-shared-back-button"
+            />
+
+            <h1>
+              경기 상세
+            </h1>
+          </header>
+
+
+          <main className="match-team-detail-main">
+            <p>
+              경기 정보를 불러오는 중입니다.
+            </p>
+          </main>
+
+
+          <BottomNav />
+
+        </div>
       );
-      return;
     }
 
-    // 내 클럽 선택창 열기
-    setIsClubSelectOpen(true);
-  };
-
-
-  // ========================================
-  // 내 클럽 선택 후 매칭 신청 확인
-  // ========================================
-  const handleConfirmClub = () => {
-    // 아직 내 클럽을 선택하지 않은 경우
-    if (!selectedClubId) {
-      alert("매칭을 신청할 팀을 선택해주세요.");
-      return;
-    }
-
-    // 선택한 클럽 정보 찾기
-    const selectedClub = myClubs.find(
-      (club) =>
-        club.club_id === Number(selectedClubId)
-    );
-
-    if (!selectedClub) {
-      return;
-    }
-
-    // 내 클럽 선택창 닫기
-    setIsClubSelectOpen(false);
-
-    // 실제 신청 전 최종 확인
-    const confirmed = window.confirm(
-      `${selectedClub.club_name} 팀으로 ${match.club_name} 팀에게 매칭 신청을 보내시겠습니까?`
-    );
-
-    // 취소하면 아무 작업도 하지 않음
-    if (!confirmed) {
-      return;
-    }
 
     // ========================================
-    // TODO: 백엔드 연결 후 실제 POST 요청
+    // 상세 데이터가 없는 경우
     // ========================================
-    console.log({
-      availability_id:
-        match.availability_id,
+    if (!match) {
+      return (
+        <div className="match-team-detail-container">
 
-      requester_club_id:
-        selectedClub.club_id,
+          <header className="match-team-detail-header">
+            <BackButton
+              to="/matches"
+              className="match-shared-back-button"
+            />
 
-      target_club_id:
-        match.club_id,
-    });
+            <h1>
+              경기 상세
+            </h1>
+          </header>
 
-    // 신청 완료 상태로 변경
-    setRequestSent(true);
 
-    // 클럽 선택 모달 닫기
-    setIsClubSelectOpen(false);
+          <main className="match-team-detail-main">
+            <p>
+              경기 정보를 불러올 수 없습니다.
+            </p>
+          </main>
 
-    // 드롭다운 닫기
-    setIsClubDropdownOpen(false);
 
-    // 신청 완료 모달 열기
-    setIsRequestCompleteOpen(true);
-  };
+          <BottomNav />
+
+        </div>
+      );
+    }
 
 
   return (
@@ -281,13 +462,8 @@ function MatchTeamDetail() {
 
       <header className="match-team-detail-header">
 
-        {/* 이전 화면 */}
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-        >
-          ‹
-        </button>
+        {/* 공용 뒤로가기 버튼 */}
+        <BackButton to="/matches" className="match-shared-back-button" />
 
         <h1>
           경기 상세
@@ -371,9 +547,15 @@ function MatchTeamDetail() {
             <span>시간</span>
 
             <strong>
-              {match.start_time}
+              {formatMatchTime(
+                match.start_time
+              )}
+
               {" ~ "}
-              {match.end_time}
+
+              {formatMatchTime(
+                match.end_time
+              )}
             </strong>
           </div>
 
@@ -524,11 +706,19 @@ function MatchTeamDetail() {
           onClick={handleMatchRequest}
 
           // 이미 신청했다면 다시 신청하지 못하게 막음
-          disabled={requestSent}
+          disabled={
+            requestSent ||
+            isClubLoading ||
+            match?.status !== "open"
+          }
         >
           {requestSent
             ? "매칭 신청 완료"
-            : "매칭 신청"}
+            : isClubLoading
+              ? "불러오는 중..."
+              : match?.status !== "open"
+                ? "매칭 모집 마감"
+                : "매칭 신청"}
         </button>
 
         {/* ========================================
@@ -557,8 +747,6 @@ function MatchTeamDetail() {
                     // 선택한 클럽 초기화
                     setSelectedClubId("");
 
-                    // 열려 있던 드롭다운도 닫기
-                    setIsClubDropdownOpen(false);
                   }}
                   aria-label="닫기"
                 >
@@ -569,110 +757,28 @@ function MatchTeamDetail() {
 
               {/* ========================================
                   내 클럽 선택 드롭다운
+                  공용 CustomSelect 사용
               ======================================== */}
-              <div className="match-club-dropdown">
-
-                {/* 현재 선택값 / 드롭다운 열기 버튼 */}
-                <button
-                  type="button"
-                  className="match-club-dropdown-button"
-                  onClick={() =>
-                    setIsClubDropdownOpen(
-                      !isClubDropdownOpen
-                    )
-                  }
-                >
-                  {/* 클럽을 선택했으면 이름 표시,
-                      아직 선택 전이면 안내 문구 표시 */}
-                  <span
-                    className={
-                      selectedClub
-                        ? "selected"
-                        : ""
-                    }
-                  >
-                    {selectedClub
-                      ? selectedClub.club_name
-                      : "어떤 팀으로 신청하시겠습니까?"}
-                  </span>
-
-                  {/* 드롭다운 화살표 */}
-                  <span
-                    className={
-                      isClubDropdownOpen
-                        ? "match-club-dropdown-arrow open"
-                        : "match-club-dropdown-arrow"
-                    }
-                  >
-                    ▾
-                  </span>
-                </button>
-
-
-                {/* 드롭다운이 열렸을 때만 클럽 목록 표시 */}
-                {isClubDropdownOpen && (
-                  <div className="match-club-dropdown-menu">
-
-                    {myClubs.map((club) => (
-
-                      <button
-                        key={club.club_id}
-                        type="button"
-
-                        className={
-                          Number(selectedClubId) ===
-                          club.club_id
-                            ? "active"
-                            : ""
-                        }
-
-                        onClick={() => {
-                          // 선택한 클럽 ID 저장
-                          setSelectedClubId(
-                            club.club_id
-                          );
-
-                          // 선택 후 드롭다운 닫기
-                          setIsClubDropdownOpen(
-                            false
-                          );
-                        }}
-                      >
-                        {/* 클럽 프로필 임시 표시 */}
-                        <div className="match-club-dropdown-profile">
-                          {club.club_name?.charAt(0)}
-                        </div>
-
-                        {/* 클럽 이름 */}
-                        <strong>
-                          {club.club_name}
-                        </strong>
-
-                        {/* 현재 선택된 클럽 체크 */}
-                        {Number(selectedClubId) ===
-                          club.club_id && (
-                          <span className="match-club-dropdown-check">
-                            ✓
-                          </span>
-                        )}
-
-                      </button>
-
-                    ))}
-
-                  </div>
-                )}
-
+              <div className="match-club-select-custom">
+                <CustomSelect
+                  value={selectedClubId}
+                  options={myClubOptions}
+                  onChange={setSelectedClubId}
+                  placeholder="어떤 팀으로 신청하시겠습니까?"
+                  ariaLabel="매칭 신청 팀 선택"
+                />
               </div>
-
 
               {/* 선택한 클럽으로 매칭 신청 진행 */}
               <button
                 type="button"
                 className="match-club-select-confirm"
                 onClick={handleConfirmClub}
+                disabled={isRequestSubmitting}
               >
-                신청하기
+                {isRequestSubmitting
+                  ? "신청 중..."
+                  : "신청하기"}
               </button>
 
             </div>
