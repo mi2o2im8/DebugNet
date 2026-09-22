@@ -63,9 +63,16 @@ import MySchedule from "./pages/MySchedule/MySchedule";
 import MyActivity from "./pages/MyActivity/MyActivity";
 // 신뢰점수
 import TrustScore from './pages/TrustScore/TrustScore';
+// 내가 쓴 글/댓글
+import MyPostComment from './pages/MyPostComment/MyPostComment';
+// 찜한 동호회
+import FavoriteClub from './pages/FavoriteClub/FavoriteClub';
 
 // 알림 페이지
 import Notification from './pages/Notification/Notification';
+
+// 챗봇 페이지
+import Chatbot from './pages/Chatbot/Chatbot';
 
 
 import './App.css'
@@ -198,11 +205,18 @@ function App() {
           <Route path="/myschedule" element={<MySchedule />} />
           {/* 내 활동 */}
           <Route path="/myactivity" element={<MyActivity />} />
-          {/* 내 활동 */}
+          {/* 신뢰점수 */}
           <Route path="/trustscore" element={<TrustScore />} />
+          {/* 내가 쓴 글/댓글 목록 */}
+          <Route path="/mypostcomment" element={<MyPostComment />} />
+          {/* 내가 쓴 글/댓글 목록 */}
+          <Route path="/favoriteClub" element={<FavoriteClub />} />
 
           {/* 알림 */}
           <Route path="/notification" element={<Notification />} />
+
+          {/* 챗봇 */}
+          <Route path="/chatbot" element={<Chatbot />} />
 
           
 

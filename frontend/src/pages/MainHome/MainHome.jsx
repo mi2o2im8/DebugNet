@@ -22,13 +22,17 @@ import climbingImage from "../../assets/img/playbridge_16_assets/climbing.png";
 import runningImage from "../../assets/img/playbridge_16_assets/running.png";
 import yogaImage from "../../assets/img/playbridge_16_assets/16_yoga.png";
 import volleyballImage from "../../assets/img/volleyball.png";
+// 챗봇
 import ChatbotButton from "../../components/Chatbot/ChatbotButton";
-
+import Chatbot from "../Chatbot/Chatbot";
 
 function Main() {
 
     // ⭐ 이번 주 일정 날짜 선택
     const [selectedDay, setSelectedDay] = useState(0);
+
+    // ⭐ 챗봇 팝업 상태
+    const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
     // ⭐ 일정 참여 상태
     const [participated, setParticipated] = useState({
@@ -44,12 +48,6 @@ function Main() {
             ...prev,
             [index]: !prev[index],
         }));
-    };
-
-
-    // ⭐ 채팅 버튼
-    const handleChat = () => {
-        alert("채팅 기능을 준비 중입니다.");
     };
 
 
@@ -1038,8 +1036,19 @@ function Main() {
 
             </main>
 
-            {/* ⭐ 챗봇 아이콘 */}
-            <ChatbotButton />
+            {/* ⭐ 챗봇 버튼 */}
+            {!isChatbotOpen && (
+                <ChatbotButton
+                    onClick={() => setIsChatbotOpen(true)}
+                />
+            )}
+
+            {/* ⭐ 챗봇 팝업 */}
+            {isChatbotOpen && (
+                <Chatbot
+                    onClose={() => setIsChatbotOpen(false)}
+                />
+            )}
 
             {/* ⭐ 공통 하단 네비게이션 */}
             <BottomNav />

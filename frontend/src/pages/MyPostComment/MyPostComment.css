@@ -1,0 +1,399 @@
+@font-face {
+    font-family: "Maplestory";
+    src: url("../../assets/font/Maplestory-Light.ttf") format("truetype");
+}
+
+
+/* =========================================================
+   ⭐ 전체 페이지
+========================================================= */
+
+.my-post-comment-page {
+    width: 100%;
+    max-width: 400px;
+    min-height: 100vh;
+
+    margin: 0 auto;
+
+    padding: 60px 20px 90px;
+
+    box-sizing: border-box;
+
+    background-color: #fff;
+
+    font-family: "Maplestory", sans-serif;
+
+    position: relative;
+}
+
+
+/* =========================================================
+   ⭐ 헤더
+========================================================= */
+
+.my-post-comment-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 22px;
+}
+
+
+.my-post-comment-header h2 {
+    margin: 0;
+
+    font-size: 20px;
+    font-weight: 700;
+
+    color: #222;
+}
+
+
+/* =========================================================
+   ⭐ 탭
+========================================================= */
+
+.my-post-comment-tabs {
+    width: 100%;
+
+    display: flex;
+
+    margin-bottom: 22px;
+
+    border-bottom: 1px solid #eaeaea;
+}
+
+
+.my-post-comment-tabs button {
+    flex: 1;
+
+    height: 44px;
+
+    border: none;
+    border-bottom: 2px solid transparent;
+
+    background: transparent;
+
+    color: #999;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 14px;
+
+    cursor: pointer;
+}
+
+
+.my-post-comment-tabs button.active {
+    border-bottom: 2px solid #01A17F;
+
+    color: #01A17F;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   ⭐ 섹션
+========================================================= */
+
+.my-post-comment-section {
+    width: 100%;
+}
+
+
+.my-post-comment-count {
+    margin-bottom: 12px;
+
+    font-size: 13px;
+
+    color: #888;
+}
+
+
+/* =========================================================
+   ⭐ 게시글 목록
+========================================================= */
+
+.my-post-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+
+.my-post-card {
+    width: 100%;
+
+    padding: 16px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+
+    background-color: #fff;
+
+    text-align: left;
+
+    font-family: "Maplestory", sans-serif;
+
+    cursor: pointer;
+
+    transition: 0.15s;
+}
+
+
+.my-post-card:active {
+    background-color: #F4FBF9;
+
+    transform: scale(0.99);
+}
+
+
+/* ⭐ 게시글 상단 */
+
+.my-post-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+
+.my-post-top h3 {
+    margin: 0;
+
+    flex: 1;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    color: #222;
+}
+
+
+.my-post-top span {
+    flex-shrink: 0;
+
+    font-size: 11px;
+
+    color: #aaa;
+}
+
+
+/* ⭐ 게시글 내용 */
+
+.my-post-content {
+    margin: 10px 0 14px;
+
+    font-size: 13px;
+
+    line-height: 1.6;
+
+    color: #666;
+
+    overflow: hidden;
+}
+
+
+/* ⭐ 게시글 하단 */
+
+.my-post-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding-top: 10px;
+
+    border-top: 1px solid #f1f1f1;
+}
+
+
+.my-post-bottom span {
+    font-size: 12px;
+
+    color: #01A17F;
+}
+
+
+.my-post-arrow {
+    font-size: 20px !important;
+
+    color: #aaa !important;
+}
+
+
+/* =========================================================
+   ⭐ 댓글 목록
+========================================================= */
+
+.my-comment-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+
+.my-comment-card {
+    width: 100%;
+
+    padding: 15px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+
+    background-color: #fff;
+
+    text-align: left;
+
+    font-family: "Maplestory", sans-serif;
+
+    cursor: pointer;
+
+    position: relative;
+
+    transition: 0.15s;
+}
+
+
+.my-comment-card:active {
+    background-color: #F4FBF9;
+
+    transform: scale(0.99);
+}
+
+
+/* ⭐ 댓글 상단 */
+
+.my-comment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 8px;
+}
+
+
+.my-comment-header span:first-child {
+    font-size: 11px;
+
+    color: #01A17F;
+}
+
+
+.my-comment-header span:last-child {
+    font-size: 11px;
+
+    color: #aaa;
+}
+
+
+/* ⭐ 원글 제목 */
+
+.my-comment-card h3 {
+    margin: 0 0 9px;
+
+    padding-right: 20px;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    color: #222;
+}
+
+
+/* ⭐ 댓글 내용 */
+
+.my-comment-card p {
+    margin: 0;
+
+    padding-right: 20px;
+
+    font-size: 13px;
+
+    line-height: 1.6;
+
+    color: #555;
+}
+
+
+/* ⭐ 화살표 */
+
+.my-comment-arrow {
+    position: absolute;
+
+    right: 14px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    font-size: 20px;
+
+    color: #aaa;
+}
+
+
+/* =========================================================
+   ⭐ 빈 상태
+========================================================= */
+
+.my-post-comment-empty {
+    width: 100%;
+
+    min-height: 180px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #eeeeee;
+    border-radius: 12px;
+
+    background-color: #fafafa;
+
+    font-size: 13px;
+
+    color: #aaa;
+}
+
+
+/* =========================================================
+   ⭐ 모바일
+========================================================= */
+
+@media (max-width: 500px) {
+
+    .my-post-comment-page {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+}
+
+
+@media (max-width: 360px) {
+
+    .my-post-comment-page {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .my-post-comment-header h2 {
+        font-size: 18px;
+    }
+
+    .my-post-top h3 {
+        font-size: 14px;
+    }
+
+    .my-comment-card h3 {
+        font-size: 14px;
+    }
+
+}

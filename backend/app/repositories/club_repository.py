@@ -154,79 +154,99 @@ class ClubRepository:
 
         return club
     # ---------------------------------------------------------
-    # 내가 가입한 동호회 조회
+    # 내가 운영 중인 동호회 + 가입한 동호회 조회
     # ---------------------------------------------------------
     def get_my_club(self, user_id: str):
 
-        # 1. 현재 사용자의 활동 중인 동호회 조회
         member_response = (
             self.supabase
             .table("club_members")
-            .select(
-                "club_id, role, status, joined_at"
-            )
+            .select("club_id, role, status, joined_at")
             .eq("user_id", user_id)
             .eq("status", "active")
             .order("joined_at", desc=True)
-            .limit(1)
             .execute()
         )
 
-        if not member_response.data:
-            return None
+        members = member_response.data or []
 
-        member = member_response.data[0]
+        result = {
+            "operating_club": None,
+            "joined_club": None,
+        }
 
-        club_id = member["club_id"]
+        for member in members:
 
-        # 2. 동호회 기본 정보 조회
-        club_response = (
-            self.supabase
-            .table("clubs")
-            .select("*")
-            .eq("club_id", club_id)
-            .single()
-            .execute()
-        )
+            club_id = member["club_id"]
 
-        club = club_response.data
-
-        if not club:
-            return None
-
-        # 3. 동호회 운동 종목 조회
-        club_sports_response = (
-            self.supabase
-            .table("club_sports")
-            .select("sport_id")
-            .eq("club_id", club_id)
-            .execute()
-        )
-
-        sport_name = None
-
-        if club_sports_response.data:
-            sport_id = club_sports_response.data[0]["sport_id"]
-
-            sport_response = (
+            club_response = (
                 self.supabase
-                .table("sports")
-                .select("sport_name")
-                .eq("sport_id", sport_id)
+                .table("clubs")
+                .select("*")
+                .eq("club_id", club_id)
                 .single()
                 .execute()
             )
 
-            if sport_response.data:
-                sport_name = sport_response.data["sport_name"]
+            club = club_response.data
 
-        # 4. 프론트에서 사용할 정보 추가
-        club["sport_name"] = sport_name
-        club["member_role"] = member.get("role")
-        club["member_status"] = member.get("status")
-        club["joined_at"] = member.get("joined_at")
+            if not club:
+                continue
 
-        return club
+            # ⭐ 종목명 조회
+            sport_name = None
+
+            club_sports_response = (
+                self.supabase
+                .table("club_sports")
+                .select("sport_id")
+                .eq("club_id", club_id)
+                .limit(1)
+                .execute()
+            )
+
+            if club_sports_response.data:
+
+                sport_id = club_sports_response.data[0]["sport_id"]
+
+                sport_response = (
+                    self.supabase
+                    .table("sports")
+                    .select("sport_name")
+                    .eq("sport_id", sport_id)
+                    .single()
+                    .execute()
+                )
+
+                if sport_response.data:
+                    sport_name = sport_response.data["sport_name"]
+
+            club["sport_name"] = sport_name
+            club["member_role"] = member.get("role")
+            club["member_status"] = member.get("status")
+            club["joined_at"] = member.get("joined_at")
+
+            # ⭐ 운영 중인 동호회
+            if member.get("role") in [
+                "owner",
+                "manager",
+                "동호회장",
+                "운영진",
+            ]:
+
+                if result["operating_club"] is None:
+                    result["operating_club"] = club
+
+            # ⭐ 일반 가입 동호회
+            elif member.get("role") in [
+                "member",
+                "회원",
+            ]:
+
+                if result["joined_club"] is None:
+                    result["joined_club"] = club
+
+        return result
 
     # -----------------------------------------------------
     # 동호회 가입 신청

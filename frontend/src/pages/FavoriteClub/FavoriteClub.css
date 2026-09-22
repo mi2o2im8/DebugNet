@@ -1,0 +1,359 @@
+@font-face {
+    font-family: "Maplestory";
+    src: url("../../assets/font/Maplestory-Light.ttf")
+        format("truetype");
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.favorite-club-page {
+    width: 100%;
+    min-height: 100vh;
+
+    background-color: #ffffff;
+
+    font-family: "Maplestory", sans-serif;
+}
+
+.favorite-club-container {
+    width: 100%;
+    max-width: 400px;
+
+    min-height: 100vh;
+
+    margin: 0 auto;
+
+    padding: 70px 20px 100px;
+}
+
+/* =========================
+   ⭐ 헤더
+========================= */
+
+.favorite-club-header {
+    margin-bottom: 24px;
+}
+
+.favorite-club-header h1 {
+    margin: 0 0 8px;
+
+    font-size: 25px;
+    font-weight: 700;
+
+    color: #222;
+}
+
+.favorite-club-header p {
+    margin: 0;
+
+    font-size: 14px;
+    line-height: 1.5;
+
+    color: #888;
+}
+
+/* =========================
+   ⭐ 개수
+========================= */
+
+.favorite-club-count {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    margin-bottom: 18px;
+
+    font-size: 14px;
+
+    color: #555;
+}
+
+.favorite-club-count svg {
+    width: 17px;
+    height: 17px;
+
+    stroke-width: 2;
+}
+
+.favorite-club-count strong {
+    margin-left: 3px;
+
+    color: #01A17F;
+}
+
+/* =========================
+   ⭐ 목록
+========================= */
+
+.favorite-club-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 14px;
+}
+
+/* =========================
+   ⭐ 동호회 카드
+========================= */
+
+.favorite-club-card {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    min-height: 125px;
+
+    padding: 16px;
+
+    background-color: #ffffff;
+
+    border: 1px solid #e9e9e9;
+    border-radius: 16px;
+
+    font-family: "Maplestory", sans-serif;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.favorite-club-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 5px 16px rgba(0, 0, 0, 0.06);
+}
+
+.favorite-club-card:active {
+    transform: scale(0.99);
+}
+
+/* =========================
+   ⭐ 이미지
+========================= */
+
+.favorite-club-image {
+    flex-shrink: 0;
+
+    width: 82px;
+    height: 82px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 14px;
+
+    background-color: #f0f8f6;
+
+    border-radius: 14px;
+
+    overflow: hidden;
+}
+
+.favorite-club-image img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.favorite-club-image svg {
+    width: 28px;
+    height: 28px;
+
+    color: #01A17F;
+
+    stroke-width: 1.7;
+}
+
+/* =========================
+   ⭐ 정보
+========================= */
+
+.favorite-club-info {
+    flex: 1;
+
+    min-width: 0;
+
+    padding-right: 22px;
+}
+
+.favorite-club-sport {
+    display: inline-block;
+
+    margin-bottom: 5px;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    color: #01A17F;
+}
+
+.favorite-club-info h2 {
+    margin: 0 0 8px;
+
+    font-size: 17px;
+    font-weight: 700;
+
+    color: #222;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* =========================
+   ⭐ 상세정보
+========================= */
+
+.favorite-club-detail {
+    display: flex;
+    align-items: center;
+
+    gap: 5px;
+
+    margin-top: 3px;
+
+    font-size: 11px;
+
+    color: #888;
+}
+
+.favorite-club-detail svg {
+    width: 13px;
+    height: 13px;
+
+    flex-shrink: 0;
+
+    stroke-width: 1.8;
+}
+
+/* =========================
+   ⭐ 화살표
+========================= */
+
+.favorite-club-arrow {
+    position: absolute;
+
+    top: 50%;
+    right: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transform: translateY(-50%);
+
+    color: #bbb;
+}
+
+.favorite-club-arrow svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* =========================
+   ⭐ 빈 화면
+========================= */
+
+.favorite-club-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 380px;
+
+    text-align: center;
+}
+
+.favorite-club-empty > svg {
+    width: 48px;
+    height: 48px;
+
+    margin-bottom: 18px;
+
+    color: #d7d7d7;
+
+    stroke-width: 1.5;
+}
+
+.favorite-club-empty h2 {
+    margin: 0 0 8px;
+
+    font-size: 18px;
+
+    color: #444;
+}
+
+.favorite-club-empty p {
+    margin: 0 0 22px;
+
+    font-size: 13px;
+    line-height: 1.7;
+
+    color: #999;
+}
+
+.favorite-club-empty button {
+    width: 180px;
+    height: 44px;
+
+    border: none;
+    border-radius: 10px;
+
+    background-color: #01A17F;
+
+    color: #ffffff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 14px;
+
+    cursor: pointer;
+}
+
+.favorite-club-empty button:hover {
+    opacity: 0.9;
+}
+
+/* =========================
+   ⭐ 모바일
+========================= */
+
+@media (max-width: 480px) {
+
+    .favorite-club-container {
+        padding: 65px 16px 100px;
+    }
+
+    .favorite-club-card {
+        min-height: 115px;
+
+        padding: 14px;
+    }
+
+    .favorite-club-image {
+        width: 74px;
+        height: 74px;
+
+        margin-right: 12px;
+    }
+
+    .favorite-club-info h2 {
+        font-size: 16px;
+    }
+
+    .favorite-club-detail {
+        font-size: 10px;
+    }
+}

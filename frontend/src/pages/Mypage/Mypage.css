@@ -324,6 +324,45 @@
     color: #888;
 }
 
+/* ⭐ 운영 중인 동호회 / 가입한 동호회 영역 */
+.club-subsection {
+    width: 100%;
+    margin: 0 0 8px;
+}
+
+/* ⭐ 소제목 */
+.club-subsection-title {
+    width: 100%;
+    margin: 0 0 8px;
+
+    text-align: left;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* ⭐ 동호회 카드 */
+.club-card {
+    width: 100%;
+    margin: 0 0 4px;
+}
+
+/* ⭐ 동호회 없음 */
+.club-empty {
+    width: 100%;
+    min-height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d9eeee;
+    border-radius: 10px;
+
+    font-size: 13px;
+}
 
 /* ========================================
    ⭐ 내 활동
