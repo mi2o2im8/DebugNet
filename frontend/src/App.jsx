@@ -56,6 +56,11 @@ import Settings from './pages/Settings/Settings';
 import MySchedule from "./pages/MySchedule/MySchedule";
 // 내 활동
 import MyActivity from "./pages/MyActivity/MyActivity";
+// 신뢰점수
+import TrustScore from './pages/TrustScore/TrustScore';
+
+// 알림 페이지
+import Notification from './pages/Notification/Notification';
 
 
 import './App.css'
@@ -177,7 +182,11 @@ function App() {
           <Route path="/myschedule" element={<MySchedule />} />
           {/* 내 활동 */}
           <Route path="/myactivity" element={<MyActivity />} />
+          {/* 내 활동 */}
+          <Route path="/trustscore" element={<TrustScore />} />
 
+          {/* 알림 */}
+          <Route path="/notification" element={<Notification />} />
 
           
 

@@ -1,0 +1,504 @@
+/* ========================================
+   ⭐ 폰트
+======================================== */
+
+@font-face {
+    font-family: "Maplestory";
+    src: url("../../assets/font/Maplestory-Light.ttf") format("truetype");
+}
+
+
+/* ========================================
+   ⭐ 알림 페이지
+======================================== */
+
+.notification-page {
+    width: 100%;
+    max-width: 400px;
+    min-height: 100vh;
+
+    margin: 0 auto;
+    padding: 10px 20px 90px;
+
+    box-sizing: border-box;
+
+    background: #fff;
+
+    font-family: "Maplestory", sans-serif;
+}
+
+
+/* ========================================
+   ⭐ 헤더
+======================================== */
+
+.notification-header {
+    position: relative;
+
+    width: 100%;
+    height: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    margin-bottom: 8px;
+}
+
+
+/* ========================================
+   ⭐ 뒤로가기
+======================================== */
+
+.notification-header > button:first-child {
+    position: absolute;
+
+    left: 0;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 32px !important;
+    height: 32px !important;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+    margin: 0;
+
+    z-index: 2;
+}
+/* ========================================
+   ⭐ 알림 카테고리
+======================================== */
+
+.notification-category {
+    display: flex;
+    gap: 6px;
+
+    width: 100%;
+
+    margin-bottom: 12px;
+}
+
+
+/* ⭐ 카테고리 버튼 */
+
+.notification-category-button {
+    flex: 1;
+
+    height: 35px;
+
+    border: 1px solid #dce3ed;
+    border-radius: 8px;
+
+    background: #fff;
+
+    font-family: "Maplestory", sans-serif;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    color: #071a4d;
+
+    cursor: pointer;
+}
+
+
+/* ⭐ 선택된 카테고리 */
+
+.notification-category-button.active {
+    border-color: #009b6b;
+
+    background: #f7fbf9;
+
+    color: #009b6b;
+}
+
+/* ========================================
+   ⭐ 페이지 제목
+======================================== */
+
+.notification-header h2 {
+    margin: 0;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    line-height: 1;
+
+    color: #071a4d;
+
+    text-align: center;
+    white-space: nowrap;
+}
+
+
+/* ========================================
+   ⭐ 모두 읽음
+======================================== */
+
+.notification-read-button {
+    position: absolute;
+
+    right: 0;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    padding: 0;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    font-family: "Maplestory", sans-serif;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    color: #777;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+}
+
+.notification-read-button:hover {
+    color: #071a4d;
+}
+
+
+/* ========================================
+   ⭐ 알림 리스트
+======================================== */
+
+.notification-list {
+    width: 100%;
+}
+
+
+/* ========================================
+   ⭐ 알림 하나
+======================================== */
+
+.notification-item {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    min-height: 66px;
+
+    padding: 10px 2px;
+
+    box-sizing: border-box;
+
+    border: none;
+    border-bottom: 1px solid #eeeeee;
+
+    background: #fff;
+
+    font-family: "Maplestory", sans-serif;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition: background 0.15s ease;
+}
+
+
+/* ========================================
+   ⭐ 안 읽은 알림
+======================================== */
+
+.notification-item.notification-unread {
+    background: #f7fbf9;
+}
+
+
+/* ========================================
+   ⭐ 안 읽은 알림 hover
+======================================== */
+
+.notification-item.notification-unread:hover {
+    background: #f0f8f4;
+}
+
+
+/* ========================================
+   ⭐ 읽은 알림 hover
+======================================== */
+
+.notification-item:not(.notification-unread):hover {
+    background: #fafafa;
+}
+
+
+/* ========================================
+   ⭐ 클릭
+======================================== */
+
+.notification-item:active {
+    background: #f2f5f4;
+}
+
+
+/* ========================================
+   ⭐ 알림 아이콘
+======================================== */
+
+.notification-icon {
+    flex-shrink: 0;
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 11px;
+
+    border-radius: 50%;
+}
+
+
+.notification-icon svg {
+    width: 21px;
+    height: 21px;
+
+    stroke-width: 2.2;
+}
+
+
+/* ========================================
+   ⭐ 참여 투표
+======================================== */
+
+.notification-vote .notification-icon {
+    background: #f0e8ff;
+    color: #8955d9;
+}
+
+
+/* ========================================
+   ⭐ 활동 예정
+======================================== */
+
+.notification-schedule .notification-icon {
+    background: #ffe8e8;
+    color: #ee4b50;
+}
+
+
+/* ========================================
+   ⭐ 가입 신청
+======================================== */
+
+.notification-join .notification-icon {
+    background: #eee8ff;
+    color: #7148d8;
+}
+
+
+/* ========================================
+   ⭐ 팀 매칭
+======================================== */
+
+.notification-matching .notification-icon {
+    background: #edf0f5;
+    color: #344054;
+}
+
+
+/* ========================================
+   ⭐ 새 댓글
+======================================== */
+
+.notification-comment .notification-icon {
+    background: #e5f0ff;
+    color: #3179dc;
+}
+
+
+/* ========================================
+   ⭐ 투표 결과
+======================================== */
+
+.notification-result .notification-icon {
+    background: #e6f0ff;
+    color: #2877dc;
+}
+
+
+/* ========================================
+   ⭐ 서비스 점검
+======================================== */
+
+.notification-notice .notification-icon {
+    background: #edf0f2;
+    color: #626b75;
+}
+
+
+/* ========================================
+   ⭐ 활동 후기
+======================================== */
+
+.notification-review .notification-icon {
+    background: #ffe7ed;
+    color: #ec4d70;
+}
+
+
+/* ========================================
+   ⭐ 알림 내용
+======================================== */
+
+.notification-content {
+    flex: 1;
+    min-width: 0;
+
+    padding-right: 6px;
+}
+
+
+.notification-content h3 {
+    margin: 0 0 4px;
+
+    overflow: hidden;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    line-height: 1.35;
+
+    color: #222;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
+.notification-content p {
+    margin: 0;
+
+    overflow: hidden;
+
+    font-size: 10.5px;
+
+    line-height: 1.4;
+
+    color: #888;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
+/* ========================================
+   ⭐ 오른쪽 영역
+======================================== */
+
+.notification-right {
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 2px;
+}
+
+
+.notification-time {
+    font-size: 9.5px;
+
+    color: #999;
+
+    white-space: nowrap;
+}
+
+
+.notification-arrow {
+    width: 15px;
+    height: 15px;
+
+    color: #aaa;
+}
+
+
+/* ========================================
+   ⭐ 모바일
+======================================== */
+
+@media (max-width: 400px) {
+
+    .notification-page {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+
+    .notification-header {
+        height: 48px;
+        margin-bottom: 8px;
+    }
+
+
+    .notification-header h2 {
+        font-size: 18px;
+    }
+
+
+    .notification-read-button {
+        font-size: 10px;
+    }
+
+
+    .notification-item {
+        min-height: 64px;
+
+        padding: 9px 0;
+    }
+
+
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+
+        margin-right: 10px;
+    }
+
+
+    .notification-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+
+    .notification-content h3 {
+        font-size: 12px;
+    }
+
+
+    .notification-content p {
+        font-size: 10px;
+    }
+
+
+    .notification-time {
+        font-size: 9px;
+    }
+
+
+    .notification-arrow {
+        width: 14px;
+        height: 14px;
+    }
+}

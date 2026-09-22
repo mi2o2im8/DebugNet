@@ -1,5 +1,6 @@
 // 내 정보 메인 페이지
 
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import BackButton from "../../components/BackButton/BackButton";
@@ -8,14 +9,62 @@ import BackButton from "../../components/BackButton/BackButton";
 import settingIcon from "../../assets/img/mypage/setting_icon.png";
 import profileIcon from "../../assets/img/basic_profile_img.png";
 import clubHeartIcon from "../../assets/img/mypage/club_heart.png";
-import favoriteStarIcon from "../../assets/img/mypage/favorite_star.png";
 import writeCommentIcon from "../../assets/img/mypage/write_comment.png";
+
+import BottomNav from "../../components/BottomNav";
 
 import "./Mypage.css";
 
 function Mypage() {
 
     const navigate = useNavigate();
+
+    // ⭐ 내가 가입한 동호회 ID
+    const [myClubId, setMyClubId] = useState(null);
+
+    // ⭐ 내가 가입한 동호회 정보
+    const [myClub, setMyClub] = useState(null);
+
+    // ⭐ 가입한 동호회 조회
+    useEffect(() => {
+
+        const fetchMyClub = async () => {
+
+            try {
+
+                const response = await fetch(
+                    "http://127.0.0.1:8000/api/clubs/my"
+                );
+
+                if (!response.ok) {
+                    throw new Error("내 동호회 조회 실패");
+                }
+
+                const data = await response.json();
+
+                console.log("⭐ 내가 가입한 동호회:", data);
+
+                // ⭐ 백엔드에서 받은 동호회 정보 저장
+                setMyClub(data);
+
+                // ⭐ club_id 저장
+                setMyClubId(data.club_id);
+
+            } catch (error) {
+
+                console.error(
+                    "내 동호회 조회 오류:",
+                    error
+                );
+
+            }
+
+        };
+
+        fetchMyClub();
+
+    }, []);
+
 
     return (
         <>
@@ -31,7 +80,9 @@ function Mypage() {
 
                     <button
                         type="button"
-                        onClick={() => navigate("/mypage/settings")}
+                        onClick={() =>
+                            navigate("/mypage/settings")
+                        }
                     >
                         <img
                             src={settingIcon}
@@ -90,7 +141,9 @@ function Mypage() {
                     {/* ⭐ 전체보기 → 내 동호회 일정 */}
                     <button
                         type="button"
-                        onClick={() => navigate("/myschedule")}
+                        onClick={() =>
+                            navigate("/myschedule")
+                        }
                     >
                         전체보기
                     </button>
@@ -101,12 +154,17 @@ function Mypage() {
                 {/* 내 동호회 */}
                 <div className="club-card">
 
-                    {/* ⭐ 개별 동호회 선택 */}
                     <button
                         type="button"
-                        onClick={() =>
-                            navigate("/club/1")
-                        }
+                        disabled={!myClubId}
+                        onClick={() => {
+
+                            // ⭐ 가입한 동호회가 있을 때만 이동
+                            if (myClubId) {
+                                navigate(`/clubs/${myClubId}`);
+                            }
+
+                        }}
                     >
 
                         <img
@@ -116,10 +174,14 @@ function Mypage() {
 
                         <div className="club-info">
 
-                            <p>우리 동호회</p>
+                            {/* ⭐ DB에서 가져온 동호회 이름 */}
+                            <p>
+                                {myClub?.club_name || "우리 동호회"}
+                            </p>
 
+                            {/* ⭐ DB에서 가져온 종목 */}
                             <span>
-                                축구ㆍ풋살
+                                {myClub?.sport_name || "축구ㆍ풋살"}
                             </span>
 
                         </div>
@@ -160,7 +222,9 @@ function Mypage() {
                         type="button"
                         className="activity-item"
                         onClick={() =>
-                            navigate("/mypage/activity/posts")
+                            navigate(
+                                "/mypage/activity/posts"
+                            )
                         }
                     >
                         <img
@@ -179,7 +243,9 @@ function Mypage() {
                         type="button"
                         className="activity-item"
                         onClick={() =>
-                            navigate("/mypage/activity/clubs")
+                            navigate(
+                                "/mypage/activity/clubs"
+                            )
                         }
                     >
                         <img
@@ -200,10 +266,11 @@ function Mypage() {
 
                     <h3>신뢰점수</h3>
 
+                    {/* ⭐ 자세히 → 신뢰점수 페이지 */}
                     <button
                         type="button"
                         onClick={() =>
-                            navigate("/mypage/trust-score")
+                            navigate("/trustscore")
                         }
                     >
                         자세히
@@ -219,7 +286,7 @@ function Mypage() {
                         type="button"
                         className="trust-score-card"
                         onClick={() =>
-                            navigate("/mypage/trust-score")
+                            navigate("/trustscore")
                         }
                     >
 
@@ -242,6 +309,10 @@ function Mypage() {
                     </button>
 
                 </div>
+
+
+                {/* ⭐ 공통 하단 네비게이션 */}
+                <BottomNav />
 
             </div>
         </>

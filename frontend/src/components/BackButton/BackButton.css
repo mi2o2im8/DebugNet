@@ -12,9 +12,11 @@
 
     width: 100%;
     max-width: 400px;
-    height: 80px;
+    height: 60px;
 
     padding: 0 15px;
+
+    box-sizing: border-box;
 
     display: flex;
     align-items: center;
@@ -26,8 +28,20 @@
     cursor: pointer;
 
     z-index: 1001;
+}
 
-    box-sizing: border-box;
+/* ========================================
+   ⭐ 다크모드
+   ======================================== */
+
+.dark-mode .Back-btn {
+    background-color: #12161c;
+}
+
+.dark-mode .Back-btn img {
+    filter:
+        brightness(0)
+        invert(1);
 }
 
 
@@ -36,8 +50,8 @@
    ======================================== */
 
 .Back-btn img {
-    width: 35px;
-    height: 35px;
+    width: 30px;
+    height: 30px;
 
     margin-top: 10px;
 
@@ -75,21 +89,27 @@
 @media (max-width: 500px) {
 
     .Back-btn {
+        top: 0;
         left: 0;
 
         transform: none;
 
         width: 100%;
-        max-width: 390px;
+        max-width: none;
 
-        height: 70px;
+        height: 60px;
 
-        padding: 0;
+        padding: 0 20px;
+
+        box-sizing: border-box;
     }
 
     .Back-btn img {
-        margin-left: 20px;
-        margin-top: 10px;
+        width: 30px;
+        height: 30px;
+
+        margin-left: 0;
+        margin-top: -12px;
     }
 
     .Back-btn:active {

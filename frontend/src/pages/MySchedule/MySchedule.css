@@ -8,11 +8,13 @@
     min-height: 100vh;
 
     margin: 0 auto;
-    padding: 0 22px 40px;
+    padding: 10px 20px 40px;
 
     box-sizing: border-box;
 
     background: #ffffff;
+
+    font-family: "Maplestory", sans-serif;
 }
 
 
@@ -24,27 +26,37 @@
     position: relative;
 
     width: 100%;
-    height: 55px;
+    height: 60px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    z-index: 10;
+    z-index: 100;
 }
 
 
-/* ⭐ 동호회 이름 */
+/* ========================================
+   ⭐ 동호회 이름
+   ======================================== */
 
 .MySchedule-title {
+    position: relative;
+
+    display: block;
+
     margin: 0;
 
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
 
-    color: #111111;
+    line-height: 1.3;
 
-    z-index: 20;
+    color: #222;
+
+    white-space: nowrap;
+
+    z-index: 999;
 }
 
 
@@ -52,19 +64,22 @@
    ⭐ 뒤로가기
    ======================================== */
 
-.MySchedule-back {
-    position: absolute;
+.MySchedule-back-btn {
+    position: absolute !important;
 
-    left: -7px;
-    top: 0;
+    left: 0 !important;
+    top: 50% !important;
 
-    width: 42px;
-    height: 55px;
+    width: 38px !important;
+    height: 38px !important;
 
-    display: flex;
-    align-items: center;
+    transform: translateY(-50%) !important;
 
-    z-index: 30;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    z-index: 1000 !important;
 }
 
 
@@ -75,42 +90,55 @@
 .MySchedule-header-right {
     position: absolute;
 
-    right: -3px;
+    right: 0;
     top: 0;
 
-    height: 55px;
+    height: 60px;
 
     display: flex;
     align-items: center;
 
-    gap: 2px;
+    gap: 4px;
 
-    z-index: 30;
+    z-index: 1000;
 }
 
 
 .MySchedule-header-btn {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
 
     padding: 0;
 
     border: none;
-    background: transparent;
+    border-radius: 10px;
+
+    background-color: #ffffff;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    color: #0b3b77;
+    color: #555;
 
     cursor: pointer;
+
+    font-family: "Maplestory", sans-serif;
+
+    transition: transform 0.1s ease,
+                background-color 0.1s ease;
 }
 
 
 .MySchedule-header-btn svg {
-    width: 17px;
-    height: 17px;
+    width: 22px;
+    height: 22px;
+}
+
+
+.MySchedule-header-btn:active {
+    transform: scale(0.96);
+    background-color: #E8F6F2;
 }
 
 
@@ -121,15 +149,20 @@
 .MySchedule-calendar {
     width: 100%;
 
-    margin-top: 17px;
-    padding: 17px 14px 14px;
+    margin-top: 20px;
+
+    padding: 18px 15px 16px;
 
     box-sizing: border-box;
 
-    border: 1px solid #eeeeee;
-    border-radius: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
 
-    background: #ffffff;
+    background-color: #fff;
+
+    position: relative;
+
+    z-index: 1;
 }
 
 
@@ -139,7 +172,7 @@
 
 .MySchedule-calendar-header {
     width: 100%;
-    height: 30px;
+    height: 40px;
 
     display: flex;
     align-items: center;
@@ -150,35 +183,47 @@
 
 
 .MySchedule-calendar-header strong {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
 
-    color: #111111;
+    color: #222;
 }
 
 
 .MySchedule-calendar-header button {
-    width: 28px;
-    height: 28px;
+    width: 40px;
+    height: 40px;
 
     padding: 0;
 
     border: none;
-    background: transparent;
+    border-radius: 10px;
+
+    background-color: #fff;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    color: #555555;
+    color: #555;
 
     cursor: pointer;
+
+    transition: transform 0.1s ease,
+                background-color 0.1s ease;
 }
 
 
 .MySchedule-calendar-header button svg {
-    width: 17px;
-    height: 17px;
+    width: 21px;
+    height: 21px;
+}
+
+
+.MySchedule-calendar-header button:active {
+    transform: scale(0.96);
+
+    background-color: #E8F6F2;
 }
 
 
@@ -191,21 +236,21 @@
 
     grid-template-columns: repeat(7, 1fr);
 
-    margin-bottom: 3px;
+    margin-bottom: 5px;
 }
 
 
 .MySchedule-weekdays span {
-    height: 27px;
+    height: 32px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 600;
 
-    color: #777777;
+    color: #777;
 }
 
 
@@ -228,13 +273,13 @@
 
     grid-template-columns: repeat(7, 1fr);
 
-    row-gap: 2px;
+    row-gap: 4px;
 }
 
 
 .MySchedule-empty-day {
     width: 100%;
-    height: 43px;
+    height: 48px;
 }
 
 
@@ -244,12 +289,14 @@
 
 .MySchedule-day {
     width: 100%;
-    height: 43px;
+    height: 48px;
 
     padding: 4px 0 0;
 
     border: none;
     outline: none;
+
+    border-radius: 10px;
 
     background: transparent;
 
@@ -260,12 +307,14 @@
     box-sizing: border-box;
 
     cursor: pointer;
+
+    font-family: "Maplestory", sans-serif;
 }
 
 
 .MySchedule-day > span {
-    width: 27px;
-    height: 27px;
+    width: 32px;
+    height: 32px;
 
     display: flex;
     align-items: center;
@@ -273,16 +322,18 @@
 
     border-radius: 50%;
 
-    font-size: 11px;
+    font-size: 14px;
 
-    color: #333333;
+    color: #333;
 }
 
 
-/* ⭐ 선택된 날짜 */
+/* ========================================
+   ⭐ 선택된 날짜
+   ======================================== */
 
 .MySchedule-day.selected > span {
-    background: #01A17F;
+    background-color: #01A17F;
 
     color: #ffffff;
 
@@ -290,15 +341,17 @@
 }
 
 
-/* ⭐ hover */
+/* ========================================
+   ⭐ hover
+   ======================================== */
 
 .MySchedule-day:hover > span {
-    background: #edf8f4;
+    background-color: #E8F6F2;
 }
 
 
 .MySchedule-day.selected:hover > span {
-    background: #01A17F;
+    background-color: #01A17F;
 }
 
 
@@ -307,21 +360,21 @@
    ======================================== */
 
 .MySchedule-dots {
-    height: 7px;
+    height: 8px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    gap: 3px;
+    gap: 4px;
 
     margin-top: 1px;
 }
 
 
 .MySchedule-dots i {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
 
     display: block;
 
@@ -330,14 +383,13 @@
 
 
 .MySchedule-dots .mine {
-    background: #01A17F;
+    background-color: #01A17F;
 }
 
 
 .MySchedule-dots .team {
-    background: #5B83C7;
+    background-color: #5B83C7;
 }
-
 
 
 /* ========================================
@@ -347,56 +399,60 @@
 .schedule-list {
     width: 100%;
 
-    margin-top: 18px;
+    margin-top: 20px;
 
     display: flex;
     flex-direction: column;
 
-    gap: 9px;
+    gap: 10px;
 }
 
 
 .schedule-item {
     width: 100%;
-    min-height: 70px;
+    min-height: 76px;
 
-    padding: 11px 12px;
+    padding: 12px 14px;
 
     box-sizing: border-box;
 
     display: flex;
     align-items: center;
 
-    border: 1px solid #e5eee9;
-    border-radius: 12px;
+    border: 1px solid #CDEBE4;
+    border-radius: 10px;
 
-    background: #f8fbfa;
+    background-color: #F4FBF9;
 }
 
 
-/* 시간 */
+/* ========================================
+   ⭐ 시간
+   ======================================== */
 
 .schedule-time {
-    width: 45px;
+    width: 58px;
 
     flex-shrink: 0;
 
     display: flex;
     flex-direction: column;
 
-    gap: 2px;
+    gap: 3px;
 }
 
 
 .schedule-time span {
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 600;
 
     color: #01A17F;
 }
 
 
-/* 일정 정보 */
+/* ========================================
+   ⭐ 일정 정보
+   ======================================== */
 
 .schedule-info {
     min-width: 0;
@@ -406,26 +462,26 @@
     display: flex;
     flex-direction: column;
 
-    gap: 4px;
+    gap: 5px;
 }
 
 
 .schedule-info h4 {
     margin: 0;
 
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 700;
 
-    color: #222222;
+    color: #333;
 }
 
 
 .schedule-info p {
     margin: 0;
 
-    font-size: 9px;
+    font-size: 12px;
 
-    color: #888888;
+    color: #888;
 
     white-space: nowrap;
     overflow: hidden;
@@ -433,26 +489,44 @@
 }
 
 
-/* 참여 상태 */
+/* ========================================
+   ⭐ 참여 상태
+   ======================================== */
 
 .schedule-status {
     flex-shrink: 0;
 
     margin-left: 8px;
 
-    padding: 6px 8px;
+    min-height: 40px;
 
-    border: none;
-    border-radius: 6px;
+    padding: 0 12px;
 
-    background: #e4f4ef;
+    border: 1px solid #CDEBE4;
+    border-radius: 10px;
+
+    background-color: #E8F6F2;
 
     color: #01A17F;
 
-    font-size: 9px;
+    font-family: "Maplestory", sans-serif;
+
+    font-size: 13px;
     font-weight: 600;
 
     white-space: nowrap;
+
+    cursor: pointer;
+
+    transition: transform 0.1s ease,
+                background-color 0.1s ease;
+}
+
+
+.schedule-status:active {
+    transform: scale(0.97);
+
+    background-color: #E0F3EE;
 }
 
 
@@ -461,24 +535,25 @@
    ======================================== */
 
 .MySchedule-detail {
-    margin-top: 18px;
+    margin-top: 20px;
 }
 
 
 .MySchedule-detail-title {
-    margin-bottom: 10px;
+    margin: 0 0 10px;
 
     text-align: center;
 
-    font-size: 13px;
+    font-size: 15px;
+    font-weight: 600;
 
-    color: #111111;
+    color: #333;
 }
 
 
 .MySchedule-event {
     width: 100%;
-    min-height: 62px;
+    min-height: 70px;
 
     padding: 12px 14px;
 
@@ -487,27 +562,27 @@
     display: flex;
     align-items: center;
 
-    border: 1px solid #e4eee9;
-    border-radius: 12px;
+    border: 1px solid #CDEBE4;
+    border-radius: 10px;
 
-    background: #f7faf9;
+    background-color: #F4FBF9;
 }
 
 
 .MySchedule-event-time {
-    width: 48px;
+    width: 58px;
 
     flex-shrink: 0;
 
     display: flex;
     flex-direction: column;
 
-    gap: 2px;
+    gap: 3px;
 }
 
 
 .MySchedule-event-time span {
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 700;
 
     color: #01A17F;
@@ -518,21 +593,21 @@
     display: flex;
     flex-direction: column;
 
-    gap: 4px;
+    gap: 5px;
 }
 
 
 .MySchedule-event-info strong {
-    font-size: 12px;
+    font-size: 15px;
 
-    color: #222222;
+    color: #333;
 }
 
 
 .MySchedule-event-info span {
-    font-size: 10px;
+    font-size: 12px;
 
-    color: #888888;
+    color: #888;
 }
 
 
@@ -544,187 +619,57 @@
     width: 100%;
 
     margin: 0;
-    padding: 19px 10px;
+
+    padding: 20px 10px;
 
     box-sizing: border-box;
 
-    border-radius: 12px;
+    border-radius: 10px;
 
-    background: #fafafa;
+    background-color: #F4FBF9;
 
     text-align: center;
 
-    font-size: 10px;
+    font-size: 13px;
     line-height: 1.6;
 
-    color: #999999;
+    color: #888;
 }
 
-/* ========================================
-   ⭐ 매칭 현황
-   ======================================== */
+/* ⭐ 활동 종료 리뷰 화면 보기 */
+.Review-btn {
+    display: block;
 
-.Matching-status {
     width: 100%;
-    margin-top: 18px;
-}
+    height: 60px;
 
-
-/* 제목 */
-
-.Matching-status h3 {
-    margin: 0 0 10px;
-
-    font-size: 14px;
-    font-weight: 700;
-
-    color: #111111;
-}
-
-
-/* 카드 가로 배치 */
-
-.Matching-card-list {
-    display: flex;
-
-    gap: 8px;
-
-    overflow-x: auto;
-
-    scrollbar-width: none;
-}
-
-.Matching-card-list::-webkit-scrollbar {
-    display: none;
-}
-
-
-/* 카드 */
-
-.Matching-card {
-    flex: 0 0 112px;
-
-    height: 64px;
+    margin: 30px 0 0;
+    padding: 0 15px;
 
     box-sizing: border-box;
 
-    border: 1px solid #dfe7ed;
+    border: none;
     border-radius: 10px;
 
-    background: #ffffff;
+    background-color: #01A17F;
+    color: #ffffff;
 
-    display: flex;
-    flex-direction: column;
-
-    align-items: center;
-    justify-content: center;
-
-    gap: 5px;
-}
-
-
-/* 숫자 */
-
-.Matching-card strong {
-    font-size: 18px;
+    font-family: "Maplestory", sans-serif;
+    font-size: 20px;
     font-weight: 700;
-
-    line-height: 1;
-
-    color: #111111;
-}
-
-
-/* 설명 */
-
-.Matching-card span {
-    font-size: 9px;
-
-    color: #777777;
-}
-
-.RecentNews {
-    margin-top: 20px;
-}
-
-.RecentNews-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    margin-bottom: 10px;
-}
-
-.RecentNews-header h3 {
-    margin: 0;
-
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.RecentNews-header button {
-    padding: 0;
-
-    border: none;
-    background: none;
-
-    font-size: 10px;
-    color: #777;
+    line-height: 1.3;
 
     cursor: pointer;
+
+    transition:
+        background-color 0.15s ease,
+        transform 0.1s ease;
 }
 
-
-.RecentNews-list {
-    padding: 0 14px;
-
-    border: 1px solid #e1e7eb;
-    border-radius: 12px;
-
-    background: #fff;
+.Review-btn:active {
+    transform: scale(0.98);
+    background-color: #008F72;
 }
-
-
-.RecentNews-item {
-    min-height: 47px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    border-bottom: 1px solid #eeeeee;
-}
-
-.RecentNews-item:last-child {
-    border-bottom: none;
-}
-
-
-.RecentNews-item h4 {
-    margin: 0;
-
-    font-size: 11px;
-    font-weight: 600;
-
-    color: #111;
-
-    /* 제목이 길어져도 한 줄 */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-
-.RecentNews-item p {
-    margin: 0 0 0 10px;
-
-    flex-shrink: 0;
-
-    font-size: 9px;
-
-    color: #777;
-}
-
 
 /* ========================================
    ⭐ 모바일
@@ -733,13 +678,51 @@
 @media (max-width: 400px) {
 
     .MySchedule-page {
-        padding-left: 20px;
-        padding-right: 20px;
+        padding: 10px 20px 40px;
     }
 
+
     .MySchedule-calendar {
-        padding-left: 11px;
-        padding-right: 11px;
+        padding-left: 12px;
+        padding-right: 12px;
+
+        margin-top: 25px;
+    }
+
+
+    .MySchedule-title {
+        font-size: 18px;
+    }
+
+
+    .MySchedule-header-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+
+    .MySchedule-header-btn svg {
+        width: 21px;
+        height: 21px;
+    }
+
+
+    .schedule-info h4 {
+        font-size: 14px;
+    }
+
+
+    .schedule-info p {
+        font-size: 12px;
+    }
+
+
+    .schedule-status {
+        min-height: 40px;
+
+        padding: 0 10px;
+
+        font-size: 12px;
     }
 
 }
