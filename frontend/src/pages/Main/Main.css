@@ -1,5 +1,5 @@
 /* ========================================
-   ⭐ 베이직 홈
+   ⭐ 가입 전 홈
 ======================================== */
 
 /* ========================================
@@ -62,7 +62,7 @@
 .welcome-text h3 {
     margin: 0 0 5px;
 
-    font-size: 17px;
+    font-size: 19px;
     font-weight: 700;
 
     color: #222;
@@ -71,14 +71,14 @@
 .welcome-text p {
     margin: 0;
 
-    font-size: 11px;
+    font-size: 13px;
     color: #777;
 
     line-height: 1.5;
 }
 
 
-/* ⭐ 알림 / 채팅 아이콘 */
+/* ⭐ 알림 / 프로필 아이콘 */
 
 .welcome-actions {
     display: flex;
@@ -89,13 +89,81 @@
     padding-top: 2px;
 }
 
-.welcome-actions img {
+/* ⭐ 알림 / 프로필 링크 위치 고정 */
+.welcome-icon {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+
+    flex-shrink: 0;
+
+    text-decoration: none;
+}
+
+/* ⭐ 기본 알림 아이콘 */
+.notification-icon-svg {
     width: 22px;
     height: 22px;
+
+    color: #333;
+
+    stroke-width: 2;
+
+    flex-shrink: 0;
+
+    cursor: pointer;
+}
+
+/* ⭐ 알림 / 프로필 아이콘 */
+.welcome-actions img {
+    display: block;
+
+    width: 30px;
+    height: 30px;
 
     object-fit: contain;
 
     cursor: pointer;
+}
+
+/* ⭐ 안 읽은 알림 숫자 배지 */
+.notification-badge {
+    position: absolute;
+
+    top: -4px;
+    right: -5px;
+
+    z-index: 10;
+
+    min-width: 15px;
+    height: 15px;
+
+    padding: 0 4px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    border-radius: 999px;
+
+    background-color: #FF4D4D;
+    color: #fff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+
+    line-height: 1;
+    white-space: nowrap;
+
+    pointer-events: none;
 }
 
 
@@ -157,7 +225,7 @@
 .club-card-content h4 {
     margin: 0 0 6px;
 
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
 
     color: #333;
@@ -175,7 +243,7 @@
 .club-card-description p {
     margin: 0;
 
-    font-size: 9px;
+    font-size: 11px;
     color: #777;
 
     line-height: 1.5;
@@ -195,7 +263,7 @@
     color: #01A17F;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 600;
 
     cursor: pointer;
@@ -218,6 +286,7 @@
 
     color: inherit;
 }
+
 
 /* ========================================
    ⭐ 이번 주 일정
@@ -268,7 +337,7 @@
 .schedule-title h3 {
     margin: 0;
 
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
 
     color: #333;
@@ -287,7 +356,7 @@
 .schedule-more p {
     margin: 0;
 
-    font-size: 9px;
+    font-size: 11px;
     color: #777;
 }
 
@@ -296,6 +365,7 @@
     height: 12px;
 
     object-fit: contain;
+    transform: rotate(180deg);
 }
 
 
@@ -336,7 +406,7 @@
 .schedule-info h4 {
     margin: 0 0 5px;
 
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
 
     color: #333;
@@ -349,7 +419,7 @@
 .schedule-description p {
     margin: 0;
 
-    font-size: 9px;
+    font-size: 11px;
     color: #888;
 
     line-height: 1.5;
@@ -370,7 +440,7 @@
     color: #01A17F;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 600;
 
     cursor: pointer;
@@ -398,13 +468,13 @@
 /* ⭐ 팝업 문구 */
 
 .guest-header {
-    margin-bottom: 5px;
+    display: none;
 }
 
 .guest-header p {
     margin: 0;
 
-    font-size: 8px;
+    font-size: 10px;
     color: #aaa;
 }
 
@@ -441,7 +511,7 @@
 .guest-content h3 {
     margin: 0;
 
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
 
     color: #333;
@@ -466,7 +536,7 @@
 .guest-more p {
     margin: 0;
 
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .guest-more img {
@@ -507,9 +577,13 @@
 .guest-item-image-link {
     display: block;
 
+    position: relative;
+
     width: 100%;
 
     text-decoration: none;
+
+    overflow: hidden;
 }
 
 
@@ -536,7 +610,7 @@
 
     margin-top: 5px;
 
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 600;
 
     line-height: 1.3;
@@ -586,7 +660,7 @@
 .recommendation-header h3 {
     margin: 0;
 
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
 }
 
@@ -612,11 +686,13 @@
 /* ⭐ 팝업 문구 */
 
 .recommendation-item p:first-child {
+    display: none;
+
     height: 10px;
 
     margin: 0 0 3px;
 
-    font-size: 7px;
+    font-size: 9px;
     color: #01A17F;
 
     line-height: 1;
@@ -628,9 +704,13 @@
 .recommendation-image-link {
     display: block;
 
+    position: relative;
+
     width: 100%;
 
     text-decoration: none;
+
+    overflow: hidden;
 }
 
 
@@ -659,7 +739,7 @@
 
     margin: 0;
 
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 600;
 
     color: #333;
@@ -676,6 +756,46 @@
 
 .recommendation-title:hover {
     color: #01A17F;
+}
+
+
+/* ⭐ 이미지 위 팝업 문구 */
+
+.image-popup {
+    position: absolute;
+
+    top: 5px;
+    left: 5px;
+
+    z-index: 2;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 3px 6px;
+
+    border-radius: 5px;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 8px;
+    font-weight: 600;
+
+    line-height: 1;
+
+    color: #fff;
+
+    white-space: nowrap;
+
+    box-sizing: border-box;
+}
+
+.popup-green {
+    background-color: #01A17F;
+}
+
+.popup-blue {
+    background-color: #4A9FD8;
 }
 
 
@@ -744,11 +864,11 @@
     }
 
     .club-card-content h4 {
-        font-size: 10px;
+        font-size: 12px;
     }
 
     .club-card-description p {
-        font-size: 8px;
+        font-size: 10px;
     }
 
     .schedule-content {
