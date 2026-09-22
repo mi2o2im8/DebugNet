@@ -29,10 +29,12 @@ import ClubEventAttendance from "./pages/ClubEvents/ClubEventAttendance";
 import Main from "./pages/Main/Main";
 import MainHome from "./pages/MainHome/MainHome"; 
 
-// 동호회 페이지
+// 동호회
 import ClubCreate from './pages/ClubCreate/ClubCreate';
 import AllClub from "./pages/AllClub/AllClub";
 import ClubRecruit from "./pages/ClubRecruit/ClubRecruit";
+import GuestRecruit from "./pages/GuestRecruit/GuestRecruit";
+import ClubUserDashboard from "./pages/ClubUserDashboard/ClubUserDashboard";
 
 import Community from "./pages/Community/Community";
 import PostDetail from './pages/Community/PostDetail';
@@ -98,6 +100,7 @@ function App() {
           <Route path='/' element={<Home/>}/>
 
           {/* 로그인 페이지 */}
+
           <Route path='/Login' element={<Login/>}/>
 
           {/* 동호회 가입 전 메인 페이지 */}
@@ -164,42 +167,23 @@ function App() {
               ⭐ 동호회 찾기
           ===================================================== */}
 
+
           {/* 동호회 찾기 홈 화면 페이지 */}
-          <Route
-            path='/clubs'
-            element={<ClubHome />}
-          />
-
+          <Route path='/clubs' element={<ClubHome />} />
           {/* 전체 동호회 페이지 */}
-          <Route
-            path="/clubs/all"
-            element={<AllClub />}
-          />
-
+          <Route path="/clubs/all" element={<AllClub />} />
           {/* 회원 모집 중 페이지 */}
-          <Route
-            path="/clubs/recruit"
-            element={<ClubRecruit />}
-          />
-
+          <Route path="/clubs/recruit" element={<ClubRecruit />} />
+          {/* 게스트 모집 중 페이지 */}
+          <Route path="/guest-recruit" element={<GuestRecruit />} />
           {/* 동호회 상세 페이지 */}
-          <Route
-            path="/clubs/:clubId"
-            element={<ClubDetail />}
-          />
-
+          <Route path="/clubs/:clubId" element={<ClubDetail />} />
+          {/* 동호회 이용자용 대시보드 */}
+          <Route path="/clubs/:clubId/home" element={<ClubUserDashboard />} />
           {/* 동호회 가입 페이지 */}
-          <Route
-            path="/clubs/:clubId/application"
-            element={<ClubApplication />}
-          />
-
+          <Route path="/clubs/:clubId/application" element={<ClubApplication />}/>
           {/* 동호회 참석 응답 */}
-          <Route
-            path="/clubs/:clubId/events/:eventId/attendance"
-            element={<ClubEventAttendance />}
-          />
-
+          <Route path="/clubs/:clubId/events/:eventId/attendance" element={<ClubEventAttendance />}/>
           {/* 동호회 만들기 페이지 */}
           <Route
             path="/clubs/create"
@@ -238,7 +222,6 @@ function App() {
           <Route element={<ClubManageLayout />}>
 
             {/* 이후 아래 위치에 동호회 운영 기능 관련 화면들을 추가 */}
-
             <Route
               path="/clubs/:clubId/manage"
               element={<ClubDashboard />}
@@ -268,43 +251,7 @@ function App() {
               path="/clubs/:clubId/manage/events/:eventId/participants"
               element={<ClubEventParticipants />}
             />
-
-            <Route
-
-              path="/clubs/:clubId/manage/members/:clubMemberId"
-              element={<ClubMemberDetail />}
-            />
-
-            <Route
-              path="/clubs/:clubId/matches"
-              element={<MatchManagement />}
-            />
-
-            <Route
-              path="/clubs/:clubId/matches/list"
-              element={<MatchManagementList />}
-            />
-
-            <Route
-              path="/clubs/:clubId/matches/:clubMatchId"
-              element={<MatchManagementDetail />}
-            />
-
-            <Route
-              path="/clubs/:clubId/matches/:clubMatchId/record"
-              element={<MatchRecordWrite />}
-            />
-
-            <Route
-              path="/clubs/:clubId/matches/:clubMatchId/review"
-              element={<MatchReviewWrite />}
-            />
-
-            <Route
-              path="/clubs/:clubId/matches/:clubMatchId/review-detail"
-              element={<MatchReviewDetail />}
-            />
-                          
+              
 
 
 
@@ -342,74 +289,35 @@ function App() {
               element={<MatchTeamList />}
             />
 
-            {/* 경기 등록 여부와 관계없이 상대팀 검색 */}
-            <Route
-              path="/matches/teams"
-              element={<MatchTeamList />}
-            />
-
             {/* 상대팀 경기 가능일 상세 */}
             <Route
               path="/matches/team/:availabilityId"
               element={<MatchTeamDetail />}
             />
 
+          {/* 경기 등록 여부와 관계없이 상대팀 검색 */}
+          <Route path="/matches/teams" element={<MatchTeamList />} />
+
+          {/* 상대팀 경기 가능일 상세 */}
+          <Route path="/matches/team/:availabilityId" element={<MatchTeamDetail />} />
+          
+              
           </Route>
 
-
-          {/* =====================================================
-              ⭐ 내 정보
-          ===================================================== */}
-
           {/* 내 정보 */}
-          <Route
-            path="/mypage"
-            element={<Mypage />}
-          />
-
+          <Route path="/mypage" element={<Mypage />} />
+          {/* 설정 페이지 */}
+          <Route path="/mypage/settings" element={<Settings />} />
+          {/* 내 동호회 전체보기 페이지 */}
+          <Route path="/myschedule" element={<MySchedule />} />
+          {/* 내 활동 */}
+          <Route path="/myactivity" element={<MyActivity />} />
+          {/* 내 활동 */}
+          <Route path="/trustscore" element={<TrustScore />} />
           {/* 내 정보 수정 */}
           <Route
             path="/myinfoedit"
             element={<MyInfoEdit />}
-          />
-
-          {/* 설정 페이지 */}
-          <Route
-            path="/mypage/settings"
-            element={<Settings />}
-          />
-
-
-          {/* =====================================================
-              ⭐ 내 동호회 일정 전체보기
-          ===================================================== */}
-
-          {/* 기존 주소 */}
-          <Route
-            path="/myschedule"
-            element={<MySchedule />}
-          />
-
-          {/* ⭐ Main의 '전체 일정 보기' 버튼용 */}
-          <Route
-            path="/schedule"
-            element={<MySchedule />}
-          />
-
-
-          {/* =====================================================
-              ⭐ 내 활동
-          ===================================================== */}
-
-          <Route
-            path="/myactivity"
-            element={<MyActivity />}
-          />
-
-          {/* 신뢰점수 */}
-          <Route
-            path="/trustscore"
-            element={<TrustScore />}
           />
 
           {/* 내가 쓴 글/댓글 목록 */}
@@ -424,25 +332,15 @@ function App() {
             element={<FavoriteClub />}
           />
 
-
-          {/* =====================================================
-              ⭐ 알림
-          ===================================================== */}
-
-          <Route
-            path="/notification"
-            element={<Notification />}
-          />
-
-
-          {/* =====================================================
-              ⭐ 챗봇
-          ===================================================== */}
-
+          {/* 챗봇 */}
           <Route
             path="/chatbot"
             element={<Chatbot />}
           />
+                    {/* 알림 */}
+          <Route path="/notification" element={<Notification />} />
+
+          
 
         </Routes>
       </SignupProvider>

@@ -195,6 +195,14 @@ export async function getClubDashboard(clubId) {
     );
 }
 
+// 이용자용 동호회 대시보드 조회
+export async function getClubUserDashboard(clubId) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/user-dashboard`,
+        { method: "GET" }
+    );
+}
+
 export async function getClubEvents(clubId) {
     return authenticatedRequest(
         `/api/clubs/${clubId}/events`,

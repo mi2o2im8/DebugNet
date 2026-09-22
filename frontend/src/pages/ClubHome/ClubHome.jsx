@@ -377,7 +377,18 @@ function ClubHome() {
 
         <div className="ClubHome-section-header">
 
+<<<<<<< HEAD
           <h2>
+=======
+          <h2
+            onClick={() => {
+              if (!isSearchResult) {
+                navigate("/clubs/recruit");
+              }
+            }}
+            style={{ cursor: isSearchResult ? "default" : "pointer" }}
+          >
+>>>>>>> 16a8b1b (feat: 이용자용 동호회 대시보드 추가)
             {isSearchResult ? "검색 결과" : "회원 모집중"}
           </h2>
 
@@ -468,7 +479,16 @@ function ClubHome() {
         <section className="ClubHome-guest">
 
           <div className="ClubHome-section-header">
+<<<<<<< HEAD
             <h2>게스트 모집중</h2>
+=======
+            <h2
+              onClick={() => navigate("/guest-recruit")}
+              style={{ cursor: "pointer" }}
+            >
+              게스트 모집중
+            </h2>
+>>>>>>> 16a8b1b (feat: 이용자용 동호회 대시보드 추가)
           </div>
 
           <div className="Guest-list">
@@ -496,7 +516,11 @@ function ClubHome() {
             {guestList.length > 6 && (
               <button
                 className="ClubHome-guest-more"
+<<<<<<< HEAD
                 onClick={() => navigate("/clubs/guest-recruit")}
+=======
+                onClick={() => navigate("/guest-recruit")}
+>>>>>>> 16a8b1b (feat: 이용자용 동호회 대시보드 추가)
               >
                 더보기 →
               </button>
