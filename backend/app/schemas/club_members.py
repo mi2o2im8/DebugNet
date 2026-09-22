@@ -89,3 +89,45 @@ class ClubApplicationDecisionResponse(BaseModel):
     ] | None = None
 
     message: str
+
+# ---------------------------------------------------------
+# 현재 동호회 회원
+# ---------------------------------------------------------
+class ClubMemberListItemResponse(BaseModel):
+    club_member_id: int
+    club_id: int
+    user_id: str
+
+    name: str
+    nickname: str
+    profile_image: str | None = None
+
+    role: Literal[
+        "owner",
+        "manager",
+        "member",
+    ]
+
+    status: Literal[
+        "active",
+        "inactive",
+        "suspended",
+    ]
+
+    join_source: str | None = None
+
+
+# ---------------------------------------------------------
+# 현재 동호회 회원 목록
+# ---------------------------------------------------------
+class ClubMemberListResponse(BaseModel):
+    members: list[
+        ClubMemberListItemResponse
+    ] = Field(
+        default_factory=list
+    )
+
+    total: int
+    active_count: int
+    inactive_count: int
+    suspended_count: int

@@ -11,6 +11,8 @@ from app.schemas.club_members import (
     ClubApplicationDecisionResponse,
     ClubApplicationListItemResponse,
     ClubApplicationListResponse,
+    ClubMemberListItemResponse,
+    ClubMemberListResponse,
 )
 
 
@@ -73,6 +75,106 @@ class ClubMemberService:
             )
 
         return club
+
+    # -----------------------------------------------------
+    # 현재 동호회 회원 목록 조회
+    # -----------------------------------------------------
+    def get_members(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> ClubMemberListResponse:
+
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        member_rows = (
+            self.member_repository
+            .find_members(club_id)
+        )
+
+        if not member_rows:
+            return ClubMemberListResponse(
+                members=[],
+                total=0,
+                active_count=0,
+                inactive_count=0,
+                suspended_count=0,
+            )
+
+        member_user_ids = list(
+            {
+                str(row["user_id"])
+                for row in member_rows
+            }
+        )
+
+        user_rows = (
+            self.member_repository
+            .find_users(member_user_ids)
+        )
+
+        user_map = {
+            str(row["user_id"]): row
+            for row in user_rows
+        }
+
+        members = []
+
+        for member_row in member_rows:
+            member_user_id = str(
+                member_row["user_id"]
+            )
+
+            user = user_map.get(
+                member_user_id,
+                {},
+            )
+
+            members.append(
+                ClubMemberListItemResponse(
+                    club_member_id=int(
+                        member_row["club_member_id"]
+                    ),
+                    club_id=club_id,
+                    user_id=member_user_id,
+                    name=(
+                        user.get("name")
+                        or "이름 없음"
+                    ),
+                    nickname=(
+                        user.get("nickname")
+                        or "닉네임 없음"
+                    ),
+                    profile_image=user.get(
+                        "profile_image"
+                    ),
+                    role=member_row["role"],
+                    status=member_row["status"],
+                    join_source=member_row.get(
+                        "join_source"
+                    ),
+                )
+            )
+
+        return ClubMemberListResponse(
+            members=members,
+            total=len(members),
+            active_count=sum(
+                member.status == "active"
+                for member in members
+            ),
+            inactive_count=sum(
+                member.status == "inactive"
+                for member in members
+            ),
+            suspended_count=sum(
+                member.status == "suspended"
+                for member in members
+            ),
+        )
 
     # -----------------------------------------------------
     # 가입 신청자 목록 조회

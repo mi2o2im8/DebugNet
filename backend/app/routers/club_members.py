@@ -15,6 +15,7 @@ from app.schemas.club_members import (
     ClubApplicationDecisionRequest,
     ClubApplicationDecisionResponse,
     ClubApplicationListResponse,
+    ClubMemberListResponse,
 )
 from app.services.club_member_service import (
     ApplicationConflictError,
@@ -23,9 +24,63 @@ from app.services.club_member_service import (
 
 
 router = APIRouter(
-    prefix="/api/clubs/{club_id}/applications",
+    prefix="/api/clubs/{club_id}",
     tags=["Club Members"],
 )
+
+
+# ---------------------------------------------------------
+# 현재 동호회 회원 목록 조회
+#
+# GET /api/clubs/{club_id}/members
+# ---------------------------------------------------------
+@router.get(
+    "/members",
+    response_model=ClubMemberListResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_club_members(
+    club_id: int,
+
+    manager_user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    member_service = ClubMemberService()
+
+    try:
+        return member_service.get_members(
+            club_id=club_id,
+            user_id=manager_user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "동호회 회원 목록 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "동호회 회원 목록을 불러오는 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
 
 
 # ---------------------------------------------------------
@@ -34,7 +89,7 @@ router = APIRouter(
 # GET /api/clubs/{club_id}/applications
 # ---------------------------------------------------------
 @router.get(
-    "",
+    "/applications",
     response_model=ClubApplicationListResponse,
     status_code=status.HTTP_200_OK,
 )
@@ -107,7 +162,7 @@ def get_club_applications(
 # {application_id}/decision
 # ---------------------------------------------------------
 @router.patch(
-    "/{application_id}/decision",
+    "/applications/{application_id}/decision",
     response_model=(
         ClubApplicationDecisionResponse
     ),
