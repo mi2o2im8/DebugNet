@@ -75,6 +75,36 @@ def search_clubs(
     )
 
 # =========================================================
+# 모집 중인 동호회 조회
+#
+# GET /api/clubs/recruiting
+# =========================================================
+
+@router.get("/recruiting")
+def get_recruiting_clubs(
+    sport_name: list[str] = Query(default=[]),
+    region: list[str] = Query(default=[]),
+    day_of_week: list[str] = Query(default=[]),
+    time_slot: list[str] = Query(default=[]),
+):
+    try:
+        return club_service.get_recruiting_clubs(
+            sport_names=sport_name,
+            regions=region,
+            days=day_of_week,
+            time_slots=time_slot,
+        )
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"모집 중인 동호회 조회 중 오류가 발생했습니다: {str(e)}"
+        )
+
+# =========================================================
 # 동호회 생성
 #
 # POST /api/clubs
@@ -107,6 +137,25 @@ def create_club(
             detail="동호회 생성 중 오류가 발생했습니다.",
         ) from error
 
+# =========================================================
+# 게스트 모집 중인 행사 조회
+#
+# GET /api/clubs/guest-recruiting
+# =========================================================
+
+@router.get("/guest-recruiting")
+def get_guest_recruiting_events():
+    try:
+        return club_service.get_guest_recruiting_events()
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"게스트 모집 조회 중 오류가 발생했습니다: {str(e)}"
+        )
 
 # =========================================================
 # 동호회 상세 조회
@@ -246,3 +295,5 @@ def get_club_dashboard(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="동호회 허브를 불러오는 중 오류가 발생했습니다.",
         ) from error
+
+

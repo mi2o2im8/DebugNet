@@ -1,0 +1,166 @@
+.ClubRecruit-page {
+  min-height: 100vh;
+  padding: 30px 20px 110px;
+  background-color: #f8f9fb;
+  box-sizing: border-box;
+}
+
+/* 페이지 제목 */
+.ClubRecruit-header {
+  max-width: 1000px;
+  margin: 0 auto 25px;
+}
+
+.ClubRecruit-header h1 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #222;
+}
+
+.ClubRecruit-header p {
+  margin: 0;
+  font-size: 15px;
+  color: #777;
+}
+
+/* 동호회 목록 영역 */
+.ClubRecruit-content {
+  max-width: 1000px;
+  margin: 30px auto 0;
+}
+
+/* 목록 제목 */
+.ClubRecruit-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.ClubRecruit-list-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #222;
+}
+
+.ClubRecruit-list-header span {
+  font-size: 14px;
+  color: #777;
+}
+
+/* 동호회 카드 목록 */
+.ClubRecruit-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* 동호회 카드 */
+.ClubRecruit-card {
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ClubRecruit-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.07);
+}
+
+/* 모집 상태 */
+.ClubRecruit-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  background: #e8f7ed;
+  color: #24934d;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* 동호회 이름 */
+.ClubRecruit-card h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  color: #222;
+}
+
+/* 동호회 소개 */
+.ClubRecruit-description {
+  min-height: auto;
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #777;
+  line-height: 1.5;
+}
+
+/* 동호회 정보 */
+.ClubRecruit-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px solid #eee;
+}
+
+.ClubRecruit-info p {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  font-size: 12px;
+  color: #555;
+}
+
+.ClubRecruit-info span {
+  color: #888;
+}
+
+/* 카드 하단 */
+.ClubRecruit-card-footer {
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  text-align: right;
+}
+
+/* 로딩 및 결과 없음 */
+.ClubRecruit-message {
+  padding: 40px 20px;
+  background: #fff;
+  border-radius: 12px;
+  text-align: center;
+  color: #777;
+  font-size: 14px;
+}
+
+.ClubRecruit-error {
+  color: #d93025;
+}
+
+/* 반응형 */
+@media (max-width: 700px) {
+  .ClubRecruit-page {
+    padding: 24px 15px 100px;
+  }
+
+  .ClubRecruit-header h1 {
+    font-size: 24px;
+  }
+
+  .ClubRecruit-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .ClubRecruit-card {
+    padding: 14px;
+  }
+}

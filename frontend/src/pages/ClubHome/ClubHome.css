@@ -999,12 +999,14 @@
     gap: 8px;
 
     overflow-x: auto;
+    overflow-y: hidden;
 
     padding-bottom: 4px;
 
     box-sizing: border-box;
 
     scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .Guest-list::-webkit-scrollbar {

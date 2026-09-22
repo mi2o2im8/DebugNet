@@ -1,0 +1,311 @@
+/* =====================================================
+   동호회 검색 공통 CSS
+===================================================== */
+
+.ClubSearch-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 검색창 */
+.ClubSearch-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 14px;
+
+  background: #f5f6f7;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.ClubSearch-search-icon {
+  flex-shrink: 0;
+}
+
+.ClubSearch-search-box input {
+  flex: 1;
+  min-width: 0;
+
+  border: none;
+  outline: none;
+  background: transparent;
+
+  font-size: 14px;
+}
+
+.ClubSearch-search-clear {
+  border: none;
+  background: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* 필터 영역 */
+.ClubSearch-filter-section {
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+/* 필터 설정 버튼 */
+.ClubSearch-filter-open-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 15px;
+
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+  background: #ffffff;
+
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.ClubSearch-filter-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+
+  border-radius: 50%;
+  background: #2e8b57;
+  color: #ffffff;
+
+  font-size: 12px;
+}
+
+.ClubSearch-filter-arrow {
+  margin-left: auto;
+}
+
+/* 선택된 필터 칩 */
+.ClubSearch-selected-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  margin-top: 12px;
+}
+
+.ClubSearch-filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 7px 11px;
+
+  border: 1px solid #cce5d4;
+  border-radius: 20px;
+
+  background: #edf7f0;
+  color: #2e8b57;
+
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ClubSearch-filter-chip span {
+  font-size: 15px;
+}
+
+/* =====================================================
+   필터 모달
+===================================================== */
+
+/* 배경 */
+.ClubSearch-filter-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 2000;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* 모달 본체 */
+.ClubSearch-filter-modal {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+
+  overflow: hidden;
+
+  animation: ClubSearch-filterSlideUp 0.25s ease;
+  box-sizing: border-box;
+}
+
+/* 모달 등장 애니메이션 */
+@keyframes ClubSearch-filterSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* 모달 헤더 */
+.ClubSearch-filter-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 20px;
+
+  border-bottom: 1px solid #eeeeee;
+}
+
+.ClubSearch-filter-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.ClubSearch-filter-close {
+  border: none;
+  background: none;
+
+  font-size: 28px;
+  cursor: pointer;
+}
+
+/* 모달 내용 */
+.ClubSearch-filter-modal-body {
+  flex: 1;
+
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* 필터 그룹 */
+.ClubSearch-filter-group {
+  margin-bottom: 25px;
+}
+
+.ClubSearch-filter-group h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+/* 필터 선택 옵션 */
+.ClubSearch-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ClubSearch-filter-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 13px;
+
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #333333;
+
+  font-size: 13px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.ClubSearch-filter-option input {
+  display: none;
+}
+
+/* 선택된 옵션 */
+.ClubSearch-filter-option.active {
+  border-color: #2e8b57;
+  background: #edf7f0;
+  color: #2e8b57;
+  font-weight: 600;
+}
+
+.ClubSearch-filter-option small {
+  font-size: 11px;
+  color: #777777;
+}
+
+/* 모달 하단 버튼 */
+.ClubSearch-filter-modal-footer {
+  display: flex;
+  gap: 10px;
+
+  padding: 15px 20px;
+
+  border-top: 1px solid #eeeeee;
+  background: #ffffff;
+}
+
+/* 초기화 버튼 */
+.ClubSearch-filter-reset {
+  flex: 1;
+
+  padding: 14px;
+
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* 검색 결과 보기 버튼 */
+.ClubSearch-filter-apply {
+  flex: 2;
+
+  padding: 14px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #2e8b57;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+/* 모바일 */
+@media (max-width: 600px) {
+  .ClubSearch-filter-modal {
+    width: 100%;
+    max-width: 600px;
+    max-height: 85vh;
+
+    border-radius: 20px 20px 0 0;
+  }
+
+  .ClubSearch-filter-modal-body {
+    padding: 16px;
+  }
+
+  .ClubSearch-filter-modal-footer {
+    padding: 12px 16px;
+  }
+}

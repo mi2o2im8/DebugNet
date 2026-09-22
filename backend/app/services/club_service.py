@@ -546,3 +546,26 @@ class ClubService:
                 .find_club_schedules(club_id)
             ),
         )
+
+    # =========================================================
+    # 모집 중인 동호회 조회
+    # =========================================================
+    def get_recruiting_clubs(
+        self,
+        sport_names=None,
+        regions=None,
+        days=None,
+        time_slots=None,
+    ):
+        return self.club_repository.get_recruiting_clubs(
+            sport_names=sport_names or [],
+            regions=regions or [],
+            days=days or [],
+            time_slots=time_slots or [],
+        )
+
+    # =========================================================
+    # 게스트 모집 중인 행사 조회
+    # =========================================================
+    def get_guest_recruiting_events(self):
+        return self.club_repository.get_guest_recruiting_events()

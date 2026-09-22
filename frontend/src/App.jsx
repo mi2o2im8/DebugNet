@@ -29,6 +29,8 @@ import MainHome from "./pages/MainHome/MainHome";
 
 // 동호회
 import ClubCreate from './pages/ClubCreate/ClubCreate';
+import AllClub from "./pages/AllClub/AllClub";
+import ClubRecruit from "./pages/ClubRecruit/ClubRecruit";
 
 import Community from "./pages/Community/Community";
 import PostDetail from './pages/Community/PostDetail';
@@ -91,6 +93,10 @@ function App() {
 
           {/* 동호회 찾기 홈 화면 페이지 */}
           <Route path='/clubs' element={<ClubHome />} />
+          {/* 전체 동호회 페이지 */}
+          <Route path="/clubs/all" element={<AllClub />} />
+          {/* 회원 모집 중 페이지 */}
+          <Route path="/clubs/recruit" element={<ClubRecruit />} />
           {/* 동호회 상세 페이지 */}
           <Route path="/clubs/:clubId" element={<ClubDetail />} />
           {/* 동호회 가입 페이지 */}

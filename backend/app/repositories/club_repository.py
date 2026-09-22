@@ -741,3 +741,43 @@ class ClubRepository:
                 return response.count
 
             return len(response.data or [])
+
+    # =========================================================
+    # 모집 중인 동호회 조회
+    # =========================================================
+    def get_recruiting_clubs(
+        self,
+        sport_names=None,
+        regions=None,
+        days=None,
+        time_slots=None,
+    ):
+        params = {
+            "p_keyword": None,
+            "p_sport_name": sport_names or None,
+            "p_region": regions or None,
+            "p_day_of_week": days or None,
+            "p_time_slot": time_slots or None,
+            "p_atmosphere": None,
+        }
+
+        response = self.supabase.rpc(
+            "search_recruiting_clubs",
+            params,
+        ).execute()
+
+        return response.data or []
+
+    # =========================================================
+    # 게스트 모집 중인 행사 조회
+    # =========================================================
+    def get_guest_recruiting_events(self):
+        response = (
+            self.supabase
+            .table("club_events")
+            .select("*")
+            .eq("guest_allowed", True)
+            .execute()
+        )
+
+        return response.data or []
