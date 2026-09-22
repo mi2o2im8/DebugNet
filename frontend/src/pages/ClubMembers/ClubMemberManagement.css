@@ -1,0 +1,443 @@
+.club-member-page,
+.club-member-state {
+    min-height: 100vh;
+    background: #f6f9f7;
+    color: #172019;
+}
+
+.club-member-page {
+    padding-bottom: 100px;
+}
+
+.club-member-state {
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    color: #6d776f;
+    font-size: 14px;
+    text-align: center;
+}
+
+
+/* ---------------------------------------------------------
+   상단
+--------------------------------------------------------- */
+
+.club-member-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e4ebe6;
+    background: #ffffff;
+}
+
+.club-member-back-button {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid #dce5df;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #172019;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.club-member-header-text {
+    min-width: 0;
+}
+
+.club-member-header-text h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.club-member-header-text p {
+    margin: 4px 0 0;
+    color: #748078;
+    font-size: 12px;
+}
+
+
+/* ---------------------------------------------------------
+   상단 집계
+--------------------------------------------------------- */
+
+.club-member-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 18px 20px 14px;
+    overflow: hidden;
+    border: 1px solid #dfe8e2;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.club-member-summary > div {
+    display: grid;
+    gap: 5px;
+    padding: 15px 8px;
+    text-align: center;
+}
+
+.club-member-summary > div + div {
+    border-left: 1px solid #e6ece8;
+}
+
+.club-member-summary span {
+    color: #77827a;
+    font-size: 11px;
+}
+
+.club-member-summary strong {
+    font-size: 20px;
+}
+
+.club-member-summary strong.pending {
+    color: #bd7b00;
+}
+
+.club-member-summary strong.approved {
+    color: #009b3a;
+}
+
+
+/* ---------------------------------------------------------
+   상태 탭
+--------------------------------------------------------- */
+
+.club-member-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0 20px 18px;
+    padding: 4px;
+    border-radius: 12px;
+    background: #eaf0ec;
+}
+
+.club-member-tabs button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 0;
+    padding: 10px 5px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #707b73;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.club-member-tabs button.active {
+    background: #ffffff;
+    color: #008f35;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(23, 46, 31, 0.08);
+}
+
+.club-member-tabs button svg {
+    flex: 0 0 auto;
+    font-size: 14px;
+}
+
+.club-member-tabs button strong {
+    display: grid;
+    place-items: center;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 5px;
+    border-radius: 10px;
+    background: #dfe8e2;
+    color: #59635c;
+    font-size: 10px;
+}
+
+.club-member-tabs button.active strong {
+    background: #e0f5e7;
+    color: #008f35;
+}
+
+
+/* ---------------------------------------------------------
+   오류 및 빈 화면
+--------------------------------------------------------- */
+
+.club-member-error {
+    margin: 0 20px 15px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #fff0f0;
+    color: #c54040;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.club-member-list {
+    display: grid;
+    gap: 14px;
+    padding: 0 20px 28px;
+}
+
+.club-member-empty {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    padding: 48px 20px;
+    border: 1px dashed #ced9d1;
+    border-radius: 14px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.club-member-empty svg {
+    margin-bottom: 4px;
+    color: #9aa69e;
+    font-size: 30px;
+}
+
+.club-member-empty strong {
+    font-size: 14px;
+}
+
+.club-member-empty p {
+    margin: 0;
+    color: #7a857e;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* ---------------------------------------------------------
+   신청자 카드
+--------------------------------------------------------- */
+
+.club-member-card {
+    overflow: hidden;
+    border: 1px solid #dce5df;
+    border-radius: 15px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(25, 52, 34, 0.04);
+}
+
+.club-member-card.pending {
+    border-color: #d7e4da;
+}
+
+.club-member-card.approved {
+    border-color: #cce8d5;
+}
+
+.club-member-card.rejected {
+    border-color: #ead7d7;
+}
+
+.club-member-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+}
+
+.club-member-avatar {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #e3f5e9;
+    color: #008d34;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.club-member-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.club-member-identity {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+    gap: 2px;
+}
+
+.club-member-identity strong {
+    overflow: hidden;
+    font-size: 15px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.club-member-identity span {
+    color: #68736c;
+    font-size: 12px;
+}
+
+.club-member-identity small {
+    margin-top: 3px;
+    color: #939d96;
+    font-size: 10px;
+}
+
+.club-member-status {
+    flex: 0 0 auto;
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.club-member-status.pending {
+    background: #fff4d9;
+    color: #a96d00;
+}
+
+.club-member-status.approved {
+    background: #e1f6e8;
+    color: #008b33;
+}
+
+.club-member-status.rejected {
+    background: #ffe8e8;
+    color: #cb4444;
+}
+
+
+/* ---------------------------------------------------------
+   신청서 상세
+--------------------------------------------------------- */
+
+.club-member-detail-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: calc(100% - 32px);
+    margin: 0 16px 14px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 9px;
+    background: #f1f6f3;
+    color: #536158;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.club-member-detail-toggle svg {
+    font-size: 16px;
+}
+
+.club-member-detail {
+    display: grid;
+    gap: 16px;
+    margin: 0 16px 16px;
+    padding: 15px;
+    border-radius: 12px;
+    background: #f8faf9;
+}
+
+.club-member-detail section {
+    display: grid;
+    gap: 9px;
+}
+
+.club-member-detail h2 {
+    margin: 0;
+    color: #38433c;
+    font-size: 12px;
+}
+
+.club-member-message {
+    margin: 0;
+    color: #58635c;
+    font-size: 12px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.club-member-answers {
+    display: grid;
+    gap: 10px;
+}
+
+.club-member-answers > div {
+    display: grid;
+    gap: 5px;
+    padding: 11px 12px;
+    border: 1px solid #e1e8e3;
+    border-radius: 9px;
+    background: #ffffff;
+}
+
+.club-member-answers strong {
+    color: #526057;
+    font-size: 11px;
+}
+
+.club-member-answers p {
+    margin: 0;
+    color: #252d28;
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.club-member-decided-at {
+    margin: 0;
+    color: #8a958e;
+    font-size: 10px;
+    text-align: right;
+}
+
+
+/* ---------------------------------------------------------
+   승인·거절 버튼
+--------------------------------------------------------- */
+
+.club-member-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    padding: 0 16px 16px;
+}
+
+.club-member-actions button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 42px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.club-member-actions button.reject {
+    border: 1px solid #efcccc;
+    background: #ffffff;
+    color: #cd4545;
+}
+
+.club-member-actions button.approve {
+    border: 1px solid #009b3a;
+    background: #009b3a;
+    color: #ffffff;
+}
+
+.club-member-actions button:disabled {
+    cursor: wait;
+    opacity: 0.55;
+}

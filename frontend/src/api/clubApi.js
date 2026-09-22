@@ -335,3 +335,48 @@ export async function updateClubEventAttendance(
         }
     );
 }
+
+// ---------------------------------------------------------
+// 동호회 가입 신청 목록 조회
+// ---------------------------------------------------------
+export async function getClubApplications(
+    clubId,
+    applicationStatus = "pending"
+) {
+    const query = new URLSearchParams({
+        application_status: applicationStatus
+    });
+
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/applications`
+            + `?${query.toString()}`
+        ),
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// 동호회 가입 신청 승인·거절
+// ---------------------------------------------------------
+export async function decideClubApplication(
+    clubId,
+    applicationId,
+    decision
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/applications/`
+            + `${applicationId}/decision`
+        ),
+        {
+            method: "PATCH",
+            body: {
+                decision
+            }
+        }
+    );
+}

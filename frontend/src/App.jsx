@@ -47,6 +47,7 @@ import MatchTeamDetail from "./pages/Match/MatchTeamDetail";
 import ClubManageLayout from "./layouts/ClubManageLayout";
 
 import ClubEventParticipants from "./pages/ClubEvents/ClubEventParticipants";
+import ClubMemberManagement from "./pages/ClubMembers/ClubMemberManagement";
 
 
 
@@ -134,6 +135,11 @@ function App() {
             <Route
               path="/clubs/:clubId/manage"
               element={<ClubDashboard />}
+            />
+
+            <Route
+              path="/clubs/:clubId/manage/members"
+              element={<ClubMemberManagement />}
             />
 
             <Route

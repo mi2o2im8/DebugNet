@@ -215,6 +215,13 @@ function ClubDashboard() {
     }, [dashboard]);
 
     const handleManagementMenu = (menuId) => {
+        if (menuId === "members") {
+            navigate(
+                `/clubs/${clubId}/manage/members`
+            );
+            return;
+        }
+
         if (menuId === "schedules") {
             navigate(
                 `/clubs/${clubId}/manage/events`
