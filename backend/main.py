@@ -20,6 +20,11 @@ from app.routers.club_events import (
     router as club_events_router,
 )
 
+# 동호회 가입 신청 및 회원 관리 API Router
+from app.routers.club_members import (
+    router as club_members_router,
+)
+
 # ---------------------------------------------------------
 # PlayBridge FastAPI 애플리케이션 생성
 # ---------------------------------------------------------
@@ -64,6 +69,7 @@ app.include_router(posts_router)
 app.include_router(comments_router)
 app.include_router(blocks_router)
 app.include_router(club_events_router)
+app.include_router(club_members_router)
 
 # ---------------------------------------------------------
 # 서버 실행 확인용 기본 API
