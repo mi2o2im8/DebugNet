@@ -401,3 +401,21 @@ class ClubEventParticipantListResponse(BaseModel):
     joined_member_count: int
     joined_guest_count: int
     pending_guest_count: int
+
+class ClubEventGuestDecisionRequest(BaseModel):
+    decision: Literal[
+        "approve",
+        "reject",
+    ]
+
+
+class ClubEventGuestDecisionResponse(BaseModel):
+    event_participant_id: int
+    event_id: int
+
+    participation_status: Literal[
+        "joined",
+        "rejected",
+    ]
+
+    message: str

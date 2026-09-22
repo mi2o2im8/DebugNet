@@ -359,3 +359,91 @@ class ClubEventRepository:
         )
 
         return response.data or []
+
+    # -----------------------------------------------------
+    # 일정 참가 신청 한 건 조회
+    # -----------------------------------------------------
+    def find_event_participant(
+        self,
+        event_id: int,
+        event_participant_id: int,
+    ) -> dict | None:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .select(
+                (
+                    "event_participant_id, "
+                    "event_id, "
+                    "user_id, "
+                    "participant_type, "
+                    "status"
+                )
+            )
+            .eq("event_id", event_id)
+            .eq(
+                "event_participant_id",
+                event_participant_id,
+            )
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 승인된 게스트 인원 조회
+    # -----------------------------------------------------
+    def count_joined_guests(
+        self,
+        event_id: int,
+    ) -> int:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .select("event_participant_id")
+            .eq("event_id", event_id)
+            .eq("participant_type", "guest")
+            .eq("status", "joined")
+            .execute()
+        )
+
+        return len(response.data or [])
+
+    # -----------------------------------------------------
+    # 대기 중인 게스트 신청 상태 변경
+    # -----------------------------------------------------
+    def update_pending_guest_status(
+        self,
+        event_id: int,
+        event_participant_id: int,
+        new_status: str,
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .update(
+                {
+                    "status": new_status,
+                }
+            )
+            .eq("event_id", event_id)
+            .eq(
+                "event_participant_id",
+                event_participant_id,
+            )
+            .eq("participant_type", "guest")
+            .eq("status", "pending")
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError(
+                "이미 처리되었거나 처리할 수 없는 "
+                "게스트 신청입니다."
+            )
+
+        return response.data[0]

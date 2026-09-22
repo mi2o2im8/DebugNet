@@ -13,6 +13,8 @@ from app.schemas.club_events import (
     ClubEventListResponse,
     ClubEventParticipantItemResponse,
     ClubEventParticipantListResponse,
+    ClubEventGuestDecisionRequest,
+    ClubEventGuestDecisionResponse,
 )
 
 
@@ -740,4 +742,114 @@ class ClubEventService:
         return ClubEventListResponse(
             events=events,
             total=len(events),
+        )
+
+    # -----------------------------------------------------
+    # 게스트 신청 승인 또는 거절
+    # -----------------------------------------------------
+    def decide_guest_application(
+        self,
+        club_id: int,
+        event_id: int,
+        event_participant_id: int,
+        user_id: str,
+        request_data: ClubEventGuestDecisionRequest,
+    ) -> ClubEventGuestDecisionResponse:
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            raise LookupError(
+                "존재하지 않는 일정입니다."
+            )
+
+        participant = (
+            self.event_repository
+            .find_event_participant(
+                event_id=event_id,
+                event_participant_id=(
+                    event_participant_id
+                ),
+            )
+        )
+
+        if participant is None:
+            raise LookupError(
+                "존재하지 않는 참가 신청입니다."
+            )
+
+        if participant["participant_type"] != "guest":
+            raise ValueError(
+                "게스트 신청만 승인하거나 "
+                "거절할 수 있습니다."
+            )
+
+        if participant["status"] != "pending":
+            raise ValueError(
+                "이미 처리된 게스트 신청입니다."
+            )
+
+        if request_data.decision == "approve":
+            if not event.get("guest_allowed", False):
+                raise ValueError(
+                    "게스트 모집이 허용되지 않은 "
+                    "일정입니다."
+                )
+
+            max_guests = int(
+                event.get("max_guests") or 0
+            )
+
+            joined_guest_count = (
+                self.event_repository
+                .count_joined_guests(event_id)
+            )
+
+            if joined_guest_count >= max_guests:
+                raise ValueError(
+                    "게스트 모집 정원이 "
+                    "마감되었습니다."
+                )
+
+            new_status = "joined"
+            message = (
+                "게스트 신청을 승인했습니다."
+            )
+
+        else:
+            new_status = "rejected"
+            message = (
+                "게스트 신청을 거절했습니다."
+            )
+
+        updated_participant = (
+            self.event_repository
+            .update_pending_guest_status(
+                event_id=event_id,
+                event_participant_id=(
+                    event_participant_id
+                ),
+                new_status=new_status,
+            )
+        )
+
+        return ClubEventGuestDecisionResponse(
+            event_participant_id=int(
+                updated_participant[
+                    "event_participant_id"
+                ]
+            ),
+            event_id=event_id,
+            participation_status=new_status,
+            message=message,
         )
