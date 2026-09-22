@@ -77,7 +77,7 @@ function ClubCreate() {
         // activityLevels: [
         //     "수준 무관",
         // ],
-        joinTarget: "모두",
+        joinTarget: "all",
         // ageGroups: [
         //     "연령 제한 없음",
         //     "30대",
