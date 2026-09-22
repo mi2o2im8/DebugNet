@@ -52,6 +52,8 @@ import ClubEventParticipants from "./pages/ClubEvents/ClubEventParticipants";
 
 // 내 정보
 import Mypage from "./pages/Mypage/Mypage";
+// 내정보 수정
+import MyInfoEdit from './pages/Mypage/MyInfoEdit';
 // 성정 페이지
 import Settings from './pages/Settings/Settings';
 // 내 동호회 일정 전체보기
@@ -182,6 +184,8 @@ function App() {
 
           {/* 내 정보 */}
           <Route path="/mypage" element={<Mypage />} />
+          {/* 내 정보 수정 */}
+          <Route path="/myinfoedit" element={<MyInfoEdit />} />
           {/* 설정 페이지 */}
           <Route path="/mypage/settings" element={<Settings />} />
           {/* 내 동호회 전체보기 페이지 */}

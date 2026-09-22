@@ -1,0 +1,217 @@
+@font-face {
+    font-family: "Maplestory";
+    src: url("../../assets/font/Maplestory-Light.ttf") format("truetype");
+}
+
+.my-info-edit-page {
+    width: 100%;
+    max-width: 400px;
+    min-height: 100vh;
+
+    margin: 0 auto;
+    padding: 20px 20px 40px;
+
+    box-sizing: border-box;
+
+    background: #fff;
+
+    font-family: "Maplestory", sans-serif;
+    color: #172b35;
+}
+
+
+/* ⭐ 상단 */
+.my-info-edit-header {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 45px;
+    margin-bottom: 25px;
+}
+
+.my-info-edit-header h1 {
+    margin: 0;
+
+    font-size: 20px;
+    font-weight: bold;
+
+    color: #173746;
+}
+
+
+/* ⭐ 프로필 */
+.edit-profile-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    margin-bottom: 30px;
+}
+
+.edit-profile-image {
+    width: 82px;
+    height: 82px;
+
+    object-fit: cover;
+
+    border-radius: 50%;
+    border: 1px solid #e5e5e5;
+
+    margin-bottom: 12px;
+}
+
+.profile-image-btn {
+    padding: 7px 13px;
+
+    border: 1px solid #d8e5e2;
+    border-radius: 7px;
+
+    background: #fff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 13px;
+
+    color: #008f75;
+
+    cursor: pointer;
+}
+
+
+/* ⭐ 섹션 */
+.edit-section {
+    margin-bottom: 25px;
+}
+
+.edit-section h2 {
+    margin: 0 0 12px;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    color: #173746;
+}
+
+
+/* ⭐ 입력 항목 */
+.edit-item {
+    margin-bottom: 16px;
+}
+
+.edit-item label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-size: 13px;
+    font-weight: bold;
+
+    color: #555;
+}
+
+.edit-item input,
+.edit-item select {
+    width: 100%;
+    height: 43px;
+
+    padding: 0 13px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #dfe5e5;
+    border-radius: 8px;
+
+    background: #fff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 14px;
+
+    color: #333;
+
+    outline: none;
+}
+
+.edit-item input:focus,
+.edit-item select:focus {
+    border-color: #01a17f;
+}
+
+
+/* ⭐ 성별 */
+.gender-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.gender-buttons button {
+    flex: 1;
+
+    height: 43px;
+
+    border: 1px solid #dfe5e5;
+    border-radius: 8px;
+
+    background: #fff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 14px;
+
+    color: #555;
+
+    cursor: pointer;
+}
+
+.gender-buttons button.active {
+    border-color: #01a17f;
+
+    background: #effaf7;
+
+    color: #008f75;
+
+    font-weight: bold;
+}
+
+
+/* ⭐ 저장 버튼 */
+.my-info-save-btn {
+    width: 100%;
+    height: 48px;
+
+    margin-top: 10px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #01a17f;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 15px;
+    font-weight: bold;
+
+    color: #fff;
+
+    cursor: pointer;
+}
+
+.my-info-save-btn:hover {
+    background: #008f75;
+}
+
+
+/* ⭐ 모바일 */
+@media (max-width: 400px) {
+    .my-info-edit-page {
+        padding: 15px 18px 30px;
+    }
+
+    .my-info-edit-header {
+        margin-bottom: 20px;
+    }
+
+    .edit-profile-image {
+        width: 75px;
+        height: 75px;
+    }
+}

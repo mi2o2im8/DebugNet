@@ -42,6 +42,15 @@ class ClubService:
     def get_club_by_id(self, club_id: int):
         return self.club_repository.get_club_by_id(club_id)
 
+    # ---------------------------------------------------------
+    # 내가 가입한 동호회 조회
+    # ---------------------------------------------------------
+    def get_my_club(self, user_id: str):
+
+        return self.club_repository.get_my_club(
+            user_id=user_id
+        )
+
     # -----------------------------------------------------
     # 동호회 가입 질문 조회
     # -----------------------------------------------------

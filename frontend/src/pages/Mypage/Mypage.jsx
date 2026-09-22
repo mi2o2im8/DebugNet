@@ -1,9 +1,12 @@
 // 내 정보 메인 페이지
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 import BackButton from "../../components/BackButton/BackButton";
+
+// ⭐ Supabase
+import { supabase } from "../../../supabaseClient";
 
 // ⭐ 마이페이지 이미지
 import settingIcon from "../../assets/img/mypage/setting_icon.png";
@@ -19,36 +22,151 @@ function Mypage() {
 
     const navigate = useNavigate();
 
+    // ⭐ 내 사용자 정보
+    const [userInfo, setUserInfo] = useState(null);
+
     // ⭐ 내가 가입한 동호회 ID
     const [myClubId, setMyClubId] = useState(null);
 
     // ⭐ 내가 가입한 동호회 정보
     const [myClub, setMyClub] = useState(null);
 
-    // ⭐ 가입한 동호회 조회
+
+    // ⭐ 내 사용자 정보 조회
+    useEffect(() => {
+
+        const fetchUserInfo = async () => {
+
+            try {
+
+                // ⭐ 현재 로그인한 Supabase 세션 가져오기
+                const {
+                    data: { session },
+                    error: sessionError,
+                } = await supabase.auth.getSession();
+
+                if (sessionError) {
+                    throw new Error("로그인 세션 조회 실패");
+                }
+
+                // ⭐ 로그인 세션이 없는 경우
+                if (!session?.access_token) {
+                    throw new Error("로그인 세션이 없습니다.");
+                }
+
+                // ⭐ Access Token을 FastAPI에 전달
+                const response = await fetch(
+                    "http://127.0.0.1:8000/api/auth/me",
+                    {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${session.access_token}`,
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+
+                    const errorData = await response
+                        .json()
+                        .catch(() => null);
+
+                    console.error(
+                        "⭐ 사용자 정보 API 오류:",
+                        errorData
+                    );
+
+                    throw new Error(
+                        `내 사용자 정보 조회 실패 (${response.status})`
+                    );
+                }
+
+                const data = await response.json();
+
+                console.log(
+                    "⭐ 내 사용자 정보:",
+                    data
+                );
+
+                setUserInfo(data);
+
+            } catch (error) {
+
+                console.error(
+                    "내 사용자 정보 조회 오류:",
+                    error
+                );
+
+            }
+
+        };
+
+        fetchUserInfo();
+
+    }, []);
+
+
+    // ⭐ 내가 가입한 동호회 조회
     useEffect(() => {
 
         const fetchMyClub = async () => {
 
             try {
 
+                // ⭐ 현재 로그인한 Supabase 세션 가져오기
+                const {
+                    data: { session },
+                    error: sessionError,
+                } = await supabase.auth.getSession();
+
+                if (sessionError) {
+                    throw new Error("로그인 세션 조회 실패");
+                }
+
+                // ⭐ 로그인 세션이 없는 경우
+                if (!session?.access_token) {
+                    throw new Error("로그인 세션이 없습니다.");
+                }
+
+                // ⭐ Access Token을 FastAPI에 전달
                 const response = await fetch(
-                    "http://127.0.0.1:8000/api/clubs/my"
+                    "http://127.0.0.1:8000/api/clubs/my",
+                    {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${session.access_token}`,
+                        },
+                    }
                 );
 
                 if (!response.ok) {
-                    throw new Error("내 동호회 조회 실패");
+
+                    const errorData = await response
+                        .json()
+                        .catch(() => null);
+
+                    console.error(
+                        "⭐ 내 동호회 API 오류:",
+                        errorData
+                    );
+
+                    throw new Error(
+                        `내 동호회 조회 실패 (${response.status})`
+                    );
                 }
 
                 const data = await response.json();
 
-                console.log("⭐ 내가 가입한 동호회:", data);
+                console.log(
+                    "⭐ 내가 가입한 동호회:",
+                    data
+                );
 
                 // ⭐ 백엔드에서 받은 동호회 정보 저장
                 setMyClub(data);
 
                 // ⭐ club_id 저장
-                setMyClubId(data.club_id);
+                setMyClubId(data?.club_id ?? null);
 
             } catch (error) {
 
@@ -73,7 +191,7 @@ function Mypage() {
 
             <div className="mypage-container">
 
-                {/* 헤더 */}
+                {/* ⭐ 헤더 */}
                 <div className="mypage-header">
 
                     <h2>내 정보</h2>
@@ -93,52 +211,58 @@ function Mypage() {
                 </div>
 
 
-                {/* 내 정보 */}
+                {/* ⭐ 내 정보 */}
                 <div className="profile-card">
 
                     {/* 프로필 이미지 */}
                     <div className="profile-image">
+
                         <img
                             src={profileIcon}
                             alt="프로필"
                         />
+
                     </div>
 
-                    {/* 사용자 이름 */}
+
+                    {/* ⭐ 실제 사용자 이름 */}
                     <p className="profile-name">
-                        사용자 이름
+                        {userInfo?.name || "사용자 이름"}
                     </p>
 
-                    {/* 운동 종목 */}
+
+                    {/* ⭐ 실제 운동 종목 */}
                     <p className="profile-sports">
-                        축구ㆍ농구
+                        {Array.isArray(userInfo?.sports)
+                            ? userInfo.sports.join("ㆍ")
+                            : userInfo?.sports || "운동 종목 없음"}
                     </p>
 
-                    {/* 활동 지역 */}
+
+                    {/* ⭐ 실제 활동 지역 */}
                     <p className="profile-region">
-                        서울특별시 강서구
+                        {Array.isArray(userInfo?.regions)
+                            ? userInfo.regions.join("ㆍ")
+                            : userInfo?.regions || "활동 지역 없음"}
                     </p>
 
-                    {/* 프로필 수정 */}
-                    <button
-                        type="button"
+
+                    {/* ⭐ 프로필 수정 */}
+                    <Link
+                        to="/myinfoedit"
                         className="profile-edit-button"
-                        onClick={() =>
-                            navigate("/mypage/profile/edit")
-                        }
                     >
                         수정
-                    </button>
+                    </Link>
 
                 </div>
 
 
-                {/* 내 동호회 제목 */}
+                {/* ⭐ 내 동호회 제목 */}
                 <div className="section-header">
 
                     <h3>내 동호회</h3>
 
-                    {/* ⭐ 전체보기 → 내 동호회 일정 */}
                     <button
                         type="button"
                         onClick={() =>
@@ -151,7 +275,7 @@ function Mypage() {
                 </div>
 
 
-                {/* 내 동호회 */}
+                {/* ⭐ 내 동호회 */}
                 <div className="club-card">
 
                     <button
@@ -159,7 +283,6 @@ function Mypage() {
                         disabled={!myClubId}
                         onClick={() => {
 
-                            // ⭐ 가입한 동호회가 있을 때만 이동
                             if (myClubId) {
                                 navigate(`/clubs/${myClubId}`);
                             }
@@ -174,12 +297,10 @@ function Mypage() {
 
                         <div className="club-info">
 
-                            {/* ⭐ DB에서 가져온 동호회 이름 */}
                             <p>
                                 {myClub?.club_name || "우리 동호회"}
                             </p>
 
-                            {/* ⭐ DB에서 가져온 종목 */}
                             <span>
                                 {myClub?.sport_name || "축구ㆍ풋살"}
                             </span>
@@ -191,14 +312,14 @@ function Mypage() {
                 </div>
 
 
-                {/* 내 활동 */}
+                {/* ⭐ 내 활동 */}
                 <h3 className="section-title">
                     내 활동
                 </h3>
 
                 <div className="activity-list">
 
-                    {/* 최근 참여경기 / 통계 */}
+                    {/* ⭐ 최근 참여경기 / 통계 */}
                     <button
                         type="button"
                         className="activity-item"
@@ -217,14 +338,12 @@ function Mypage() {
                     </button>
 
 
-                    {/* 내가 쓴 글 / 댓글 */}
+                    {/* ⭐ 내가 쓴 글 / 댓글 */}
                     <button
                         type="button"
                         className="activity-item"
                         onClick={() =>
-                            navigate(
-                                "/mypage/activity/posts"
-                            )
+                            navigate("/mypage/activity/posts")
                         }
                     >
                         <img
@@ -238,14 +357,12 @@ function Mypage() {
                     </button>
 
 
-                    {/* 찜한 동호회 */}
+                    {/* ⭐ 찜한 동호회 */}
                     <button
                         type="button"
                         className="activity-item"
                         onClick={() =>
-                            navigate(
-                                "/mypage/activity/clubs"
-                            )
+                            navigate("/mypage/activity/clubs")
                         }
                     >
                         <img
@@ -261,12 +378,11 @@ function Mypage() {
                 </div>
 
 
-                {/* 신뢰점수 제목 */}
+                {/* ⭐ 신뢰점수 제목 */}
                 <div className="section-header">
 
                     <h3>신뢰점수</h3>
 
-                    {/* ⭐ 자세히 → 신뢰점수 페이지 */}
                     <button
                         type="button"
                         onClick={() =>
@@ -279,7 +395,7 @@ function Mypage() {
                 </div>
 
 
-                {/* 신뢰점수 */}
+                {/* ⭐ 신뢰점수 */}
                 <div className="trust-score-wrapper">
 
                     <button

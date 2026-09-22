@@ -8,7 +8,7 @@ import "./MainHome.css";
 
 // ⭐ 이미지
 import notificationIcon from "../../assets/img/playbridge_16_assets/notification_icon.png";
-import chatIcon from "../../assets/img/playbridge_16_assets/chat_icon.png";
+import profileIcon from "../../assets/img/basic_profile_img.png";
 
 import createClubImage from "../../assets/img/playbridge_16_assets/create_club.png";
 import calendarIcon from "../../assets/img/playbridge_16_assets/calendar_icon.png";
@@ -22,7 +22,6 @@ import climbingImage from "../../assets/img/playbridge_16_assets/climbing.png";
 import runningImage from "../../assets/img/playbridge_16_assets/running.png";
 import yogaImage from "../../assets/img/playbridge_16_assets/16_yoga.png";
 import volleyballImage from "../../assets/img/volleyball.png";
-import profileIcon from "../../assets/img/basic_profile_img.png";
 import ChatbotButton from "../../components/Chatbot/ChatbotButton";
 
 

@@ -6,7 +6,7 @@ import "./Main.css";
 
 // ⭐ 베이직 홈 이미지
 import notificationIcon from "../../assets/img/playbridge_16_assets/notification_icon.png";
-import chatIcon from "../../assets/img/playbridge_16_assets/chat_icon.png";
+import profileIcon from "../../assets/img/basic_profile_img.png";
 
 import findClubImage from "../../assets/img/playbridge_16_assets/find_club.png";
 import createClubImage from "../../assets/img/playbridge_16_assets/create_club.png";
@@ -44,10 +44,32 @@ function Main() {
                         </div>
 
                         <div className="welcome-actions">
-                            <img src={notificationIcon} alt="알림 아이콘" />
-                            <img src={chatIcon} alt="채팅 아이콘" />
-                        </div>
 
+                            {/* ⭐ 알림 */}
+                            <Link
+                                to="/notification"
+                                className="welcome-icon"
+                                aria-label="알림"
+                            >
+                                <img
+                                    src={notificationIcon}
+                                    alt="알림"
+                                />
+                            </Link>
+
+                            {/* ⭐ 내 정보 */}
+                            <Link
+                                to="/mypage"
+                                className="welcome-icon"
+                                aria-label="내 정보"
+                            >
+                                <img
+                                    src={profileIcon}
+                                    alt="내 정보"
+                                />
+                            </Link>
+
+                        </div>
                     </div>
                 </section>
 

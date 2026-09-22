@@ -31,6 +31,36 @@ router = APIRouter(
 
 club_service = ClubService()
 
+# =========================================================
+# 내가 가입한 동호회 조회
+#
+# GET /api/clubs/my
+# =========================================================
+
+@router.get("/my")
+def get_my_club(
+    user_id: str = Depends(get_current_user_id),
+):
+    try:
+
+        club = club_service.get_my_club(
+            user_id=user_id
+        )
+
+        if not club:
+            return {
+                "club_id": None,
+                "club_name": None,
+                "sport_name": None,
+            }
+
+        return club
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="내 동호회 조회 중 오류가 발생했습니다.",
+        ) from error
 
 # =========================================================
 # 동호회 검색
@@ -45,6 +75,8 @@ club_service = ClubService()
 # - time_slot (복수 선택)
 # - atmosphere
 # =========================================================
+
+
 
 @router.get("/search")
 def search_clubs(
