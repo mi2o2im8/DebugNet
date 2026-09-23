@@ -11,15 +11,21 @@ from fastapi import (
 from app.core.security import (
     get_current_user_id,
 )
+
 from app.schemas.club_members import (
     ClubApplicationDecisionRequest,
     ClubApplicationDecisionResponse,
     ClubApplicationListResponse,
     ClubMemberListResponse,
+    ClubMemberRoleUpdateRequest,
+    ClubMemberStatusUpdateRequest,
+    ClubMemberUpdateResponse,
 )
+
 from app.services.club_member_service import (
     ApplicationConflictError,
     ClubMemberService,
+    MemberManagementConflictError,
 )
 
 
@@ -80,6 +86,139 @@ def get_club_members(
                 "동호회 회원 목록을 불러오는 중 "
                 "오류가 발생했습니다."
             ),
+        ) from error
+
+# ---------------------------------------------------------
+# 회원 역할 변경
+#
+# PATCH /api/clubs/{club_id}/members/{club_member_id}/role
+# ---------------------------------------------------------
+@router.patch(
+    "/members/{club_member_id}/role",
+    response_model=ClubMemberUpdateResponse,
+    status_code=status.HTTP_200_OK,
+)
+def update_club_member_role(
+    club_id: int,
+    club_member_id: int,
+    request_data: ClubMemberRoleUpdateRequest,
+
+    manager_user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    member_service = ClubMemberService()
+
+    try:
+        return member_service.update_member_role(
+            club_id=club_id,
+            club_member_id=club_member_id,
+            manager_user_id=manager_user_id,
+            next_role=request_data.role,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except MemberManagementConflictError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "회원 역할 변경 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail="회원 역할 변경 중 오류가 발생했습니다.",
+        ) from error
+
+
+# ---------------------------------------------------------
+# 회원 상태 변경
+#
+# PATCH /api/clubs/{club_id}/members/{club_member_id}/status
+# ---------------------------------------------------------
+@router.patch(
+    "/members/{club_member_id}/status",
+    response_model=ClubMemberUpdateResponse,
+    status_code=status.HTTP_200_OK,
+)
+def update_club_member_status(
+    club_id: int,
+    club_member_id: int,
+    request_data: ClubMemberStatusUpdateRequest,
+
+    manager_user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    member_service = ClubMemberService()
+
+    try:
+        return member_service.update_member_status(
+            club_id=club_id,
+            club_member_id=club_member_id,
+            manager_user_id=manager_user_id,
+            next_status=request_data.status,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except MemberManagementConflictError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "회원 상태 변경 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail="회원 상태 변경 중 오류가 발생했습니다.",
         ) from error
 
 

@@ -337,6 +337,20 @@ export async function updateClubEventAttendance(
 }
 
 // ---------------------------------------------------------
+// 현재 동호회 회원 목록 조회
+// ---------------------------------------------------------
+export async function getClubMembers(
+    clubId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/members`,
+        {
+            method: "GET"
+        }
+    );
+}
+
+// ---------------------------------------------------------
 // 동호회 가입 신청 목록 조회
 // ---------------------------------------------------------
 export async function getClubApplications(
@@ -415,15 +429,82 @@ export async function getClubMemberStatus(
     clubId,
     userId
 ) {
-    const query =
-        new URLSearchParams({
-            user_id: userId
-        });
+    const query = new URLSearchParams({
+        user_id: userId
+    });
 
     return authenticatedRequest(
-        `/api/clubs/${clubId}/member-status?${query.toString()}`,
+        (
+            `/api/clubs/${clubId}/member-status`
+            + `?${query.toString()}`
+        ),
         {
             method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// 회원 역할 변경
+// ---------------------------------------------------------
+export async function updateClubMemberRole(
+    clubId,
+    clubMemberId,
+    role
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/members/`
+            + `${clubMemberId}/role`
+        ),
+        {
+            method: "PATCH",
+            body: {
+                role
+            }
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// 회원 활동 상태 변경
+// ---------------------------------------------------------
+export async function updateClubMemberStatus(
+    clubId,
+    clubMemberId,
+    memberStatus
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/members/`
+            + `${clubMemberId}/status`
+        ),
+        {
+            method: "PATCH",
+            body: {
+                status: memberStatus
+            }
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// 동호회 회원 내보내기
+// ---------------------------------------------------------
+export async function removeClubMember(
+    clubId,
+    clubMemberId
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/members/`
+            + clubMemberId
+        ),
+        {
+            method: "DELETE"
         }
     );
 }

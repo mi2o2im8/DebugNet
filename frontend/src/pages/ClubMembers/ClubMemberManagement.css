@@ -441,3 +441,182 @@
     cursor: wait;
     opacity: 0.55;
 }
+
+/* ---------------------------------------------------------
+   가입 신청 / 현재 회원 전환
+--------------------------------------------------------- */
+
+.club-member-primary-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin: 18px 20px 0;
+    padding: 5px;
+    border-radius: 13px;
+    background: #e8efea;
+}
+
+.club-member-primary-tabs button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 43px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #6d786f;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.club-member-primary-tabs button.active {
+    background: #ffffff;
+    color: #008f35;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(23, 46, 31, 0.08);
+}
+
+.club-member-primary-tabs button svg {
+    font-size: 16px;
+}
+
+.club-member-primary-tabs button strong {
+    display: grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #dbe5de;
+    color: #566159;
+    font-size: 10px;
+}
+
+.club-member-primary-tabs button.active strong {
+    background: #dff5e7;
+    color: #008f35;
+}
+
+
+/* ---------------------------------------------------------
+   현재 회원 카드
+--------------------------------------------------------- */
+
+.club-member-card.member-active {
+    border-color: #d2e8d9;
+}
+
+.club-member-card.member-inactive {
+    border-color: #e0e3e1;
+}
+
+.club-member-card.member-suspended {
+    border-color: #efd2d2;
+}
+
+.club-member-badges {
+    display: grid;
+    justify-items: end;
+    flex: 0 0 auto;
+    gap: 5px;
+}
+
+.club-member-role,
+.club-member-state-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 5px 7px;
+    border-radius: 7px;
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.club-member-role svg {
+    font-size: 11px;
+}
+
+.club-member-role.owner {
+    background: #fff0cf;
+    color: #9a6500;
+}
+
+.club-member-role.manager {
+    background: #e6edff;
+    color: #4368b0;
+}
+
+.club-member-role.member {
+    background: #edf2ef;
+    color: #59665e;
+}
+
+.club-member-state-badge.active {
+    background: #e1f6e8;
+    color: #008b33;
+}
+
+.club-member-state-badge.inactive {
+    background: #eef1ef;
+    color: #6e7871;
+}
+
+.club-member-state-badge.suspended {
+    background: #ffe7e7;
+    color: #c94141;
+}
+
+/* ---------------------------------------------------------
+   회원 역할·상태 관리 버튼
+--------------------------------------------------------- */
+
+.club-member-management-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 9px;
+    padding: 0 16px 16px;
+}
+
+.club-member-management-actions button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.club-member-management-actions button:only-child {
+    grid-column: 1 / -1;
+}
+
+.club-member-management-actions button.role {
+    border: 1px solid #b9c9e8;
+    background: #f4f7ff;
+    color: #4569aa;
+}
+
+.club-member-management-actions button.suspend {
+    border: 1px solid #efcccc;
+    background: #ffffff;
+    color: #c94747;
+}
+
+.club-member-management-actions button.restore {
+    border: 1px solid #009b3a;
+    background: #009b3a;
+    color: #ffffff;
+}
+
+.club-member-management-actions button:disabled {
+    cursor: wait;
+    opacity: 0.55;
+}

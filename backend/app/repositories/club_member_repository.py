@@ -512,3 +512,108 @@ class ClubMemberRepository:
             "club_id",
             club_id,
         ).execute()
+
+    # -----------------------------------------------------
+    # 회원 단건 조회
+    # -----------------------------------------------------
+    def find_member_by_id(
+        self,
+        club_id: int,
+        club_member_id: int,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_members")
+            .select(
+                "club_member_id, "
+                "club_id, "
+                "user_id, "
+                "role, "
+                "status, "
+                "join_source"
+            )
+            .eq(
+                "club_id",
+                club_id,
+            )
+            .eq(
+                "club_member_id",
+                club_member_id,
+            )
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 회원 역할 변경
+    # -----------------------------------------------------
+    def update_member_role(
+        self,
+        club_id: int,
+        club_member_id: int,
+        role: str,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_members")
+            .update(
+                {
+                    "role": role,
+                }
+            )
+            .eq(
+                "club_id",
+                club_id,
+            )
+            .eq(
+                "club_member_id",
+                club_member_id,
+            )
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 회원 상태 변경
+    # -----------------------------------------------------
+    def update_member_status(
+        self,
+        club_id: int,
+        club_member_id: int,
+        member_status: str,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_members")
+            .update(
+                {
+                    "status": member_status,
+                }
+            )
+            .eq(
+                "club_id",
+                club_id,
+            )
+            .eq(
+                "club_member_id",
+                club_member_id,
+            )
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]

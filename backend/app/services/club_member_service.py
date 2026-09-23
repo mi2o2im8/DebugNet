@@ -13,6 +13,7 @@ from app.schemas.club_members import (
     ClubApplicationListResponse,
     ClubMemberListItemResponse,
     ClubMemberListResponse,
+    ClubMemberUpdateResponse,
 )
 
 
@@ -22,6 +23,8 @@ from app.schemas.club_members import (
 class ApplicationConflictError(Exception):
     pass
 
+class MemberManagementConflictError(Exception):
+    pass
 
 class ClubMemberService:
 
@@ -90,6 +93,18 @@ class ClubMemberService:
             user_id=user_id,
         )
 
+        management_membership = (
+            self.member_repository
+            .find_management_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        current_user_role = str(
+            management_membership["role"]
+        )
+
         member_rows = (
             self.member_repository
             .find_members(club_id)
@@ -98,6 +113,7 @@ class ClubMemberService:
         if not member_rows:
             return ClubMemberListResponse(
                 members=[],
+                current_user_role=current_user_role,
                 total=0,
                 active_count=0,
                 inactive_count=0,
@@ -161,6 +177,7 @@ class ClubMemberService:
 
         return ClubMemberListResponse(
             members=members,
+            current_user_role=current_user_role,
             total=len(members),
             active_count=sum(
                 member.status == "active"
@@ -574,4 +591,287 @@ class ClubMemberService:
             application_status="approved",
             member_status="active",
             message="가입 신청을 승인했습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 회원 역할 변경
+    #
+    # 동호회장만 운영진 지정 및 해제가 가능하다.
+    # -----------------------------------------------------
+    def update_member_role(
+        self,
+        club_id: int,
+        club_member_id: int,
+        manager_user_id: str,
+        next_role: str,
+    ) -> ClubMemberUpdateResponse:
+
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=manager_user_id,
+        )
+
+        manager_membership = (
+            self.member_repository
+            .find_management_membership(
+                club_id=club_id,
+                user_id=manager_user_id,
+            )
+        )
+
+        if (
+            manager_membership is None
+            or manager_membership.get("role")
+                != "owner"
+        ):
+            raise PermissionError(
+                "동호회장만 운영진 역할을 "
+                "변경할 수 있습니다."
+            )
+
+        target_member = (
+            self.member_repository
+            .find_member_by_id(
+                club_id=club_id,
+                club_member_id=club_member_id,
+            )
+        )
+
+        if target_member is None:
+            raise LookupError(
+                "변경할 회원을 찾을 수 없습니다."
+            )
+
+        if target_member.get("role") == "owner":
+            raise MemberManagementConflictError(
+                "동호회장의 역할은 변경할 수 없습니다."
+            )
+
+        if target_member.get("status") != "active":
+            raise MemberManagementConflictError(
+                "활동 중인 회원만 역할을 "
+                "변경할 수 있습니다."
+            )
+
+        if next_role not in {
+            "manager",
+            "member",
+        }:
+            raise ValueError(
+                "지원하지 않는 회원 역할입니다."
+            )
+
+        if target_member.get("role") == next_role:
+            return ClubMemberUpdateResponse(
+                club_member_id=club_member_id,
+                club_id=club_id,
+                user_id=str(
+                    target_member["user_id"]
+                ),
+                role=target_member["role"],
+                status=target_member["status"],
+                message=(
+                    "이미 선택한 역할로 "
+                    "설정되어 있습니다."
+                ),
+            )
+
+        updated_member = (
+            self.member_repository
+            .update_member_role(
+                club_id=club_id,
+                club_member_id=club_member_id,
+                role=next_role,
+            )
+        )
+
+        if updated_member is None:
+            raise LookupError(
+                "회원 역할 변경에 실패했습니다."
+            )
+
+        role_label = (
+            "운영진"
+            if next_role == "manager"
+            else "일반 회원"
+        )
+
+        return ClubMemberUpdateResponse(
+            club_member_id=club_member_id,
+            club_id=club_id,
+            user_id=str(
+                updated_member["user_id"]
+            ),
+            role=updated_member["role"],
+            status=updated_member["status"],
+            message=(
+                f"회원 역할을 {role_label}(으)로 "
+                "변경했습니다."
+            ),
+        )
+
+    # -----------------------------------------------------
+    # 회원 활동 정지 또는 복구
+    # -----------------------------------------------------
+    def update_member_status(
+        self,
+        club_id: int,
+        club_member_id: int,
+        manager_user_id: str,
+        next_status: str,
+    ) -> ClubMemberUpdateResponse:
+
+        club = self.validate_management_permission(
+            club_id=club_id,
+            user_id=manager_user_id,
+        )
+
+        manager_membership = (
+            self.member_repository
+            .find_management_membership(
+                club_id=club_id,
+                user_id=manager_user_id,
+            )
+        )
+
+        target_member = (
+            self.member_repository
+            .find_member_by_id(
+                club_id=club_id,
+                club_member_id=club_member_id,
+            )
+        )
+
+        if target_member is None:
+            raise LookupError(
+                "변경할 회원을 찾을 수 없습니다."
+            )
+
+        if target_member.get("role") == "owner":
+            raise MemberManagementConflictError(
+                "동호회장은 활동 정지할 수 없습니다."
+            )
+
+        if (
+            target_member.get("user_id")
+            == manager_user_id
+        ):
+            raise MemberManagementConflictError(
+                "자신의 회원 상태는 변경할 수 없습니다."
+            )
+
+        manager_role = (
+            manager_membership.get("role")
+            if manager_membership
+            else None
+        )
+
+        if (
+            manager_role == "manager"
+            and target_member.get("role")
+                == "manager"
+        ):
+            raise PermissionError(
+                "운영진은 다른 운영진의 상태를 "
+                "변경할 수 없습니다."
+            )
+
+        if next_status not in {
+            "active",
+            "suspended",
+        }:
+            raise ValueError(
+                "지원하지 않는 회원 상태입니다."
+            )
+
+        current_status = target_member.get(
+            "status"
+        )
+
+        if current_status not in {
+            "active",
+            "suspended",
+        }:
+            raise MemberManagementConflictError(
+                "현재 회원 상태에서는 활동 정지나 "
+                "복구를 처리할 수 없습니다."
+            )
+
+        if current_status == next_status:
+            return ClubMemberUpdateResponse(
+                club_member_id=club_member_id,
+                club_id=club_id,
+                user_id=str(
+                    target_member["user_id"]
+                ),
+                role=target_member["role"],
+                status=target_member["status"],
+                message=(
+                    "이미 선택한 회원 상태로 "
+                    "설정되어 있습니다."
+                ),
+            )
+
+        # 정지된 회원을 복구할 때 정원을 확인한다.
+        if next_status == "active":
+            current_member_count = (
+                self.member_repository
+                .count_active_members(club_id)
+            )
+
+            max_members = club.get(
+                "max_members"
+            )
+
+            if (
+                max_members is not None
+                and current_member_count
+                    >= int(max_members)
+            ):
+                raise MemberManagementConflictError(
+                    "동호회 정원이 모두 차서 "
+                    "회원을 복구할 수 없습니다."
+                )
+
+        updated_member = (
+            self.member_repository
+            .update_member_status(
+                club_id=club_id,
+                club_member_id=club_member_id,
+                member_status=next_status,
+            )
+        )
+
+        if updated_member is None:
+            raise LookupError(
+                "회원 상태 변경에 실패했습니다."
+            )
+
+        updated_member_count = (
+            self.member_repository
+            .count_active_members(club_id)
+        )
+
+        self.member_repository.update_current_member_count(
+            club_id=club_id,
+            current_members=updated_member_count,
+        )
+
+        status_label = (
+            "활동 상태로 복구"
+            if next_status == "active"
+            else "활동 정지"
+        )
+
+        return ClubMemberUpdateResponse(
+            club_member_id=club_member_id,
+            club_id=club_id,
+            user_id=str(
+                updated_member["user_id"]
+            ),
+            role=updated_member["role"],
+            status=updated_member["status"],
+            message=(
+                f"회원을 {status_label}했습니다."
+            ),
         )

@@ -127,7 +127,55 @@ class ClubMemberListResponse(BaseModel):
         default_factory=list
     )
 
+    current_user_role: Literal[
+        "owner",
+        "manager",
+    ]
+
     total: int
     active_count: int
     inactive_count: int
     suspended_count: int
+
+# ---------------------------------------------------------
+# 회원 역할 변경 요청
+# ---------------------------------------------------------
+class ClubMemberRoleUpdateRequest(BaseModel):
+    role: Literal[
+        "manager",
+        "member",
+    ]
+
+
+# ---------------------------------------------------------
+# 회원 상태 변경 요청
+# ---------------------------------------------------------
+class ClubMemberStatusUpdateRequest(BaseModel):
+    status: Literal[
+        "active",
+        "suspended",
+    ]
+
+
+# ---------------------------------------------------------
+# 회원 역할·상태 변경 응답
+# ---------------------------------------------------------
+class ClubMemberUpdateResponse(BaseModel):
+    club_member_id: int
+    club_id: int
+    user_id: str
+
+    role: Literal[
+        "owner",
+        "manager",
+        "member",
+    ]
+
+    status: Literal[
+        "active",
+        "inactive",
+        "suspended",
+        "withdrawn",
+    ]
+
+    message: str

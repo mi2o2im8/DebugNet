@@ -16,13 +16,18 @@ import {
     FiChevronDown,
     FiChevronUp,
     FiClock,
+    FiShield,
     FiUser,
+    FiUsers,
     FiX
 } from "react-icons/fi";
 
 import {
     decideClubApplication,
-    getClubApplications
+    getClubApplications,
+    getClubMembers,
+    updateClubMemberRole,
+    updateClubMemberStatus
 } from "../../api/clubApi";
 
 import "./ClubMemberManagement.css";
@@ -47,10 +52,31 @@ const APPLICATION_TABS = [
 ];
 
 
-const STATUS_LABELS = {
+const APPLICATION_STATUS_LABELS = {
     pending: "승인 대기",
     approved: "승인 완료",
     rejected: "승인 거절"
+};
+
+
+const MEMBER_ROLE_LABELS = {
+    owner: "동호회장",
+    manager: "운영진",
+    member: "일반 회원"
+};
+
+
+const MEMBER_STATUS_LABELS = {
+    active: "활동 중",
+    inactive: "비활성",
+    suspended: "활동 정지"
+};
+
+
+const JOIN_SOURCE_LABELS = {
+    club_created: "동호회 개설",
+    application: "가입 신청",
+    invitation: "운영진 초대"
 };
 
 
@@ -78,21 +104,50 @@ function formatDateTime(value) {
 }
 
 
+function getProfileInitial(person) {
+    return (
+        person.nickname
+        || person.name
+        || "?"
+    ).slice(0, 1);
+}
+
+
 function ClubMemberManagement() {
     const { clubId } = useParams();
     const navigate = useNavigate();
 
+    const [activeSection, setActiveSection] =
+        useState("applications");
+
     const [applications, setApplications] =
+        useState([]);
+
+    const [members, setMembers] =
         useState([]);
 
     const [activeStatus, setActiveStatus] =
         useState("pending");
 
-    const [expandedApplicationIds, setExpandedApplicationIds] =
-        useState(() => new Set());
+    const [
+        expandedApplicationIds,
+        setExpandedApplicationIds
+    ] = useState(() => new Set());
 
-    const [processingApplicationId, setProcessingApplicationId] =
-        useState(null);
+    const [
+        processingApplicationId,
+        setProcessingApplicationId
+    ] = useState(null);
+
+    const [
+        processingMemberId,
+        setProcessingMemberId
+    ] = useState(null);
+
+    const [
+        currentUserRole,
+        setCurrentUserRole
+    ] = useState("");
 
     const [isLoading, setIsLoading] =
         useState(true);
@@ -102,27 +157,43 @@ function ClubMemberManagement() {
 
 
     // -----------------------------------------------------
-    // 가입 신청 전체 목록 조회
+    // 가입 신청 및 현재 회원 목록 조회
     // -----------------------------------------------------
-    const loadApplications = useCallback(
+    const loadManagementData = useCallback(
         async () => {
             setIsLoading(true);
             setErrorMessage("");
 
             try {
-                const result =
-                    await getClubApplications(
+                const [
+                    applicationResult,
+                    memberResult
+                ] = await Promise.all([
+                    getClubApplications(
                         clubId,
                         "all"
-                    );
+                    ),
+                    getClubMembers(clubId)
+                ]);
 
                 setApplications(
-                    result.applications || []
+                    applicationResult.applications
+                    || []
+                );
+
+                setMembers(
+                    memberResult.members
+                    || []
+                );
+
+                setCurrentUserRole(
+                    memberResult.current_user_role
+                    || ""
                 );
             } catch (error) {
                 setErrorMessage(
-                    error.message ||
-                    "가입 신청 목록을 불러오지 못했습니다."
+                    error.message
+                    || "회원 관리 정보를 불러오지 못했습니다."
                 );
             } finally {
                 setIsLoading(false);
@@ -133,27 +204,12 @@ function ClubMemberManagement() {
 
 
     useEffect(() => {
-        loadApplications();
-    }, [loadApplications]);
+        loadManagementData();
+    }, [loadManagementData]);
 
 
     // -----------------------------------------------------
-    // 상태별 신청 목록
-    // -----------------------------------------------------
-    const filteredApplications = useMemo(
-        () => applications.filter(
-            (application) =>
-                application.status === activeStatus
-        ),
-        [
-            applications,
-            activeStatus
-        ]
-    );
-
-
-    // -----------------------------------------------------
-    // 상태별 신청 수
+    // 가입 신청 상태별 집계
     // -----------------------------------------------------
     const applicationCounts = useMemo(
         () => ({
@@ -173,6 +229,40 @@ function ClubMemberManagement() {
             ).length
         }),
         [applications]
+    );
+
+
+    const filteredApplications = useMemo(
+        () => applications.filter(
+            (application) =>
+                application.status === activeStatus
+        ),
+        [
+            applications,
+            activeStatus
+        ]
+    );
+
+
+    // -----------------------------------------------------
+    // 현재 회원 상태별 집계
+    // -----------------------------------------------------
+    const memberCounts = useMemo(
+        () => ({
+            total: members.length,
+
+            active: members.filter(
+                (member) =>
+                    member.status === "active"
+            ).length,
+
+            managementRequired: members.filter(
+                (member) =>
+                    member.status === "inactive"
+                    || member.status === "suspended"
+            ).length
+        }),
+        [members]
     );
 
 
@@ -245,22 +335,138 @@ function ClubMemberManagement() {
 
             window.alert(result.message);
 
-            await loadApplications();
+            await loadManagementData();
         } catch (error) {
             setErrorMessage(
-                error.message ||
-                "가입 신청을 처리하지 못했습니다."
+                error.message
+                || "가입 신청을 처리하지 못했습니다."
             );
         } finally {
             setProcessingApplicationId(null);
         }
     };
 
+    // -----------------------------------------------------
+    // 운영진 지정·해제
+    // -----------------------------------------------------
+    const handleMemberRoleChange = async (
+        member
+    ) => {
+        if (processingMemberId !== null) {
+            return;
+        }
+
+        const nextRole = (
+            member.role === "manager"
+                ? "member"
+                : "manager"
+        );
+
+        const actionLabel = (
+            nextRole === "manager"
+                ? "운영진으로 지정"
+                : "일반 회원으로 변경"
+        );
+
+        const confirmed = window.confirm(
+            `${member.nickname}님을 `
+            + `${actionLabel}할까요?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        setProcessingMemberId(
+            member.club_member_id
+        );
+
+        setErrorMessage("");
+
+        try {
+            const result =
+                await updateClubMemberRole(
+                    clubId,
+                    member.club_member_id,
+                    nextRole
+                );
+
+            window.alert(result.message);
+
+            await loadManagementData();
+        } catch (error) {
+            setErrorMessage(
+                error.message
+                || "회원 역할을 변경하지 못했습니다."
+            );
+        } finally {
+            setProcessingMemberId(null);
+        }
+    };
+
+
+    // -----------------------------------------------------
+    // 회원 활동 정지·복구
+    // -----------------------------------------------------
+    const handleMemberStatusChange = async (
+        member
+    ) => {
+        if (processingMemberId !== null) {
+            return;
+        }
+
+        const nextStatus = (
+            member.status === "suspended"
+                ? "active"
+                : "suspended"
+        );
+
+        const actionLabel = (
+            nextStatus === "active"
+                ? "활동 상태로 복구"
+                : "활동 정지"
+        );
+
+        const confirmed = window.confirm(
+            `${member.nickname}님을 `
+            + `${actionLabel}할까요?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        setProcessingMemberId(
+            member.club_member_id
+        );
+
+        setErrorMessage("");
+
+        try {
+            const result =
+                await updateClubMemberStatus(
+                    clubId,
+                    member.club_member_id,
+                    nextStatus
+                );
+
+            window.alert(result.message);
+
+            await loadManagementData();
+        } catch (error) {
+            setErrorMessage(
+                error.message
+                || "회원 상태를 변경하지 못했습니다."
+            );
+        } finally {
+            setProcessingMemberId(null);
+        }
+    };
 
     if (isLoading) {
         return (
             <main className="club-member-state">
-                가입 신청 목록을 불러오는 중입니다.
+                회원 관리 정보를 불러오는 중입니다.
             </main>
         );
     }
@@ -280,75 +486,57 @@ function ClubMemberManagement() {
 
                 <div className="club-member-header-text">
                     <h1>회원 관리</h1>
-                    <p>가입 신청을 확인하고 처리할 수 있습니다.</p>
+
+                    <p>
+                        가입 신청과 현재 회원을
+                        관리할 수 있습니다.
+                    </p>
                 </div>
             </header>
 
-            <section className="club-member-summary">
-                <div>
-                    <span>전체 신청</span>
-                    <strong>
-                        {
-                            applicationCounts.pending
-                            + applicationCounts.approved
-                            + applicationCounts.rejected
-                        }
-                    </strong>
-                </div>
+            <nav
+                className="club-member-primary-tabs"
+                aria-label="회원 관리 메뉴"
+            >
+                <button
+                    type="button"
+                    className={
+                        activeSection === "applications"
+                            ? "active"
+                            : ""
+                    }
+                    onClick={() =>
+                        setActiveSection("applications")
+                    }
+                >
+                    <FiClock />
 
-                <div>
-                    <span>승인 대기</span>
-                    <strong className="pending">
+                    <span>가입 신청</span>
+
+                    <strong>
                         {applicationCounts.pending}
                     </strong>
-                </div>
+                </button>
 
-                <div>
-                    <span>승인 완료</span>
-                    <strong className="approved">
-                        {applicationCounts.approved}
+                <button
+                    type="button"
+                    className={
+                        activeSection === "members"
+                            ? "active"
+                            : ""
+                    }
+                    onClick={() =>
+                        setActiveSection("members")
+                    }
+                >
+                    <FiUsers />
+
+                    <span>현재 회원</span>
+
+                    <strong>
+                        {memberCounts.total}
                     </strong>
-                </div>
-            </section>
-
-            <nav
-                className="club-member-tabs"
-                aria-label="가입 신청 상태"
-            >
-                {APPLICATION_TABS.map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive =
-                        activeStatus === tab.status;
-
-                    return (
-                        <button
-                            key={tab.status}
-                            type="button"
-                            className={
-                                isActive
-                                    ? "active"
-                                    : ""
-                            }
-                            onClick={() =>
-                                setActiveStatus(
-                                    tab.status
-                                )
-                            }
-                        >
-                            <Icon />
-
-                            <span>{tab.label}</span>
-
-                            <strong>
-                                {
-                                    applicationCounts[
-                                        tab.status
-                                    ]
-                                }
-                            </strong>
-                        </button>
-                    );
-                })}
+                </button>
             </nav>
 
             {errorMessage && (
@@ -357,64 +545,427 @@ function ClubMemberManagement() {
                 </p>
             )}
 
-            <section className="club-member-list">
-                {filteredApplications.length === 0 ? (
-                    <div className="club-member-empty">
-                        <FiUser />
+            {activeSection === "applications" ? (
+                <>
+                    <section className="club-member-summary">
+                        <div>
+                            <span>전체 신청</span>
 
-                        <strong>
-                            {
-                                activeStatus === "pending"
-                                    ? "대기 중인 가입 신청이 없습니다."
-                                    : (
-                                        activeStatus === "approved"
-                                            ? "승인한 가입 신청이 없습니다."
-                                            : "거절한 가입 신청이 없습니다."
-                                    )
-                            }
-                        </strong>
+                            <strong>
+                                {
+                                    applicationCounts.pending
+                                    + applicationCounts.approved
+                                    + applicationCounts.rejected
+                                }
+                            </strong>
+                        </div>
 
-                        <p>
-                            새로운 신청이나 처리 내역이 생기면
-                            이곳에 표시됩니다.
-                        </p>
-                    </div>
-                ) : (
-                    filteredApplications.map(
-                        (application) => {
-                            const isExpanded =
-                                expandedApplicationIds.has(
-                                    application.application_id
+                        <div>
+                            <span>승인 대기</span>
+
+                            <strong className="pending">
+                                {applicationCounts.pending}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>승인 완료</span>
+
+                            <strong className="approved">
+                                {applicationCounts.approved}
+                            </strong>
+                        </div>
+                    </section>
+
+                    <nav
+                        className="club-member-tabs"
+                        aria-label="가입 신청 상태"
+                    >
+                        {APPLICATION_TABS.map(
+                            (tab) => {
+                                const Icon = tab.icon;
+
+                                const isActive =
+                                    activeStatus
+                                    === tab.status;
+
+                                return (
+                                    <button
+                                        key={tab.status}
+                                        type="button"
+                                        className={
+                                            isActive
+                                                ? "active"
+                                                : ""
+                                        }
+                                        onClick={() =>
+                                            setActiveStatus(
+                                                tab.status
+                                            )
+                                        }
+                                    >
+                                        <Icon />
+
+                                        <span>
+                                            {tab.label}
+                                        </span>
+
+                                        <strong>
+                                            {
+                                                applicationCounts[
+                                                    tab.status
+                                                ]
+                                            }
+                                        </strong>
+                                    </button>
                                 );
+                            }
+                        )}
+                    </nav>
 
-                            const isProcessing =
-                                processingApplicationId
-                                === application.application_id;
+                    <section className="club-member-list">
+                        {
+                            filteredApplications.length
+                            === 0
+                                ? (
+                                    <div className="club-member-empty">
+                                        <FiUser />
 
-                            const profileInitial = (
-                                application.nickname
-                                || application.name
-                                || "?"
-                            ).slice(0, 1);
+                                        <strong>
+                                            {
+                                                activeStatus
+                                                === "pending"
+                                                    ? "대기 중인 가입 신청이 없습니다."
+                                                    : (
+                                                        activeStatus
+                                                        === "approved"
+                                                            ? "승인한 가입 신청이 없습니다."
+                                                            : "거절한 가입 신청이 없습니다."
+                                                    )
+                                            }
+                                        </strong>
 
-                            return (
+                                        <p>
+                                            새로운 신청이나 처리 내역이
+                                            생기면 이곳에 표시됩니다.
+                                        </p>
+                                    </div>
+                                )
+                                : filteredApplications.map(
+                                    (application) => {
+                                        const isExpanded =
+                                            expandedApplicationIds
+                                                .has(
+                                                    application
+                                                        .application_id
+                                                );
+
+                                        const isProcessing =
+                                            processingApplicationId
+                                            === application
+                                                .application_id;
+
+                                        return (
+                                            <article
+                                                key={
+                                                    application
+                                                        .application_id
+                                                }
+                                                className={
+                                                    "club-member-card "
+                                                    + application.status
+                                                }
+                                            >
+                                                <div className="club-member-profile">
+                                                    <div className="club-member-avatar">
+                                                        {
+                                                            application
+                                                                .profile_image
+                                                                ? (
+                                                                    <img
+                                                                        src={
+                                                                            application
+                                                                                .profile_image
+                                                                        }
+                                                                        alt=""
+                                                                    />
+                                                                )
+                                                                : (
+                                                                    <span>
+                                                                        {
+                                                                            getProfileInitial(
+                                                                                application
+                                                                            )
+                                                                        }
+                                                                    </span>
+                                                                )
+                                                        }
+                                                    </div>
+
+                                                    <div className="club-member-identity">
+                                                        <strong>
+                                                            {
+                                                                application
+                                                                    .nickname
+                                                            }
+                                                        </strong>
+
+                                                        <span>
+                                                            {
+                                                                application
+                                                                    .name
+                                                            }
+                                                        </span>
+
+                                                        <small>
+                                                            신청일{" "}
+                                                            {
+                                                                formatDateTime(
+                                                                    application
+                                                                        .created_at
+                                                                )
+                                                            }
+                                                        </small>
+                                                    </div>
+
+                                                    <span
+                                                        className={
+                                                            "club-member-status "
+                                                            + application
+                                                                .status
+                                                        }
+                                                    >
+                                                        {
+                                                            APPLICATION_STATUS_LABELS[
+                                                                application
+                                                                    .status
+                                                            ]
+                                                        }
+                                                    </span>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    className="club-member-detail-toggle"
+                                                    onClick={() =>
+                                                        toggleApplicationDetail(
+                                                            application
+                                                                .application_id
+                                                        )
+                                                    }
+                                                >
+                                                    <span>
+                                                        신청서 보기
+                                                    </span>
+
+                                                    {
+                                                        isExpanded
+                                                            ? <FiChevronUp />
+                                                            : <FiChevronDown />
+                                                    }
+                                                </button>
+
+                                                {isExpanded && (
+                                                    <div className="club-member-detail">
+                                                        <section>
+                                                            <h2>
+                                                                자기소개 및 가입 이유
+                                                            </h2>
+
+                                                            <p className="club-member-message">
+                                                                {
+                                                                    application
+                                                                        .application_message
+                                                                    || "작성된 내용이 없습니다."
+                                                                }
+                                                            </p>
+                                                        </section>
+
+                                                        {
+                                                            (
+                                                                application
+                                                                    .answers
+                                                                || []
+                                                            ).length > 0
+                                                            && (
+                                                                <section>
+                                                                    <h2>
+                                                                        추가 질문
+                                                                    </h2>
+
+                                                                    <div className="club-member-answers">
+                                                                        {
+                                                                            application
+                                                                                .answers
+                                                                                .map(
+                                                                                    (
+                                                                                        answer
+                                                                                    ) => (
+                                                                                        <div
+                                                                                            key={
+                                                                                                answer
+                                                                                                    .question_id
+                                                                                            }
+                                                                                        >
+                                                                                            <strong>
+                                                                                                {
+                                                                                                    answer
+                                                                                                        .question_text
+                                                                                                }
+                                                                                            </strong>
+
+                                                                                            <p>
+                                                                                                {
+                                                                                                    answer
+                                                                                                        .answer_text
+                                                                                                }
+                                                                                            </p>
+                                                                                        </div>
+                                                                                    )
+                                                                                )
+                                                                        }
+                                                                    </div>
+                                                                </section>
+                                                            )
+                                                        }
+
+                                                        {
+                                                            application
+                                                                .decided_at
+                                                            && (
+                                                                <p className="club-member-decided-at">
+                                                                    처리일{" "}
+                                                                    {
+                                                                        formatDateTime(
+                                                                            application
+                                                                                .decided_at
+                                                                        )
+                                                                    }
+                                                                </p>
+                                                            )
+                                                        }
+                                                    </div>
+                                                )}
+
+                                                {
+                                                    application.status
+                                                    === "pending"
+                                                    && (
+                                                        <div className="club-member-actions">
+                                                            <button
+                                                                type="button"
+                                                                className="reject"
+                                                                disabled={
+                                                                    processingApplicationId
+                                                                    !== null
+                                                                }
+                                                                onClick={() =>
+                                                                    handleDecision(
+                                                                        application,
+                                                                        "reject"
+                                                                    )
+                                                                }
+                                                            >
+                                                                <FiX />
+                                                                거절
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                className="approve"
+                                                                disabled={
+                                                                    processingApplicationId
+                                                                    !== null
+                                                                }
+                                                                onClick={() =>
+                                                                    handleDecision(
+                                                                        application,
+                                                                        "approve"
+                                                                    )
+                                                                }
+                                                            >
+                                                                <FiCheck />
+
+                                                                {
+                                                                    isProcessing
+                                                                        ? "처리 중"
+                                                                        : "승인"
+                                                                }
+                                                            </button>
+                                                        </div>
+                                                    )
+                                                }
+                                            </article>
+                                        );
+                                    }
+                                )
+                        }
+                    </section>
+                </>
+            ) : (
+                <>
+                    <section className="club-member-summary">
+                        <div>
+                            <span>전체 회원</span>
+
+                            <strong>
+                                {memberCounts.total}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>활동 중</span>
+
+                            <strong className="approved">
+                                {memberCounts.active}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>관리 필요</span>
+
+                            <strong className="pending">
+                                {
+                                    memberCounts
+                                        .managementRequired
+                                }
+                            </strong>
+                        </div>
+                    </section>
+
+                    <section className="club-member-list">
+                        {members.length === 0 ? (
+                            <div className="club-member-empty">
+                                <FiUsers />
+
+                                <strong>
+                                    등록된 회원이 없습니다.
+                                </strong>
+
+                                <p>
+                                    가입이 승인된 회원이 생기면
+                                    이곳에 표시됩니다.
+                                </p>
+                            </div>
+                        ) : (
+                            members.map((member) => (
                                 <article
                                     key={
-                                        application.application_id
+                                        member.club_member_id
                                     }
                                     className={
                                         "club-member-card "
-                                        + application.status
+                                        + `member-${member.status}`
                                     }
                                 >
                                     <div className="club-member-profile">
                                         <div className="club-member-avatar">
                                             {
-                                                application.profile_image
+                                                member.profile_image
                                                     ? (
                                                         <img
                                                             src={
-                                                                application
+                                                                member
                                                                     .profile_image
                                                             }
                                                             alt=""
@@ -422,7 +973,11 @@ function ClubMemberManagement() {
                                                     )
                                                     : (
                                                         <span>
-                                                            {profileInitial}
+                                                            {
+                                                                getProfileInitial(
+                                                                    member
+                                                                )
+                                                            }
                                                         </span>
                                                     )
                                             }
@@ -430,192 +985,152 @@ function ClubMemberManagement() {
 
                                         <div className="club-member-identity">
                                             <strong>
-                                                {
-                                                    application
-                                                        .nickname
-                                                }
+                                                {member.nickname}
                                             </strong>
 
                                             <span>
-                                                {application.name}
+                                                {member.name}
                                             </span>
 
                                             <small>
-                                                신청일{" "}
+                                                가입 경로 ·{" "}
                                                 {
-                                                    formatDateTime(
-                                                        application
-                                                            .created_at
-                                                    )
+                                                    JOIN_SOURCE_LABELS[
+                                                        member
+                                                            .join_source
+                                                    ]
+                                                    || member.join_source
+                                                    || "정보 없음"
                                                 }
                                             </small>
                                         </div>
 
-                                        <span
-                                            className={
-                                                "club-member-status "
-                                                + application.status
-                                            }
-                                        >
-                                            {
-                                                STATUS_LABELS[
-                                                    application.status
-                                                ]
-                                            }
-                                        </span>
+                                        <div className="club-member-badges">
+                                            <span
+                                                className={
+                                                    "club-member-role "
+                                                    + member.role
+                                                }
+                                            >
+                                                <FiShield />
+
+                                                {
+                                                    MEMBER_ROLE_LABELS[
+                                                        member.role
+                                                    ]
+                                                    || member.role
+                                                }
+                                            </span>
+
+                                            <span
+                                                className={
+                                                    "club-member-state-badge "
+                                                    + member.status
+                                                }
+                                            >
+                                                {
+                                                    MEMBER_STATUS_LABELS[
+                                                        member.status
+                                                    ]
+                                                    || member.status
+                                                }
+                                            </span>
+                                        </div>
                                     </div>
 
-                                    <button
-                                        type="button"
-                                        className="club-member-detail-toggle"
-                                        onClick={() =>
-                                            toggleApplicationDetail(
-                                                application
-                                                    .application_id
-                                            )
-                                        }
-                                    >
-                                        <span>
-                                            신청서 보기
-                                        </span>
-
-                                        {
-                                            isExpanded
-                                                ? <FiChevronUp />
-                                                : <FiChevronDown />
-                                        }
-                                    </button>
-
-                                    {isExpanded && (
-                                        <div className="club-member-detail">
-                                            <section>
-                                                <h2>
-                                                    자기소개 및 가입 이유
-                                                </h2>
-
-                                                <p className="club-member-message">
-                                                    {
-                                                        application
-                                                            .application_message
-                                                        || "작성된 내용이 없습니다."
-                                                    }
-                                                </p>
-                                            </section>
-
-                                            {
-                                                application.answers.length > 0
-                                                && (
-                                                    <section>
-                                                        <h2>
-                                                            추가 질문
-                                                        </h2>
-
-                                                        <div className="club-member-answers">
-                                                            {
-                                                                application
-                                                                    .answers
-                                                                    .map(
-                                                                        (
-                                                                            answer
-                                                                        ) => (
-                                                                            <div
-                                                                                key={
-                                                                                    answer
-                                                                                        .question_id
-                                                                                }
-                                                                            >
-                                                                                <strong>
-                                                                                    {
-                                                                                        answer
-                                                                                            .question_text
-                                                                                    }
-                                                                                </strong>
-
-                                                                                <p>
-                                                                                    {
-                                                                                        answer
-                                                                                            .answer_text
-                                                                                    }
-                                                                                </p>
-                                                                            </div>
-                                                                        )
-                                                                    )
-                                                            }
-                                                        </div>
-                                                    </section>
-                                                )
-                                            }
-
-                                            {
-                                                application.decided_at
-                                                && (
-                                                    <p className="club-member-decided-at">
-                                                        처리일{" "}
-                                                        {
-                                                            formatDateTime(
-                                                                application
-                                                                    .decided_at
-                                                            )
-                                                        }
-                                                    </p>
-                                                )
-                                            }
-                                        </div>
-                                    )}
-
                                     {
-                                        application.status === "pending"
+                                        member.role !== "owner"
                                         && (
-                                            <div className="club-member-actions">
-                                                <button
-                                                    type="button"
-                                                    className="reject"
-                                                    disabled={
-                                                        processingApplicationId
-                                                        !== null
-                                                    }
-                                                    onClick={() =>
-                                                        handleDecision(
-                                                            application,
-                                                            "reject"
-                                                        )
-                                                    }
-                                                >
-                                                    <FiX />
-                                                    거절
-                                                </button>
+                                            <div className="club-member-management-actions">
+                                                {
+                                                    currentUserRole
+                                                    === "owner"
+                                                    && member.status
+                                                    === "active"
+                                                    && (
+                                                        <button
+                                                            type="button"
+                                                            className="role"
+                                                            disabled={
+                                                                processingMemberId
+                                                                !== null
+                                                            }
+                                                            onClick={() =>
+                                                                handleMemberRoleChange(
+                                                                    member
+                                                                )
+                                                            }
+                                                        >
+                                                            <FiShield />
 
-                                                <button
-                                                    type="button"
-                                                    className="approve"
-                                                    disabled={
-                                                        processingApplicationId
-                                                        !== null
-                                                    }
-                                                    onClick={() =>
-                                                        handleDecision(
-                                                            application,
-                                                            "approve"
-                                                        )
-                                                    }
-                                                >
-                                                    <FiCheck />
+                                                            {
+                                                                member.role
+                                                                === "manager"
+                                                                    ? "운영진 해제"
+                                                                    : "운영진 지정"
+                                                            }
+                                                        </button>
+                                                    )
+                                                }
 
-                                                    {
-                                                        isProcessing
-                                                            ? "처리 중"
-                                                            : "승인"
-                                                    }
-                                                </button>
+                                                {
+                                                    (
+                                                        member.status
+                                                        === "active"
+                                                        || member.status
+                                                        === "suspended"
+                                                    )
+                                                    && !(
+                                                        currentUserRole
+                                                        === "manager"
+                                                        && member.role
+                                                        === "manager"
+                                                    )
+                                                    && (
+                                                        <button
+                                                            type="button"
+                                                            className={
+                                                                member.status
+                                                                === "suspended"
+                                                                    ? "restore"
+                                                                    : "suspend"
+                                                            }
+                                                            disabled={
+                                                                processingMemberId
+                                                                !== null
+                                                            }
+                                                            onClick={() =>
+                                                                handleMemberStatusChange(
+                                                                    member
+                                                                )
+                                                            }
+                                                        >
+                                                            {
+                                                                member.status
+                                                                === "suspended"
+                                                                    ? <FiCheck />
+                                                                    : <FiX />
+                                                            }
+
+                                                            {
+                                                                member.status
+                                                                === "suspended"
+                                                                    ? "활동 복구"
+                                                                    : "활동 정지"
+                                                            }
+                                                        </button>
+                                                    )
+                                                }
                                             </div>
                                         )
                                     }
+
                                 </article>
-                            );
-                        }
-                    )
-                )}
-            </section>
+                            ))
+                        )}
+                    </section>
+                </>
+            )}
         </main>
     );
 }
