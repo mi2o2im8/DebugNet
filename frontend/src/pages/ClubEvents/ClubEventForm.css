@@ -203,6 +203,259 @@
     opacity: 0.55;
 }
 
+/* ---------------------------------------------------------
+   5단계 일정 등록
+--------------------------------------------------------- */
+
+.club-event-step-progress {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    margin: 14px 16px 0;
+    padding: 14px 8px;
+    border: 1px solid #e1e9e3;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.club-event-step-progress > div {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.club-event-step-progress > div:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 14px;
+    left: 62%;
+    width: 76%;
+    height: 2px;
+    background: #dfe7e2;
+    z-index: -1;
+}
+
+.club-event-step-progress > div.completed:not(:last-child)::after {
+    background: #009b3a;
+}
+
+.club-event-step-progress span {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #edf2ef;
+    color: #7a867e;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.club-event-step-progress div.active span,
+.club-event-step-progress div.completed span {
+    background: #009b3a;
+    color: #ffffff;
+}
+
+.club-event-step-progress small {
+    overflow: hidden;
+    max-width: 100%;
+    color: #8b958e;
+    font-size: 8px;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.club-event-step-progress div.active small {
+    color: #008f35;
+    font-weight: 700;
+}
+
+.club-event-form-step {
+    min-height: 390px;
+}
+
+.club-event-step-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #edf1ee;
+}
+
+.club-event-step-heading > span {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    background: #009b3a;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.club-event-step-heading > div {
+    display: grid;
+    gap: 4px;
+}
+
+.club-event-step-heading h2 {
+    display: block !important;
+    font-size: 17px !important;
+}
+
+.club-event-step-heading p {
+    margin: 0;
+    color: #78837c;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+.club-event-field-count {
+    color: #929c95;
+    font-size: 10px;
+    font-weight: 400;
+    text-align: right;
+}
+
+.club-event-recurrence-note {
+    margin: 0;
+    padding: 11px 12px;
+    border-radius: 9px;
+    background: #f0f7f2;
+    color: #56705f;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.club-event-vote-editor {
+    display: grid;
+    gap: 9px;
+    padding-top: 14px;
+    border-top: 1px solid #edf1ee;
+}
+
+.club-event-vote-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.club-event-vote-heading span {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.club-event-vote-heading small {
+    color: #89948c;
+    font-size: 10px;
+}
+
+.club-event-vote-option {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 7px;
+}
+
+.club-event-vote-option button {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    padding: 0;
+    border: 1px solid #ecd3d3;
+    border-radius: 10px;
+    background: #fff7f7;
+    color: #cf4545;
+    cursor: pointer;
+}
+
+.club-event-vote-option button:disabled {
+    border-color: #e1e7e3;
+    background: #f3f5f4;
+    color: #a9b1ac;
+    cursor: not-allowed;
+}
+
+.club-event-add-vote {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    border: 1px dashed #9fcaae;
+    border-radius: 10px;
+    background: #f4faf6;
+    color: #008f35;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.club-event-add-vote:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.club-event-review {
+    display: grid;
+    overflow: hidden;
+    border: 1px solid #dfe8e2;
+    border-radius: 13px;
+    background: #ffffff;
+}
+
+.club-event-review > div {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    gap: 11px;
+    padding: 13px;
+}
+
+.club-event-review > div + div {
+    border-top: 1px solid #edf1ee;
+}
+
+.club-event-review > div > svg {
+    margin-top: 2px;
+    color: #009b3a;
+    font-size: 17px;
+}
+
+.club-event-review > div > span {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.club-event-review small {
+    color: #808b84;
+    font-size: 10px;
+    font-weight: 400;
+}
+
+.club-event-review strong {
+    color: #202822;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.club-event-review em {
+    color: #7a857e;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
 @media (max-width: 380px) {
     .club-event-form-grid {
         grid-template-columns: 1fr;

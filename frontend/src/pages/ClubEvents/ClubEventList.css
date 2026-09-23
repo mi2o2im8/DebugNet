@@ -613,6 +613,7 @@
     margin-top: 13px;
 }
 
+.club-event-detail-button,
 .club-event-attendance-button,
 .club-event-participants-button {
     display: flex;
@@ -626,6 +627,20 @@
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
+}
+
+.club-event-detail-button {
+    grid-column: 1 / -1;
+
+    border: 1px solid #dce5df;
+    background: #f4f7f6;
+    color: #172554;
+}
+
+.club-event-detail-button:hover {
+    border-color: #008006;
+    background: #edf8ef;
+    color: #008006;
 }
 
 .club-event-attendance-button {

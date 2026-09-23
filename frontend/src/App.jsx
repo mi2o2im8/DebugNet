@@ -47,6 +47,7 @@ import MatchTeamDetail from "./pages/Match/MatchTeamDetail";
 import ClubManageLayout from "./layouts/ClubManageLayout";
 
 import ClubEventParticipants from "./pages/ClubEvents/ClubEventParticipants";
+import ClubEventDetail from "./pages/ClubEvents/ClubEventDetail";
 
 // 동호회 멤버 관리
 import ClubMemberManagement from "./pages/ClubMembers/ClubMemberManagement";
@@ -257,6 +258,11 @@ function App() {
             <Route
               path="/clubs/:clubId/manage/events/new"
               element={<ClubEventForm />}
+            />
+
+            <Route
+              path="/clubs/:clubId/manage/events/:eventId"
+              element={<ClubEventDetail />}
             />
 
             <Route

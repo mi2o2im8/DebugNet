@@ -1,0 +1,395 @@
+.club-event-detail-page {
+    width: 100%;
+    min-height: 100%;
+    padding: 0 16px 110px;
+    box-sizing: border-box;
+    background: #f4f7f6;
+    color: #172554;
+}
+
+.club-event-detail-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+
+    min-height: 64px;
+    margin: 0 -16px;
+    padding: 0 16px;
+
+    border-bottom: 1px solid #e3e9e5;
+    background: #ffffff;
+}
+
+.club-event-detail-header::after {
+    content: "";
+}
+
+.club-event-detail-header button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+    padding: 0;
+
+    border: 1px solid #dce5df;
+    border-radius: 10px;
+    background: #ffffff;
+
+    color: #172554;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.club-event-detail-header h1 {
+    margin: 0;
+    font-size: 20px;
+    text-align: center;
+}
+
+.club-event-detail-hero {
+    overflow: hidden;
+    margin: 16px 0;
+
+    border: 1px solid #dce5df;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.club-event-detail-hero > img,
+.club-event-detail-placeholder {
+    width: 100%;
+    height: 170px;
+}
+
+.club-event-detail-hero > img {
+    display: block;
+    object-fit: cover;
+}
+
+.club-event-detail-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eaf6ed;
+    color: #008c33;
+    font-size: 42px;
+}
+
+.club-event-detail-hero-content {
+    padding: 17px;
+}
+
+.club-event-detail-type {
+    display: inline-flex;
+    margin-bottom: 9px;
+    padding: 6px 9px;
+
+    border-radius: 20px;
+    background: #e7f6eb;
+
+    color: #008c33;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.club-event-detail-hero-content h2 {
+    margin: 0 0 14px;
+    color: #111827;
+    font-size: 21px;
+}
+
+.club-event-detail-hero-content p {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    margin: 8px 0;
+    color: #657169;
+    font-size: 14px;
+}
+
+.club-event-detail-hero-content p svg {
+    flex-shrink: 0;
+    color: #008c33;
+}
+
+.club-event-detail-counts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    overflow: hidden;
+
+    margin-bottom: 16px;
+
+    border: 1px solid #dce5df;
+    border-radius: 13px;
+    background: #ffffff;
+}
+
+.club-event-detail-counts > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+
+    padding: 16px 3px;
+}
+
+.club-event-detail-counts > div + div {
+    border-left: 1px solid #e4e9e6;
+}
+
+.club-event-detail-counts strong {
+    color: #008c33;
+    font-size: 19px;
+}
+
+.club-event-detail-counts span {
+    color: #758079;
+    font-size: 11px;
+}
+
+.club-event-detail-section {
+    margin-bottom: 14px;
+    padding: 17px;
+
+    border: 1px solid #dce5df;
+    border-radius: 13px;
+    background: #ffffff;
+}
+
+.club-event-detail-section h3 {
+    margin: 0 0 15px;
+    color: #172554;
+    font-size: 17px;
+}
+
+.club-event-attendance-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+}
+
+.club-event-attendance-options button {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 44px;
+
+    border: 1px solid #dce5df;
+    border-radius: 9px;
+    background: #ffffff;
+
+    color: #6b756f;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.club-event-attendance-options button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.club-event-attendance-options .attending.active {
+    border-color: #008c33;
+    background: #008c33;
+    color: #ffffff;
+}
+
+.club-event-attendance-options .absent.active {
+    border-color: #dc4545;
+    background: #dc4545;
+    color: #ffffff;
+}
+
+.club-event-attendance-options .undecided.active {
+    border-color: #7b8790;
+    background: #7b8790;
+    color: #ffffff;
+}
+
+.club-event-detail-information {
+    margin: 0;
+}
+
+.club-event-detail-information > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+
+    padding: 13px 0;
+}
+
+.club-event-detail-information > div + div {
+    border-top: 1px solid #edf1ef;
+}
+
+.club-event-detail-information dt {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+
+    color: #778078;
+    font-size: 13px;
+}
+
+.club-event-detail-information dd {
+    margin: 0;
+    color: #202a24;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.club-event-detail-location strong {
+    color: #202a24;
+    font-size: 15px;
+}
+
+.club-event-detail-location p {
+    margin: 6px 0 13px;
+    color: #768078;
+    font-size: 13px;
+}
+
+.club-event-detail-map {
+    width: 100%;
+    height: 190px;
+    margin-top: 13px;
+
+    overflow: hidden;
+    border-radius: 10px;
+    background: #e9efec;
+}
+
+.club-event-detail-location a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 42px;
+    margin-top: 10px;
+
+    border: 1px solid #008c33;
+    border-radius: 9px;
+
+    color: #008c33;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.club-event-detail-description {
+    margin: 0;
+
+    color: #536058;
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+.club-event-vote-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.club-event-vote-options span {
+    padding: 7px 11px;
+
+    border-radius: 20px;
+    background: #eef4f0;
+
+    color: #445249;
+    font-size: 12px;
+}
+
+.club-event-detail-pending {
+    margin: 0 0 12px;
+    padding: 10px;
+
+    border-radius: 9px;
+    background: #fff5d9;
+
+    color: #805d00;
+    font-size: 13px;
+    text-align: center;
+}
+
+.club-event-management-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.club-event-management-buttons button {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 44px;
+
+    border: 1px solid #008c33;
+    border-radius: 9px;
+    background: #ffffff;
+
+    color: #008c33;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.club-event-management-buttons button.danger {
+    grid-column: 1 / -1;
+
+    border-color: #f0baba;
+    background: #fff4f4;
+    color: #d43e3e;
+}
+
+.club-event-management-buttons button:disabled {
+    cursor: wait;
+    opacity: 0.6;
+}
+
+.club-event-detail-state {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 60vh;
+    padding: 20px;
+
+    color: #66736d;
+    text-align: center;
+}
+
+.club-event-detail-state.error {
+    color: #c63f3f;
+}
+
+.club-event-detail-state button {
+    padding: 11px 15px;
+
+    border: 0;
+    border-radius: 9px;
+    background: #008c33;
+
+    color: #ffffff;
+    font: inherit;
+    cursor: pointer;
+}
