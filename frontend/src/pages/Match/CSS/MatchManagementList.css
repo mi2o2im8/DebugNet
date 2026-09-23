@@ -1,0 +1,731 @@
+/* ========================================
+   Match Management List
+======================================== */
+
+.match-management-list-container {
+  min-height: 100vh;
+  background: #f7f8f8;
+  padding-bottom: 90px;
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   상단 헤더
+======================================== */
+
+.match-management-list-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 16px;
+
+  background: #ffffff;
+  border-bottom: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+}
+
+.match-management-list-header h1 {
+  margin: 0;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  color: #222222;
+}
+
+.match-management-list-back {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #222222;
+
+  font-size: 30px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.match-management-list-header-space {
+  width: 34px;
+  height: 34px;
+}
+
+
+/* ========================================
+   메인
+======================================== */
+
+.match-management-list-main {
+  width: 100%;
+
+  padding: 16px;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   매칭 관리 선택 메뉴
+   3칸 × 2줄
+======================================== */
+
+.match-management-tabs {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 8px;
+
+  margin-bottom: 22px;
+
+  padding: 0;
+
+  background: transparent;
+}
+
+
+/* 선택 메뉴 하나 */
+.match-management-tab {
+  min-width: 0;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 6px;
+
+  border: 1px solid #e5e7e6;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #777777;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+
+.match-management-tab:active {
+  transform: scale(0.97);
+}
+
+
+/* 현재 선택된 메뉴 */
+.match-management-tab.active {
+  border-color: #20b26b;
+
+  background: #eaf8f1;
+
+  color: #20b26b;
+
+  font-weight: 700;
+
+  box-shadow: none;
+}
+
+
+/* ========================================
+   제목 + 개수
+======================================== */
+
+.match-management-list-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+}
+
+.match-management-list-title h2 {
+  margin: 0;
+
+  color: #222222;
+
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.match-management-list-title span {
+  color: #777777;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* ========================================
+   목록
+======================================== */
+
+.match-management-match-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+
+/* 카드 */
+.match-management-list-card {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 16px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  color: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+}
+
+.match-management-list-card:active {
+  background: #f8faf9;
+}
+
+
+/* 카드 내용 */
+.match-management-list-card-content {
+  min-width: 0;
+
+  flex: 1;
+}
+
+
+/* 팀명 + 상태 */
+.match-management-list-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-bottom: 8px;
+}
+
+.match-management-list-card-top strong {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: #222222;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* 종목 */
+.match-management-list-sport {
+  margin-bottom: 9px;
+
+  color: #20b26b;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+/* 날짜 / 장소 */
+.match-management-list-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+.match-management-list-info span {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  min-width: 0;
+
+  color: #777777;
+
+  font-size: 12px;
+}
+
+.match-management-list-info svg {
+  flex-shrink: 0;
+
+  color: #999999;
+
+  font-size: 13px;
+}
+
+
+/* 오른쪽 화살표 */
+.match-management-list-card > svg {
+  flex-shrink: 0;
+
+  color: #aaaaaa;
+
+  font-size: 18px;
+}
+
+
+/* ========================================
+   상태 뱃지 공통
+======================================== */
+
+.match-management-list-status {
+  flex-shrink: 0;
+
+  padding: 4px 8px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+/* 받은 신청 */
+.match-management-list-status.received {
+  background: #eaf8f1;
+  color: #20b26b;
+}
+
+
+/* 보낸 신청 */
+.match-management-list-status.sent {
+  background: #f5f3ff;
+  color: #6f5bd3;
+}
+
+
+/* 예정 경기 */
+.match-management-list-status.upcoming {
+  background: #eef4ff;
+  color: #4d76c9;
+}
+
+
+/* ========================================
+   지난 경기 상태
+======================================== */
+
+/* 기록 작성 필요 */
+.match-management-list-status.record-required {
+  background: #fff4e8;
+  color: #e88721;
+}
+
+
+/* 상대 확인 대기 */
+.match-management-list-status.record-pending {
+  background: #f5f3ff;
+  color: #6f5bd3;
+}
+
+
+/* 내가 확인해야 함 */
+.match-management-list-status.record-confirm {
+  background: #fff0f0;
+  color: #d95a5a;
+}
+
+
+/* 완료 */
+.match-management-list-status.completed {
+  background: #eaf8f1;
+  color: #20b26b;
+}
+
+
+/* 후기 작성 완료 */
+.match-management-list-status.reviewed {
+  background: #f2f3f5;
+  color: #777777;
+}
+
+
+/* ========================================
+   빈 목록
+======================================== */
+
+.match-management-list-empty {
+  padding: 50px 20px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  text-align: center;
+}
+
+.match-management-list-empty strong {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #444444;
+
+  font-size: 14px;
+}
+
+.match-management-list-empty p {
+  margin: 0;
+
+  color: #999999;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ========================================
+   지난 경기 - 제목 오른쪽 영역
+======================================== */
+
+.match-management-list-title-actions {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+
+.match-management-list-title-actions > span {
+  color: #777777;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* ========================================
+   필터 열기 버튼
+======================================== */
+
+.match-history-filter-toggle {
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid #e4e7e5;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #6f7772;
+
+  font-size: 16px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.05);
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+
+.match-history-filter-toggle:hover {
+  border-color: #b8dfca;
+
+  background: #f5fbf8;
+
+  color: #20b26b;
+}
+
+
+.match-history-filter-toggle:active {
+  transform: scale(0.94);
+}
+
+
+/* 필터가 실제 적용된 상태 */
+.match-history-filter-toggle.active {
+  border-color: #20b26b;
+
+  background: #20b26b;
+
+  color: #ffffff;
+
+  box-shadow:
+    0 3px 8px rgba(32, 178, 107, 0.2);
+}
+
+
+/* ========================================
+   펼쳐지는 필터 박스
+======================================== */
+
+.match-history-filters {
+  padding: 12px;
+
+  margin-bottom: 14px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+
+/* 필터 제목 + X */
+.match-history-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+}
+
+
+.match-history-filter-header strong {
+  position: relative;
+
+  padding-left: 9px;
+
+  color: #222222;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+
+/* PlayBridge 초록 포인트 */
+.match-history-filter-header strong::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 50%;
+
+  width: 3px;
+  height: 14px;
+
+  border-radius: 999px;
+
+  background: #20b26b;
+
+  transform: translateY(-50%);
+}
+
+/* 필터 닫기 X 버튼 */
+.match-history-filter-header button {
+  width: 30px;
+  height: 30px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid #eeeeee;
+  border-radius: 50%;
+
+  background: #f7f8f8;
+
+  color: #777777;
+
+  font-size: 17px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+
+.match-history-filter-header button:hover {
+  background: #eef8f3;
+
+  color: #20b26b;
+}
+
+
+.match-history-filter-header button:active {
+  transform: scale(0.9);
+}
+
+
+/* ========================================
+   필터 그룹
+======================================== */
+
+.match-history-filter-group {
+  margin-bottom: 12px;
+}
+
+
+.match-history-filter-group:last-of-type {
+  margin-bottom: 0;
+}
+
+
+.match-history-filter-label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #666666;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+/* 가로 스크롤 대신 자동 줄바꿈 */
+.match-history-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 6px;
+}
+
+
+/* 필터 버튼 */
+.match-history-filter-chip {
+  height: 29px;
+
+  padding: 0 10px;
+
+  border: 1px solid #dddddd;
+  border-radius: 999px;
+
+  background: #ffffff;
+
+  color: #777777;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+}
+
+
+.match-history-filter-chip.active {
+  border-color: #20b26b;
+
+  background: #eaf8f1;
+
+  color: #20b26b;
+
+  font-weight: 700;
+}
+
+
+/* ========================================
+   필터 초기화
+======================================== */
+
+.match-history-filter-reset {
+  width: 100%;
+
+  margin-top: 12px;
+
+  padding: 9px 0;
+
+  border: none;
+  border-top: 1px solid #eeeeee;
+
+  background: transparent;
+
+  color: #777777;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+/* ========================================
+   경기 후기
+======================================== */
+
+.match-management-list-status.reviews {
+  background: #fff8e8;
+
+  color: #d69122;
+}
+
+/* 작성한 후기 */
+.match-management-list-status.writtenReviews {
+  background: #eaf8f1;
+
+  color: #20b26b;
+}
+
+
+/* 받은 후기 */
+.match-management-list-status.receivedReviews {
+  background: #fff7e8;
+
+  color: #d28a16;
+}

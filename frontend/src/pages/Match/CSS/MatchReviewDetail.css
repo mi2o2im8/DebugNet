@@ -1,0 +1,472 @@
+/* ========================================
+   Match Review Detail
+======================================== */
+
+.match-review-detail-container {
+  min-height: 100vh;
+
+  padding-bottom: 90px;
+
+  background: #f7f8f8;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   헤더
+======================================== */
+
+.match-review-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 16px;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+}
+
+
+.match-review-detail-header h1 {
+  margin: 0;
+
+  color: #222222;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+
+.match-review-detail-back {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #222222;
+
+  font-size: 30px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+
+.match-review-detail-header-space {
+  width: 34px;
+  height: 34px;
+}
+
+
+/* ========================================
+   메인
+======================================== */
+
+.match-review-detail-main {
+  width: 100%;
+
+  padding: 16px;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   상대 동호회
+======================================== */
+
+.match-review-detail-opponent {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 16px;
+  cursor: pointer;
+  margin-bottom: 12px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+.match-review-detail-opponent:active {
+  background: #f5fbf8;
+}
+
+
+.match-review-detail-profile {
+  width: 48px;
+  height: 48px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 50%;
+
+  background: #eaf8f1;
+
+  color: #20b26b;
+
+  font-size: 18px;
+  font-weight: 800;
+}
+
+
+.match-review-detail-profile img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+
+.match-review-detail-opponent-info {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+
+.match-review-detail-opponent-info span {
+  color: #999999;
+
+  font-size: 11px;
+}
+
+
+.match-review-detail-opponent-info strong {
+  overflow: hidden;
+
+  color: #222222;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* ========================================
+   경기 정보
+======================================== */
+
+.match-review-detail-match {
+  padding: 16px;
+
+  margin-bottom: 12px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+
+/* 점수 */
+.match-review-detail-score {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    28px
+    minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding-bottom: 16px;
+
+  margin-bottom: 14px;
+
+  border-bottom: 1px solid #f1f1f1;
+}
+
+
+.match-review-detail-score > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 7px;
+}
+
+
+.match-review-detail-score > div > span {
+  width: 100%;
+
+  overflow: hidden;
+
+  color: #666666;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  text-align: center;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+.match-review-detail-score > div > strong {
+  color: #222222;
+
+  font-size: 30px;
+  font-weight: 800;
+}
+
+
+.match-review-detail-score > span {
+  color: #aaaaaa;
+
+  font-size: 22px;
+  font-weight: 700;
+
+  text-align: center;
+}
+
+
+/* 경기 날짜/시간/장소 */
+.match-review-detail-match-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+
+.match-review-detail-match-info span {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  color: #777777;
+
+  font-size: 12px;
+}
+
+
+.match-review-detail-match-info svg {
+  flex-shrink: 0;
+
+  color: #999999;
+
+  font-size: 13px;
+}
+
+
+/* ========================================
+   평균 평가
+======================================== */
+
+.match-review-detail-average {
+  display: flex;
+  align-items: baseline;
+
+  gap: 5px;
+
+  padding: 18px;
+
+  margin-bottom: 12px;
+
+  border-radius: 14px;
+
+  background: #eaf8f1;
+
+  box-sizing: border-box;
+}
+
+
+.match-review-detail-average > span {
+  margin-right: auto;
+
+  color: #4e6258;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+.match-review-detail-average > strong {
+  color: #20b26b;
+
+  font-size: 28px;
+  font-weight: 800;
+}
+
+
+.match-review-detail-average > small {
+  color: #789186;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* ========================================
+   평가 항목
+======================================== */
+
+.match-review-detail-ratings {
+  padding: 16px;
+
+  margin-bottom: 12px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+
+.match-review-detail-ratings h2,
+.match-review-detail-content h2 {
+  margin: 0 0 14px;
+
+  color: #222222;
+
+  font-size: 15px;
+  font-weight: 700;
+}
+
+
+.match-review-detail-rating-list {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.match-review-detail-rating-row {
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  border-bottom: 1px solid #f2f2f2;
+}
+
+
+.match-review-detail-rating-row:last-child {
+  border-bottom: none;
+}
+
+
+.match-review-detail-rating-row > span {
+  color: #666666;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+
+.match-review-detail-rating-value {
+  display: flex;
+  align-items: baseline;
+
+  gap: 3px;
+}
+
+
+.match-review-detail-rating-value strong {
+  color: #20b26b;
+
+  font-size: 15px;
+  font-weight: 800;
+}
+
+
+.match-review-detail-rating-value small {
+  color: #999999;
+
+  font-size: 10px;
+}
+
+
+/* ========================================
+   자유 후기
+======================================== */
+
+.match-review-detail-content {
+  padding: 16px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+
+.match-review-detail-content p {
+  margin: 0;
+
+  color: #555555;
+
+  font-size: 12px;
+  line-height: 1.7;
+
+  white-space: pre-wrap;
+}
+
+
+.match-review-detail-content p.empty {
+  color: #aaaaaa;
+}
+
+/* ========================================
+   상대 동호회 이동 화살표
+======================================== */
+
+.match-review-detail-opponent-arrow {
+  flex-shrink: 0;
+
+  margin-left: auto;
+
+  color: #aaaaaa;
+
+  font-size: 18px;
+}

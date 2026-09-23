@@ -1,0 +1,404 @@
+/* ========================================
+   Match Record Write
+======================================== */
+
+.match-record-write-container {
+  min-height: 100vh;
+
+  background: #f7f8f8;
+
+  padding-bottom: 150px;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   상단 헤더
+======================================== */
+
+.match-record-write-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 16px;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+}
+
+
+.match-record-write-header h1 {
+  margin: 0;
+
+  color: #222222;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+
+.match-record-write-back {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #222222;
+
+  font-size: 30px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+
+.match-record-write-header-space {
+  width: 34px;
+  height: 34px;
+}
+
+
+/* ========================================
+   메인
+======================================== */
+
+.match-record-write-main {
+  width: 100%;
+
+  padding: 16px;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   경기 기본 정보 카드
+======================================== */
+
+.match-record-info-card {
+  padding: 16px;
+
+  margin-bottom: 14px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+
+.match-record-eyebrow {
+  display: inline-block;
+
+  margin-bottom: 6px;
+
+  color: #20b26b;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+.match-record-info-card h2 {
+  margin: 0 0 14px;
+
+  color: #222222;
+
+  font-size: 16px;
+  font-weight: 700;
+}
+
+
+/* 기본 정보 */
+.match-record-basic-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+
+.match-record-basic-info span {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  color: #777777;
+
+  font-size: 12px;
+}
+
+
+.match-record-basic-info svg {
+  flex-shrink: 0;
+
+  color: #999999;
+
+  font-size: 13px;
+}
+
+
+/* ========================================
+   경기 결과
+======================================== */
+
+.match-record-score-section {
+  padding: 16px;
+
+  margin-bottom: 14px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+
+.match-record-section-title {
+  margin-bottom: 20px;
+}
+
+
+.match-record-section-title h2 {
+  margin: 0 0 5px;
+
+  color: #222222;
+
+  font-size: 16px;
+  font-weight: 700;
+}
+
+
+.match-record-section-title p {
+  margin: 0;
+
+  color: #999999;
+
+  font-size: 12px;
+}
+
+
+/* ========================================
+   점수 입력
+======================================== */
+
+.match-record-score-box {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    28px
+    minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 6px 0;
+}
+
+
+.match-record-team {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 6px;
+}
+
+
+.match-record-team > span {
+  color: #999999;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+
+.match-record-team > strong {
+  width: 100%;
+
+  min-height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  color: #333333;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  text-align: center;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* 점수 입력칸 */
+.match-record-team input {
+  width: 72px;
+  height: 64px;
+
+  padding: 0;
+
+  border: 1px solid #dddddd;
+  border-radius: 12px;
+
+  outline: none;
+
+  background: #fafafa;
+
+  color: #222222;
+
+  font-size: 28px;
+  font-weight: 800;
+
+  text-align: center;
+
+  box-sizing: border-box;
+}
+
+
+.match-record-team input:focus {
+  border-color: #20b26b;
+
+  background: #ffffff;
+}
+
+
+.match-record-team input::placeholder {
+  color: #cccccc;
+}
+
+
+/* 점수 사이 : */
+.match-record-score-divider {
+  padding-top: 48px;
+
+  color: #999999;
+
+  font-size: 24px;
+  font-weight: 700;
+
+  text-align: center;
+}
+
+
+/* ========================================
+   안내
+======================================== */
+
+.match-record-notice {
+  padding: 15px 16px;
+
+  border-radius: 12px;
+
+  background: #effaf4;
+
+  box-sizing: border-box;
+}
+
+
+.match-record-notice strong {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #20b26b;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+.match-record-notice p {
+  margin: 0;
+
+  color: #68736d;
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+
+/* ========================================
+   하단 버튼
+======================================== */
+
+.match-record-write-actions {
+  position: fixed;
+
+  left: 0;
+  right: 0;
+  bottom: 64px;
+
+  z-index: 40;
+
+  width: 100%;
+  max-width: 444px;
+
+  margin: 0 auto;
+
+  padding: 10px 16px 12px;
+
+  background: #ffffff;
+
+  border-top: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+}
+
+
+.match-record-submit-btn {
+  width: 100%;
+  height: 44px;
+
+  padding: 0 14px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #20b26b;
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+.match-record-submit-btn:active {
+  opacity: 0.88;
+}

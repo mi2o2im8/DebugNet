@@ -1,0 +1,428 @@
+/* ========================================
+   Match Management
+   운영진 - 매칭 관리 메인
+======================================== */
+
+
+/* 전체 화면 */
+.match-management-container {
+  min-height: 100vh;
+
+  background: #f7f8f8;
+
+  padding-bottom: 90px;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   상단 헤더
+======================================== */
+
+.match-management-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 16px;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-header h1 {
+  margin: 0;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  color: #222222;
+}
+
+
+/* 뒤로가기 */
+.match-management-back-btn {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #222222;
+
+  font-size: 30px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+
+/* 제목 가운데 정렬용 */
+.match-management-header-space {
+  width: 34px;
+  height: 34px;
+}
+
+
+/* ========================================
+   메인
+======================================== */
+
+.match-management-main {
+  width: 100%;
+
+  padding: 16px;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   현재 관리 중인 동호회
+======================================== */
+
+.match-management-club {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  padding: 16px;
+
+  margin-bottom: 20px;
+
+  background: #ffffff;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-club span {
+  color: #888888;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+
+.match-management-club strong {
+  color: #222222;
+
+  font-size: 17px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   매칭 현황
+======================================== */
+
+.match-management-summary {
+  margin-bottom: 24px;
+}
+
+
+.match-management-summary > h2 {
+  margin: 0 0 12px;
+
+  color: #222222;
+
+  font-size: 17px;
+  font-weight: 700;
+}
+
+
+/* 2 x 2 */
+.match-management-summary-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 10px;
+}
+
+
+/* 현황 카드 */
+.match-management-summary-card {
+  min-height: 118px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  gap: 7px;
+
+  padding: 15px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+
+.match-management-summary-card:active {
+  transform: scale(0.98);
+
+  background: #f8faf9;
+}
+
+
+/* 아이콘 */
+.match-management-summary-icon {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 3px;
+
+  border-radius: 10px;
+
+  background: #effaf4;
+
+  color: #20b26b;
+
+  font-size: 18px;
+}
+
+
+.match-management-summary-card > span {
+  color: #666666;
+
+  font-size: 13px;
+  font-weight: 500;
+}
+
+
+.match-management-summary-card > strong {
+  color: #222222;
+
+  font-size: 22px;
+  font-weight: 800;
+}
+
+
+/* ========================================
+   최근 매칭
+======================================== */
+
+.match-management-recent {
+  margin-bottom: 20px;
+}
+
+
+.match-management-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+}
+
+
+.match-management-section-head h2 {
+  margin: 0;
+
+  color: #222222;
+
+  font-size: 17px;
+  font-weight: 700;
+}
+
+
+/* 최근 매칭 목록 */
+.match-management-recent-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+
+/* 최근 매칭 카드 */
+.match-management-recent-card {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 15px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  color: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-recent-card:active {
+  background: #f8faf9;
+}
+
+
+/* 카드 왼쪽 */
+.match-management-recent-content {
+  min-width: 0;
+
+  flex: 1;
+}
+
+
+/* 팀명 + 상태 */
+.match-management-recent-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-bottom: 9px;
+}
+
+
+.match-management-recent-top strong {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: #222222;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* ========================================
+   상태 뱃지
+======================================== */
+
+.match-management-status {
+  flex-shrink: 0;
+
+  padding: 4px 8px;
+
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+/* 받은 신청 */
+.match-management-status.received {
+  background: #eaf8f1;
+
+  color: #20b26b;
+}
+
+
+/* 예정 경기 */
+.match-management-status.upcoming {
+  background: #f1f4f8;
+
+  color: #526477;
+}
+
+
+/* 보낸 신청 - 이후 목록 페이지에서도 재사용 가능 */
+.match-management-status.sent {
+  background: #f5f3ff;
+
+  color: #6f5bd3;
+}
+
+
+/* 지난 경기 - 이후 목록 페이지에서도 재사용 가능 */
+.match-management-status.history {
+  background: #f3f3f3;
+
+  color: #777777;
+}
+
+
+/* ========================================
+   경기 정보
+======================================== */
+
+.match-management-recent-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 5px 8px;
+}
+
+
+.match-management-recent-info span {
+  color: #777777;
+
+  font-size: 12px;
+}
+
+
+/* 항목 사이 구분점 */
+.match-management-recent-info span:not(:last-child)::after {
+  content: "·";
+
+  margin-left: 8px;
+
+  color: #cccccc;
+}
+
+
+/* 오른쪽 화살표 */
+.match-management-recent-card > svg {
+  flex-shrink: 0;
+
+  color: #aaaaaa;
+
+  font-size: 18px;
+}
+

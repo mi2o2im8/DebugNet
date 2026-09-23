@@ -53,6 +53,14 @@ import ClubMemberManagement from "./pages/ClubMembers/ClubMemberManagement";
 import ClubMemberDetail from "./pages/ClubMembers/ClubMemberDetail";
 
 
+import MatchManagement from "./pages/Match/MatchManagement";
+import MatchManagementList from "./pages/Match/MatchManagementList";
+import MatchManagementDetail from "./pages/Match/MatchManagementDetail";
+import MatchRecordWrite from "./pages/Match/MatchRecordWrite";
+import MatchReviewWrite from "./pages/Match/MatchReviewWrite";
+import MatchReviewDetail from "./pages/Match/MatchReviewDetail";
+
+
 
 // 내 정보
 import Mypage from "./pages/Mypage/Mypage";
@@ -262,9 +270,42 @@ function App() {
             />
 
             <Route
+
               path="/clubs/:clubId/manage/members/:clubMemberId"
               element={<ClubMemberDetail />}
             />
+
+            <Route
+              path="/clubs/:clubId/matches"
+              element={<MatchManagement />}
+            />
+
+            <Route
+              path="/clubs/:clubId/matches/list"
+              element={<MatchManagementList />}
+            />
+
+            <Route
+              path="/clubs/:clubId/matches/:clubMatchId"
+              element={<MatchManagementDetail />}
+            />
+
+            <Route
+              path="/clubs/:clubId/matches/:clubMatchId/record"
+              element={<MatchRecordWrite />}
+            />
+
+            <Route
+              path="/clubs/:clubId/matches/:clubMatchId/review"
+              element={<MatchReviewWrite />}
+            />
+
+            <Route
+              path="/clubs/:clubId/matches/:clubMatchId/review-detail"
+              element={<MatchReviewDetail />}
+            />
+                          
+
 
 
             {/* =================================================

@@ -236,6 +236,13 @@ function ClubDashboard() {
             return;
         }
 
+        if (menuId === "matches") {
+            navigate(
+                `/clubs/${clubId}/matches`
+            );
+            return;
+        }
+
         alert(
             "해당 관리 기능은 이후 단계에서 연결합니다."
         );

@@ -1,0 +1,830 @@
+/* ========================================
+   Match Management Detail
+======================================== */
+
+.match-management-detail-container {
+  min-height: 100vh;
+
+  background: #f7f8f8;
+
+  padding-bottom: 140px;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   상단 헤더
+======================================== */
+
+.match-management-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 16px;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-detail-header h1 {
+  margin: 0;
+
+  color: #222222;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+
+.match-management-detail-back,
+.match-management-detail-header > button {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #222222;
+
+  font-size: 30px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+
+.match-management-detail-header-space,
+.match-management-detail-header > div {
+  width: 34px;
+  height: 34px;
+}
+
+
+/* ========================================
+   메인
+======================================== */
+
+.match-management-detail-main {
+  width: 100%;
+
+  padding: 16px;
+
+  box-sizing: border-box;
+}
+
+
+/* ========================================
+   상대 동호회
+======================================== */
+
+.match-management-opponent {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 16px;
+
+  margin-bottom: 12px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  color: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-opponent:active {
+  background: #f8faf9;
+}
+
+
+/* 프로필 */
+.match-management-opponent-profile {
+  width: 48px;
+  height: 48px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 50%;
+
+  background: #eaf8f1;
+
+  color: #20b26b;
+
+  font-size: 18px;
+  font-weight: 800;
+}
+
+
+.match-management-opponent-profile img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+
+/* 상대 동호회 정보 */
+.match-management-opponent-info {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+
+.match-management-opponent-info > span {
+  color: #999999;
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+
+.match-management-opponent-info > strong {
+  overflow: hidden;
+
+  color: #222222;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+.match-management-opponent > svg {
+  flex-shrink: 0;
+
+  color: #aaaaaa;
+
+  font-size: 18px;
+}
+
+
+/* ========================================
+   현재 상태
+======================================== */
+
+.match-management-detail-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 14px 16px;
+
+  margin-bottom: 16px;
+
+  border-radius: 12px;
+
+  background: #effaf4;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-detail-status span {
+  color: #666666;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+
+.match-management-detail-status strong {
+  color: #20b26b;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   상세 섹션
+======================================== */
+
+.match-management-detail-section {
+  padding: 16px;
+
+  margin-bottom: 12px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-detail-section h2 {
+  margin: 0 0 14px;
+
+  color: #222222;
+
+  font-size: 16px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   상세 정보 목록
+======================================== */
+
+.match-management-detail-info-list {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.match-management-detail-info-row {
+  min-height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 8px 0;
+
+  border-bottom: 1px solid #f1f1f1;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-detail-info-row:last-child {
+  border-bottom: none;
+}
+
+
+.match-management-detail-info-row > span {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  color: #888888;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+
+.match-management-detail-info-row > span svg {
+  color: #999999;
+
+  font-size: 13px;
+}
+
+
+.match-management-detail-info-row > strong {
+  min-width: 0;
+
+  color: #333333;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  text-align: right;
+
+  word-break: keep-all;
+}
+
+
+/* ========================================
+   소개
+======================================== */
+
+.match-management-detail-intro {
+  margin: 0;
+
+  color: #555555;
+
+  font-size: 13px;
+  line-height: 1.7;
+
+  white-space: pre-wrap;
+}
+
+
+/* ========================================
+   경기 결과
+======================================== */
+
+.match-management-score {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    32px
+    minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 16px 0 6px;
+}
+
+
+.match-management-score > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 10px;
+}
+
+
+.match-management-score > div > span {
+  width: 100%;
+
+  overflow: hidden;
+
+  color: #666666;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  text-align: center;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+.match-management-score > div > strong {
+  color: #222222;
+
+  font-size: 34px;
+  font-weight: 800;
+}
+
+
+.match-management-score-divider {
+  color: #aaaaaa;
+
+  font-size: 24px;
+  font-weight: 700;
+
+  text-align: center;
+}
+
+
+/* ========================================
+   하단 액션
+======================================== */
+
+.match-management-detail-actions {
+  position: fixed;
+
+  left: 0;
+  right: 0;
+  bottom: 64px;
+
+  z-index: 40;
+
+  width: 100%;
+  max-width: 444px;
+
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 10px 16px 12px;
+
+  background: #ffffff;
+
+  border-top: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+}
+
+
+/* 승인 등 주요 버튼 */
+.match-management-primary-btn {
+  height: 44px;
+
+  flex: 1;
+
+  padding: 0 14px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #20b26b;
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+.match-management-primary-btn:active {
+  opacity: 0.88;
+}
+
+
+.match-management-primary-btn.full {
+  width: 100%;
+}
+
+
+/* 거절 */
+.match-management-reject-btn {
+  height: 44px;
+
+  flex: 1;
+
+  padding: 0 14px;
+
+  border: 1px solid #dddddd;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #666666;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+.match-management-reject-btn:active {
+  background: #f7f7f7;
+}
+
+
+/* 대기 / 완료 안내 */
+.match-management-waiting {
+  width: 100%;
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 14px;
+
+  border-radius: 10px;
+
+  background: #f2f3f5;
+
+  color: #777777;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  text-align: center;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-waiting.completed {
+  background: #eaf8f1;
+
+  color: #20b26b;
+}
+
+
+/* ========================================
+   데이터 없음
+======================================== */
+
+.match-management-detail-empty {
+  padding: 60px 20px;
+
+  color: #999999;
+
+  font-size: 13px;
+
+  text-align: center;
+}
+
+/* ========================================
+   보낸 매칭 신청 취소
+======================================== */
+
+.match-management-cancel-request-btn {
+  width: 100%;
+  height: 44px;
+
+  padding: 0 14px;
+
+  border: 1px solid #e1a5a5;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #c65353;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-cancel-request-btn:active {
+  background: #fff7f7;
+}
+
+
+/* ========================================
+   경기 기록 수정
+======================================== */
+
+.match-management-record-edit {
+  margin-top: 18px;
+
+  padding-top: 16px;
+
+  border-top: 1px solid #eeeeee;
+}
+
+
+/* 설명 */
+.match-management-record-edit-title {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  margin-bottom: 16px;
+}
+
+
+.match-management-record-edit-title strong {
+  color: #333333;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+.match-management-record-edit-title span {
+  color: #999999;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+
+/* 점수 */
+.match-management-record-edit-score {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    24px
+    minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: 10px;
+}
+
+
+.match-management-record-edit-score > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 8px;
+}
+
+
+.match-management-record-edit-score > div > span {
+  width: 100%;
+
+  overflow: hidden;
+
+  color: #777777;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  text-align: center;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* 점수 입력 */
+.match-management-record-edit-score input {
+  width: 70px;
+  height: 56px;
+
+  padding: 0;
+
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #fafafa;
+
+  color: #222222;
+
+  font-size: 24px;
+  font-weight: 800;
+
+  text-align: center;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-record-edit-score input:focus {
+  border-color: #20b26b;
+
+  background: #ffffff;
+}
+
+
+.match-management-record-edit-score > strong {
+  padding-top: 25px;
+
+  color: #999999;
+
+  font-size: 20px;
+
+  text-align: center;
+}
+
+/* ========================================
+   경기 후기 메뉴
+======================================== */
+
+.match-management-review-menu {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+
+/* 클릭 가능한 후기 */
+.match-management-review-link {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 13px 14px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 11px;
+
+  background: #fafafa;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-review-link:active {
+  background: #f1f8f4;
+}
+
+
+.match-management-review-link > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+
+.match-management-review-link strong {
+  color: #333333;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+.match-management-review-link span {
+  color: #999999;
+
+  font-size: 10px;
+}
+
+
+.match-management-review-link > svg {
+  flex-shrink: 0;
+
+  color: #aaaaaa;
+
+  font-size: 17px;
+}
+
+
+/* ========================================
+   아직 받은 후기가 없는 경우
+======================================== */
+
+.match-management-review-empty {
+  padding: 13px 14px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 11px;
+
+  background: #fafafa;
+
+  box-sizing: border-box;
+}
+
+
+.match-management-review-empty > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+
+.match-management-review-empty strong {
+  color: #777777;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+.match-management-review-empty span {
+  color: #aaaaaa;
+
+  font-size: 10px;
+}
