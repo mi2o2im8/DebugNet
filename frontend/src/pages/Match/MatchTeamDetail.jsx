@@ -396,7 +396,7 @@ function MatchTeamDetail() {
 
           <header className="match-team-detail-header">
             <BackButton
-              to="/matches"
+              
               className="match-shared-back-button"
             />
 
@@ -429,7 +429,7 @@ function MatchTeamDetail() {
 
           <header className="match-team-detail-header">
             <BackButton
-              to="/matches"
+              
               className="match-shared-back-button"
             />
 
@@ -463,7 +463,7 @@ function MatchTeamDetail() {
       <header className="match-team-detail-header">
 
         {/* 공용 뒤로가기 버튼 */}
-        <BackButton to="/matches" className="match-shared-back-button" />
+        <BackButton  className="match-shared-back-button" />
 
         <h1>
           경기 상세
