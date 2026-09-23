@@ -10,11 +10,15 @@ import {
 
 import {
     FiCalendar,
+    FiCheck,
     FiChevronLeft,
+    FiChevronRight,
     FiClock,
     FiMapPin,
+    FiPlus,
     FiSave,
-    FiUsers
+    FiUsers,
+    FiX
 } from "react-icons/fi";
 
 import ClubEventPlacePicker
@@ -59,6 +63,49 @@ const INITIAL_FORM = {
         "불참",
         "미정"
     ]
+};
+
+const EVENT_STEPS = [
+    {
+        number: 1,
+        label: "기본 정보"
+    },
+    {
+        number: 2,
+        label: "날짜·시간"
+    },
+    {
+        number: 3,
+        label: "장소"
+    },
+    {
+        number: 4,
+        label: "참여·투표"
+    },
+    {
+        number: 5,
+        label: "확인"
+    }
+];
+
+
+const EVENT_TYPE_LABELS = {
+    regular: "정기 활동",
+    special: "특별 활동"
+};
+
+
+const RECURRENCE_TYPE_LABELS = {
+    none: "반복 안 함",
+    weekly: "매주 반복",
+    monthly: "매월 반복",
+    custom: "직접 날짜 선택"
+};
+
+
+const PARTICIPATION_METHOD_LABELS = {
+    open: "바로 참여",
+    approval: "운영자 승인"
 };
 
 
