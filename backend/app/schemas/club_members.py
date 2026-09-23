@@ -1,4 +1,8 @@
-from datetime import datetime
+from datetime import (
+    date,
+    datetime,
+)
+
 from typing import Literal
 
 from pydantic import (
@@ -114,7 +118,13 @@ class ClubMemberListItemResponse(BaseModel):
         "suspended",
     ]
 
+    joined_at: datetime | None = None
     join_source: str | None = None
+
+    responded_vote_count: int = 0
+    eligible_vote_count: int = 0
+    vote_participation_rate: int | None = None
+    warning_count: int = 0
 
 
 # ---------------------------------------------------------
@@ -179,3 +189,87 @@ class ClubMemberUpdateResponse(BaseModel):
     ]
 
     message: str
+
+# ---------------------------------------------------------
+# 회원 활동 내역
+# ---------------------------------------------------------
+class ClubMemberActivityResponse(BaseModel):
+    event_id: int
+    event_title: str
+    event_date: date
+
+    participation_status: str
+
+    attendance_status: Literal[
+        "attending",
+        "absent",
+        "undecided",
+    ]
+
+
+# ---------------------------------------------------------
+# 회원 투표 내역
+# ---------------------------------------------------------
+class ClubMemberVoteResponse(BaseModel):
+    vote_id: int
+    event_id: int
+
+    vote_title: str
+    event_title: str
+
+    deadline: datetime | None = None
+    created_at: datetime | None = None
+
+    has_responded: bool
+
+
+# ---------------------------------------------------------
+# 회원 경고 내역
+# ---------------------------------------------------------
+class ClubMemberWarningResponse(BaseModel):
+    warning_id: int
+    warning_type: str
+    reason: str | None = None
+    created_at: datetime
+
+
+# ---------------------------------------------------------
+# 회원 상세 정보
+# ---------------------------------------------------------
+class ClubMemberDetailResponse(
+    ClubMemberListItemResponse
+):
+    email: str
+    phone: str | None = None
+    bio: str | None = None
+
+    attending_count: int = 0
+    absent_count: int = 0
+    undecided_count: int = 0
+
+    activities: list[
+        ClubMemberActivityResponse
+    ] = Field(
+        default_factory=list
+    )
+
+    votes: list[
+        ClubMemberVoteResponse
+    ] = Field(
+        default_factory=list
+    )
+
+    warnings: list[
+        ClubMemberWarningResponse
+    ] = Field(
+        default_factory=list
+    )
+
+    current_user_role: Literal[
+        "owner",
+        "manager",
+    ]
+
+    can_change_role: bool = False
+    can_change_status: bool = False
+    can_remove_member: bool = False

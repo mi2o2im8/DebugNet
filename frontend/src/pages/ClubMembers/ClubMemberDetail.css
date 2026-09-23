@@ -1,0 +1,401 @@
+.club-member-detail-page,
+.club-member-detail-state {
+    min-height: 100vh;
+    background: #f6f9f7;
+    color: #172019;
+}
+
+.club-member-detail-page {
+    padding-bottom: 110px;
+}
+
+.club-member-detail-state {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 14px;
+    padding: 24px;
+    color: #69746c;
+    font-size: 14px;
+    text-align: center;
+}
+
+.club-member-detail-state button {
+    padding: 10px 14px;
+    border: 1px solid #d5dfd8;
+    border-radius: 9px;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.club-member-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e4ebe6;
+    background: #ffffff;
+}
+
+.club-member-detail-header button {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid #dce5df;
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.club-member-detail-header h1 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.club-member-detail-profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 22px 20px 18px;
+    background: #ffffff;
+}
+
+.club-member-detail-avatar {
+    display: grid;
+    place-items: center;
+    width: 68px;
+    height: 68px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #e0f5e7;
+    color: #008d34;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.club-member-detail-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.club-member-detail-name {
+    display: grid;
+    gap: 3px;
+}
+
+.club-member-detail-name h2,
+.club-member-detail-name p {
+    margin: 0;
+}
+
+.club-member-detail-name h2 {
+    font-size: 19px;
+}
+
+.club-member-detail-name p {
+    color: #748078;
+    font-size: 12px;
+}
+
+.club-member-detail-name > div {
+    display: flex;
+    gap: 6px;
+    margin-top: 5px;
+}
+
+.club-member-detail-name span {
+    padding: 5px 7px;
+    border-radius: 7px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.club-member-detail-name .role.owner {
+    background: #fff0cf;
+    color: #986300;
+}
+
+.club-member-detail-name .role.manager {
+    background: #e6edff;
+    color: #4267ac;
+}
+
+.club-member-detail-name .role.member {
+    background: #edf2ef;
+    color: #59665e;
+}
+
+.club-member-detail-name .status.active {
+    background: #e1f6e8;
+    color: #008b33;
+}
+
+.club-member-detail-name .status.suspended {
+    background: #ffe7e7;
+    color: #c94141;
+}
+
+.club-member-detail-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 16px 20px;
+    overflow: hidden;
+    border: 1px solid #dfe8e2;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.club-member-detail-summary div {
+    display: grid;
+    gap: 4px;
+    padding: 15px 6px;
+    text-align: center;
+}
+
+.club-member-detail-summary div + div {
+    border-left: 1px solid #e5ece7;
+}
+
+.club-member-detail-summary span,
+.club-member-detail-summary small {
+    color: #7a857e;
+    font-size: 10px;
+}
+
+.club-member-detail-summary strong {
+    font-size: 20px;
+}
+
+.club-member-detail-summary strong.warning {
+    color: #c94747;
+}
+
+.club-member-detail-error {
+    margin: 0 20px 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #fff0f0;
+    color: #c54040;
+    font-size: 12px;
+}
+
+.club-member-detail-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 0 20px;
+    border-bottom: 1px solid #dfe7e2;
+    background: #ffffff;
+}
+
+.club-member-detail-tabs button {
+    padding: 13px 2px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: #7a857e;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.club-member-detail-tabs button.active {
+    border-bottom-color: #009b3a;
+    color: #008c35;
+    font-weight: 700;
+}
+
+.club-member-detail-content {
+    padding: 18px 20px;
+}
+
+.club-member-detail-info,
+.club-member-detail-history {
+    display: grid;
+    gap: 12px;
+}
+
+.club-member-detail-info dl {
+    margin: 0;
+    padding: 16px;
+    border: 1px solid #dfe8e2;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.club-member-detail-info dl > div {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+}
+
+.club-member-detail-info dl > div + div {
+    border-top: 1px solid #edf1ee;
+}
+
+.club-member-detail-info dt {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #7a857e;
+    font-size: 11px;
+}
+
+.club-member-detail-info dd {
+    margin: 0;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.club-member-detail-bio {
+    padding: 16px;
+    border: 1px solid #dfe8e2;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.club-member-detail-bio h3 {
+    margin: 0 0 9px;
+    font-size: 13px;
+}
+
+.club-member-detail-bio p {
+    margin: 0;
+    color: #5e6a62;
+    font-size: 12px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+.club-member-detail-history article {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 15px;
+    border: 1px solid #dfe8e2;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.club-member-detail-history article > div {
+    display: grid;
+    gap: 4px;
+}
+
+.club-member-detail-history strong {
+    font-size: 13px;
+}
+
+.club-member-detail-history span,
+.club-member-detail-history small {
+    color: #7a857e;
+    font-size: 10px;
+}
+
+.club-member-detail-history .history-status {
+    flex: 0 0 auto;
+    padding: 5px 7px;
+    border-radius: 7px;
+    font-weight: 700;
+}
+
+.club-member-detail-history .history-status.attending {
+    background: #e1f6e8;
+    color: #008b33;
+}
+
+.club-member-detail-history .history-status.absent {
+    background: #ffe7e7;
+    color: #c94141;
+}
+
+.club-member-detail-history .history-status.undecided {
+    background: #fff3d7;
+    color: #a96d00;
+}
+
+.club-member-detail-history .empty {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    padding: 45px 20px;
+    border: 1px dashed #ced9d1;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #849087;
+    text-align: center;
+}
+
+.club-member-detail-history .empty svg {
+    font-size: 28px;
+}
+
+.club-member-detail-history .empty p {
+    margin: 0;
+    font-size: 12px;
+}
+
+.club-member-detail-management {
+    margin: 0 20px 24px;
+    padding: 16px;
+    border: 1px solid #dfe8e2;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.club-member-detail-management h2 {
+    margin: 0 0 12px;
+    font-size: 14px;
+}
+
+.club-member-detail-management > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+}
+
+.club-member-detail-management button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 42px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.club-member-detail-management .role {
+    border: 1px solid #b9c9e8;
+    background: #f4f7ff;
+    color: #4569aa;
+}
+
+.club-member-detail-management .suspend {
+    border: 1px solid #efcccc;
+    background: #ffffff;
+    color: #c94747;
+}
+
+.club-member-detail-management .restore {
+    border: 1px solid #009b3a;
+    background: #009b3a;
+    color: #ffffff;
+}
+
+.club-member-detail-management .remove {
+    grid-column: 1 / -1;
+    border: 1px solid #efcccc;
+    background: #fff2f2;
+    color: #c63f3f;
+}
+
+.club-member-detail-management button:disabled {
+    cursor: wait;
+    opacity: 0.55;
+}

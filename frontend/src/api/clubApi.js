@@ -351,6 +351,24 @@ export async function getClubMembers(
 }
 
 // ---------------------------------------------------------
+// 동호회 회원 상세 조회
+// ---------------------------------------------------------
+export async function getClubMemberDetail(
+    clubId,
+    clubMemberId
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/members/`
+            + clubMemberId
+        ),
+        {
+            method: "GET"
+        }
+    );
+}
+
+// ---------------------------------------------------------
 // 동호회 가입 신청 목록 조회
 // ---------------------------------------------------------
 export async function getClubApplications(

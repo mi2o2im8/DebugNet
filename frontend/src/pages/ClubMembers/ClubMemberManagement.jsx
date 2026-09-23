@@ -14,6 +14,7 @@ import {
     FiArrowLeft,
     FiCheck,
     FiChevronDown,
+    FiChevronRight,
     FiChevronUp,
     FiClock,
     FiShield,
@@ -26,8 +27,6 @@ import {
     decideClubApplication,
     getClubApplications,
     getClubMembers,
-    updateClubMemberRole,
-    updateClubMemberStatus
 } from "../../api/clubApi";
 
 import "./ClubMemberManagement.css";
@@ -139,16 +138,6 @@ function ClubMemberManagement() {
         setProcessingApplicationId
     ] = useState(null);
 
-    const [
-        processingMemberId,
-        setProcessingMemberId
-    ] = useState(null);
-
-    const [
-        currentUserRole,
-        setCurrentUserRole
-    ] = useState("");
-
     const [isLoading, setIsLoading] =
         useState(true);
 
@@ -186,10 +175,6 @@ function ClubMemberManagement() {
                     || []
                 );
 
-                setCurrentUserRole(
-                    memberResult.current_user_role
-                    || ""
-                );
             } catch (error) {
                 setErrorMessage(
                     error.message
@@ -343,123 +328,6 @@ function ClubMemberManagement() {
             );
         } finally {
             setProcessingApplicationId(null);
-        }
-    };
-
-    // -----------------------------------------------------
-    // 운영진 지정·해제
-    // -----------------------------------------------------
-    const handleMemberRoleChange = async (
-        member
-    ) => {
-        if (processingMemberId !== null) {
-            return;
-        }
-
-        const nextRole = (
-            member.role === "manager"
-                ? "member"
-                : "manager"
-        );
-
-        const actionLabel = (
-            nextRole === "manager"
-                ? "운영진으로 지정"
-                : "일반 회원으로 변경"
-        );
-
-        const confirmed = window.confirm(
-            `${member.nickname}님을 `
-            + `${actionLabel}할까요?`
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
-        setProcessingMemberId(
-            member.club_member_id
-        );
-
-        setErrorMessage("");
-
-        try {
-            const result =
-                await updateClubMemberRole(
-                    clubId,
-                    member.club_member_id,
-                    nextRole
-                );
-
-            window.alert(result.message);
-
-            await loadManagementData();
-        } catch (error) {
-            setErrorMessage(
-                error.message
-                || "회원 역할을 변경하지 못했습니다."
-            );
-        } finally {
-            setProcessingMemberId(null);
-        }
-    };
-
-
-    // -----------------------------------------------------
-    // 회원 활동 정지·복구
-    // -----------------------------------------------------
-    const handleMemberStatusChange = async (
-        member
-    ) => {
-        if (processingMemberId !== null) {
-            return;
-        }
-
-        const nextStatus = (
-            member.status === "suspended"
-                ? "active"
-                : "suspended"
-        );
-
-        const actionLabel = (
-            nextStatus === "active"
-                ? "활동 상태로 복구"
-                : "활동 정지"
-        );
-
-        const confirmed = window.confirm(
-            `${member.nickname}님을 `
-            + `${actionLabel}할까요?`
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
-        setProcessingMemberId(
-            member.club_member_id
-        );
-
-        setErrorMessage("");
-
-        try {
-            const result =
-                await updateClubMemberStatus(
-                    clubId,
-                    member.club_member_id,
-                    nextStatus
-                );
-
-            window.alert(result.message);
-
-            await loadManagementData();
-        } catch (error) {
-            setErrorMessage(
-                error.message
-                || "회원 상태를 변경하지 못했습니다."
-            );
-        } finally {
-            setProcessingMemberId(null);
         }
     };
 
@@ -950,181 +818,150 @@ function ClubMemberManagement() {
                         ) : (
                             members.map((member) => (
                                 <article
-                                    key={
-                                        member.club_member_id
-                                    }
+                                    key={member.club_member_id}
                                     className={
                                         "club-member-card "
                                         + `member-${member.status}`
                                     }
                                 >
-                                    <div className="club-member-profile">
-                                        <div className="club-member-avatar">
-                                            {
-                                                member.profile_image
-                                                    ? (
-                                                        <img
-                                                            src={
-                                                                member
-                                                                    .profile_image
-                                                            }
-                                                            alt=""
-                                                        />
-                                                    )
-                                                    : (
-                                                        <span>
-                                                            {
-                                                                getProfileInitial(
-                                                                    member
-                                                                )
-                                                            }
-                                                        </span>
-                                                    )
-                                            }
-                                        </div>
-
-                                        <div className="club-member-identity">
-                                            <strong>
-                                                {member.nickname}
-                                            </strong>
-
-                                            <span>
-                                                {member.name}
-                                            </span>
-
-                                            <small>
-                                                가입 경로 ·{" "}
+                                    <button
+                                        type="button"
+                                        className="club-member-list-link"
+                                        aria-label={
+                                            `${member.nickname} 회원 상세 보기`
+                                        }
+                                        onClick={() =>
+                                            navigate(
+                                                `/clubs/${clubId}/manage/members/`
+                                                + member.club_member_id
+                                            )
+                                        }
+                                    >
+                                        <div className="club-member-profile">
+                                            <div className="club-member-avatar">
                                                 {
-                                                    JOIN_SOURCE_LABELS[
-                                                        member
-                                                            .join_source
-                                                    ]
-                                                    || member.join_source
-                                                    || "정보 없음"
-                                                }
-                                            </small>
-                                        </div>
-
-                                        <div className="club-member-badges">
-                                            <span
-                                                className={
-                                                    "club-member-role "
-                                                    + member.role
-                                                }
-                                            >
-                                                <FiShield />
-
-                                                {
-                                                    MEMBER_ROLE_LABELS[
-                                                        member.role
-                                                    ]
-                                                    || member.role
-                                                }
-                                            </span>
-
-                                            <span
-                                                className={
-                                                    "club-member-state-badge "
-                                                    + member.status
-                                                }
-                                            >
-                                                {
-                                                    MEMBER_STATUS_LABELS[
-                                                        member.status
-                                                    ]
-                                                    || member.status
-                                                }
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {
-                                        member.role !== "owner"
-                                        && (
-                                            <div className="club-member-management-actions">
-                                                {
-                                                    currentUserRole
-                                                    === "owner"
-                                                    && member.status
-                                                    === "active"
-                                                    && (
-                                                        <button
-                                                            type="button"
-                                                            className="role"
-                                                            disabled={
-                                                                processingMemberId
-                                                                !== null
-                                                            }
-                                                            onClick={() =>
-                                                                handleMemberRoleChange(
-                                                                    member
-                                                                )
-                                                            }
-                                                        >
-                                                            <FiShield />
-
-                                                            {
-                                                                member.role
-                                                                === "manager"
-                                                                    ? "운영진 해제"
-                                                                    : "운영진 지정"
-                                                            }
-                                                        </button>
-                                                    )
-                                                }
-
-                                                {
-                                                    (
-                                                        member.status
-                                                        === "active"
-                                                        || member.status
-                                                        === "suspended"
-                                                    )
-                                                    && !(
-                                                        currentUserRole
-                                                        === "manager"
-                                                        && member.role
-                                                        === "manager"
-                                                    )
-                                                    && (
-                                                        <button
-                                                            type="button"
-                                                            className={
-                                                                member.status
-                                                                === "suspended"
-                                                                    ? "restore"
-                                                                    : "suspend"
-                                                            }
-                                                            disabled={
-                                                                processingMemberId
-                                                                !== null
-                                                            }
-                                                            onClick={() =>
-                                                                handleMemberStatusChange(
-                                                                    member
-                                                                )
-                                                            }
-                                                        >
-                                                            {
-                                                                member.status
-                                                                === "suspended"
-                                                                    ? <FiCheck />
-                                                                    : <FiX />
-                                                            }
-
-                                                            {
-                                                                member.status
-                                                                === "suspended"
-                                                                    ? "활동 복구"
-                                                                    : "활동 정지"
-                                                            }
-                                                        </button>
-                                                    )
+                                                    member.profile_image
+                                                        ? (
+                                                            <img
+                                                                src={member.profile_image}
+                                                                alt=""
+                                                            />
+                                                        )
+                                                        : (
+                                                            <span>
+                                                                {
+                                                                    getProfileInitial(
+                                                                        member
+                                                                    )
+                                                                }
+                                                            </span>
+                                                        )
                                                 }
                                             </div>
-                                        )
-                                    }
 
+                                            <div className="club-member-identity">
+                                                <strong>
+                                                    {member.nickname}
+                                                </strong>
+
+                                                <span>
+                                                    {member.name}
+                                                </span>
+
+                                                <small>
+                                                    가입 경로 ·{" "}
+                                                    {
+                                                        JOIN_SOURCE_LABELS[
+                                                            member.join_source
+                                                        ]
+                                                        || member.join_source
+                                                        || "정보 없음"
+                                                    }
+                                                </small>
+                                            </div>
+
+                                            <div className="club-member-list-side">
+                                                <div className="club-member-badges">
+                                                    <span
+                                                        className={
+                                                            "club-member-role "
+                                                            + member.role
+                                                        }
+                                                    >
+                                                        <FiShield />
+
+                                                        {
+                                                            MEMBER_ROLE_LABELS[
+                                                                member.role
+                                                            ]
+                                                            || member.role
+                                                        }
+                                                    </span>
+
+                                                    <span
+                                                        className={
+                                                            "club-member-state-badge "
+                                                            + member.status
+                                                        }
+                                                    >
+                                                        {
+                                                            MEMBER_STATUS_LABELS[
+                                                                member.status
+                                                            ]
+                                                            || member.status
+                                                        }
+                                                    </span>
+                                                </div>
+
+                                                <FiChevronRight
+                                                    className={
+                                                        "club-member-list-chevron"
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="club-member-quick-stats">
+                                            <div className="club-member-quick-stat">
+                                                <span>투표 참여율</span>
+
+                                                <strong>
+                                                    {
+                                                        member.vote_participation_rate
+                                                        === null
+                                                            ? "-"
+                                                            : (
+                                                                member
+                                                                    .vote_participation_rate
+                                                                + "%"
+                                                            )
+                                                    }
+                                                </strong>
+
+                                                <small>
+                                                    {member.responded_vote_count}
+                                                    /
+                                                    {member.eligible_vote_count}회
+                                                </small>
+                                            </div>
+
+                                            <div className="club-member-quick-stat">
+                                                <span>경고</span>
+
+                                                <strong
+                                                    className={
+                                                        member.warning_count > 0
+                                                            ? "warning"
+                                                            : ""
+                                                    }
+                                                >
+                                                    {member.warning_count}
+                                                </strong>
+
+                                                <small>회</small>
+                                            </div>
+                                        </div>
+                                    </button>
                                 </article>
                             ))
                         )}

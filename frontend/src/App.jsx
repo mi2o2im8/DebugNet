@@ -29,7 +29,7 @@ import ClubEventAttendance from "./pages/ClubEvents/ClubEventAttendance";
 import Main from "./pages/Main/Main";
 import MainHome from "./pages/MainHome/MainHome"; 
 
-// 동호회
+// 동호회 페이지
 import ClubCreate from './pages/ClubCreate/ClubCreate';
 import AllClub from "./pages/AllClub/AllClub";
 import ClubRecruit from "./pages/ClubRecruit/ClubRecruit";
@@ -47,7 +47,10 @@ import MatchTeamDetail from "./pages/Match/MatchTeamDetail";
 import ClubManageLayout from "./layouts/ClubManageLayout";
 
 import ClubEventParticipants from "./pages/ClubEvents/ClubEventParticipants";
+
+// 동호회 멤버 관리
 import ClubMemberManagement from "./pages/ClubMembers/ClubMemberManagement";
+import ClubMemberDetail from "./pages/ClubMembers/ClubMemberDetail";
 
 
 
@@ -256,6 +259,11 @@ function App() {
             <Route
               path="/clubs/:clubId/manage/events/:eventId/participants"
               element={<ClubEventParticipants />}
+            />
+
+            <Route
+              path="/clubs/:clubId/manage/members/:clubMemberId"
+              element={<ClubMemberDetail />}
             />
 
 

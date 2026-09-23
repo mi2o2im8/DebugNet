@@ -20,6 +20,7 @@ from app.schemas.club_members import (
     ClubMemberRoleUpdateRequest,
     ClubMemberStatusUpdateRequest,
     ClubMemberUpdateResponse,
+    ClubMemberDetailResponse,
 )
 
 from app.services.club_member_service import (
@@ -87,6 +88,123 @@ def get_club_members(
                 "오류가 발생했습니다."
             ),
         ) from error
+
+# ---------------------------------------------------------
+# 회원 상세 조회
+#
+# GET /api/clubs/{club_id}/members/{club_member_id}
+# ---------------------------------------------------------
+@router.get(
+    "/members/{club_member_id}",
+    response_model=ClubMemberDetailResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_club_member_detail(
+    club_id: int,
+    club_member_id: int,
+
+    manager_user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    member_service = ClubMemberService()
+
+    try:
+        return member_service.get_member_detail(
+            club_id=club_id,
+            club_member_id=club_member_id,
+            user_id=manager_user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "회원 상세 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "회원 상세 정보를 불러오는 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# ---------------------------------------------------------
+# 동호회 회원 내보내기
+#
+# DELETE /api/clubs/{club_id}/members/{club_member_id}
+# ---------------------------------------------------------
+@router.delete(
+    "/members/{club_member_id}",
+    response_model=ClubMemberUpdateResponse,
+    status_code=status.HTTP_200_OK,
+)
+def remove_club_member(
+    club_id: int,
+    club_member_id: int,
+
+    manager_user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    member_service = ClubMemberService()
+
+    try:
+        return member_service.remove_member(
+            club_id=club_id,
+            club_member_id=club_member_id,
+            manager_user_id=manager_user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except MemberManagementConflictError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "회원 내보내기 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "회원을 내보내는 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
 
 # ---------------------------------------------------------
 # 회원 역할 변경

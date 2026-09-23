@@ -29,8 +29,6 @@ router = APIRouter(
     tags=["clubs"],
 )
 
-club_service = ClubService()
-
 # =========================================================
 # 내가 가입한 동호회 조회
 #
@@ -41,8 +39,9 @@ club_service = ClubService()
 def get_my_club(
     user_id: str = Depends(get_current_user_id),
 ):
-    try:
+    club_service = ClubService()
 
+    try:
         club = club_service.get_my_club(
             user_id=user_id
         )
@@ -57,6 +56,7 @@ def get_my_club(
         return club
 
     except Exception as error:
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="내 동호회 조회 중 오류가 발생했습니다.",
@@ -97,6 +97,8 @@ def search_clubs(
     # 동호회 분위기
     atmosphere: Optional[str] = Query(default=None),
 ):
+    club_service = ClubService()
+    
     return club_service.search_clubs(
         keyword=keyword,
         sport_name=sport_name,
@@ -119,6 +121,8 @@ def get_recruiting_clubs(
     day_of_week: list[str] = Query(default=[]),
     time_slot: list[str] = Query(default=[]),
 ):
+    club_service = ClubService()
+    
     try:
         return club_service.get_recruiting_clubs(
             sport_names=sport_name,
@@ -151,6 +155,8 @@ def create_club(
     request_data: ClubCreateRequest,
     owner_id: str = Depends(get_current_user_id),
 ):
+    club_service = ClubService()
+    
     try:
         return club_service.create_club(
             owner_id=owner_id,
@@ -177,6 +183,8 @@ def create_club(
 
 @router.get("/guest-recruiting")
 def get_guest_recruiting_events():
+    club_service = ClubService()
+
     try:
         return club_service.get_guest_recruiting_events()
 
@@ -197,6 +205,7 @@ def get_guest_recruiting_events():
 
 @router.get("/{club_id}")
 def get_club_by_id(club_id: int):
+    club_service = ClubService()
     return club_service.get_club_by_id(club_id)
 
 
@@ -211,6 +220,8 @@ def create_join_request(
     club_id: int,
     user_id: str,
 ):
+    club_service = ClubService()
+    
     try:
         return club_service.create_join_request(
             club_id=club_id,
@@ -232,6 +243,8 @@ def create_join_request(
 
 @router.get("/{club_id}/join-questions")
 def get_join_questions(club_id: int):
+    club_service = ClubService()
+
     return club_service.get_join_questions(
         club_id=club_id,
     )
@@ -248,6 +261,8 @@ def get_member_status(
     club_id: int,
     user_id: str,
 ):
+    club_service = ClubService()
+
     return {
         "status": club_service.get_member_status(
             club_id=club_id,
@@ -269,6 +284,8 @@ def create_application(
     club_id: int,
     request: ClubApplicationRequest,
 ):
+    club_service = ClubService()
+    
     try:
         return club_service.create_application(
             club_id=club_id,
@@ -304,6 +321,8 @@ def get_club_dashboard(
     club_id: int,
     user_id: str = Depends(get_current_user_id),
 ):
+    club_service = ClubService()
+
     try:
         return club_service.get_dashboard(
             club_id=club_id,

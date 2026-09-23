@@ -14,6 +14,10 @@ from app.schemas.club_members import (
     ClubMemberListItemResponse,
     ClubMemberListResponse,
     ClubMemberUpdateResponse,
+    ClubMemberActivityResponse,
+    ClubMemberDetailResponse,
+    ClubMemberVoteResponse,
+    ClubMemberWarningResponse,
 )
 
 
@@ -31,6 +35,103 @@ class ClubMemberService:
     def __init__(self):
         self.member_repository = (
             ClubMemberRepository()
+        )
+
+    # -----------------------------------------------------
+    # Supabase 날짜 문자열 변환
+    # -----------------------------------------------------
+    @staticmethod
+    def _parse_datetime(
+        value,
+    ) -> datetime | None:
+
+        if value is None:
+            return None
+
+        if isinstance(value, datetime):
+            parsed_value = value
+        else:
+            parsed_value = datetime.fromisoformat(
+                str(value).replace(
+                    "Z",
+                    "+00:00",
+                )
+            )
+
+        if parsed_value.tzinfo is None:
+            parsed_value = parsed_value.replace(
+                tzinfo=timezone.utc
+            )
+
+        return parsed_value
+
+    # -----------------------------------------------------
+    # 가입 이후 생성된 투표만 참여 대상에 포함
+    # -----------------------------------------------------
+    def _get_eligible_votes(
+        self,
+        vote_rows: list[dict],
+        joined_at,
+    ) -> list[dict]:
+
+        joined_datetime = self._parse_datetime(
+            joined_at
+        )
+
+        if joined_datetime is None:
+            return vote_rows
+
+        eligible_votes = []
+
+        for vote_row in vote_rows:
+            vote_created_at = self._parse_datetime(
+                vote_row.get("created_at")
+            )
+
+            if (
+                vote_created_at is None
+                or vote_created_at >= joined_datetime
+            ):
+                eligible_votes.append(vote_row)
+
+        return eligible_votes
+
+    # -----------------------------------------------------
+    # 투표 참여율 계산
+    # -----------------------------------------------------
+    @staticmethod
+    def _calculate_vote_summary(
+        eligible_vote_rows: list[dict],
+        responded_vote_ids: set[int],
+    ) -> tuple[int, int, int | None]:
+
+        eligible_vote_ids = {
+            int(row["vote_id"])
+            for row in eligible_vote_rows
+        }
+
+        eligible_vote_count = len(
+            eligible_vote_ids
+        )
+
+        responded_vote_count = len(
+            eligible_vote_ids
+            & responded_vote_ids
+        )
+
+        if eligible_vote_count == 0:
+            participation_rate = None
+        else:
+            participation_rate = round(
+                responded_vote_count
+                / eligible_vote_count
+                * 100
+            )
+
+        return (
+            responded_vote_count,
+            eligible_vote_count,
+            participation_rate,
         )
 
     # -----------------------------------------------------
@@ -120,22 +221,93 @@ class ClubMemberService:
                 suspended_count=0,
             )
 
-        member_user_ids = list(
-            {
-                str(row["user_id"])
-                for row in member_rows
-            }
-        )
+        member_user_ids = list({
+            str(row["user_id"])
+            for row in member_rows
+        })
 
         user_rows = (
             self.member_repository
             .find_users(member_user_ids)
         )
 
+        event_rows = (
+            self.member_repository
+            .find_club_events(club_id)
+        )
+
+        event_ids = [
+            int(row["event_id"])
+            for row in event_rows
+        ]
+
+        vote_rows = (
+            self.member_repository
+            .find_event_votes(event_ids)
+        )
+
+        vote_ids = [
+            int(row["vote_id"])
+            for row in vote_rows
+        ]
+
+        response_rows = (
+            self.member_repository
+            .find_vote_responses(
+                vote_ids=vote_ids,
+                user_ids=member_user_ids,
+            )
+        )
+
+        warning_rows = (
+            self.member_repository
+            .find_member_warnings(
+                club_id=club_id,
+                user_ids=member_user_ids,
+            )
+        )
+
         user_map = {
             str(row["user_id"]): row
             for row in user_rows
         }
+
+        responded_votes_by_user: dict[
+            str,
+            set[int],
+        ] = {}
+
+        for response_row in response_rows:
+            response_user_id = str(
+                response_row["user_id"]
+            )
+
+            responded_votes_by_user.setdefault(
+                response_user_id,
+                set(),
+            ).add(
+                int(response_row["vote_id"])
+            )
+
+        warning_count_by_user: dict[
+            str,
+            int,
+        ] = {}
+
+        for warning_row in warning_rows:
+            warning_user_id = str(
+                warning_row["user_id"]
+            )
+
+            warning_count_by_user[
+                warning_user_id
+            ] = (
+                warning_count_by_user.get(
+                    warning_user_id,
+                    0,
+                )
+                + 1
+            )
 
         members = []
 
@@ -149,10 +321,35 @@ class ClubMemberService:
                 {},
             )
 
+            eligible_votes = (
+                self._get_eligible_votes(
+                    vote_rows=vote_rows,
+                    joined_at=member_row.get(
+                        "joined_at"
+                    ),
+                )
+            )
+
+            (
+                responded_vote_count,
+                eligible_vote_count,
+                vote_participation_rate,
+            ) = self._calculate_vote_summary(
+                eligible_vote_rows=eligible_votes,
+                responded_vote_ids=(
+                    responded_votes_by_user.get(
+                        member_user_id,
+                        set(),
+                    )
+                ),
+            )
+
             members.append(
                 ClubMemberListItemResponse(
                     club_member_id=int(
-                        member_row["club_member_id"]
+                        member_row[
+                            "club_member_id"
+                        ]
                     ),
                     club_id=club_id,
                     user_id=member_user_id,
@@ -169,8 +366,26 @@ class ClubMemberService:
                     ),
                     role=member_row["role"],
                     status=member_row["status"],
+                    joined_at=member_row.get(
+                        "joined_at"
+                    ),
                     join_source=member_row.get(
                         "join_source"
+                    ),
+                    responded_vote_count=(
+                        responded_vote_count
+                    ),
+                    eligible_vote_count=(
+                        eligible_vote_count
+                    ),
+                    vote_participation_rate=(
+                        vote_participation_rate
+                    ),
+                    warning_count=(
+                        warning_count_by_user.get(
+                            member_user_id,
+                            0,
+                        )
                     ),
                 )
             )
@@ -191,6 +406,356 @@ class ClubMemberService:
                 member.status == "suspended"
                 for member in members
             ),
+        )
+
+    # -----------------------------------------------------
+    # 회원 상세 조회
+    # -----------------------------------------------------
+    def get_member_detail(
+        self,
+        club_id: int,
+        club_member_id: int,
+        user_id: str,
+    ) -> ClubMemberDetailResponse:
+
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        member_row = (
+            self.member_repository
+            .find_member_by_id(
+                club_id=club_id,
+                club_member_id=club_member_id,
+            )
+        )
+
+        if (
+            member_row is None
+            or member_row.get("status")
+                == "withdrawn"
+        ):
+            raise LookupError(
+                "현재 동호회 회원을 찾을 수 없습니다."
+            )
+
+        member_user_id = str(
+            member_row["user_id"]
+        )
+
+        # -------------------------------------------------
+        # 로그인한 운영자의 권한 확인
+        # -------------------------------------------------
+        management_membership = (
+            self.member_repository
+            .find_management_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        current_user_role = str(
+            management_membership["role"]
+        )
+
+        target_role = member_row.get(
+            "role"
+        )
+
+        target_status = member_row.get(
+            "status"
+        )
+
+        is_current_user = (
+            member_user_id == user_id
+        )
+
+        # 운영진은 다른 운영진을 관리할 수 없다.
+        manager_target_conflict = (
+            current_user_role == "manager"
+            and target_role == "manager"
+        )
+
+        # 동호회장만 운영진 역할을 변경할 수 있다.
+        can_change_role = (
+            current_user_role == "owner"
+            and target_role != "owner"
+            and target_status == "active"
+        )
+
+        # 동호회장, 자기 자신, 운영진 간 관리를 제한한다.
+        can_change_status = (
+            target_role != "owner"
+            and not is_current_user
+            and not manager_target_conflict
+            and target_status in {
+                "active",
+                "suspended",
+            }
+        )
+
+        can_remove_member = (
+            target_role != "owner"
+            and not is_current_user
+            and not manager_target_conflict
+        )
+
+        user_rows = (
+            self.member_repository
+            .find_users([member_user_id])
+        )
+
+        if not user_rows:
+            raise LookupError(
+                "회원의 사용자 정보를 찾을 수 없습니다."
+            )
+
+        member_user = user_rows[0]
+
+        event_rows = (
+            self.member_repository
+            .find_club_events(club_id)
+        )
+
+        event_ids = [
+            int(row["event_id"])
+            for row in event_rows
+        ]
+
+        event_map = {
+            int(row["event_id"]): row
+            for row in event_rows
+        }
+
+        vote_rows = (
+            self.member_repository
+            .find_event_votes(event_ids)
+        )
+
+        eligible_votes = (
+            self._get_eligible_votes(
+                vote_rows=vote_rows,
+                joined_at=member_row.get(
+                    "joined_at"
+                ),
+            )
+        )
+
+        eligible_vote_ids = [
+            int(row["vote_id"])
+            for row in eligible_votes
+        ]
+
+        vote_response_rows = (
+            self.member_repository
+            .find_vote_responses(
+                vote_ids=eligible_vote_ids,
+                user_ids=[member_user_id],
+            )
+        )
+
+        responded_vote_ids = {
+            int(row["vote_id"])
+            for row in vote_response_rows
+        }
+
+        (
+            responded_vote_count,
+            eligible_vote_count,
+            vote_participation_rate,
+        ) = self._calculate_vote_summary(
+            eligible_vote_rows=eligible_votes,
+            responded_vote_ids=(
+                responded_vote_ids
+            ),
+        )
+
+        participation_rows = (
+            self.member_repository
+            .find_member_participations(
+                event_ids=event_ids,
+                user_id=member_user_id,
+            )
+        )
+
+        warning_rows = (
+            self.member_repository
+            .find_member_warnings(
+                club_id=club_id,
+                user_ids=[member_user_id],
+            )
+        )
+
+        activities = []
+
+        for participation_row in participation_rows:
+            event_id = int(
+                participation_row["event_id"]
+            )
+
+            event = event_map.get(event_id)
+
+            if event is None:
+                continue
+
+            activities.append(
+                ClubMemberActivityResponse(
+                    event_id=event_id,
+                    event_title=(
+                        event.get("title")
+                        or "제목 없는 일정"
+                    ),
+                    event_date=event[
+                        "event_date"
+                    ],
+                    participation_status=(
+                        participation_row.get(
+                            "status"
+                        )
+                        or "joined"
+                    ),
+                    attendance_status=(
+                        participation_row.get(
+                            "attendance_status"
+                        )
+                        or "undecided"
+                    ),
+                )
+            )
+
+        votes = []
+
+        for vote_row in eligible_votes:
+            event_id = int(
+                vote_row["event_id"]
+            )
+
+            event = event_map.get(
+                event_id,
+                {},
+            )
+
+            vote_id = int(
+                vote_row["vote_id"]
+            )
+
+            votes.append(
+                ClubMemberVoteResponse(
+                    vote_id=vote_id,
+                    event_id=event_id,
+                    vote_title=(
+                        vote_row.get("title")
+                        or "제목 없는 투표"
+                    ),
+                    event_title=(
+                        event.get("title")
+                        or "삭제된 일정"
+                    ),
+                    deadline=vote_row.get(
+                        "deadline"
+                    ),
+                    created_at=vote_row.get(
+                        "created_at"
+                    ),
+                    has_responded=(
+                        vote_id
+                        in responded_vote_ids
+                    ),
+                )
+            )
+
+        warnings = [
+            ClubMemberWarningResponse(
+                warning_id=int(
+                    warning_row["warning_id"]
+                ),
+                warning_type=warning_row[
+                    "warning_type"
+                ],
+                reason=warning_row.get(
+                    "reason"
+                ),
+                created_at=warning_row[
+                    "created_at"
+                ],
+            )
+            for warning_row in warning_rows
+        ]
+
+        return ClubMemberDetailResponse(
+            club_member_id=int(
+                member_row["club_member_id"]
+            ),
+            club_id=club_id,
+            user_id=member_user_id,
+            name=(
+                member_user.get("name")
+                or "이름 없음"
+            ),
+            nickname=(
+                member_user.get("nickname")
+                or "닉네임 없음"
+            ),
+            email=(
+                member_user.get("email")
+                or ""
+            ),
+            profile_image=member_user.get(
+                "profile_image"
+            ),
+            phone=member_user.get("phone"),
+            bio=member_user.get("bio"),
+
+            current_user_role=(
+                current_user_role
+            ),
+            can_change_role=(
+                can_change_role
+            ),
+            can_change_status=(
+                can_change_status
+            ),
+            can_remove_member=(
+                can_remove_member
+            ),
+
+            role=member_row["role"],
+            status=member_row["status"],
+            joined_at=member_row.get(
+                "joined_at"
+            ),
+            join_source=member_row.get(
+                "join_source"
+            ),
+            responded_vote_count=(
+                responded_vote_count
+            ),
+            eligible_vote_count=(
+                eligible_vote_count
+            ),
+            vote_participation_rate=(
+                vote_participation_rate
+            ),
+            warning_count=len(warnings),
+            attending_count=sum(
+                activity.attendance_status
+                    == "attending"
+                for activity in activities
+            ),
+            absent_count=sum(
+                activity.attendance_status
+                    == "absent"
+                for activity in activities
+            ),
+            undecided_count=sum(
+                activity.attendance_status
+                    == "undecided"
+                for activity in activities
+            ),
+            activities=activities,
+            votes=votes,
+            warnings=warnings,
         )
 
     # -----------------------------------------------------
@@ -873,5 +1438,112 @@ class ClubMemberService:
             status=updated_member["status"],
             message=(
                 f"회원을 {status_label}했습니다."
+            ),
+        )
+
+    # -----------------------------------------------------
+    # 동호회 회원 내보내기
+    # -----------------------------------------------------
+    def remove_member(
+        self,
+        club_id: int,
+        club_member_id: int,
+        manager_user_id: str,
+    ) -> ClubMemberUpdateResponse:
+
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=manager_user_id,
+        )
+
+        manager_membership = (
+            self.member_repository
+            .find_management_membership(
+                club_id=club_id,
+                user_id=manager_user_id,
+            )
+        )
+
+        target_member = (
+            self.member_repository
+            .find_member_by_id(
+                club_id=club_id,
+                club_member_id=club_member_id,
+            )
+        )
+
+        if target_member is None:
+            raise LookupError(
+                "내보낼 회원을 찾을 수 없습니다."
+            )
+
+        if target_member.get("role") == "owner":
+            raise MemberManagementConflictError(
+                "동호회장은 내보낼 수 없습니다."
+            )
+
+        if (
+            str(target_member.get("user_id"))
+            == manager_user_id
+        ):
+            raise MemberManagementConflictError(
+                "자기 자신을 동호회에서 "
+                "내보낼 수 없습니다."
+            )
+
+        manager_role = (
+            manager_membership.get("role")
+            if manager_membership
+            else None
+        )
+
+        if (
+            manager_role == "manager"
+            and target_member.get("role")
+                == "manager"
+        ):
+            raise PermissionError(
+                "운영진은 다른 운영진을 "
+                "내보낼 수 없습니다."
+            )
+
+        if target_member.get("status") == "withdrawn":
+            raise MemberManagementConflictError(
+                "이미 탈퇴 처리된 회원입니다."
+            )
+
+        updated_member = (
+            self.member_repository
+            .withdraw_member(
+                club_id=club_id,
+                club_member_id=club_member_id,
+            )
+        )
+
+        if updated_member is None:
+            raise LookupError(
+                "회원 내보내기에 실패했습니다."
+            )
+
+        updated_member_count = (
+            self.member_repository
+            .count_active_members(club_id)
+        )
+
+        self.member_repository.update_current_member_count(
+            club_id=club_id,
+            current_members=updated_member_count,
+        )
+
+        return ClubMemberUpdateResponse(
+            club_member_id=club_member_id,
+            club_id=club_id,
+            user_id=str(
+                updated_member["user_id"]
+            ),
+            role=updated_member["role"],
+            status=updated_member["status"],
+            message=(
+                "회원을 동호회에서 내보냈습니다."
             ),
         )

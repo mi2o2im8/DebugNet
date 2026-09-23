@@ -29,6 +29,7 @@ class ClubMemberRepository:
                 "user_id, "
                 "role, "
                 "status, "
+                "joined_at, "
                 "join_source"
             )
             .eq(
@@ -67,7 +68,10 @@ class ClubMemberRepository:
                 "user_id, "
                 "name, "
                 "nickname, "
-                "profile_image"
+                "email, "
+                "profile_image, "
+                "phone, "
+                "bio"
             )
             .in_(
                 "user_id",
@@ -271,6 +275,7 @@ class ClubMemberRepository:
                 "user_id, "
                 "role, "
                 "status, "
+                "joined_at, "
                 "join_source"
             )
             .eq(
@@ -531,6 +536,7 @@ class ClubMemberRepository:
                 "user_id, "
                 "role, "
                 "status, "
+                "joined_at, "
                 "join_source"
             )
             .eq(
@@ -600,6 +606,226 @@ class ClubMemberRepository:
             .update(
                 {
                     "status": member_status,
+                }
+            )
+            .eq(
+                "club_id",
+                club_id,
+            )
+            .eq(
+                "club_member_id",
+                club_member_id,
+            )
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 동호회 전체 일정 조회
+    # -----------------------------------------------------
+    def find_club_events(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("club_events")
+            .select(
+                "event_id, "
+                "title, "
+                "event_date, "
+                "status"
+            )
+            .eq(
+                "club_id",
+                club_id,
+            )
+            .order(
+                "event_date",
+                desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 동호회 일정에 연결된 투표 조회
+    # -----------------------------------------------------
+    def find_event_votes(
+        self,
+        event_ids: list[int],
+    ) -> list[dict]:
+
+        if not event_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("event_votes")
+            .select(
+                "vote_id, "
+                "event_id, "
+                "title, "
+                "vote_type, "
+                "deadline, "
+                "created_at"
+            )
+            .in_(
+                "event_id",
+                event_ids,
+            )
+            .order(
+                "created_at",
+                desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 회원별 투표 응답 조회
+    #
+    # 복수 선택 투표에서는 한 사람이 여러 선택지를
+    # 고를 수 있으므로 서비스에서 vote_id를 중복 제거한다.
+    # -----------------------------------------------------
+    def find_vote_responses(
+        self,
+        vote_ids: list[int],
+        user_ids: list[str],
+    ) -> list[dict]:
+
+        if not vote_ids or not user_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("event_vote_responses")
+            .select(
+                "response_id, "
+                "vote_id, "
+                "user_id, "
+                "created_at"
+            )
+            .in_(
+                "vote_id",
+                vote_ids,
+            )
+            .in_(
+                "user_id",
+                user_ids,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 회원 경고 내역 조회
+    # -----------------------------------------------------
+    def find_member_warnings(
+        self,
+        club_id: int,
+        user_ids: list[str],
+    ) -> list[dict]:
+
+        if not user_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("club_member_warnings")
+            .select(
+                "warning_id, "
+                "club_id, "
+                "user_id, "
+                "warning_type, "
+                "reason, "
+                "created_at"
+            )
+            .eq(
+                "club_id",
+                club_id,
+            )
+            .in_(
+                "user_id",
+                user_ids,
+            )
+            .order(
+                "created_at",
+                desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 특정 회원의 일정 참여 내역 조회
+    # -----------------------------------------------------
+    def find_member_participations(
+        self,
+        event_ids: list[int],
+        user_id: str,
+    ) -> list[dict]:
+
+        if not event_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .select(
+                "event_participant_id, "
+                "event_id, "
+                "user_id, "
+                "status, "
+                "attendance_status, "
+                "created_at"
+            )
+            .in_(
+                "event_id",
+                event_ids,
+            )
+            .eq(
+                "user_id",
+                user_id,
+            )
+            .eq(
+                "status",
+                "joined",
+            )
+            .order(
+                "created_at",
+                desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 회원 내보내기
+    # -----------------------------------------------------
+    def withdraw_member(
+        self,
+        club_id: int,
+        club_member_id: int,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_members")
+            .update(
+                {
+                    "role": "member",
+                    "status": "withdrawn",
                 }
             )
             .eq(

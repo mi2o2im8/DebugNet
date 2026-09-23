@@ -571,52 +571,83 @@
 }
 
 /* ---------------------------------------------------------
-   회원 역할·상태 관리 버튼
+   현재 회원 상세 이동 및 약식 통계
 --------------------------------------------------------- */
 
-.club-member-management-actions {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 9px;
-    padding: 0 16px 16px;
-}
-
-.club-member-management-actions button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-height: 40px;
-    padding: 8px 10px;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 700;
+.club-member-list-link {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
     cursor: pointer;
 }
 
-.club-member-management-actions button:only-child {
+.club-member-list-link:hover {
+    background: #fbfdfb;
+}
+
+.club-member-list-link:focus-visible {
+    outline: 2px solid #009b3a;
+    outline-offset: -2px;
+}
+
+.club-member-list-side {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 7px;
+}
+
+.club-member-list-chevron {
+    color: #9ba69f;
+    font-size: 18px;
+}
+
+.club-member-quick-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    margin: 0 16px 16px;
+    overflow: hidden;
+    border: 1px solid #e1e9e3;
+    border-radius: 10px;
+    background: #f7faf8;
+}
+
+.club-member-quick-stat {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 4px 8px;
+    min-width: 0;
+    padding: 10px 12px;
+}
+
+.club-member-quick-stat + .club-member-quick-stat {
+    border-left: 1px solid #e1e9e3;
+}
+
+.club-member-quick-stat span {
+    color: #68746c;
+    font-size: 10px;
+}
+
+.club-member-quick-stat strong {
+    color: #202822;
+    font-size: 14px;
+    text-align: right;
+}
+
+.club-member-quick-stat strong.warning {
+    color: #cf4141;
+}
+
+.club-member-quick-stat small {
     grid-column: 1 / -1;
-}
-
-.club-member-management-actions button.role {
-    border: 1px solid #b9c9e8;
-    background: #f4f7ff;
-    color: #4569aa;
-}
-
-.club-member-management-actions button.suspend {
-    border: 1px solid #efcccc;
-    background: #ffffff;
-    color: #c94747;
-}
-
-.club-member-management-actions button.restore {
-    border: 1px solid #009b3a;
-    background: #009b3a;
-    color: #ffffff;
-}
-
-.club-member-management-actions button:disabled {
-    cursor: wait;
-    opacity: 0.55;
+    color: #909a93;
+    font-size: 9px;
+    text-align: right;
 }
