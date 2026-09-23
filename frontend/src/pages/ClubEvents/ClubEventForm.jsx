@@ -17,6 +17,9 @@ import {
     FiUsers
 } from "react-icons/fi";
 
+import ClubEventPlacePicker
+    from "./components/ClubEventPlacePicker";
+
 import {
     createClubEvent,
     getClubEvent,
@@ -35,6 +38,9 @@ const INITIAL_FORM = {
     endTime: "",
 
     location: "",
+    locationAddress: "",
+    latitude: null,
+    longitude: null,
 
     eventType: "regular",
     recurrenceType: "none",
@@ -126,6 +132,15 @@ function ClubEventForm() {
                     location:
                         event.location || "",
 
+                    locationAddress:
+                        event.location_address || "",
+
+                    latitude:
+                        event.latitude ?? null,
+
+                    longitude:
+                        event.longitude ?? null,
+
                     eventType:
                         event.event_type ||
                         "regular",
@@ -209,6 +224,25 @@ function ClubEventForm() {
         );
     };
 
+
+    // -----------------------------------------------------
+    // 장소 정보 전체 변경
+    // -----------------------------------------------------
+    const handlePlaceChange = (
+        placeData
+    ) => {
+        setFormData(
+            (current) => ({
+                ...current,
+                ...placeData
+            })
+        );
+    };
+
+
+    // -----------------------------------------------------
+    // 게스트 모집 설정 변경
+    // -----------------------------------------------------
     const handleGuestAllowedChange = (
         checked
     ) => {
@@ -269,6 +303,16 @@ function ClubEventForm() {
             location:
                 formData.location.trim() ||
                 null,
+
+            locationAddress:
+                formData.locationAddress.trim()
+                || null,
+
+            latitude:
+                formData.latitude,
+
+            longitude:
+                formData.longitude,
 
             eventType:
                 formData.eventType,
@@ -572,22 +616,15 @@ function ClubEventForm() {
                         장소
                     </h2>
 
-                    <label>
-                        <span>활동 장소</span>
-
-                        <input
-                            type="text"
-                            maxLength="200"
-                            placeholder="예: 여의도 한강공원"
-                            value={formData.location}
-                            onChange={(event) =>
-                                updateField(
-                                    "location",
-                                    event.target.value
-                                )
-                            }
-                        />
-                    </label>
+                    <ClubEventPlacePicker
+                        location={formData.location}
+                        locationAddress={
+                            formData.locationAddress
+                        }
+                        latitude={formData.latitude}
+                        longitude={formData.longitude}
+                        onChange={handlePlaceChange}
+                    />
                 </section>
 
                 <section>

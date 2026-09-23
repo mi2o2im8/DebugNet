@@ -92,6 +92,27 @@ class ClubEventCreateRequest(BaseModel):
         max_length=200,
     )
 
+    location_address: str | None = Field(
+        default=None,
+        max_length=500,
+        validation_alias=AliasChoices(
+            "location_address",
+            "locationAddress",
+        ),
+    )
+
+    latitude: float | None = Field(
+        default=None,
+        ge=-90,
+        le=90,
+    )
+
+    longitude: float | None = Field(
+        default=None,
+        ge=-180,
+        le=180,
+    )
+
     # 4단계: 참여 및 투표 설정
 
     max_participants: int | None = Field(
@@ -179,6 +200,7 @@ class ClubEventCreateRequest(BaseModel):
         "description",
         "event_image_url",
         "location",
+        "location_address",
     )
     @classmethod
     def strip_optional_strings(
@@ -302,6 +324,23 @@ class ClubEventCreateRequest(BaseModel):
                 "늦을 수 없습니다."
             )
 
+        if (
+            (self.latitude is None)
+            != (self.longitude is None)
+        ):
+            raise ValueError(
+                "위도와 경도는 함께 입력해야 합니다."
+            )
+
+        if (
+            self.latitude is not None
+            and self.longitude is not None
+            and self.location is None
+        ):
+            raise ValueError(
+                "좌표를 입력하려면 장소명도 필요합니다."
+            )
+
         return self
 
 
@@ -322,6 +361,10 @@ class ClubEventDetailResponse(BaseModel):
     end_time: time | None = None
 
     location: str | None = None
+    location_address: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+
     max_participants: int | None = None
 
     event_type: str
@@ -351,6 +394,10 @@ class ClubEventListItemResponse(BaseModel):
     end_time: time | None = None
 
     location: str | None = None
+    location_address: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+
     max_participants: int | None = None
 
     event_type: str

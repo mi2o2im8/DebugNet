@@ -101,6 +101,12 @@ class ClubEventService:
                     else None
                 ),
                 "location": request_data.location,
+                "location_address": (
+                    request_data.location_address
+                ),
+                "latitude": request_data.latitude,
+                "longitude": request_data.longitude,
+
                 "max_participants": (
                     request_data.max_participants
                 ),
@@ -404,6 +410,12 @@ class ClubEventService:
                     else None
                 ),
                 "location": request_data.location,
+                "location_address": (
+                    request_data.location_address
+                ),
+                "latitude": request_data.latitude,
+                "longitude": request_data.longitude,
+
                 "max_participants": (
                     request_data.max_participants
                 ),
@@ -498,6 +510,15 @@ class ClubEventService:
                     ),
                     "location": (
                         source_event.location
+                    ),
+                    "location_address": (
+                        source_event.location_address
+                    ),
+                    "latitude": (
+                        source_event.latitude
+                    ),
+                    "longitude": (
+                        source_event.longitude
                     ),
                     "max_participants": (
                         source_event.max_participants
