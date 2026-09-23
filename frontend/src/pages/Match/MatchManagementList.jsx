@@ -1,6 +1,11 @@
 import {
+  useEffect,
   useState,
 } from "react";
+
+import {
+  getMatchManagementMatches,
+} from "./api/matchApi";
 
 import {
   useNavigate,
@@ -36,6 +41,10 @@ const MATCH_TABS = [
   {
     id: "upcoming",
     label: "예정 경기",
+  },
+  {
+    id: "history",
+    label: "지난 경기",
   },
   {
     id: "writtenReviews",
@@ -91,194 +100,6 @@ const HISTORY_SPORT_FILTERS = [
 ];
 
 
-// ========================================
-// 임시 매칭 데이터
-//
-// TODO:
-// 백엔드 연결 후 실제 API 응답으로 교체
-// ========================================
-const SAMPLE_MATCHES = {
-
-  received: [
-    {
-      clubMatchId: 1,
-      opponentClubName: "신림 FC",
-      sportName: "축구/풋살",
-      matchDate: "2026-09-27",
-      startTime: "19:00",
-      endTime: "21:00",
-      region: "관악구",
-      locationName: "관악구민운동장",
-      statusLabel: "승인 대기",
-    },
-
-    {
-      clubMatchId: 2,
-      opponentClubName: "봉천 풋살클럽",
-      sportName: "축구/풋살",
-      matchDate: "2026-09-29",
-      startTime: "20:00",
-      endTime: "22:00",
-      region: "관악구",
-      locationName: "신림체육센터",
-      statusLabel: "승인 대기",
-    },
-  ],
-
-
-  sent: [
-    {
-      clubMatchId: 3,
-      opponentClubName: "서울 유나이티드",
-      sportName: "축구/풋살",
-      matchDate: "2026-09-28",
-      startTime: "18:00",
-      endTime: "20:00",
-      region: "동작구",
-      locationName: "노량진 축구장",
-      statusLabel: "응답 대기",
-    },
-  ],
-
-
-  upcoming: [
-    {
-      clubMatchId: 4,
-      opponentClubName: "관악 위너스",
-      sportName: "축구/풋살",
-      matchDate: "2026-10-02",
-      startTime: "19:00",
-      endTime: "21:00",
-      region: "관악구",
-      locationName: "관악구민운동장",
-      statusLabel: "경기 예정",
-    },
-
-    {
-      clubMatchId: 5,
-      opponentClubName: "신림 스타즈",
-      sportName: "축구/풋살",
-      matchDate: "2026-10-05",
-      startTime: "20:00",
-      endTime: "22:00",
-      region: "관악구",
-      locationName: "신림체육센터",
-      statusLabel: "경기 예정",
-    },
-  ],
-
-
-  history: [
-    {
-      clubMatchId: 6,
-      opponentClubName: "봉천 FC",
-      sportName: "축구/풋살",
-      matchDate: "2026-09-20",
-      startTime: "19:00",
-      endTime: "21:00",
-      region: "관악구",
-      locationName: "관악구민운동장",
-
-      // TODO:
-      // 실제 백엔드 경기기록 상태값과
-      // 나중에 맞춰서 교체
-      recordStatus: "RECORD_REQUIRED",
-    },
-
-    {
-      clubMatchId: 7,
-      opponentClubName: "서울 킥커스",
-      sportName: "축구/풋살",
-      matchDate: "2026-09-18",
-      startTime: "20:00",
-      endTime: "22:00",
-      region: "동작구",
-      locationName: "노량진 축구장",
-      recordStatus: "RECORD_PENDING",
-    },
-
-    {
-      clubMatchId: 8,
-      opponentClubName: "신림 유나이티드",
-      sportName: "축구/풋살",
-      matchDate: "2026-09-15",
-      startTime: "19:00",
-      endTime: "21:00",
-      region: "관악구",
-      locationName: "신림체육센터",
-      recordStatus: "COMPLETED",
-    },
-  ],
-
-  // ========================================
-  // 내가 작성한 후기
-  // ========================================
-  writtenReviews: [
-    {
-      clubMatchId: 8,
-
-      opponentClubName:
-        "신림 유나이티드",
-
-      sportName:
-        "축구/풋살",
-
-      matchDate:
-        "2026-09-15",
-
-      startTime:
-        "19:00",
-
-      endTime:
-        "21:00",
-
-      region:
-        "관악구",
-
-      locationName:
-        "신림체육센터",
-
-      statusLabel:
-        "작성 완료",
-    },
-  ],
-
-
-  // ========================================
-  // 내가 받은 후기
-  // ========================================
-  receivedReviews: [
-    {
-      clubMatchId: 8,
-
-      opponentClubName:
-        "신림 유나이티드",
-
-      sportName:
-        "축구/풋살",
-
-      matchDate:
-        "2026-09-15",
-
-      startTime:
-        "19:00",
-
-      endTime:
-        "21:00",
-
-      region:
-        "관악구",
-
-      locationName:
-        "신림체육센터",
-
-      statusLabel:
-        "후기 도착",
-    },
-  ],
-
-};
-
 
 // ========================================
 // 날짜 표시
@@ -294,6 +115,31 @@ const formatMatchDate = (dateString) => {
     dateString.split("-");
 
   return `${Number(month)}월 ${Number(day)}일`;
+};
+
+// ========================================
+// 지난 경기 화면 표시용 상태
+//
+// Backend에는 REVIEWED 상태가 없다.
+//
+// 경기 기록이 COMPLETED이고
+// 내가 후기를 작성했다면
+// Frontend에서만 REVIEWED처럼 표시한다.
+// ========================================
+const getDisplayRecordStatus = (
+  match
+) => {
+
+  if (
+    match.recordStatus === "COMPLETED" &&
+    match.hasWrittenReview
+  ) {
+
+    return "REVIEWED";
+
+  }
+
+  return match.recordStatus;
 };
 
 
@@ -357,6 +203,28 @@ function MatchManagementList() {
   ] = useSearchParams();
 
   // ========================================
+  // 실제 매칭관리 목록
+  // ========================================
+  const [
+    matches,
+    setMatches,
+  ] = useState([]);
+
+
+  // 목록 조회 중 여부
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
+
+
+  // 목록 조회 오류
+  const [
+    loadError,
+    setLoadError,
+  ] = useState("");
+
+  // ========================================
   // 지난 경기 필터
   // ========================================
 
@@ -397,16 +265,65 @@ function MatchManagementList() {
       ? queryTab
       : "received";
 
+  // ========================================
+  // 현재 선택된 탭의 실제 목록 조회
+  // ========================================
+  useEffect(() => {
 
-  // ========================================
-  // 현재 탭의 매칭 목록
-  //
-  // TODO:
-  // 백엔드 연결 후 SAMPLE_MATCHES 대신
-  // 실제 조회 결과 사용
-  // ========================================
-  const matches =
-    SAMPLE_MATCHES[selectedTab] || [];
+    if (!clubId) {
+      return;
+    }
+
+
+    const loadMatches = async () => {
+
+      setIsLoading(true);
+      setLoadError("");
+
+
+      try {
+
+        const response =
+          await getMatchManagementMatches(
+            clubId,
+            selectedTab
+          );
+
+
+        setMatches(
+          response.items
+        );
+
+      } catch (error) {
+
+        console.error(
+          "매칭관리 목록 조회 실패:",
+          error
+        );
+
+
+        setMatches([]);
+
+        setLoadError(
+          error.message ||
+          "매칭 목록을 불러오지 못했습니다."
+        );
+
+      } finally {
+
+        setIsLoading(false);
+
+      }
+
+    };
+
+
+    loadMatches();
+
+  }, [
+    clubId,
+    selectedTab,
+  ]);
 
   // ========================================
   // 화면에 실제로 표시할 매칭 목록
@@ -422,9 +339,15 @@ function MatchManagementList() {
           // ------------------------------
           // 상태 필터
           // ------------------------------
+          const displayRecordStatus =
+            getDisplayRecordStatus(
+              match
+            );
+
+
           const matchesStatus =
             selectedHistoryStatus === "all" ||
-            match.recordStatus ===
+            displayRecordStatus ===
               selectedHistoryStatus;
 
 
@@ -781,7 +704,31 @@ function MatchManagementList() {
         ======================================== */}
         <section className="match-management-match-list">
 
-          {filteredMatches.length > 0 ? (
+          {isLoading ? (
+
+            <div className="match-management-list-empty">
+
+              <strong>
+                매칭 정보를 불러오는 중입니다.
+              </strong>
+
+            </div>
+
+          ) : loadError ? (
+
+            <div className="match-management-list-empty">
+
+              <strong>
+                목록을 불러오지 못했습니다.
+              </strong>
+
+              <p>
+                {loadError}
+              </p>
+
+            </div>
+
+          ) : filteredMatches.length > 0 ? (
 
             filteredMatches.map(
               (match) => {
@@ -791,7 +738,9 @@ function MatchManagementList() {
                 const historyStatus =
                   selectedTab === "history"
                     ? getHistoryStatus(
-                        match.recordStatus
+                        getDisplayRecordStatus(
+                          match
+                        )
                       )
                     : null;
 
