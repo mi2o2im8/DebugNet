@@ -843,59 +843,114 @@ class ClubRepository:
     # 2. club_join_answers에 추가 질문 답변 저장
     # -----------------------------------------------------
     def create_application(
-            self,
-            club_id: int,
-            user_id: str,
-            application_message: str,
-            answers: list,
-        ):
+        self,
+        club_id: int,
+        user_id: str,
+        application_message: str,
+        answers: list,
+    ):
+        # 1. 가입 신청 생성
+        application_data = {
+            "club_id": club_id,
+            "user_id": user_id,
+            "application_message": application_message,
+            "status": "pending",
+        }
 
-            # 1. 가입 신청 생성
-            application_data = {
-                "club_id": club_id,
-                "user_id": user_id,
-                "application_message": application_message,
-                "status": "pending",
-            }
+        application_response = (
+            self.supabase
+            .table("club_applications")
+            .insert(application_data)
+            .execute()
+        )
 
-            application_response = (
+        if not application_response.data:
+            raise ValueError(
+                "가입 신청 저장에 실패했습니다."
+            )
+
+        application = application_response.data[0]
+
+        application_id = application["application_id"]
+
+        # 2. 추가 질문 답변 저장
+        answer_data = []
+
+        for answer in answers:
+            answer_data.append(
+                {
+                    "application_id": application_id,
+                    "question_id": answer["question_id"],
+                    "answer_text": answer["answer_text"],
+                }
+            )
+
+        # 답변이 있을 때만 INSERT
+        if answer_data:
+            (
                 self.supabase
-                .table("club_applications")
-                .insert(application_data)
+                .table("club_join_answers")
+                .insert(answer_data)
                 .execute()
             )
 
-            if not application_response.data:
-                raise ValueError(
-                    "가입 신청 저장에 실패했습니다."
-                )
+        # ⭐ 3. 동호회장에게 가입 신청 알림 생성
 
-            application = application_response.data[0]
+        # 동호회 이름 조회
+        club_response = (
+            self.supabase
+            .table("clubs")
+            .select("club_name")
+            .eq("club_id", club_id)
+            .limit(1)
+            .execute()
+        )
 
-            application_id = application["application_id"]
+        club_name = "동호회"
 
-            # 2. 추가 질문 답변 저장
-            answer_data = []
+        if club_response.data:
+            club_name = (
+                club_response.data[0].get("club_name")
+                or "동호회"
+            )
 
-            for answer in answers:
-                answer_data.append(
+        # ⭐ club_members에서 동호회장 조회
+        owner_response = (
+            self.supabase
+            .table("club_members")
+            .select("user_id")
+            .eq("club_id", club_id)
+            .eq("role", "owner")
+            .eq("status", "active")
+            .limit(1)
+            .execute()
+        )
+
+        if owner_response.data:
+            owner_id = owner_response.data[0]["user_id"]
+
+            # ⭐ 동호회장에게 알림 저장
+            (
+                self.supabase
+                .table("notifications")
+                .insert(
                     {
-                        "application_id": application_id,
-                        "question_id": answer["question_id"],
-                        "answer_text": answer["answer_text"],
+                        "user_id": owner_id,
+                        "notification_type": "club_application",
+                        "title": "새로운 가입 신청",
+                        "content": (
+                            f"{club_name}에 "
+                            "새로운 가입 신청이 있습니다."
+                        ),
+                        "related_type": "club",
+                        "related_id": club_id,
+                        "is_read": False,
                     }
                 )
+                .execute()
+            )
 
-            # 답변이 있을 때만 INSERT
-            if answer_data:
-                (
-                    self.supabase
-                    .table("club_join_answers")
-                    .insert(answer_data)
-                    .execute()
-                )
-
-            return application
+        return application
 
     # -----------------------------------------------------
     # 동호회 정기 일정 조회

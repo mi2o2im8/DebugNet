@@ -70,6 +70,38 @@ class ClubEventService:
             )
 
     # -----------------------------------------------------
+    # 동호회 일정 조회 권한 확인
+    # ⭐ 일반 가입 회원도 일정 조회 가능
+    # ⭐ 일정 생성/수정/삭제는 기존 운영 권한 유지
+    # -----------------------------------------------------
+    def validate_view_permission(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> None:
+        club = self.club_repository.find_club_by_id(
+            club_id
+        )
+
+        if club is None:
+            raise LookupError(
+                "존재하지 않거나 비활성화된 동호회입니다."
+            )
+
+        membership = (
+            self.club_repository
+            .find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is None:
+            raise PermissionError(
+                "이 동호회의 회원만 일정을 조회할 수 있습니다."
+            )
+
+    # -----------------------------------------------------
     # 일정 기본 정보 저장
     # -----------------------------------------------------
     def create_base_event(
@@ -1320,7 +1352,7 @@ class ClubEventService:
         club_id: int,
         user_id: str,
     ) -> ClubEventListResponse:
-        self.validate_management_permission(
+        self.validate_view_permission(
             club_id=club_id,
             user_id=user_id,
         )

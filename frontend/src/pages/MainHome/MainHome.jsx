@@ -454,77 +454,16 @@ function MainHome() {
     // ⭐ 커뮤니티
     // =========================================================
 
-    const posts = [
-
-        {
-            id: 1,
-            category: "자유게시판",
-            title: "이번 주말 같이 운동하실 분 있나요?",
-            description: "근처에서 가볍게 운동하실 분 구해요!",
-            date: "오늘",
-            comments: "댓글 5",
-        },
-
-        {
-            id: 2,
-            category: "운동정보",
-            title: "초보자도 쉽게 할 수 있는 운동 추천",
-            description: "처음 시작하는 분들에게 추천하는 운동이에요.",
-            date: "어제",
-            comments: "댓글 3",
-        },
-
-        {
-            id: 3,
-            category: "모집",
-            title: "강서구 배드민턴 함께 하실 분!",
-            description: "주말에 같이 운동할 분들을 찾고 있어요.",
-            date: "어제",
-            comments: "댓글 8",
-        },
-
-    ];
-
-
+    // ⭐ 백엔드에서 받아온 최신 게시글
+    const [posts, setPosts] = useState([]);
     // =========================================================
-    // ⭐ 활동 추천
+    // ⭐ 활동 추천 동호회
+    // /api/clubs/search에서 실제 동호회 목록을 가져옴
     // =========================================================
 
-    const activities = [
+    const [activityClubs, setActivityClubs] =
+        useState([]);
 
-        {
-            image: soccerImage,
-            alt: "축구",
-            category: "운동",
-            title: "축구 모임",
-            place: "강서구",
-        },
-
-        {
-            image: basketballImage,
-            alt: "농구",
-            category: "운동",
-            title: "농구 모임",
-            place: "강서구",
-        },
-
-        {
-            image: runningImage,
-            alt: "러닝",
-            category: "운동",
-            title: "러닝 크루",
-            place: "한강공원",
-        },
-
-        {
-            image: yogaImage,
-            alt: "요가",
-            category: "문화",
-            title: "요가 클래스",
-            place: "강서구",
-        },
-
-    ];
 
 
     // =========================================================
@@ -1151,6 +1090,258 @@ function MainHome() {
 
 
     // =========================================================
+    // ⭐ 커뮤니티 최신 게시글 조회
+    //
+    // Community.jsx와 동일한 /api/posts 백엔드 사용
+    // 최신 자유게시판 게시글 3개만 MainHome에 표시
+    // =========================================================
+
+    useEffect(() => {
+
+        let isActive = true;
+
+        const loadCommunityPosts = async () => {
+
+            try {
+
+                // ⭐ 현재 로그인 세션
+                const {
+                    data: {
+                        session,
+                    },
+                } = await supabase.auth.getSession();
+
+                if (!session?.access_token) {
+
+                    console.log(
+                        "⭐ 커뮤니티 조회: 로그인 세션 없음"
+                    );
+
+                    return;
+                }
+
+                // ⭐ Community.jsx와 동일한 API 파라미터
+                const params = new URLSearchParams({
+                    board_type: "free",
+                    page: "1",
+                    size: "3",
+                    sort: "latest",
+                });
+
+                const response = await fetch(
+                    `http://127.0.0.1:8000/api/posts?${params.toString()}`,
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${session.access_token}`,
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+
+                    const errorData =
+                        await response
+                            .json()
+                            .catch(() => null);
+
+                    throw new Error(
+                        errorData?.detail ||
+                        "커뮤니티 게시글을 불러오지 못했습니다."
+                    );
+                }
+
+                const data =
+                    await response.json();
+
+                console.log(
+                    "⭐ MainHome 커뮤니티 게시글:",
+                    data
+                );
+
+                if (!isActive) {
+                    return;
+                }
+
+                // ⭐ 백엔드 응답을 MainHome 카드 형태로 변환
+                const mappedPosts =
+                    (data.items || [])
+                        .slice(0, 3)
+                        .map((post) => ({
+
+                            id:
+                                post.id ??
+                                post.post_id,
+
+                            category:
+                                post.category ??
+                                post.board_name ??
+                                "자유게시판",
+
+                            title:
+                                post.title ??
+                                "제목 없음",
+
+                            description:
+                                post.content ??
+                                post.description ??
+                                "",
+
+                            date:
+                                post.createdAt ??
+                                post.created_at ??
+                                "",
+
+                            comments:
+                                post.comments ??
+                                post.comment_count ??
+                                0,
+
+                        }));
+
+                setPosts(mappedPosts);
+
+            } catch (error) {
+
+                console.error(
+                    "⭐ MainHome 커뮤니티 조회 오류:",
+                    error
+                );
+
+                if (isActive) {
+                    setPosts([]);
+                }
+
+            }
+
+        };
+
+        loadCommunityPosts();
+
+        return () => {
+            isActive = false;
+        };
+
+    }, []);
+
+
+    // =========================================================
+    // ⭐ 활동 추천 동호회 조회
+    //
+    // ClubHome에서 사용하는
+    // /api/clubs/search API와 동일한 백엔드 연결
+    //
+    // ⭐ 내 동호회는 제외하고 다른 동호회를 표시
+    // =========================================================
+
+    useEffect(() => {
+
+        let isActive = true;
+
+        const loadActivityClubs = async () => {
+
+            try {
+
+                const response = await fetch(
+                    "http://127.0.0.1:8000/api/clubs/search"
+                );
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "활동 추천 동호회를 불러오지 못했습니다."
+                    );
+
+                }
+
+                const data =
+                    await response.json();
+
+                console.log(
+                    "⭐ MainHome 활동 추천 동호회:",
+                    data
+                );
+
+                if (!isActive) {
+                    return;
+                }
+
+                // ⭐ /api/clubs/search 응답
+                // 배열 / data 배열 형태 모두 대응
+                const clubList =
+                    Array.isArray(data)
+                        ? data
+                        : Array.isArray(data?.items)
+                            ? data.items
+                            : [];
+
+                // ⭐ 현재 내 동호회 ID
+                const myClubIds =
+                    new Set(
+                        myClubs
+                            .map(
+                                (club) =>
+                                    club?.club_id ||
+                                    club?.id ||
+                                    club?.clubId
+                            )
+                            .filter(Boolean)
+                            .map((id) =>
+                                String(id)
+                            )
+                    );
+
+                // ⭐ 내 동호회를 제외한 다른 동호회
+                const recommendedClubs =
+                    clubList
+                        .filter((club) => {
+
+                            const currentId =
+                                club?.club_id ||
+                                club?.id ||
+                                club?.clubId;
+
+                            if (!currentId) {
+                                return true;
+                            }
+
+                            return !myClubIds.has(
+                                String(currentId)
+                            );
+
+                        })
+                        .slice(0, 4);
+
+                setActivityClubs(
+                    recommendedClubs
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "⭐ MainHome 활동 추천 동호회 조회 오류:",
+                    error
+                );
+
+                if (isActive) {
+                    setActivityClubs([]);
+                }
+
+            }
+
+        };
+
+        loadActivityClubs();
+
+        return () => {
+            isActive = false;
+        };
+
+    }, [myClubs]);
+
+
+
+    // =========================================================
     // ⭐ MainHome 접근 확인 중
     //
     // ⭐ 중요:
@@ -1717,14 +1908,23 @@ function MainHome() {
                                     className="guest-card"
                                 >
 
-                                    <img
-                                        src={
-                                            guest.image
-                                        }
-                                        alt={
-                                            guest.alt
-                                        }
-                                    />
+                                    <div className="guest-image">
+
+                                        <img
+                                            src={
+                                                guest.image
+                                            }
+                                            alt={
+                                                guest.alt
+                                            }
+                                        />
+
+                                        {/* ⭐ 게스트 모집 팝업 글씨 */}
+                                        <span className="guest-badge">
+                                            게스트 모집
+                                        </span>
+
+                                    </div>
 
                                     <h4>
                                         {
@@ -1810,18 +2010,21 @@ function MainHome() {
                                     </span>
 
 
-                                    <h4>
-                                        {
-                                            post.title
-                                        }
-                                    </h4>
+                                    <div className="community-content">
 
+                                        <h4>
+                                            {
+                                                post.title
+                                            }
+                                        </h4>
 
-                                    <p>
-                                        {
-                                            post.description
-                                        }
-                                    </p>
+                                        <p>
+                                            {
+                                                post.description
+                                            }
+                                        </p>
+
+                                    </div>
 
 
                                     <div className="community-meta">
@@ -1833,9 +2036,7 @@ function MainHome() {
                                         </span>
 
                                         <span>
-                                            {
-                                                post.comments
-                                            }
+                                            댓글 {post.comments}
                                         </span>
 
                                     </div>
@@ -1854,7 +2055,7 @@ function MainHome() {
                     ⭐ 이런 활동도 있어요
                 ===================================================== */}
 
-                <section className="activity-section">
+                <section className="main-home-activity-section">
 
                     <div className="section-header">
 
@@ -1876,66 +2077,200 @@ function MainHome() {
                     </div>
 
 
-                    <div className="activity-list">
+                    <div
+                        className="main-home-activity-list"
+                        style={{
+                            width: "100%",
+                            display: "flex",
+                            gap: "6px",
+                            overflowX: "auto",
+                            overflowY: "hidden",
+                            padding: "0 1px 5px",
+                            boxSizing: "border-box",
+                            scrollbarWidth: "none",
+                        }}
+                    >
 
-                        {activities.map(
-                            (activity) => (
+                        {activityClubs.slice(0, 4).map(
+                            (club, index) => {
 
-                                <Link
-                                    key={
-                                        activity.title
-                                    }
-                                    to="/clubs"
-                                    className="activity-card"
-                                >
+                                const clubIdValue =
+                                    club?.club_id ||
+                                    club?.id ||
+                                    club?.clubId;
 
-                                    <div className="activity-image">
+                                const clubName =
+                                    club?.club_name ||
+                                    club?.name ||
+                                    club?.title ||
+                                    "동호회";
 
-                                        <span className="activity-category">
-                                            {
-                                                activity.category
-                                            }
+                                const sportName =
+                                    club?.sport_name ||
+                                    club?.sport ||
+                                    club?.sportName ||
+                                    "운동";
+
+                                const memberCount =
+                                    club?.current_members ??
+                                    club?.member_count ??
+                                    club?.members_count ??
+                                    0;
+
+                                const image =
+                                    club?.representative_image_url ||
+                                    club?.club_image ||
+                                    sportImages[sportName] ||
+                                    badmintonImage;
+
+                                const region =
+                                    club?.region ||
+                                    club?.club_region ||
+                                    club?.activity_region ||
+                                    "지역 정보 없음";
+
+                                return (
+
+                                    <Link
+                                        key={
+                                            clubIdValue ||
+                                            `${clubName}-${index}`
+                                        }
+                                        to={
+                                            clubIdValue
+                                                ? `/clubs/${clubIdValue}`
+                                                : "/clubs"
+                                        }
+                                        className="main-home-activity-card"
+                                        style={{
+                                            flex: "0 0 calc((100% - 18px) / 4)",
+                                            width: "calc((100% - 18px) / 4)",
+                                            minWidth: "calc((100% - 18px) / 4)",
+                                            display: "block",
+                                            boxSizing: "border-box",
+                                            border: "1px solid #ddd",
+                                            borderRadius: "8px",
+                                            overflow: "hidden",
+                                            background: "#fff",
+                                            textDecoration: "none",
+                                            color: "#333",
+                                        }}
+                                    >
+
+                                        <div
+                                            className="main-home-activity-image"
+                                            style={{
+                                                position: "relative",
+                                                width: "100%",
+                                                height: "58px",
+                                                overflow: "hidden",
+                                            }}
+                                        >
+
+                                            <span
+                                                className="main-home-activity-category"
+                                                style={{
+                                                    position: "absolute",
+                                                    top: "4px",
+                                                    left: "4px",
+                                                    zIndex: 2,
+                                                    padding: "2px 5px",
+                                                    borderRadius: "4px",
+                                                    background: "#01A17F",
+                                                    color: "#fff",
+                                                    fontSize: "7px",
+                                                    lineHeight: 1.2,
+                                                }}
+                                            >
+                                                운동
+                                            </span>
+
+                                            <img
+                                                src={image}
+                                                alt={clubName}
+                                                style={{
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    display: "block",
+                                                    objectFit: "cover",
+                                                }}
+                                                onError={(e) => {
+
+                                                    e.currentTarget.src =
+                                                        sportImages[sportName] ||
+                                                        badmintonImage;
+
+                                                }}
+                                            />
+
+                                        </div>
+
+
+                                        <h4
+                                            style={{
+                                                margin: "6px 5px 4px",
+                                                fontSize: "9px",
+                                                fontWeight: 700,
+                                                whiteSpace: "nowrap",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                            }}
+                                        >
+                                            {clubName}
+                                        </h4>
+
+
+                                        <p
+                                            style={{
+                                                margin: "3px 5px",
+                                                fontSize: "7px",
+                                                color: "#888",
+                                                whiteSpace: "nowrap",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                            }}
+                                        >
+                                            {sportName}
+                                            {" · "}
+                                            {region}
+                                        </p>
+
+
+                                        <span
+                                            className="main-home-activity-action"
+                                            style={{
+                                                display: "block",
+                                                margin: "6px 5px 7px",
+                                                padding: "4px 0",
+                                                border: "1px solid #01A17F",
+                                                borderRadius: "5px",
+                                                background: "#fff",
+                                                color: "#01A17F",
+                                                textAlign: "center",
+                                                fontSize: "7px",
+                                            }}
+                                        >
+                                            자세히 보기
                                         </span>
 
+                                    </Link>
 
-                                        <img
-                                            src={
-                                                activity.image
-                                            }
-                                            alt={
-                                                activity.alt
-                                            }
-                                        />
+                                );
 
-                                    </div>
-
-
-                                    <h4>
-                                        {
-                                            activity.title
-                                        }
-                                    </h4>
-
-
-                                    <p>
-                                        {
-                                            activity.place
-                                        }
-                                    </p>
-
-
-                                    <span className="activity-action">
-                                        자세히 보기
-                                    </span>
-
-                                </Link>
-
-                            )
+                            }
                         )}
 
                     </div>
 
                 </section>
+
+                {/* ⭐ 이용도우미가 활동 카드 버튼을 가리지 않도록 하단 스크롤 여유 공간 */}
+                <div
+                    aria-hidden="true"
+                    style={{
+                        height: "100px",
+                    }}
+                />
 
             </main>
 

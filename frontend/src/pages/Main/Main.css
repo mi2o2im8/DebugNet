@@ -462,12 +462,8 @@
 
 .guest-section {
     width: 100%;
-
     margin-bottom: 20px;
 }
-
-
-/* ⭐ 팝업 문구 */
 
 .guest-header {
     display: none;
@@ -475,152 +471,118 @@
 
 .guest-header p {
     margin: 0;
-
     font-size: 10px;
     color: #aaa;
 }
-
-
-/* ⭐ 게스트 제목 + 더보기 */
 
 .guest-title {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     width: 100%;
-
     margin-bottom: 10px;
 }
-
-
-/* ⭐ 게스트 제목 */
 
 .guest-content {
     display: flex;
     align-items: center;
-
     gap: 6px;
 }
 
 .guest-content img {
     width: 17px;
     height: 17px;
-
     object-fit: contain;
 }
 
 .guest-content h3 {
     margin: 0;
-
     font-size: 16px;
     font-weight: 700;
-
     color: #333;
 }
-
-
-/* ⭐ 더보기 */
 
 .guest-more {
     display: flex;
     align-items: center;
-
     gap: 3px;
-
     text-decoration: none;
-
     color: #777;
-
     cursor: pointer;
 }
 
 .guest-more p {
     margin: 0;
-
     font-size: 11px;
 }
 
 .guest-more img {
     width: 10px;
     height: 10px;
-
     object-fit: contain;
-
-    /* ⭐ back.png가 왼쪽 화살표라서 오른쪽으로 회전 */
     transform: rotate(180deg);
 }
 
-
-/* ⭐ 게스트 모집 카드 목록 */
-
+/* ⭐ 가입 후 MainHome 카드 느낌으로 4개 배치 */
 .guest-list {
-    display: grid;
-
-    grid-template-columns: repeat(3, 1fr);
-
-    gap: 8px;
-
     width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
 }
-
-
-/* ⭐ 게스트 카드 */
 
 .guest-item {
+    width: 100%;
     min-width: 0;
-
-    text-align: center;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    text-align: left;
+    text-decoration: none;
+    color: #333;
 }
-
-
-/* ⭐ 게스트 이미지 클릭 */
 
 .guest-item-image-link {
-    display: block;
-
     position: relative;
-
+    display: block;
     width: 100%;
-
-    text-decoration: none;
-
+    height: 58px;
     overflow: hidden;
+    text-decoration: none;
 }
-
-
-/* ⭐ 게스트 이미지 */
 
 .guest-item-image-link img {
     display: block;
-
     width: 100%;
-    aspect-ratio: 1 / 1;
-
-    border-radius: 7px;
-
+    height: 100%;
     object-fit: cover;
 }
 
-
-/* ⭐ 게스트 제목 링크 */
+.guest-item-image-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.01),
+        rgba(0, 0, 0, 0.1)
+    );
+    pointer-events: none;
+}
 
 .guest-item-title {
     display: block;
-
+    text-align: center;
+    margin: 6px 5px 3px;
+    min-height: 14px;
     overflow: hidden;
-
-    margin-top: 5px;
-
-    font-size: 11px;
-    font-weight: 600;
-
+    font-size: 10px;
+    font-weight: 700;
     line-height: 1.3;
-
     color: #333;
-
     text-decoration: none;
-
     white-space: nowrap;
     text-overflow: ellipsis;
 }
@@ -629,6 +591,59 @@
     color: #01A17F;
 }
 
+/* ⭐ 게스트 카드 안의 시간 / 장소 / 자세히 보기 */
+.guest-item p {
+    text-align: center;
+    margin: 2px 5px;
+    font-size: 8px;
+    line-height: 1.35;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.guest-item > span:last-child {
+    display: block;
+    margin: 6px 5px 7px;
+    padding: 4px 0;
+    border: 1px solid #01A17F;
+    border-radius: 5px;
+    background: #fff;
+    color: #01A17F;
+    text-align: center;
+    font-size: 8px;
+    line-height: 1.2;
+    box-sizing: border-box;
+}
+
+/* ⭐ 이미지 위 뱃지 */
+.guest-item-image-link .image-popup {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: "Maplestory", sans-serif;
+    font-size: 7px;
+    font-weight: 600;
+    line-height: 1;
+    color: #fff;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.guest-item-image-link .popup-green {
+    background-color: #01A17F;
+}
+
+.guest-item-image-link .popup-blue {
+    background-color: #4A9FD8;
+}
 
 /* ========================================
    ⭐ 동호회 활동 추천
@@ -636,122 +651,112 @@
 
 .activity-recommendation {
     width: 100%;
-
     margin-bottom: 20px;
 }
-
-
-/* ⭐ 추천 제목 */
 
 .recommendation-header {
     display: flex;
     align-items: center;
-
     gap: 6px;
-
     margin-bottom: 10px;
 }
 
 .recommendation-header img {
     width: 17px;
     height: 17px;
-
     object-fit: contain;
 }
 
 .recommendation-header h3 {
     margin: 0;
-
     font-size: 16px;
     font-weight: 700;
 }
 
-
-/* ⭐ 추천 목록 */
-
 .recommendation-list {
+    width: 100%;
     display: grid;
-
-    grid-template-columns: repeat(4, 1fr);
-
-    gap: 7px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
 }
-
-
-/* ⭐ 추천 카드 */
 
 .recommendation-item {
+    width: 100%;
     min-width: 0;
+    display: block;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    text-decoration: none;
+    color: #333;
 }
 
-
-/* ⭐ 팝업 문구 */
-
-.recommendation-item p:first-child {
+.recommendation-item > p:first-child {
     display: none;
-
-    height: 10px;
-
-    margin: 0 0 3px;
-
-    font-size: 9px;
-    color: #01A17F;
-
-    line-height: 1;
 }
-
-
-/* ⭐ 활동 추천 이미지 링크 */
 
 .recommendation-image-link {
-    display: block;
-
     position: relative;
-
+    display: block;
     width: 100%;
-
-    text-decoration: none;
-
+    height: 58px;
     overflow: hidden;
+    text-decoration: none;
 }
-
-
-/* ⭐ 운동 이미지 */
 
 .recommendation-image-link img {
     display: block;
-
     width: 100%;
-    aspect-ratio: 1 / 1;
-
-    margin-bottom: 5px;
-
-    border-radius: 7px;
-
+    height: 100%;
     object-fit: cover;
 }
 
+.recommendation-image-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.01),
+        rgba(0, 0, 0, 0.1)
+    );
+    pointer-events: none;
+}
 
-/* ⭐ 운동 이름 링크 */
+.recommendation-image-link .image-popup {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    z-index: 2;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 7px;
+    line-height: 1.2;
+    color: #fff;
+}
+
+.recommendation-image-link .popup-green {
+    background-color: #01A17F;
+}
+
+.recommendation-image-link .popup-blue {
+    background-color: #4A9FD8;
+}
 
 .recommendation-title {
     display: block;
-
-    overflow: hidden;
-
-    margin: 0;
-
-    font-size: 11px;
-    font-weight: 600;
-
-    color: #333;
-
-    line-height: 1.3;
-
     text-align: center;
-
+    width: 100%;
+    margin: 6px 5px 3px;
+    min-height: 14px;
+    overflow: hidden;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #333;
     text-decoration: none;
-
     white-space: nowrap;
     text-overflow: ellipsis;
 }
@@ -760,46 +765,20 @@
     color: #01A17F;
 }
 
-
-/* ⭐ 이미지 위 팝업 문구 */
-
-.image-popup {
-    position: absolute;
-
-    top: 5px;
-    left: 5px;
-
-    z-index: 2;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 3px 6px;
-
+.recommendation-item::after {
+    content: "자세히 보기";
+    display: block;
+    margin: 6px 5px 7px;
+    padding: 4px 0;
+    border: 1px solid #01A17F;
     border-radius: 5px;
-
-    font-family: "Maplestory", sans-serif;
+    background: #fff;
+    color: #01A17F;
+    text-align: center;
     font-size: 8px;
-    font-weight: 600;
-
-    line-height: 1;
-
-    color: #fff;
-
-    white-space: nowrap;
-
+    line-height: 1.2;
     box-sizing: border-box;
 }
-
-.popup-green {
-    background-color: #01A17F;
-}
-
-.popup-blue {
-    background-color: #4A9FD8;
-}
-
 
 /* ========================================
    ⭐ 모바일
@@ -885,4 +864,8 @@
     .recommendation-list {
         gap: 5px;
     }
+}
+
+.main-page {
+    padding-bottom: 100px;
 }
