@@ -399,3 +399,198 @@
     cursor: wait;
     opacity: 0.55;
 }
+
+/* ---------------------------------------------------------
+   회원 경고 관리
+--------------------------------------------------------- */
+
+.club-member-warning-section {
+    display: grid;
+    gap: 16px;
+    width: 100%;
+}
+
+.club-member-warning-form {
+    display: grid;
+    gap: 16px;
+    width: 100%;
+    padding: 18px;
+    border: 1px solid #f0d0d0;
+    border-radius: 14px;
+    background: #fffafa;
+    box-sizing: border-box;
+}
+
+.club-member-warning-form h3 {
+    margin: 0;
+    color: #b63f3f;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.club-member-warning-form label {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+}
+
+.club-member-warning-form label > span {
+    color: #505c54;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.club-member-warning-form select,
+.club-member-warning-form textarea {
+    display: block;
+    width: 100%;
+    margin: 0;
+    border: 1px solid #d9e2dc;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #202722;
+    font: inherit;
+    box-sizing: border-box;
+}
+
+.club-member-warning-form select {
+    min-height: 44px;
+    padding: 0 38px 0 13px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.club-member-warning-form textarea {
+    min-height: 112px;
+    padding: 12px 13px;
+    font-size: 12px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.club-member-warning-form textarea::placeholder {
+    color: #a0aaa3;
+}
+
+.club-member-warning-form select:focus,
+.club-member-warning-form textarea:focus {
+    border-color: #d45a5a;
+    outline: 3px solid rgba(212, 90, 90, 0.1);
+}
+
+.club-member-warning-form select:disabled,
+.club-member-warning-form textarea:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.club-member-warning-form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.club-member-warning-form-footer small {
+    color: #8b968e;
+    font-size: 10px;
+}
+
+.club-member-warning-form-footer button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 112px;
+    min-height: 42px;
+    padding: 8px 15px;
+    border: 1px solid #d54b4b;
+    border-radius: 10px;
+    background: #d54b4b;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.club-member-warning-form-footer button:not(:disabled):hover {
+    background: #c64040;
+}
+
+.club-member-warning-form-footer button:disabled {
+    border-color: #e3caca;
+    background: #ead7d7;
+    color: #a98787;
+    cursor: not-allowed;
+}
+
+
+/* ---------------------------------------------------------
+   경고 내역 카드
+--------------------------------------------------------- */
+
+.club-member-detail-history article.club-member-warning-card {
+    align-items: flex-start;
+    padding: 16px;
+    border-color: #ebd7d7;
+    background: #ffffff;
+}
+
+.club-member-warning-card > div {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.club-member-detail-history
+.club-member-warning-card strong {
+    display: inline-flex;
+    width: fit-content;
+    margin-bottom: 4px;
+    padding: 4px 7px;
+    border-radius: 7px;
+    background: #fff0f0;
+    color: #c64141;
+    font-size: 10px;
+}
+
+.club-member-detail-history
+.club-member-warning-card span {
+    color: #3f4942;
+    font-size: 11px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.club-member-detail-history
+.club-member-warning-card small {
+    margin-top: 3px;
+    color: #929c95;
+    font-size: 9px;
+}
+
+.club-member-warning-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    gap: 4px;
+    min-height: 34px;
+    padding: 6px 9px;
+    border: 1px solid #eccaca;
+    border-radius: 8px;
+    background: #fff7f7;
+    color: #c74444;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.club-member-warning-delete:not(:disabled):hover {
+    background: #ffeded;
+}
+
+.club-member-warning-delete:disabled {
+    cursor: wait;
+    opacity: 0.55;
+}

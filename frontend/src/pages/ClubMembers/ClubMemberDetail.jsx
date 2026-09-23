@@ -23,6 +23,8 @@ import {
 } from "react-icons/fi";
 
 import {
+    createClubMemberWarning,
+    deleteClubMemberWarning,
     getClubMemberDetail,
     removeClubMember,
     updateClubMemberRole,
@@ -77,6 +79,13 @@ const ATTENDANCE_LABELS = {
     attending: "참석",
     absent: "불참",
     undecided: "미정"
+};
+
+const WARNING_TYPE_LABELS = {
+    attendance: "출석 및 참여",
+    rule_violation: "규칙 위반",
+    manner: "매너 및 태도",
+    other: "기타"
 };
 
 
@@ -147,6 +156,12 @@ function ClubMemberDetail() {
         useState("");
 
     const [errorMessage, setErrorMessage] =
+        useState("");
+
+    const [warningType, setWarningType] =
+    useState("attendance");
+
+    const [warningReason, setWarningReason] =
         useState("");
 
 
@@ -332,6 +347,111 @@ function ClubMemberDetail() {
                 || "회원을 내보내지 못했습니다."
             );
 
+            setProcessingAction("");
+        }
+    };
+
+    const handleWarningCreate = async (
+        event
+    ) => {
+        event.preventDefault();
+
+        if (
+            !member
+            || processingAction
+        ) {
+            return;
+        }
+
+        const normalizedReason =
+            warningReason.trim();
+
+        if (normalizedReason.length < 2) {
+            setErrorMessage(
+                "경고 사유를 2자 이상 입력해주세요."
+            );
+
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `${member.nickname}님에게 경고를 부여할까요?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        setProcessingAction("warning-create");
+        setErrorMessage("");
+
+        try {
+            const result =
+                await createClubMemberWarning(
+                    clubId,
+                    clubMemberId,
+                    warningType,
+                    normalizedReason
+                );
+
+            window.alert(result.message);
+
+            setWarningReason("");
+            setWarningType("attendance");
+
+            await loadMemberDetail();
+        } catch (error) {
+            setErrorMessage(
+                error.message
+                || "회원 경고를 저장하지 못했습니다."
+            );
+        } finally {
+            setProcessingAction("");
+        }
+    };
+
+
+    const handleWarningDelete = async (
+        warning
+    ) => {
+        if (
+            !member
+            || processingAction
+        ) {
+            return;
+        }
+
+        const confirmed = window.confirm(
+            "이 경고 기록을 취소할까요?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        setProcessingAction(
+            `warning-delete-${warning.warning_id}`
+        );
+
+        setErrorMessage("");
+
+        try {
+            const result =
+                await deleteClubMemberWarning(
+                    clubId,
+                    clubMemberId,
+                    warning.warning_id
+                );
+
+            window.alert(result.message);
+
+            await loadMemberDetail();
+        } catch (error) {
+            setErrorMessage(
+                error.message
+                || "회원 경고를 취소하지 못했습니다."
+            );
+        } finally {
             setProcessingAction("");
         }
     };
@@ -637,38 +757,190 @@ function ClubMemberDetail() {
                 )}
 
                 {activeTab === "warnings" && (
-                    <div className="club-member-detail-history">
-                        {member.warnings.length === 0 ? (
-                            <div className="empty">
-                                <FiAlertTriangle />
-                                <p>등록된 경고 내역이 없습니다.</p>
+                <div className="club-member-warning-section">
+                    {member.can_manage_warnings && (
+                        <form
+                            className="club-member-warning-form"
+                            onSubmit={handleWarningCreate}
+                        >
+                            <h3>경고 부여</h3>
+
+                            <label>
+                                <span>경고 유형</span>
+
+                                <select
+                                    value={warningType}
+                                    disabled={Boolean(
+                                        processingAction
+                                    )}
+                                    onChange={(event) =>
+                                        setWarningType(
+                                            event.target.value
+                                        )
+                                    }
+                                >
+                                    <option value="attendance">
+                                        출석 및 참여
+                                    </option>
+
+                                    <option value="rule_violation">
+                                        규칙 위반
+                                    </option>
+
+                                    <option value="manner">
+                                        매너 및 태도
+                                    </option>
+
+                                    <option value="other">
+                                        기타
+                                    </option>
+                                </select>
+                            </label>
+
+                            <label>
+                                <span>경고 사유</span>
+
+                                <textarea
+                                    value={warningReason}
+                                    maxLength={500}
+                                    placeholder={
+                                        "경고 사유를 구체적으로 입력해주세요."
+                                    }
+                                    disabled={Boolean(
+                                        processingAction
+                                    )}
+                                    onChange={(event) =>
+                                        setWarningReason(
+                                            event.target.value
+                                        )
+                                    }
+                                />
+                            </label>
+
+                            <div className="club-member-warning-form-footer">
+                                <small>
+                                    {warningReason.length}/500
+                                </small>
+
+                                <button
+                                    type="submit"
+                                    disabled={
+                                        Boolean(processingAction)
+                                        || warningReason
+                                            .trim()
+                                            .length < 2
+                                    }
+                                >
+                                    <FiAlertTriangle />
+
+                                    {
+                                        processingAction
+                                        === "warning-create"
+                                            ? "저장 중"
+                                            : "경고 부여"
+                                    }
+                                </button>
                             </div>
-                        ) : (
-                            member.warnings.map((warning) => (
-                                <article key={warning.warning_id}>
-                                    <div>
-                                        <strong>
-                                            {warning.warning_type}
-                                        </strong>
+                        </form>
+                    )}
 
-                                        <span>
-                                            {warning.reason
-                                                || "사유 없음"}
-                                        </span>
+                    <div className="club-member-detail-history">
+                        {
+                            (member.warnings || []).length
+                            === 0
+                                ? (
+                                    <div className="empty">
+                                        <FiAlertTriangle />
 
-                                        <small>
-                                            {
-                                                formatDateTime(
-                                                    warning.created_at
-                                                )
-                                            }
-                                        </small>
+                                        <p>
+                                            등록된 경고 내역이 없습니다.
+                                        </p>
                                     </div>
-                                </article>
-                            ))
-                        )}
+                                )
+                                : (
+                                    member.warnings.map(
+                                        (warning) => (
+                                            <article
+                                                key={
+                                                    warning.warning_id
+                                                }
+                                                className={
+                                                    "club-member-warning-card"
+                                                }
+                                            >
+                                                <div>
+                                                    <strong>
+                                                        {
+                                                            WARNING_TYPE_LABELS[
+                                                                warning
+                                                                    .warning_type
+                                                            ]
+                                                            || warning
+                                                                .warning_type
+                                                        }
+                                                    </strong>
+
+                                                    <span>
+                                                        {
+                                                            warning.reason
+                                                            || "사유 없음"
+                                                        }
+                                                    </span>
+
+                                                    <small>
+                                                        {
+                                                            formatDateTime(
+                                                                warning
+                                                                    .created_at
+                                                            )
+                                                        }
+                                                    </small>
+                                                </div>
+
+                                                {
+                                                    member
+                                                        .can_manage_warnings
+                                                    && (
+                                                        <button
+                                                            type="button"
+                                                            className={
+                                                                "club-member-warning-delete"
+                                                            }
+                                                            aria-label={
+                                                                "경고 취소"
+                                                            }
+                                                            disabled={Boolean(
+                                                                processingAction
+                                                            )}
+                                                            onClick={() =>
+                                                                handleWarningDelete(
+                                                                    warning
+                                                                )
+                                                            }
+                                                        >
+                                                            <FiXCircle />
+
+                                                            {
+                                                                processingAction
+                                                                === (
+                                                                    "warning-delete-"
+                                                                    + warning
+                                                                        .warning_id
+                                                                )
+                                                                    ? "취소 중"
+                                                                    : "경고 취소"
+                                                            }
+                                                        </button>
+                                                    )
+                                                }
+                                            </article>
+                                        )
+                                    )
+                                )
+                        }
                     </div>
-                )}
+                </div>
+            )}
             </section>
 
             {
@@ -689,12 +961,15 @@ function ClubMemberDetail() {
                                     disabled={Boolean(
                                         processingAction
                                     )}
-                                    onClick={handleRoleChange}
+                                    onClick={
+                                        handleRoleChange
+                                    }
                                 >
                                     <FiShield />
 
                                     {
-                                        member.role === "manager"
+                                        member.role
+                                        === "manager"
                                             ? "운영진 해제"
                                             : "운영진 지정"
                                     }
@@ -713,7 +988,9 @@ function ClubMemberDetail() {
                                     disabled={Boolean(
                                         processingAction
                                     )}
-                                    onClick={handleStatusChange}
+                                    onClick={
+                                        handleStatusChange
+                                    }
                                 >
                                     {
                                         member.status
@@ -738,7 +1015,9 @@ function ClubMemberDetail() {
                                     disabled={Boolean(
                                         processingAction
                                     )}
-                                    onClick={handleRemoveMember}
+                                    onClick={
+                                        handleRemoveMember
+                                    }
                                 >
                                     <FiUserMinus />
                                     동호회에서 내보내기

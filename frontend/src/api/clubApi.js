@@ -526,3 +526,48 @@ export async function removeClubMember(
         }
     );
 }
+
+// ---------------------------------------------------------
+// 회원 경고 부여
+// ---------------------------------------------------------
+export async function createClubMemberWarning(
+    clubId,
+    clubMemberId,
+    warningType,
+    reason
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/members/`
+            + `${clubMemberId}/warnings`
+        ),
+        {
+            method: "POST",
+            body: {
+                warning_type: warningType,
+                reason
+            }
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// 회원 경고 취소
+// ---------------------------------------------------------
+export async function deleteClubMemberWarning(
+    clubId,
+    clubMemberId,
+    warningId
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/members/`
+            + `${clubMemberId}/warnings/`
+            + warningId
+        ),
+        {
+            method: "DELETE"
+        }
+    );
+}
