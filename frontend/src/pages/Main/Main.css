@@ -349,8 +349,10 @@
 .schedule-more {
     display: flex;
     align-items: center;
-
-    gap: 3px;
+    gap: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
 }
 
 .schedule-more p {

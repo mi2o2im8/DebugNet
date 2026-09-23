@@ -380,3 +380,50 @@ export async function decideClubApplication(
         }
     );
 }
+
+// =========================================================
+// ⭐ 내 동호회 조회
+//
+// 운영 중인 동호회 또는
+// 운영자 승인을 받아 가입한 동호회 확인
+// =========================================================
+
+export async function getMyClub() {
+    return authenticatedRequest(
+        "/api/clubs/my",
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// =========================================================
+// ⭐ 특정 동호회 가입 상태 조회
+//
+// pending
+//   → 승인 대기
+//
+// active
+//   → 운영자 승인 완료 + 정식 회원
+//
+// rejected
+//   → 가입 거절
+// =========================================================
+
+export async function getClubMemberStatus(
+    clubId,
+    userId
+) {
+    const query =
+        new URLSearchParams({
+            user_id: userId
+        });
+
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/member-status?${query.toString()}`,
+        {
+            method: "GET"
+        }
+    );
+}

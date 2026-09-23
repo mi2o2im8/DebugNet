@@ -7,6 +7,7 @@
     src: url("../../assets/font/Maplestory-Light.ttf") format("truetype");
 }
 
+
 body {
     margin: 0;
 
@@ -31,6 +32,7 @@ body {
     background: #fff;
 }
 
+
 .main-home-main {
     width: 100%;
     max-width: 400px;
@@ -45,50 +47,74 @@ body {
    ⭐ 상단 인사
 ======================================== */
 
-.main-welcome-content {
+.main-welcome-section {
     width: 100%;
 
-    margin: 12px auto 22px;
+    margin-bottom: 20px;
+}
 
+
+.main-welcome-content {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
 }
 
-.main-welcome-text h2 {
-    margin: 0;
 
-    font-size: 21px;
+.main-welcome-text {
+    text-align: left;
+}
+
+
+.main-welcome-text h2 {
+    margin: 0 0 5px;
+
+    font-size: 19px;
     font-weight: 700;
 
     color: #222;
 }
 
-.main-welcome-text p {
-    margin: 4px 0 0;
 
-    font-size: 11px;
+.main-welcome-text p {
+    margin: 0;
+
+    font-size: 13px;
 
     color: #777;
+
+    line-height: 1.5;
 }
+
+
+/* ========================================
+   ⭐ 알림 / 프로필
+======================================== */
 
 .main-welcome-actions {
     display: flex;
     align-items: center;
 
-    gap: 9px;
+    gap: 10px;
+
+    padding-top: 2px;
 }
 
-.main-welcome-icon {
-    width: 21px;
-    height: 21px;
 
-    padding: 0;
-    margin: 0;
+.main-welcome-icon {
+    position: relative;
 
     display: flex;
     align-items: center;
     justify-content: center;
+
+    width: 30px;
+    height: 30px;
+
+    padding: 0;
+    margin: 0;
+
+    flex-shrink: 0;
 
     border: none;
 
@@ -99,13 +125,62 @@ body {
     cursor: pointer;
 }
 
-.main-welcome-icon img {
-    width: 21px;
-    height: 21px;
 
+.notification-icon-svg {
+    width: 22px;
+    height: 22px;
+
+    color: #333;
+
+    stroke-width: 2;
+
+    flex-shrink: 0;
+}
+
+
+.main-welcome-actions img {
     display: block;
 
+    width: 30px;
+    height: 30px;
+
     object-fit: contain;
+}
+
+
+.notification-badge {
+    position: absolute;
+
+    top: -4px;
+    right: -5px;
+
+    z-index: 10;
+
+    min-width: 15px;
+    height: 15px;
+
+    padding: 0 4px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    border-radius: 999px;
+
+    background-color: #FF4D4D;
+    color: #fff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+
+    line-height: 1;
+
+    white-space: nowrap;
+
+    pointer-events: none;
 }
 
 
@@ -117,6 +192,7 @@ body {
     margin-bottom: 17px;
 }
 
+
 .section-header {
     width: 100%;
 
@@ -127,6 +203,7 @@ body {
     justify-content: space-between;
 }
 
+
 .section-title {
     display: flex;
     align-items: center;
@@ -134,12 +211,14 @@ body {
     gap: 5px;
 }
 
+
 .section-title img {
     width: 18px;
     height: 18px;
 
     object-fit: contain;
 }
+
 
 .section-header h3 {
     margin: 0;
@@ -149,6 +228,7 @@ body {
 
     color: #333;
 }
+
 
 .section-more {
     display: flex;
@@ -162,6 +242,7 @@ body {
 
     text-decoration: none;
 }
+
 
 .section-more img {
     width: 10px;
@@ -185,12 +266,11 @@ body {
     scrollbar-width: none;
 }
 
+
 .my-club-list::-webkit-scrollbar {
     display: none;
 }
 
-
-/* ⭐ 카드 4개가 한 화면에 들어오도록 */
 
 .my-club-card,
 .my-club-create-card {
@@ -213,7 +293,7 @@ body {
 
 
 /* ========================================
-   ⭐ 내 동호회 이미지
+   ⭐ 동호회 이미지
 ======================================== */
 
 .my-club-image {
@@ -225,12 +305,14 @@ body {
     overflow: hidden;
 }
 
+
 .my-club-image img {
     width: 100%;
     height: 100%;
 
     object-fit: cover;
 }
+
 
 .club-badge {
     position: absolute;
@@ -247,6 +329,7 @@ body {
 
     font-size: 8px;
 }
+
 
 .club-option {
     position: absolute;
@@ -270,6 +353,7 @@ body {
     padding: 7px 7px 3px;
 }
 
+
 .my-club-info h4 {
     margin: 0 0 4px;
 
@@ -281,6 +365,7 @@ body {
     text-overflow: ellipsis;
 }
 
+
 .my-club-info p {
     margin: 0;
 
@@ -288,6 +373,7 @@ body {
 
     color: #777;
 }
+
 
 .my-club-status {
     display: flex;
@@ -299,6 +385,7 @@ body {
 
     color: #888;
 }
+
 
 .my-club-status span:first-child {
     color: #01A17F;
@@ -326,6 +413,7 @@ body {
     text-align: center;
 }
 
+
 .my-club-create-card img {
     width: 38px;
     height: 38px;
@@ -334,6 +422,7 @@ body {
 
     object-fit: contain;
 }
+
 
 .my-club-create-card p {
     margin: 0;
@@ -349,29 +438,175 @@ body {
    ⭐ 이번 주 일정
 ======================================== */
 
-.schedule-days {
+.main-schedule-section {
     width: 100%;
-
-    margin: 0 0 8px;
-
-    display: flex;
-
-    gap: 5px;
 }
 
-.schedule-day {
-    flex: 1;
 
-    min-width: 0;
+.main-schedule-section .section-header {
+    margin-bottom: 8px;
+}
 
-    padding: 6px 2px;
+
+/* ========================================
+   ⭐ 메인 홈 월간 달력
+======================================== */
+
+.main-home-calendar {
+    width: 100%;
+
+    padding: 10px 10px 9px;
+
+    box-sizing: border-box;
 
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 10px;
 
     background: #fff;
+}
 
-    text-align: center;
+
+/* ========================================
+   ⭐ 달력 헤더
+======================================== */
+
+.main-home-calendar-header {
+    width: 100%;
+
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 4px;
+}
+
+
+.main-home-calendar-header strong {
+    font-size: 14px;
+    font-weight: 700;
+
+    color: #222;
+}
+
+
+.main-home-calendar-header button {
+    width: 28px;
+    height: 28px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 7px;
+
+    background: transparent;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #555;
+
+    font-family: "Maplestory", sans-serif;
+
+    font-size: 21px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+
+.main-home-calendar-header button:hover {
+    background: #E8F6F2;
+}
+
+
+.main-home-calendar-header .main-home-today-button {
+    width: auto;
+
+    padding: 0 7px;
+
+    font-size: 10px;
+
+    color: #777;
+}
+
+
+/* ========================================
+   ⭐ 요일
+======================================== */
+
+.main-home-weekdays {
+    display: grid;
+
+    grid-template-columns: repeat(7, 1fr);
+
+    margin-bottom: 2px;
+}
+
+
+.main-home-weekdays span {
+    height: 24px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 9px;
+    font-weight: 600;
+
+    color: #777;
+}
+
+
+.main-home-weekdays .sunday {
+    color: #e05c64;
+}
+
+
+.main-home-weekdays .saturday {
+    color: #5279bd;
+}
+
+
+/* ========================================
+   ⭐ 날짜 그리드
+======================================== */
+
+.main-home-calendar-grid {
+    display: grid;
+
+    grid-template-columns: repeat(7, 1fr);
+
+    row-gap: 1px;
+}
+
+
+.main-home-empty-day {
+    width: 100%;
+    height: 34px;
+}
+
+
+/* ========================================
+   ⭐ 날짜 버튼
+======================================== */
+
+.main-home-calendar-day {
+    width: 100%;
+    height: 34px;
+
+    padding: 2px 0 0;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 
     box-sizing: border-box;
 
@@ -380,35 +615,77 @@ body {
     cursor: pointer;
 }
 
-.schedule-day span {
-    display: block;
 
-    margin-bottom: 3px;
+.main-home-calendar-day > span {
+    width: 28px;
+    height: 28px;
 
-    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    color: #777;
-}
-
-.schedule-day strong {
-    display: block;
+    border-radius: 50%;
 
     font-size: 10px;
 
     color: #333;
 }
 
-.schedule-day.active {
-    border: 2px solid #01A17F;
 
-    background: #E8F6F2;
+/* ========================================
+   ⭐ 선택 날짜
+======================================== */
 
-    color: #01A17F;
+.main-home-calendar-day.selected > span {
+    background-color: #01A17F;
+
+    color: #fff;
+
+    font-weight: 700;
 }
 
-.schedule-day.active span,
-.schedule-day.active strong {
-    color: #01A17F;
+
+.main-home-calendar-day:hover > span {
+    background-color: #E8F6F2;
+}
+
+
+.main-home-calendar-day.selected:hover > span {
+    background-color: #01A17F;
+}
+
+
+/* ========================================
+   ⭐ 일정 점
+======================================== */
+
+.main-home-calendar-dots {
+    position: absolute;
+
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    pointer-events: none;
+}
+
+
+.main-home-calendar-day {
+    position: relative;
+}
+
+
+.main-home-calendar-dots i {
+    width: 4px;
+    height: 4px;
+
+    display: block;
+
+    border-radius: 50%;
+
+    background-color: #F5A623;
 }
 
 
@@ -419,6 +696,8 @@ body {
 .schedule-list {
     width: 100%;
 
+    margin-top: 8px;
+
     display: flex;
 
     flex-direction: column;
@@ -426,50 +705,54 @@ body {
     gap: 6px;
 }
 
+
 .schedule-item {
     width: 100%;
-    min-height: 54px;
+    min-height: 60px;
 
-    padding: 7px 8px;
+    padding: 8px 9px;
 
     display: flex;
     align-items: center;
 
     gap: 7px;
 
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    border: 1px solid #CDEBE4;
+    border-radius: 9px;
 
     box-sizing: border-box;
 
-    background: #fff;
+    background: #F4FBF9;
 }
 
 
-/* ⭐ 시간 */
+/* ========================================
+   ⭐ 시간
+======================================== */
 
 .schedule-time {
-    width: 70px;
+    width: 48px;
 
     flex-shrink: 0;
 
-    font-size: 10px;
+    display: flex;
+    flex-direction: column;
 
-    color: #777;
-
-    white-space: nowrap;
+    gap: 2px;
 }
+
 
 .schedule-time span {
-    display: inline;
+    font-size: 10px;
+    font-weight: 700;
+
+    color: #01A17F;
 }
 
-.schedule-time span + span {
-    margin-left: 2px;
-}
 
-
-/* ⭐ 일정 이미지 */
+/* ========================================
+   ⭐ 일정 이미지
+======================================== */
 
 .schedule-item > img {
     width: 36px;
@@ -483,7 +766,9 @@ body {
 }
 
 
-/* ⭐ 일정 정보 */
+/* ========================================
+   ⭐ 일정 정보
+======================================== */
 
 .schedule-info {
     flex: 1;
@@ -491,10 +776,11 @@ body {
     min-width: 0;
 }
 
+
 .schedule-info h4 {
     margin: 0 0 3px;
 
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
 
     color: #333;
@@ -503,6 +789,7 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 
 .schedule-info p {
     margin: 0;
@@ -517,7 +804,9 @@ body {
 }
 
 
-/* ⭐ 참여 버튼 */
+/* ========================================
+   ⭐ 참여 버튼
+======================================== */
 
 .schedule-item button {
     flex-shrink: 0;
@@ -535,13 +824,39 @@ body {
 
     font-size: 8px;
 
+    white-space: nowrap;
+
     cursor: pointer;
 }
+
 
 .schedule-item button.participated {
     background: #E8F6F2;
 
     color: #01A17F;
+}
+
+
+/* ========================================
+   ⭐ 일정 없음
+======================================== */
+
+.main-home-no-schedule {
+    width: 100%;
+
+    padding: 15px 10px;
+
+    box-sizing: border-box;
+
+    border-radius: 8px;
+
+    background: #F4FBF9;
+
+    text-align: center;
+
+    font-size: 10px;
+
+    color: #888;
 }
 
 
@@ -554,9 +869,9 @@ body {
 
     width: 100%;
 
-    margin-top: 8px;
+    margin-top: 7px;
 
-    padding: 9px 0;
+    padding: 8px 0;
 
     border: 1px solid #01A17F;
     border-radius: 8px;
@@ -569,12 +884,12 @@ body {
 
     text-decoration: none;
 
-    font-size: 11px;
+    font-size: 10px;
 }
 
 
 /* ========================================
-   ⭐ 다른 동호회 게스트 모집
+   ⭐ 게스트 모집
 ======================================== */
 
 .guest-list {
@@ -586,6 +901,7 @@ body {
 
     gap: 6px;
 }
+
 
 .guest-card {
     width: 100%;
@@ -606,6 +922,7 @@ body {
     color: #333;
 }
 
+
 .guest-card img {
     width: 100%;
     height: 58px;
@@ -614,6 +931,7 @@ body {
 
     object-fit: cover;
 }
+
 
 .guest-card h4 {
     margin: 6px 5px 4px;
@@ -626,6 +944,7 @@ body {
     text-overflow: ellipsis;
 }
 
+
 .guest-card p {
     margin: 3px 5px;
 
@@ -637,6 +956,7 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 
 .guest-card span {
     display: block;
@@ -670,6 +990,7 @@ body {
     gap: 6px;
 }
 
+
 .community-card {
     width: 100%;
 
@@ -693,11 +1014,6 @@ body {
     color: #333;
 }
 
-.community-card-content {
-    width: 100%;
-
-    min-width: 0;
-}
 
 .community-category {
     display: block;
@@ -708,13 +1024,8 @@ body {
     font-weight: 600;
 
     color: #01A17F;
-
-    text-align: left;
 }
 
-.community-content {
-    width: 100%;
-}
 
 .community-card h4 {
     margin: 0 0 4px;
@@ -731,6 +1042,7 @@ body {
     text-overflow: ellipsis;
 }
 
+
 .community-card p {
     margin: 0;
 
@@ -744,6 +1056,7 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 
 .community-meta {
     display: flex;
@@ -774,6 +1087,7 @@ body {
     gap: 6px;
 }
 
+
 .activity-card {
     width: 100%;
 
@@ -796,8 +1110,6 @@ body {
 }
 
 
-/* ⭐ 활동 이미지 */
-
 .activity-image {
     position: relative;
 
@@ -806,6 +1118,7 @@ body {
 
     overflow: hidden;
 }
+
 
 .activity-image img {
     width: 100%;
@@ -816,8 +1129,6 @@ body {
     object-fit: cover;
 }
 
-
-/* ⭐ 카테고리 뱃지 */
 
 .activity-category {
     position: absolute;
@@ -841,8 +1152,6 @@ body {
 }
 
 
-/* ⭐ 활동 제목 */
-
 .activity-card h4 {
     margin: 6px 5px 3px;
 
@@ -858,8 +1167,6 @@ body {
 }
 
 
-/* ⭐ 활동 위치 */
-
 .activity-card p {
     margin: 3px 5px;
 
@@ -874,8 +1181,6 @@ body {
     text-overflow: ellipsis;
 }
 
-
-/* ⭐ 자세히 보기 */
 
 .activity-action {
     display: block;
@@ -910,6 +1215,7 @@ body {
     .main-welcome-content {
         margin-top: 8px;
     }
+
 }
 
 
@@ -924,45 +1230,52 @@ body {
         padding-right: 14px;
     }
 
+
     .my-club-card,
     .my-club-create-card {
         height: 138px;
     }
 
+
     .my-club-image {
         height: 65px;
     }
 
-    .schedule-time {
-        width: 64px;
 
-        font-size: 9px;
+    .schedule-time {
+        width: 44px;
     }
+
 
     .schedule-item > img {
         width: 33px;
         height: 33px;
     }
 
+
     .guest-list,
     .activity-list {
         gap: 5px;
     }
+
 
     .guest-card h4,
     .activity-card h4 {
         font-size: 8px;
     }
 
+
     .guest-card p,
     .activity-card p {
         font-size: 6px;
     }
 
+
     .guest-card span,
     .activity-action {
         font-size: 6px;
     }
+
 
     .community-card {
         min-height: 68px;
@@ -970,17 +1283,43 @@ body {
         padding: 8px 10px;
     }
 
-    .community-content h4,
+
     .community-card h4 {
         font-size: 10px;
     }
 
-    .community-content p,
+
     .community-card p {
         font-size: 7px;
     }
 
+
     .community-meta {
         font-size: 6px;
     }
+
+
+    .main-home-calendar {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+
+    .main-home-calendar-day > span {
+        width: 26px;
+        height: 26px;
+
+        font-size: 9px;
+    }
+
+}
+
+/* ⭐ 가입 후 메인 홈 진입 확인 */
+.main-home-loading {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Maplestory", sans-serif;
+    font-size: 16px;
 }

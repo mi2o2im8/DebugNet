@@ -408,7 +408,7 @@ function ClubEventList() {
     const [events, setEvents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
-    const [viewMode, setViewMode] = useState("list");
+    const [viewMode, setViewMode] = useState("calendar");
 
     const [reloadKey, setReloadKey] = useState(0);
 

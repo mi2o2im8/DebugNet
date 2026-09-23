@@ -34,21 +34,50 @@ import badmintonImage from "../../assets/img/playbridge_16_assets/badminton.png"
 function Main() {
     const navigate = useNavigate();
 
+    // =========================================================
     // ⭐ 로그인한 사용자 닉네임
-    const [userName, setUserName] = useState("");
+    // ⭐ 이전에 조회한 닉네임이 있으면 바로 표시
+    // =========================================================
+    const [userName, setUserName] = useState(() => {
+        return localStorage.getItem("playbridge_user_nickname") || "";
+    });
 
+
+    // =========================================================
     // ⭐ 로그인한 사용자의 프로필 이미지
-    const [profileImage, setProfileImage] = useState("");
+    // ⭐ 이전에 조회한 이미지가 있으면 바로 표시
+    // =========================================================
+    const [profileImage, setProfileImage] = useState(() => {
+        return localStorage.getItem("playbridge_profile_image") || "";
+    });
 
+
+    // =========================================================
+    // ⭐ 사용자 정보 로딩 상태
+    // =========================================================
+    const [isUserLoading, setIsUserLoading] = useState(() => {
+        return !localStorage.getItem("playbridge_user_nickname");
+    });
+
+
+    // =========================================================
     // ⭐ 안 읽은 알림 개수
-    const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+    // =========================================================
+    const [unreadNotificationCount, setUnreadNotificationCount] =
+        useState(0);
 
-    // ⭐ 로그인한 사용자 정보 + 안 읽은 알림 개수 + 실시간 알림
+
+    // =========================================================
+    // ⭐ 로그인한 사용자 정보 + 안 읽은 알림 + 실시간 알림
+    // =========================================================
     useEffect(() => {
         let notificationChannel = null;
         let isActive = true;
 
+
+        // =====================================================
         // ⭐ 안 읽은 알림 개수 조회
+        // =====================================================
         const loadUnreadNotificationCount = async (userId) => {
             const {
                 count,
@@ -62,6 +91,7 @@ function Main() {
                 .eq("user_id", userId)
                 .eq("is_read", false);
 
+
             if (error) {
                 console.error(
                     "안 읽은 알림 개수 조회 오류:",
@@ -69,6 +99,7 @@ function Main() {
                 );
                 return;
             }
+
 
             if (isActive) {
                 setUnreadNotificationCount(count || 0);
@@ -80,28 +111,48 @@ function Main() {
             }
         };
 
+
+        // =====================================================
+        // ⭐ 사용자 정보 조회
+        // =====================================================
         const getUserInfo = async () => {
             try {
-                // ⭐ 현재 로그인한 Supabase Auth 사용자
+
+                // =================================================
+                // ⭐ 1. 현재 로그인한 Supabase Auth 사용자 확인
+                // =================================================
                 const {
                     data: { user },
                     error: authError,
                 } = await supabase.auth.getUser();
+
 
                 if (authError) {
                     console.error(
                         "Auth 사용자 조회 오류:",
                         authError
                     );
+
+                    if (isActive) {
+                        setIsUserLoading(false);
+                    }
+
                     return;
                 }
+
 
                 if (!user) {
                     console.log(
                         "로그인한 사용자가 없습니다."
                     );
+
+                    if (isActive) {
+                        setIsUserLoading(false);
+                    }
+
                     return;
                 }
+
 
                 console.log(
                     "⭐ 현재 로그인한 Auth user.id:",
@@ -113,47 +164,27 @@ function Main() {
                     user.email
                 );
 
-                // ⭐ 컴포넌트가 이미 정리되었으면 중단
+
                 if (!isActive) return;
 
-                // ⭐ 최초 안 읽은 알림 개수 조회
-                await loadUnreadNotificationCount(user.id);
 
-                // ⭐ 컴포넌트가 정리되었으면 실시간 채널 생성 금지
-                if (!isActive) return;
-
-                // ⭐ 알림 실시간 구독
-                notificationChannel = supabase
-                    .channel(`notification-badge-${user.id}`)
-                    .on(
-                        "postgres_changes",
-                        {
-                            event: "*",
-                            schema: "public",
-                            table: "notifications",
-                            filter: `user_id=eq.${user.id}`,
-                        },
-                        async () => {
-                            await loadUnreadNotificationCount(
-                                user.id
-                            );
-                        }
-                    )
-                    .subscribe((status) => {
-                        console.log(
-                            "⭐ 알림 실시간 연결 상태:",
-                            status
-                        );
-                    });
-
-                // ⭐ users 테이블에서 사용자 정보 조회
-                let { data, error } = await supabase
+                // =================================================
+                // ⭐ 2. users 테이블에서 사용자 정보 먼저 조회
+                //
+                // ⭐ 기존에는 알림 조회를 먼저 했기 때문에
+                //    닉네임 표시가 늦어지는 문제가 있었음
+                // =================================================
+                let {
+                    data,
+                    error,
+                } = await supabase
                     .from("users")
                     .select(
                         "user_id, nickname, email, profile_image"
                     )
                     .eq("user_id", user.id)
                     .maybeSingle();
+
 
                 console.log(
                     "⭐ user_id로 조회한 DB 결과:",
@@ -165,8 +196,12 @@ function Main() {
                     error
                 );
 
-                // ⭐ user_id가 없으면 email로 한 번 더 조회
+
+                // =================================================
+                // ⭐ 3. user_id 조회가 안 되면 email로 조회
+                // =================================================
                 if (!data && user.email) {
+
                     const result = await supabase
                         .from("users")
                         .select(
@@ -175,8 +210,10 @@ function Main() {
                         .eq("email", user.email)
                         .maybeSingle();
 
+
                     data = result.data;
                     error = result.error;
+
 
                     console.log(
                         "⭐ email로 조회한 DB 결과:",
@@ -189,87 +226,214 @@ function Main() {
                     );
                 }
 
+
+                // =================================================
+                // ⭐ 4. 사용자 정보 조회 오류
+                // =================================================
                 if (error) {
+
                     console.error(
                         "사용자 정보 조회 오류:",
                         error
                     );
+
+
+                    if (isActive) {
+                        setIsUserLoading(false);
+                    }
+
                     return;
                 }
 
+
                 if (!isActive) return;
 
-                // ⭐ DB nickname 저장
+
+                // =================================================
+                // ⭐ 5. 닉네임 저장
+                // =================================================
                 if (data?.nickname) {
+
                     setUserName(data.nickname);
+
+
+                    // ⭐ 다음 Main 진입 시 바로 사용
+                    localStorage.setItem(
+                        "playbridge_user_nickname",
+                        data.nickname
+                    );
+
 
                     console.log(
                         "⭐ 최종 닉네임:",
                         data.nickname
                     );
+
                 } else {
+
                     console.log(
                         "❌ DB에서 nickname을 찾지 못했습니다."
                     );
                 }
 
-                // ⭐ DB profile_image 저장
+
+                // =================================================
+                // ⭐ 6. 프로필 이미지 저장
+                // =================================================
                 if (data?.profile_image) {
-                    setProfileImage(data.profile_image);
+
+                    setProfileImage(
+                        data.profile_image
+                    );
+
+
+                    // ⭐ 다음 Main 진입 시 바로 사용
+                    localStorage.setItem(
+                        "playbridge_profile_image",
+                        data.profile_image
+                    );
+
 
                     console.log(
                         "⭐ 최종 프로필 이미지:",
                         data.profile_image
                     );
+
                 } else {
+
                     console.log(
                         "ℹ️ DB에 프로필 이미지가 없어 기본 이미지를 사용합니다."
                     );
+
+
+                    // ⭐ 기존 이미지가 잘못 남아있지 않도록 제거
+                    localStorage.removeItem(
+                        "playbridge_profile_image"
+                    );
+
+
+                    setProfileImage("");
                 }
 
-            } catch (error) {
+
+                // =================================================
+                // ⭐ 7. 사용자 정보 로딩 완료
+                // =================================================
                 if (isActive) {
-                    console.error(
-                        "사용자 정보 조회 중 오류:",
-                        error
-                    );
+                    setIsUserLoading(false);
+                }
+
+
+                // =================================================
+                // ⭐ 8. 닉네임 조회가 끝난 후 알림 조회
+                // =================================================
+                loadUnreadNotificationCount(user.id);
+
+
+                // =================================================
+                // ⭐ 9. 알림 실시간 구독
+                // =================================================
+                if (!isActive) return;
+
+
+                notificationChannel = supabase
+                    .channel(
+                        `notification-badge-${user.id}`
+                    )
+                    .on(
+                        "postgres_changes",
+                        {
+                            event: "*",
+                            schema: "public",
+                            table: "notifications",
+                            filter: `user_id=eq.${user.id}`,
+                        },
+                        async () => {
+
+                            await loadUnreadNotificationCount(
+                                user.id
+                            );
+                        }
+                    )
+                    .subscribe((status) => {
+
+                        console.log(
+                            "⭐ 알림 실시간 연결 상태:",
+                            status
+                        );
+                    });
+
+
+            } catch (error) {
+
+                console.error(
+                    "사용자 정보 조회 중 오류:",
+                    error
+                );
+
+
+                if (isActive) {
+                    setIsUserLoading(false);
                 }
             }
         };
 
+
+        // ⭐ 사용자 정보 조회 실행
         getUserInfo();
 
+
+        // =====================================================
+        // ⭐ 컴포넌트 종료 시 정리
+        // =====================================================
         return () => {
+
             isActive = false;
 
-            // ⭐ 컴포넌트 종료 시 실시간 채널 정리
+
             if (notificationChannel) {
+
                 supabase.removeChannel(
                     notificationChannel
                 );
+
                 notificationChannel = null;
             }
         };
+
     }, []);
 
 
     return (
         <div className="basic-home">
+
             <main className="basic-home-main">
 
-                {/* 상단 인사 영역 */}
+
+                {/* =====================================================
+                    ⭐ 상단 인사 영역
+                ===================================================== */}
                 <section className="welcome-section">
+
                     <div className="welcome-content">
 
                         <div className="welcome-text">
 
                             {/* ⭐ DB에서 가져온 닉네임 */}
-                            <h3>
+
+                            <h3
+                                style={{
+                                    visibility: isUserLoading
+                                        ? "hidden"
+                                        : "visible",
+                                }}
+                            >
                                 안녕하세요,{" "}
                                 {userName
                                     ? `${userName}님!`
                                     : "회원님!"}
                             </h3>
+
 
                             <p>
                                 다양한 동호회의 활동을 만나보세요.
@@ -280,13 +444,17 @@ function Main() {
 
                         <div className="welcome-actions">
 
-                            {/* ⭐ 알림 */}
+
+                            {/* =================================================
+                                ⭐ 알림
+                            ================================================= */}
                             <Link
                                 to="/notification"
                                 className="welcome-icon notification-icon-wrap"
                                 aria-label="알림"
                             >
-                                {/* ⭐ 기본 알림 아이콘 - 이미지 사용 안 함 */}
+
+                                {/* ⭐ 기본 알림 아이콘 */}
                                 <svg
                                     className="notification-icon-svg"
                                     viewBox="0 0 24 24"
@@ -297,6 +465,7 @@ function Main() {
                                     aria-label="알림"
                                     role="img"
                                 >
+
                                     <path
                                         d="M18 8C18 4.686 15.314 2 12 2C8.686 2 6 4.686 6 8C6 14 3 16 3 18H21C21 16 18 14 18 8Z"
                                         stroke="currentColor"
@@ -304,56 +473,78 @@ function Main() {
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
                                     />
+
                                     <path
                                         d="M10 21H14"
                                         stroke="currentColor"
                                         strokeWidth="1.8"
                                         strokeLinecap="round"
                                     />
+
                                 </svg>
+
 
                                 {/* ⭐ 안 읽은 알림 개수 */}
                                 {unreadNotificationCount > 0 && (
+
                                     <span className="notification-badge">
+
                                         {unreadNotificationCount >= 10
                                             ? "10+"
                                             : unreadNotificationCount}
+
                                     </span>
+
                                 )}
+
                             </Link>
 
 
-                            {/* ⭐ 내 정보 */}
+                            {/* =================================================
+                                ⭐ 내 정보
+                            ================================================= */}
                             <Link
                                 to="/mypage"
                                 className="welcome-icon"
                                 aria-label="내 정보"
                             >
+
                                 <img
-                                    src={profileImage || profileIcon}
+                                    src={
+                                        profileImage ||
+                                        profileIcon
+                                    }
                                     alt="내 정보"
                                     onError={(e) => {
-                                        e.currentTarget.src = profileIcon;
+                                        e.currentTarget.src =
+                                            profileIcon;
                                     }}
                                 />
+
                             </Link>
 
                         </div>
 
                     </div>
+
                 </section>
 
 
-                {/* 동호회 가입 / 생성 */}
+
+                {/* =====================================================
+                    ⭐ 동호회 가입 / 생성
+                ===================================================== */}
                 <section className="club-section">
 
-                    {/* 동호회 찾아보기 */}
+
+                    {/* ⭐ 동호회 찾아보기 */}
                     <div className="club-card">
 
                         <Link
                             to="/clubs"
                             className="club-card-image-link"
                         >
+
                             <div className="club-card-image">
 
                                 <img
@@ -362,6 +553,7 @@ function Main() {
                                 />
 
                             </div>
+
                         </Link>
 
 
@@ -398,13 +590,15 @@ function Main() {
                     </div>
 
 
-                    {/* 동호회 만들기 */}
+
+                    {/* ⭐ 동호회 만들기 */}
                     <div className="club-card">
 
                         <Link
                             to="/clubs/create"
                             className="club-card-image-link"
                         >
+
                             <div className="club-card-image">
 
                                 <img
@@ -413,6 +607,7 @@ function Main() {
                                 />
 
                             </div>
+
                         </Link>
 
 
@@ -451,10 +646,14 @@ function Main() {
                 </section>
 
 
-                {/* 이번 주 일정 */}
+
+                {/* =====================================================
+                    ⭐ 이번 주 일정
+                ===================================================== */}
                 <section className="schedule-box">
 
                     <div className="schedule-header">
+
 
                         <div className="schedule-title">
 
@@ -470,7 +669,11 @@ function Main() {
                         </div>
 
 
-                        <div className="schedule-more">
+                        {/* ⭐ 전체 일정 보기 */}
+                        <Link
+                            to="/schedule"
+                            className="schedule-more"
+                        >
 
                             <p>
                                 전체 일정 보기
@@ -481,12 +684,14 @@ function Main() {
                                 alt="전체 일정 보기"
                             />
 
-                        </div>
+                        </Link>
 
                     </div>
 
 
+
                     <div className="schedule-content">
+
 
                         <div className="schedule-image">
 
@@ -533,17 +738,25 @@ function Main() {
                 </section>
 
 
-                {/* 게스트 모집 */}
+
+                {/* =====================================================
+                    ⭐ 게스트 모집
+                ===================================================== */}
                 <section className="guest-section">
 
+
                     <div className="guest-header">
+
                         <p>
                             팝업문구: 게스트 모집/ 게스트
                         </p>
+
                     </div>
 
 
+
                     <div className="guest-title">
+
 
                         <div className="guest-content">
 
@@ -578,9 +791,11 @@ function Main() {
                     </div>
 
 
+
                     <div className="guest-list">
 
-                        {/* 축구 */}
+
+                        {/* ⭐ 축구 */}
                         <div className="guest-item">
 
                             <Link
@@ -610,7 +825,8 @@ function Main() {
                         </div>
 
 
-                        {/* 농구 */}
+
+                        {/* ⭐ 농구 */}
                         <div className="guest-item">
 
                             <Link
@@ -640,7 +856,8 @@ function Main() {
                         </div>
 
 
-                        {/* 배드민턴 */}
+
+                        {/* ⭐ 배드민턴 */}
                         <div className="guest-item">
 
                             <Link
@@ -674,8 +891,12 @@ function Main() {
                 </section>
 
 
-                {/* 동호회 활동 추천 */}
+
+                {/* =====================================================
+                    ⭐ 동호회 활동 추천
+                ===================================================== */}
                 <section className="activity-recommendation">
+
 
                     <div className="recommendation-header">
 
@@ -691,9 +912,11 @@ function Main() {
                     </div>
 
 
+
                     <div className="recommendation-list">
 
-                        {/* 클라이밍 */}
+
+                        {/* ⭐ 클라이밍 */}
                         <div className="recommendation-item">
 
                             <p>
@@ -728,7 +951,8 @@ function Main() {
                         </div>
 
 
-                        {/* 탁구 */}
+
+                        {/* ⭐ 탁구 */}
                         <div className="recommendation-item">
 
                             <p>
@@ -763,7 +987,8 @@ function Main() {
                         </div>
 
 
-                        {/* 러닝 */}
+
+                        {/* ⭐ 러닝 */}
                         <div className="recommendation-item">
 
                             <p>
@@ -798,7 +1023,8 @@ function Main() {
                         </div>
 
 
-                        {/* 요가 */}
+
+                        {/* ⭐ 요가 */}
                         <div className="recommendation-item">
 
                             <p>
@@ -839,7 +1065,7 @@ function Main() {
             </main>
 
 
-            {/* 팀원이 만들어둔 공통 하단 네비게이션 */}
+            {/* 공통 하단 네비게이션 */}
             <BottomNav />
 
         </div>
