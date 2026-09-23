@@ -231,7 +231,35 @@ class ClubMemberWarningResponse(BaseModel):
     warning_type: str
     reason: str | None = None
     created_at: datetime
+    created_by_user_id: str | None = None
 
+# ---------------------------------------------------------
+# 회원 경고 부여 요청
+# ---------------------------------------------------------
+class ClubMemberWarningCreateRequest(BaseModel):
+    warning_type: Literal[
+        "attendance",
+        "rule_violation",
+        "manner",
+        "other",
+    ]
+
+    reason: str = Field(
+        min_length=2,
+        max_length=500,
+    )
+
+# ---------------------------------------------------------
+# 회원 경고 부여·취소 응답
+# ---------------------------------------------------------
+class ClubMemberWarningMutationResponse(BaseModel):
+    warning_id: int
+    club_member_id: int
+    club_id: int
+    user_id: str
+
+    warning_count: int
+    message: str
 
 # ---------------------------------------------------------
 # 회원 상세 정보
@@ -273,3 +301,5 @@ class ClubMemberDetailResponse(
     can_change_role: bool = False
     can_change_status: bool = False
     can_remove_member: bool = False
+    can_manage_warnings: bool = False
+

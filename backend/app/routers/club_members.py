@@ -21,6 +21,8 @@ from app.schemas.club_members import (
     ClubMemberStatusUpdateRequest,
     ClubMemberUpdateResponse,
     ClubMemberDetailResponse,
+    ClubMemberWarningCreateRequest,
+    ClubMemberWarningMutationResponse,
 )
 
 from app.services.club_member_service import (
@@ -140,6 +142,138 @@ def get_club_member_detail(
             ),
             detail=(
                 "회원 상세 정보를 불러오는 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# ---------------------------------------------------------
+# 회원 경고 부여
+#
+# POST
+# /api/clubs/{club_id}/members/{club_member_id}/warnings
+# ---------------------------------------------------------
+@router.post(
+    "/members/{club_member_id}/warnings",
+    response_model=(
+        ClubMemberWarningMutationResponse
+    ),
+    status_code=status.HTTP_201_CREATED,
+)
+def create_club_member_warning(
+    club_id: int,
+    club_member_id: int,
+    request_data: ClubMemberWarningCreateRequest,
+
+    manager_user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    member_service = ClubMemberService()
+
+    try:
+        return member_service.create_member_warning(
+            club_id=club_id,
+            club_member_id=club_member_id,
+            manager_user_id=manager_user_id,
+            warning_type=request_data.warning_type,
+            reason=request_data.reason,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "회원 경고 부여 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "회원 경고를 저장하는 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+
+# ---------------------------------------------------------
+# 회원 경고 취소
+#
+# DELETE
+# /api/clubs/{club_id}/members/{club_member_id}/
+# warnings/{warning_id}
+# ---------------------------------------------------------
+@router.delete(
+    (
+        "/members/{club_member_id}"
+        "/warnings/{warning_id}"
+    ),
+    response_model=(
+        ClubMemberWarningMutationResponse
+    ),
+    status_code=status.HTTP_200_OK,
+)
+def delete_club_member_warning(
+    club_id: int,
+    club_member_id: int,
+    warning_id: int,
+
+    manager_user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    member_service = ClubMemberService()
+
+    try:
+        return member_service.delete_member_warning(
+            club_id=club_id,
+            club_member_id=club_member_id,
+            warning_id=warning_id,
+            manager_user_id=manager_user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "회원 경고 취소 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "회원 경고를 취소하는 중 "
                 "오류가 발생했습니다."
             ),
         ) from error

@@ -747,7 +747,8 @@ class ClubMemberRepository:
                 "user_id, "
                 "warning_type, "
                 "reason, "
-                "created_at"
+                "created_at, "
+                "created_by_user_id"
             )
             .eq(
                 "club_id",
@@ -843,3 +844,106 @@ class ClubMemberRepository:
             return None
 
         return response.data[0]
+
+    # -----------------------------------------------------
+    # 회원 경고 단건 조회
+    # -----------------------------------------------------
+    def find_member_warning(
+        self,
+        club_id: int,
+        warning_id: int,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_member_warnings")
+            .select(
+                "warning_id, "
+                "club_id, "
+                "user_id, "
+                "warning_type, "
+                "reason, "
+                "created_at, "
+                "created_by_user_id"
+            )
+            .eq(
+                "club_id",
+                club_id,
+            )
+            .eq(
+                "warning_id",
+                warning_id,
+            )
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 회원 경고 부여
+    # -----------------------------------------------------
+    def create_member_warning(
+        self,
+        club_id: int,
+        user_id: str,
+        warning_type: str,
+        reason: str,
+        created_by_user_id: str,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_member_warnings")
+            .insert(
+                {
+                    "club_id": club_id,
+                    "user_id": user_id,
+                    "warning_type": warning_type,
+                    "reason": reason,
+                    "created_by_user_id": (
+                        created_by_user_id
+                    ),
+                }
+            )
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 회원 경고 취소
+    # -----------------------------------------------------
+    def delete_member_warning(
+        self,
+        club_id: int,
+        warning_id: int,
+        user_id: str,
+    ) -> bool:
+
+        response = (
+            self.admin_client
+            .table("club_member_warnings")
+            .delete()
+            .eq(
+                "club_id",
+                club_id,
+            )
+            .eq(
+                "warning_id",
+                warning_id,
+            )
+            .eq(
+                "user_id",
+                user_id,
+            )
+            .execute()
+        )
+
+        return bool(response.data)

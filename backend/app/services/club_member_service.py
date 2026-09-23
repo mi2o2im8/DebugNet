@@ -18,6 +18,7 @@ from app.schemas.club_members import (
     ClubMemberDetailResponse,
     ClubMemberVoteResponse,
     ClubMemberWarningResponse,
+    ClubMemberWarningMutationResponse,
 )
 
 
@@ -501,6 +502,12 @@ class ClubMemberService:
             and not manager_target_conflict
         )
 
+        can_manage_warnings = (
+            target_role != "owner"
+            and not is_current_user
+            and not manager_target_conflict
+        )
+
         user_rows = (
             self.member_repository
             .find_users([member_user_id])
@@ -679,6 +686,11 @@ class ClubMemberService:
                 created_at=warning_row[
                     "created_at"
                 ],
+                created_by_user_id=(
+                    warning_row.get(
+                        "created_by_user_id"
+                    )
+                ),
             )
             for warning_row in warning_rows
         ]
@@ -718,6 +730,9 @@ class ClubMemberService:
             ),
             can_remove_member=(
                 can_remove_member
+            ),
+            can_manage_warnings=(
+                can_manage_warnings
             ),
 
             role=member_row["role"],
@@ -1546,4 +1561,215 @@ class ClubMemberService:
             message=(
                 "회원을 동호회에서 내보냈습니다."
             ),
+        )
+
+    # -----------------------------------------------------
+    # 경고 관리 대상 및 운영자 권한 확인
+    # -----------------------------------------------------
+    def _get_warning_target(
+        self,
+        club_id: int,
+        club_member_id: int,
+        manager_user_id: str,
+    ) -> dict:
+
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=manager_user_id,
+        )
+
+        management_membership = (
+            self.member_repository
+            .find_management_membership(
+                club_id=club_id,
+                user_id=manager_user_id,
+            )
+        )
+
+        member_row = (
+            self.member_repository
+            .find_member_by_id(
+                club_id=club_id,
+                club_member_id=club_member_id,
+            )
+        )
+
+        if (
+            member_row is None
+            or member_row.get("status")
+                == "withdrawn"
+        ):
+            raise LookupError(
+                "현재 동호회 회원을 찾을 수 없습니다."
+            )
+
+        target_user_id = str(
+            member_row["user_id"]
+        )
+
+        target_role = member_row.get("role")
+        manager_role = (
+            management_membership.get("role")
+            if management_membership
+            else None
+        )
+
+        if target_user_id == manager_user_id:
+            raise PermissionError(
+                "자기 자신에게 경고를 부여할 수 없습니다."
+            )
+
+        if target_role == "owner":
+            raise PermissionError(
+                "동호회장에게 경고를 부여할 수 없습니다."
+            )
+
+        if (
+            manager_role == "manager"
+            and target_role == "manager"
+        ):
+            raise PermissionError(
+                "운영진은 다른 운영진의 경고를 "
+                "관리할 수 없습니다."
+            )
+
+        return member_row
+
+    # -----------------------------------------------------
+    # 회원 경고 부여
+    # -----------------------------------------------------
+    def create_member_warning(
+        self,
+        club_id: int,
+        club_member_id: int,
+        manager_user_id: str,
+        warning_type: str,
+        reason: str,
+    ) -> ClubMemberWarningMutationResponse:
+
+        member_row = self._get_warning_target(
+            club_id=club_id,
+            club_member_id=club_member_id,
+            manager_user_id=manager_user_id,
+        )
+
+        normalized_reason = reason.strip()
+
+        if len(normalized_reason) < 2:
+            raise ValueError(
+                "경고 사유를 2자 이상 입력해주세요."
+            )
+
+        member_user_id = str(
+            member_row["user_id"]
+        )
+
+        warning_row = (
+            self.member_repository
+            .create_member_warning(
+                club_id=club_id,
+                user_id=member_user_id,
+                warning_type=warning_type,
+                reason=normalized_reason,
+                created_by_user_id=(
+                    manager_user_id
+                ),
+            )
+        )
+
+        if warning_row is None:
+            raise RuntimeError(
+                "경고 기록을 저장하지 못했습니다."
+            )
+
+        warning_rows = (
+            self.member_repository
+            .find_member_warnings(
+                club_id=club_id,
+                user_ids=[member_user_id],
+            )
+        )
+
+        return ClubMemberWarningMutationResponse(
+            warning_id=int(
+                warning_row["warning_id"]
+            ),
+            club_member_id=club_member_id,
+            club_id=club_id,
+            user_id=member_user_id,
+            warning_count=len(warning_rows),
+            message="회원에게 경고를 부여했습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 회원 경고 취소
+    # -----------------------------------------------------
+    def delete_member_warning(
+        self,
+        club_id: int,
+        club_member_id: int,
+        warning_id: int,
+        manager_user_id: str,
+    ) -> ClubMemberWarningMutationResponse:
+
+        member_row = self._get_warning_target(
+            club_id=club_id,
+            club_member_id=club_member_id,
+            manager_user_id=manager_user_id,
+        )
+
+        member_user_id = str(
+            member_row["user_id"]
+        )
+
+        warning_row = (
+            self.member_repository
+            .find_member_warning(
+                club_id=club_id,
+                warning_id=warning_id,
+            )
+        )
+
+        if warning_row is None:
+            raise LookupError(
+                "경고 기록을 찾을 수 없습니다."
+            )
+
+        if (
+            str(warning_row["user_id"])
+            != member_user_id
+        ):
+            raise LookupError(
+                "해당 회원의 경고 기록이 아닙니다."
+            )
+
+        deleted = (
+            self.member_repository
+            .delete_member_warning(
+                club_id=club_id,
+                warning_id=warning_id,
+                user_id=member_user_id,
+            )
+        )
+
+        if not deleted:
+            raise RuntimeError(
+                "경고 기록을 취소하지 못했습니다."
+            )
+
+        warning_rows = (
+            self.member_repository
+            .find_member_warnings(
+                club_id=club_id,
+                user_ids=[member_user_id],
+            )
+        )
+
+        return ClubMemberWarningMutationResponse(
+            warning_id=warning_id,
+            club_member_id=club_member_id,
+            club_id=club_id,
+            user_id=member_user_id,
+            warning_count=len(warning_rows),
+            message="회원 경고를 취소했습니다.",
         )
