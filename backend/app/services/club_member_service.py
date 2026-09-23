@@ -1023,6 +1023,19 @@ class ClubMemberService:
                     "이미 다른 운영자가 처리한 신청입니다."
                 )
 
+            # 가입 신청자에게 거절 알림 생성
+            self.member_repository.create_notification(
+                user_id=applicant_user_id,
+                notification_type="join_rejected",
+                title="동호회 가입 거절",
+                content=(
+                    f"{club.get('club_name', '동호회')} "
+                    "가입 신청이 거절되었습니다."
+                ),
+                related_type="club",
+                related_id=club_id,
+            )
+
             return ClubApplicationDecisionResponse(
                 application_id=application_id,
                 club_id=club_id,
@@ -1162,6 +1175,19 @@ class ClubMemberService:
         self.member_repository.update_current_member_count(
             club_id=club_id,
             current_members=updated_member_count,
+        )
+
+        # 가입 승인된 사용자에게 승인 알림 생성
+        self.member_repository.create_notification(
+            user_id=applicant_user_id,
+            notification_type="join_approved",
+            title="동호회 가입 승인",
+            content=(
+                f"{club.get('club_name', '동호회')} "
+                "가입이 승인되었습니다."
+            ),
+            related_type="club",
+            related_id=club_id,
         )
 
         return ClubApplicationDecisionResponse(

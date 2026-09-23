@@ -929,26 +929,21 @@ class ClubRepository:
         if owner_response.data:
             owner_id = owner_response.data[0]["user_id"]
 
-            # ⭐ 동호회장에게 알림 저장
-            (
-                self.supabase
-                .table("notifications")
-                .insert(
-                    {
-                        "user_id": owner_id,
-                        "notification_type": "club_application",
-                        "title": "새로운 가입 신청",
-                        "content": (
-                            f"{club_name}에 "
-                            "새로운 가입 신청이 있습니다."
-                        ),
-                        "related_type": "club",
-                        "related_id": club_id,
-                        "is_read": False,
-                    }
-                )
-                .execute()
-            )
+            # ⭐ 동호회장에게 가입 신청 알림 저장
+            self.admin_client.table("notifications").insert(
+                {
+                    "user_id": owner_id,
+                    "notification_type": "club_application",
+                    "title": "새로운 가입 신청",
+                    "content": (
+                        f"{club_name}에 "
+                        "새로운 가입 신청이 있습니다."
+                    ),
+                    "related_type": "club",
+                    "related_id": club_id,
+                    "is_read": False,
+                }
+            ).execute()
 
         return application
 

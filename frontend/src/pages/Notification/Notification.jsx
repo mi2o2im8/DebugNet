@@ -58,6 +58,8 @@ function Notification() {
         club_join: FiUsers,
         join_request: FiUsers,
         club_application: FiUsers,
+        join_approved: FiUsers,
+        join_rejected: FiUsers,
         team_matching: GiSoccerBall,
         community_comment: FiMessageCircle,
         activity_review: FiHeart,
@@ -170,13 +172,34 @@ function Notification() {
 
 
         // ⭐ 가입 신청
+        // related_id = club_id 이므로 실제 가입 신청 관리 페이지로 이동
+        if (type === "club_application") {
+            return relatedId
+                ? `/clubs/${relatedId}/manage/members`
+                : null;
+        }
+
         if (
             type === "join" ||
             type === "club_join" ||
-            type === "join_request" ||
-            type === "club_application"
+            type === "join_request"
         ) {
-            return "/club/join-requests";
+            return relatedId
+                ? `/clubs/${relatedId}/manage/members`
+                : null;
+        }
+
+        // ⭐ 가입 승인
+        if (type === "join_approved") {
+            return relatedId
+                ? `/clubs/${relatedId}`
+                : null;
+        }
+
+        // ⭐ 가입 거절
+        // 거절 알림은 읽음 처리만 하고 별도 페이지로 이동하지 않음
+        if (type === "join_rejected") {
+            return null;
         }
 
 
