@@ -1,6 +1,6 @@
 // 가입 후 메인 홈
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
@@ -9,7 +9,7 @@ import "./MainHome.css";
 import { supabase } from "../../../supabaseClient";
 
 // ⭐ API
-import { getMyClub } from "../../api/clubApi";
+import { getMyClub, getClubEvents } from "../../api/clubApi";
 
 // ⭐ 이미지
 import profileIcon from "../../assets/img/basic_profile_img.png";
@@ -25,6 +25,21 @@ import climbingImage from "../../assets/img/playbridge_16_assets/climbing.png";
 import runningImage from "../../assets/img/playbridge_16_assets/running.png";
 import yogaImage from "../../assets/img/playbridge_16_assets/16_yoga.png";
 import volleyballImage from "../../assets/img/volleyball.png";
+
+// ⭐ 종목별 기본 이미지
+const sportImages = {
+    "축구": soccerImage,
+    "풋살": soccerImage,
+    "축구ㆍ풋살": soccerImage,
+    "배구": volleyballImage,
+    "농구": basketballImage,
+    "배드민턴": badmintonImage,
+    "테니스": badmintonImage,
+    "탁구": badmintonImage,
+    "클라이밍": climbingImage,
+    "러닝": runningImage,
+    "요가": yogaImage,
+};
 
 // ⭐ 챗봇
 import ChatbotButton from "../../components/Chatbot/ChatbotButton";
@@ -52,6 +67,15 @@ function MainHome() {
 
     // ⭐ 현재 동호회 ID
     const [clubId, setClubId] = useState(null);
+
+    // ⭐ 내 동호회
+    // 운영 중인 동호회 1개 + 가입 동호회 최대 3개
+    const [myClubs, setMyClubs] = useState([]);
+    const myClubListRef = useRef(null);
+
+    // ⭐ 내 동호회 가로 스크롤 그림자 상태
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
 
 
     // =========================================================
@@ -121,76 +145,269 @@ function MainHome() {
 
     // =========================================================
     // ⭐ 내 동호회
+    //
+    // 운영 동호회 1개 + 가입 동호회 최대 3개
+    // 실제 데이터는 getMyClub()에서 가져옴
     // =========================================================
-
-    const clubs = [
-
-        {
-            name: "강서 FC",
-            sport: "축구",
-            members: "12명",
-            image: soccerImage,
-            alt: "강서 FC",
-            leader: true,
-        },
-
-        {
-            name: "강서 배구모임",
-            sport: "배구",
-            members: "8명",
-            image: volleyballImage,
-            alt: "강서 배구모임",
-        },
-
-        {
-            name: "서툴쪽 친구들",
-            sport: "배드민턴",
-            members: "6명",
-            image: badmintonImage,
-            alt: "서툴쪽 친구들",
-        },
-
-    ];
 
 
     // =========================================================
     // ⭐ 일정
     // =========================================================
 
-    const schedules = [
+    const [schedules, setSchedules] = useState([]);
 
-        {
-            date: "2026-09-23",
-            time: "19:00",
-            endTime: "21:00",
-            image: soccerImage,
-            alt: "강서 FC",
-            title: "강서 FC 정기모임",
-            place: "강서구 체육공원 1구장",
-        },
+    // =========================================================
+    // ⭐ 내 동호회 일정
+    //
+    // ⭐ 중요:
+    // 일정 관리 페이지(ClubEventList)에서 실제로 사용하는
+    // getClubEvents(clubId)와 동일한 API를 사용한다.
+    //
+    // MainHome에서 club_events를 직접 조회하지 않고,
+    // getMyClub()으로 내 동호회 ID를 가져온 다음
+    // 각 동호회의 getClubEvents()를 호출한다.
+    // =========================================================
 
-        {
-            date: "2026-09-25",
-            time: "18:30",
-            endTime: "20:30",
-            image: volleyballImage,
-            alt: "강서 배구모임",
-            title: "강서 배구모임",
-            place: "강서 배구실내체육관",
-        },
+    useEffect(() => {
 
-        {
-            date: "2026-09-27",
-            time: "16:00",
-            endTime: "18:00",
-            image: badmintonImage,
-            alt: "서툴쪽 친구들",
-            title: "서툴쪽 친구들 연습",
-            place: "강서구 배드민턴장",
-        },
+        let isActive = true;
 
-    ];
+        const loadSchedules = async () => {
 
+            try {
+
+                // =================================================
+                // ⭐ 내 동호회 목록
+                // =================================================
+
+                const myClub = await getMyClub();
+
+                console.log(
+                    "⭐ 일정 조회용 내 동호회 정보:",
+                    myClub
+                );
+
+                const operatingClubList =
+                    Array.isArray(myClub?.operating_clubs)
+                        ? myClub.operating_clubs
+                        : myClub?.operating_club
+                            ? [myClub.operating_club]
+                            : [];
+
+                const joinedClubList =
+                    Array.isArray(myClub?.joined_clubs)
+                        ? myClub.joined_clubs
+                        : myClub?.joined_club
+                            ? [myClub.joined_club]
+                            : [];
+
+                // ⭐ 운영 + 가입 동호회
+                const allClubs = [
+                    ...operatingClubList,
+                    ...joinedClubList,
+                ];
+
+                // ⭐ 실제 club_id만 추출
+                const clubIds = [
+                    ...new Set(
+                        allClubs
+                            .map(
+                                (club) =>
+                                    club?.club_id ||
+                                    club?.id ||
+                                    club?.clubId
+                            )
+                            .filter(Boolean)
+                            .map((id) => String(id))
+                    ),
+                ];
+
+                console.log(
+                    "⭐ MainHome 일정 조회 clubIds:",
+                    clubIds
+                );
+
+                if (clubIds.length === 0) {
+
+                    console.log(
+                        "⭐ 일정 조회할 동호회가 없습니다."
+                    );
+
+                    if (isActive) {
+                        setSchedules([]);
+                    }
+
+                    return;
+                }
+
+                // =================================================
+                // ⭐ 일정 관리 페이지와 동일한 API 사용
+                // =================================================
+
+                const eventResults =
+                    await Promise.all(
+                        clubIds.map(
+                            async (currentClubId) => {
+
+                                try {
+
+                                    const result =
+                                        await getClubEvents(
+                                            currentClubId
+                                        );
+
+                                    console.log(
+                                        `⭐ 동호회 ${currentClubId} 일정:`,
+                                        result
+                                    );
+
+                                    return (
+                                        result?.events || []
+                                    );
+
+                                } catch (error) {
+
+                                    console.error(
+                                        `⭐ 동호회 ${currentClubId} 일정 조회 실패:`,
+                                        error
+                                    );
+
+                                    return [];
+                                }
+                            }
+                        )
+                    );
+
+                // ⭐ 여러 동호회의 일정 하나로 합치기
+                const events = eventResults.flat();
+
+                console.log(
+                    "⭐ MainHome 전체 일정 원본:",
+                    events
+                );
+
+                // =================================================
+                // ⭐ MainHome 일정 형태로 변환
+                // =================================================
+
+                const mappedSchedules =
+                    events.map((event) => {
+
+                        const normalizedDate =
+                            event?.event_date
+                                ? String(
+                                      event.event_date
+                                  ).slice(0, 10)
+                                : "";
+
+                        return {
+                            eventId:
+                                event?.event_id,
+                            clubId:
+                                event?.club_id,
+
+                            date:
+                                normalizedDate,
+
+                            time:
+                                event?.start_time
+                                    ? String(
+                                          event.start_time
+                                      ).slice(0, 5)
+                                    : "",
+
+                            endTime:
+                                event?.end_time
+                                    ? String(
+                                          event.end_time
+                                      ).slice(0, 5)
+                                    : "",
+
+                            // ⭐ 일정 관리 페이지에서 내려오는
+                            // event_image_url이 있으면 사용
+                            image:
+                                event?.event_image_url ||
+                                badmintonImage,
+
+                            alt:
+                                event?.title ||
+                                "동호회 일정",
+
+                            title:
+                                event?.title ||
+                                "동호회 일정",
+
+                            place:
+                                event?.location ||
+                                "장소 미정",
+
+                            status:
+                                event?.status,
+                        };
+                    });
+
+                // ⭐ 같은 event_id 중복 제거
+                const uniqueSchedules =
+                    mappedSchedules.filter(
+                        (schedule, index, array) => {
+
+                            if (!schedule.eventId) {
+                                return true;
+                            }
+
+                            return (
+                                array.findIndex(
+                                    (item) =>
+                                        String(
+                                            item.eventId
+                                        ) ===
+                                        String(
+                                            schedule.eventId
+                                        )
+                                ) === index
+                            );
+                        }
+                    );
+
+                // ⭐ 날짜 → 시간 순 정렬
+                uniqueSchedules.sort(
+                    (a, b) =>
+                        a.date.localeCompare(b.date) ||
+                        a.time.localeCompare(b.time)
+                );
+
+                console.log(
+                    "⭐ MainHome 최종 일정:",
+                    uniqueSchedules
+                );
+
+                if (isActive) {
+                    setSchedules(
+                        uniqueSchedules
+                    );
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "⭐ MainHome 일정 조회 오류:",
+                    error
+                );
+
+                if (isActive) {
+                    setSchedules([]);
+                }
+            }
+        };
+
+        loadSchedules();
+
+        return () => {
+            isActive = false;
+        };
+
+    }, []);
 
     // =========================================================
     // ⭐ 게스트 모집
@@ -311,6 +528,23 @@ function MainHome() {
 
 
     // =========================================================
+    // ⭐ 내 동호회 가로 스크롤 상태 확인
+    // =========================================================
+
+    const checkClubScroll = (element) => {
+        if (!element) {
+            return;
+        }
+
+        const { scrollLeft, clientWidth, scrollWidth } = element;
+
+        setCanScrollLeft(scrollLeft > 5);
+        setCanScrollRight(
+            scrollLeft + clientWidth < scrollWidth - 5
+        );
+    };
+
+    // =========================================================
     // ⭐ MainHome 진입 권한 확인
     //
     // 운영 중인 동호회가 있거나
@@ -337,29 +571,134 @@ function MainHome() {
                     );
 
 
-                    const hasOperatingClub =
-                        Boolean(
-                            myClub?.operating_club
-                        );
+                    // ⭐ API에서 받은 DB 기준 동호회 목록
+                    const operatingClubList =
+                        Array.isArray(myClub?.operating_clubs)
+                            ? myClub.operating_clubs
+                            : myClub?.operating_club
+                                ? [myClub.operating_club]
+                                : [];
 
+                    const joinedClubList =
+                        Array.isArray(myClub?.joined_clubs)
+                            ? myClub.joined_clubs
+                            : myClub?.joined_club
+                                ? [myClub.joined_club]
+                                : [];
 
-                    const hasJoinedClub =
-                        Boolean(
-                            myClub?.joined_club
-                        );
+                    // ⭐ DB의 operating_clubs = 운영 중인 동호회
+                    const operatingList = operatingClubList.map((club) => ({
+                        ...club,
+                        isOperating: true,
+                        clubType: "operating",
+                    }));
 
+                    // ⭐ DB의 joined_clubs = 가입한 동호회
+                    const joinedList = joinedClubList
+                        .map((club) => ({
+                            ...club,
+                            isOperating: false,
+                            clubType: "joined",
+                        }))
+                        .filter((club, index, array) => {
+                            const id =
+                                club?.club_id ||
+                                club?.id ||
+                                club?.clubId;
+
+                            if (!id) {
+                                return true;
+                            }
+
+                            return (
+                                array.findIndex((item) => {
+                                    const itemId =
+                                        item?.club_id ||
+                                        item?.id ||
+                                        item?.clubId;
+
+                                    return String(itemId) === String(id);
+                                }) === index
+                            );
+                        })
+                        .filter((club) => {
+                            const joinedId =
+                                club?.club_id ||
+                                club?.id ||
+                                club?.clubId;
+
+                            return !operatingClubList.some((operatingClub) => {
+                                const operatingId =
+                                    operatingClub?.club_id ||
+                                    operatingClub?.id ||
+                                    operatingClub?.clubId;
+
+                                return (
+                                    operatingId &&
+                                    joinedId &&
+                                    String(operatingId) === String(joinedId)
+                                );
+                            });
+                        })
+                        .slice(0, 3);
+
+                    let displayClubs = [
+                        ...operatingList,
+                        ...joinedList,
+                    ];
+
+                    // =================================================
+                    // ⭐ 동호회 정보는 getMyClub() API에서 사용
+                    //
+                    // 백엔드 /api/clubs/my 에서
+                    //  → current_members : 실제 active 회원 수
+                    //  → representative_image_url : 대표 이미지 URL
+                    // 를 함께 내려줌
+                    //
+                    // ⭐ React에서 clubs / club_images를 직접 조회하지 않음
+                    // =================================================
+
+                    displayClubs = displayClubs.map((club) => ({
+                        ...club,
+
+                        // ⭐ 백엔드에서 내려온 실제 회원 수
+                        current_members:
+                            club?.current_members ??
+                            club?.member_count ??
+                            0,
+
+                        // ⭐ 백엔드에서 내려온 DB 대표 이미지
+                        representative_image_url:
+                            club?.representative_image_url ||
+                            club?.club_image ||
+                            null,
+                    }));
+
+                    console.log(
+                        "⭐ MainHome 내 동호회 최종 데이터:",
+                        displayClubs
+                    );
 
                     // ⭐ ClubEventList 이동에 사용할 실제 동호회 ID
                     const currentClubId =
-                        myClub?.operating_club?.club_id ||
-                        myClub?.operating_club?.id ||
-                        myClub?.joined_club?.club_id ||
-                        myClub?.joined_club?.id ||
+                        operatingClubList[0]?.club_id ||
+                        operatingClubList[0]?.id ||
+                        operatingClubList[0]?.clubId ||
+                        joinedList[0]?.club_id ||
+                        joinedList[0]?.id ||
+                        joinedList[0]?.clubId ||
                         null;
 
                     if (isActive) {
                         setClubId(currentClubId);
+                        setMyClubs(displayClubs);
                     }
+
+                    const hasOperatingClub =
+                        operatingClubList.length > 0;
+
+                    const hasJoinedClub =
+                        joinedList.length > 0;
 
 
                     // -----------------------------------------
@@ -429,6 +768,36 @@ function MainHome() {
         };
 
     }, [navigate]);
+
+    // =========================================================
+    // ⭐ 내 동호회 카드가 로드되면 스크롤 가능 여부 확인
+    // =========================================================
+
+    useEffect(() => {
+        const element = myClubListRef.current;
+
+        if (!element) {
+            return;
+        }
+
+        const updateScrollState = () => {
+            checkClubScroll(element);
+        };
+
+        updateScrollState();
+
+        window.addEventListener(
+            "resize",
+            updateScrollState
+        );
+
+        return () => {
+            window.removeEventListener(
+                "resize",
+                updateScrollState
+            );
+        };
+    }, [myClubs]);
 
 
     // =========================================================
@@ -937,81 +1306,154 @@ function MainHome() {
                         </h3>
 
                         <span className="section-more">
-                            내 동호회를 만들어보세요!
+                            {myClubs.length}개 활동 중
                         </span>
 
                     </div>
 
 
-                    <div className="my-club-list">
+                    <div
+                        className={`my-club-list-wrap ${
+                            canScrollLeft ? "has-left-shadow" : ""
+                        } ${
+                            canScrollRight ? "has-right-shadow" : ""
+                        }`}
+                    >
 
-                        {clubs.map(
-                            (club) => (
+                        <div
+                            className="my-club-list"
+                            ref={myClubListRef}
+                            onScroll={(e) =>
+                                checkClubScroll(e.currentTarget)
+                            }
+                        >
+
+                            {myClubs.map((club, index) => {
+
+                            const clubIdValue =
+                                club?.club_id ||
+                                club?.id ||
+                                club?.clubId;
+
+                            const clubName =
+                                club?.club_name ||
+                                club?.name ||
+                                club?.title ||
+                                "동호회";
+
+                            const sportName =
+                                club?.sport_name ||
+                                club?.sport ||
+                                club?.sportName ||
+                                "운동";
+
+                            const memberCount =
+                                club?.current_members ??
+                                club?.member_count ??
+                                club?.members_count ??
+                                club?.current_member_count ??
+                                club?.memberCount ??
+                                club?.members ??
+                                0;
+
+                            // ⭐ DB 대표 이미지 우선
+                            // ⭐ 이미지가 없을 때만 종목 기본 이미지 사용
+                            const image =
+                                club?.representative_image_url ||
+                                club?.club_image ||
+                                sportImages[sportName] ||
+                                badmintonImage;
+
+                            const isOperating =
+                                Boolean(club?.isOperating);
+
+                            return (
 
                                 <Link
-                                    key={club.name}
-                                    to="/clubs"
+                                    key={
+                                        clubIdValue ||
+                                        `${clubName}-${index}`
+                                    }
+                                    to={
+                                        clubIdValue
+                                            ? `/clubs/${clubIdValue}`
+                                            : "/clubs"
+                                    }
                                     className="my-club-card"
                                 >
 
                                     <div className="my-club-image">
 
-                                        {club.leader && (
-
-                                            <span className="club-badge">
-                                                대표
-                                            </span>
-
-                                        )}
-
+                                        <span className="club-role-badge">
+                                            {club?.clubType === "operating"
+                                                ? "운영"
+                                                : "가입"}
+                                        </span>
 
                                         <img
-                                            src={
-                                                club.image
-                                            }
-                                            alt={
-                                                club.alt
-                                            }
+                                            src={image}
+                                            alt={clubName}
+                                            onError={(e) => {
+                                                e.currentTarget.src =
+                                                    sportImages[sportName] ||
+                                                    badmintonImage;
+                                            }}
                                         />
-
-
-                                        <span className="club-option">
-                                            •••
-                                        </span>
 
                                     </div>
 
-
                                     <div className="my-club-info">
 
-                                        <h4>
-                                            {club.name}
-                                        </h4>
+                                        <div className="my-club-name-row">
+
+                                            <h4>
+                                                {clubName}
+                                            </h4>
+
+                                            <span className="my-club-arrow">
+                                                ›
+                                            </span>
+
+                                        </div>
 
                                         <p>
-                                            {club.sport}
+                                            {sportName}
                                         </p>
 
                                     </div>
 
+                                    <div className="my-club-status-row">
 
-                                    <div className="my-club-status">
-
-                                        <span>
+                                        <span className="my-club-active-badge">
                                             활동 중
                                         </span>
 
+                                        <span className="my-club-member-count">
+                                            {Number(memberCount) || 0}명
+                                        </span>
+
+                                    </div>
+
+                                    <div className="my-club-action">
+
                                         <span>
-                                            {club.members}
+                                            동호회 보기
+                                        </span>
+
+                                        <span>
+                                            →
                                         </span>
 
                                     </div>
 
                                 </Link>
 
-                            )
-                        )}
+                            );
 
+                        })}
+
+
+                        {/* ⭐ 동호회 만들기 - 기존 코드 그대로 유지 */}
 
                         <Link
                             to="/clubs/create"
@@ -1032,6 +1474,9 @@ function MainHome() {
                             </p>
 
                         </Link>
+
+                        </div>
+
 
                     </div>
 
@@ -1208,8 +1653,8 @@ function MainHome() {
 
                     {/* ⭐ 전체 일정 */}
 
-                    <Link
-                        to="/myschedule"
+                    <Link 
+                        to={clubId ? `/clubs/${clubId}/manage/events` : "/myschedule"}
                         className="schedule-all-button"
                     >
                         전체 일정 보기

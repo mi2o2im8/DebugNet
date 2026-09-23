@@ -154,6 +154,7 @@ class ClubRepository:
 
         return club
     # ---------------------------------------------------------
+    # ---------------------------------------------------------
     # 내가 운영 중인 동호회 + 가입한 동호회 조회
     # ---------------------------------------------------------
     def get_my_club(self, user_id: str):
@@ -161,7 +162,9 @@ class ClubRepository:
         member_response = (
             self.supabase
             .table("club_members")
-            .select("club_id, role, status, joined_at")
+            .select(
+                "club_id, role, status, joined_at"
+            )
             .eq("user_id", user_id)
             .eq("status", "active")
             .order("joined_at", desc=True)
@@ -172,7 +175,9 @@ class ClubRepository:
 
         result = {
             "operating_club": None,
+            "operating_clubs": [],
             "joined_club": None,
+            "joined_clubs": [],
         }
 
         for member in members:
@@ -207,7 +212,9 @@ class ClubRepository:
 
             if club_sports_response.data:
 
-                sport_id = club_sports_response.data[0]["sport_id"]
+                sport_id = club_sports_response.data[0][
+                    "sport_id"
+                ]
 
                 sport_response = (
                     self.supabase
@@ -219,14 +226,96 @@ class ClubRepository:
                 )
 
                 if sport_response.data:
-                    sport_name = sport_response.data["sport_name"]
+                    sport_name = sport_response.data[
+                        "sport_name"
+                    ]
+
+            # =================================================
+            # ⭐ 동호회 대표 이미지 조회
+            #
+            # 동호회 생성 API에서
+            # image_type = "representative"
+            # 로 저장하고 있으므로 동일한 값으로 조회
+            # =================================================
+            image_response = (
+                self.supabase
+                .table("club_images")
+                .select(
+                    "image_url, image_type, display_order"
+                )
+                .eq("club_id", club_id)
+                .order(
+                    "display_order",
+                    desc=False,
+                )
+                .execute()
+            )
+
+            images = image_response.data or []
+
+            representative_image = next(
+                (
+                    image
+                    for image in images
+                    if image.get("image_type")
+                    == "representative"
+                    and image.get("image_url")
+                ),
+                None,
+            )
+
+            # ⭐ 대표 이미지가 없으면 첫 이미지 사용
+            if representative_image is None:
+                representative_image = next(
+                    (
+                        image
+                        for image in images
+                        if image.get("image_url")
+                    ),
+                    None,
+                )
+
+            # =================================================
+            # ⭐ 실제 활동 중인 회원 수
+            #
+            # clubs.current_members 값이 갱신되지 않은 경우에도
+            # club_members의 active 행을 기준으로 표시
+            # =================================================
+            member_count_response = (
+                self.admin_client
+                .table("club_members")
+                .select(
+                    "club_member_id",
+                    count="exact",
+                )
+                .eq("club_id", club_id)
+                .eq("status", "active")
+                .execute()
+            )
+
+            current_members = (
+                member_count_response.count
+                if member_count_response.count is not None
+                else 0
+            )
 
             club["sport_name"] = sport_name
             club["member_role"] = member.get("role")
             club["member_status"] = member.get("status")
             club["joined_at"] = member.get("joined_at")
 
+            # ⭐ MainHome에서 바로 사용할 데이터
+            club["representative_image_url"] = (
+                representative_image.get("image_url")
+                if representative_image
+                else None
+            )
+
+            club["current_members"] = current_members
+
+            # =================================================
             # ⭐ 운영 중인 동호회
+            # =================================================
             if member.get("role") in [
                 "owner",
                 "manager",
@@ -234,17 +323,36 @@ class ClubRepository:
                 "운영진",
             ]:
 
+                # ⭐ 운영 중인 동호회는 전부 저장
+                result["operating_clubs"].append(club)
+
+                # ⭐ 기존 코드와의 호환을 위해 첫 번째 운영 동호회 유지
                 if result["operating_club"] is None:
                     result["operating_club"] = club
 
+            # =================================================
             # ⭐ 일반 가입 동호회
+            # =================================================
             elif member.get("role") in [
                 "member",
                 "회원",
             ]:
 
-                if result["joined_club"] is None:
-                    result["joined_club"] = club
+                # 같은 동호회 중복 방지
+                existing_ids = {
+                    item.get("club_id")
+                    for item in result["joined_clubs"]
+                }
+
+                if club_id not in existing_ids:
+                    result["joined_clubs"].append(club)
+
+        # ⭐ 기존 joined_club 응답도 유지
+        # 기존 화면/코드와의 호환을 위해 첫 번째 가입 동호회 전달
+        if result["joined_clubs"]:
+            result["joined_club"] = result[
+                "joined_clubs"
+            ][0]
 
         return result
 
