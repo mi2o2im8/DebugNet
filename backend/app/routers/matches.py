@@ -25,6 +25,15 @@ from app.schemas.matches import (
     MatchRequestCreateRequest,
     MatchRequestCreateResponse,
     MatchAvailabilityDetailResponse,
+    MatchManagementSummaryResponse,
+    MatchManagementListResponse,
+    MatchManagementDetailResponse,
+    MatchManagementActionResponse,
+    MatchResultSubmitRequest,
+    MatchResultResponse,
+    MatchReviewCreateRequest,
+    MatchReviewCreateResponse,
+    MatchReviewDetailResponse,
 )
 
 from app.services.match_service import (
@@ -618,5 +627,1007 @@ def create_match_request(
             ),
             detail=(
                 "매칭 신청 중 오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 매칭 관리 메인 Summary 조회
+#
+# GET /api/matches/management/{club_id}/summary
+#
+# 반환:
+# - 받은 신청
+# - 보낸 신청
+# - 예정 경기
+# - 지난 경기
+# - 작성한 후기
+# - 받은 후기
+# =========================================================
+
+@router.get(
+    "/management/{club_id}/summary",
+    response_model=MatchManagementSummaryResponse,
+)
+def get_match_management_summary(
+    club_id: int,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return match_service.get_management_summary(
+            user_id=user_id,
+            club_id=club_id,
+        )
+
+    # 동호회가 존재하지 않거나 비활성화된 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # 현재 사용자가 해당 동호회의
+    # owner / manager가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # DB / 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "매칭 관리 Summary 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "매칭 관리 요약 조회 중 오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 매칭 관리 목록 조회
+#
+# GET /api/matches/management/{club_id}/matches
+#
+# 현재 지원:
+# type=received
+# type=sent
+#
+# 추후:
+# upcoming
+# history
+# writtenReviews
+# receivedReviews
+# 추가 예정
+# =========================================================
+
+@router.get(
+    "/management/{club_id}/matches",
+    response_model=MatchManagementListResponse,
+)
+def get_match_management_matches(
+    club_id: int,
+
+    match_type: str = Query(
+        ...,
+        alias="type",
+    ),
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return match_service.get_management_matches(
+            user_id=user_id,
+            club_id=club_id,
+            match_type=match_type,
+        )
+
+    # 동호회를 찾을 수 없는 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # 해당 동호회의 owner / manager가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # 지원하지 않는 type인 경우
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    # DB / 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "매칭 관리 목록 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "매칭 관리 목록 조회 중 오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 매칭 관리 상세 조회
+#
+# GET
+# /api/matches/management/{club_id}/matches/{club_match_id}
+# =========================================================
+
+@router.get(
+    "/management/{club_id}/matches/{club_match_id}",
+    response_model=MatchManagementDetailResponse,
+)
+def get_match_management_match_detail(
+    club_id: int,
+    club_match_id: int,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return (
+            match_service
+            .get_management_match_detail(
+                user_id=user_id,
+                club_id=club_id,
+                club_match_id=club_match_id,
+            )
+        )
+
+    # 동호회 / 매칭 / 경기 정보를
+    # 찾을 수 없는 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # 해당 동호회의 관리자/운영자가 아니거나
+    # 해당 매칭의 참가 동호회가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # 현재 매칭관리에서 처리하지 않는
+    # 상태인 경우
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    # DB / 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "매칭 관리 상세 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "매칭 관리 상세 조회 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 받은 매칭 신청 승인
+#
+# PATCH
+# /api/matches/management/{club_id}/matches/
+# {club_match_id}/approve
+# =========================================================
+
+@router.patch(
+    "/management/{club_id}/matches/{club_match_id}/approve",
+    response_model=MatchManagementActionResponse,
+)
+def approve_match_request(
+    club_id: int,
+    club_match_id: int,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return (
+            match_service
+            .approve_match_request(
+                user_id=user_id,
+                club_id=club_id,
+                club_match_id=club_match_id,
+            )
+        )
+
+    # 매칭 / 경기 가능일 / 동호회 정보를
+    # 찾을 수 없는 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # target 동호회 운영자가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # pending이 아니거나
+    # 이미 마감된 경기인 경우
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    # DB 저장 등 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "매칭 신청 승인 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "매칭 신청 승인 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 받은 매칭 신청 거절
+#
+# PATCH
+# /api/matches/management/{club_id}/matches/
+# {club_match_id}/reject
+# =========================================================
+
+@router.patch(
+    "/management/{club_id}/matches/{club_match_id}/reject",
+    response_model=MatchManagementActionResponse,
+)
+def reject_match_request(
+    club_id: int,
+    club_match_id: int,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return (
+            match_service
+            .reject_match_request(
+                user_id=user_id,
+                club_id=club_id,
+                club_match_id=club_match_id,
+            )
+        )
+
+    # 매칭 정보를 찾을 수 없는 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # target 동호회 운영자가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # pending 상태가 아닌 경우
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    # DB / 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "매칭 신청 거절 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "매칭 신청 거절 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 보낸 매칭 신청 취소
+#
+# PATCH
+# /api/matches/management/{club_id}/matches/
+# {club_match_id}/cancel
+# =========================================================
+
+@router.patch(
+    "/management/{club_id}/matches/{club_match_id}/cancel",
+    response_model=MatchManagementActionResponse,
+)
+def cancel_sent_match_request(
+    club_id: int,
+    club_match_id: int,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return (
+            match_service
+            .cancel_sent_match_request(
+                user_id=user_id,
+                club_id=club_id,
+                club_match_id=club_match_id,
+            )
+        )
+
+    # 매칭 신청을 찾을 수 없는 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # requester 동호회 운영자가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # pending 상태가 아닌 경우
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    # DB / 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "보낸 매칭 신청 취소 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "매칭 신청 취소 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 확정 경기 취소 요청
+#
+# PATCH
+# /api/matches/management/{club_id}/matches/
+# {club_match_id}/cancel-request
+# =========================================================
+
+@router.patch(
+    "/management/{club_id}/matches/{club_match_id}/cancel-request",
+    response_model=MatchManagementActionResponse,
+)
+def request_match_cancellation(
+    club_id: int,
+    club_match_id: int,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return (
+            match_service
+            .request_match_cancellation(
+                user_id=user_id,
+                club_id=club_id,
+                club_match_id=club_match_id,
+            )
+        )
+
+    # 매칭 / 경기 정보를 찾을 수 없는 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # 해당 경기 참가 동호회 운영자가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # approved 상태가 아니거나
+    # 이미 지난 경기인 경우
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    # DB / 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "경기 취소 요청 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "경기 취소 요청 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 경기 취소 요청 승인
+#
+# PATCH
+# /api/matches/management/{club_id}/matches/
+# {club_match_id}/cancel-request/approve
+# =========================================================
+
+@router.patch(
+    "/management/{club_id}/matches/{club_match_id}/cancel-request/approve",
+    response_model=MatchManagementActionResponse,
+)
+def approve_match_cancellation(
+    club_id: int,
+    club_match_id: int,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return (
+            match_service
+            .approve_match_cancellation(
+                user_id=user_id,
+                club_id=club_id,
+                club_match_id=club_match_id,
+            )
+        )
+
+    # 매칭 / 일정 정보를 찾을 수 없는 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # 취소 요청을 받은 상대팀 운영자가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # 처리할 취소 요청이 없는 경우
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    # DB / 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "경기 취소 요청 승인 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "경기 취소 승인 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 경기 취소 요청 거절
+#
+# PATCH
+# /api/matches/management/{club_id}/matches/
+# {club_match_id}/cancel-request/reject
+# =========================================================
+
+@router.patch(
+    "/management/{club_id}/matches/{club_match_id}/cancel-request/reject",
+    response_model=MatchManagementActionResponse,
+)
+def reject_match_cancellation(
+    club_id: int,
+    club_match_id: int,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return (
+            match_service
+            .reject_match_cancellation(
+                user_id=user_id,
+                club_id=club_id,
+                club_match_id=club_match_id,
+            )
+        )
+
+    # 매칭 정보를 찾을 수 없는 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # 취소 요청을 받은 상대팀 운영자가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # 처리할 취소 요청이 없는 경우
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    # DB / 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "경기 취소 요청 거절 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "경기 취소 요청 거절 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 경기 결과 작성 / 수정 / 재제출
+#
+# PUT
+# /api/matches/management/{club_id}/matches/
+# {club_match_id}/result
+# =========================================================
+
+@router.put(
+    "/management/{club_id}/matches/{club_match_id}/result",
+    response_model=MatchResultResponse,
+)
+def submit_match_result(
+    club_id: int,
+    club_match_id: int,
+    request: MatchResultSubmitRequest,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return (
+            match_service
+            .submit_match_result(
+                user_id=user_id,
+                club_id=club_id,
+                club_match_id=club_match_id,
+                request=request,
+            )
+        )
+
+    # 매칭 / 경기 정보를 찾을 수 없는 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # 해당 경기 참가 동호회 운영자가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # 아직 경기 전이거나
+    # 취소된 경기이거나
+    # 이미 결과가 확정된 경우
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    # DB / 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "경기 결과 제출 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "경기 결과 제출 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 경기 결과 승인
+#
+# PATCH
+# /api/matches/management/{club_id}/matches/
+# {club_match_id}/result/approve
+# =========================================================
+
+@router.patch(
+    "/management/{club_id}/matches/{club_match_id}/result/approve",
+    response_model=MatchResultResponse,
+)
+def approve_match_result(
+    club_id: int,
+    club_match_id: int,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return (
+            match_service
+            .approve_match_result(
+                user_id=user_id,
+                club_id=club_id,
+                club_match_id=club_match_id,
+            )
+        )
+
+    # 매칭 또는 경기 결과가 없는 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # 해당 경기 참가 동호회 운영자가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # 이미 확정됐거나
+    # 현재 승인할 결과가 없는 경우
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    # DB / 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "경기 결과 승인 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "경기 결과 승인 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 경기 후기 작성
+#
+# POST
+# /api/matches/management/{club_id}/matches/
+# {club_match_id}/review
+# =========================================================
+
+@router.post(
+    "/management/{club_id}/matches/{club_match_id}/review",
+    response_model=MatchReviewCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_match_review(
+    club_id: int,
+    club_match_id: int,
+    request: MatchReviewCreateRequest,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return (
+            match_service
+            .create_match_review(
+                user_id=user_id,
+                club_id=club_id,
+                club_match_id=club_match_id,
+                request=request,
+            )
+        )
+
+    # 매칭 정보를 찾을 수 없는 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # 해당 경기 참가 동호회 운영자가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # 경기 결과가 아직 확정되지 않았거나
+    # 이미 후기를 작성한 경우
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    # DB / 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "경기 후기 작성 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "경기 후기 작성 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 경기 후기 상세 조회
+#
+# GET
+# /api/matches/management/{club_id}/matches/
+# {club_match_id}/review?type=written
+#
+# GET
+# /api/matches/management/{club_id}/matches/
+# {club_match_id}/review?type=received
+# =========================================================
+
+@router.get(
+    "/management/{club_id}/matches/{club_match_id}/review",
+    response_model=MatchReviewDetailResponse,
+)
+def get_match_review_detail(
+    club_id: int,
+    club_match_id: int,
+
+    review_type: str = Query(
+        ...,
+        alias="type",
+    ),
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = MatchService()
+
+    try:
+        return (
+            match_service
+            .get_match_review_detail(
+                user_id=user_id,
+                club_id=club_id,
+                club_match_id=club_match_id,
+                review_type=review_type,
+            )
+        )
+
+    # 후기 / 매칭 / 상대 동호회 등을
+    # 찾을 수 없는 경우
+    except LookupError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    # 해당 경기 참가 동호회 운영자가 아닌 경우
+    except PermissionError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    # type이 written / received가 아닌 경우
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    # DB / 서버 내부 오류
+    except Exception as error:
+
+        print(
+            "경기 후기 상세 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "경기 후기 상세 조회 중 "
+                "오류가 발생했습니다."
             ),
         ) from error

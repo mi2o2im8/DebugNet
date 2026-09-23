@@ -103,6 +103,47 @@ class ClubEventRepository:
         return response.data[0]
 
     # -----------------------------------------------------
+    # event_id 여러 개로 일정 조회
+    #
+    # 팀매칭에서 하나의 club_event를
+    # 양쪽 동호회 캘린더에 보여주기 위해 사용
+    #
+    # club_id 조건을 걸지 않는다.
+    # -----------------------------------------------------
+    def find_events_by_ids(
+        self,
+        event_ids: list[int],
+    ) -> list[dict]:
+
+        if not event_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("club_events")
+            .select("*")
+            .in_(
+                "event_id",
+                event_ids,
+            )
+            .neq(
+                "status",
+                "cancelled",
+            )
+            .order(
+                "event_date",
+                desc=False,
+            )
+            .order(
+                "start_time",
+                desc=False,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
     # 동호회 일정 목록 조회
     # -----------------------------------------------------
     def find_events_by_club(

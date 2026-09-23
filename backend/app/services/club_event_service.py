@@ -6,6 +6,9 @@ from app.repositories.club_event_repository import (
 from app.repositories.club_repository import (
     ClubRepository,
 )
+from app.repositories.match_repository import (
+    MatchRepository,
+)
 from app.schemas.club_events import (
     ClubEventAttendanceRequest,
     ClubEventAttendanceResponse,
@@ -28,6 +31,10 @@ class ClubEventService:
 
         self.event_repository = (
             ClubEventRepository()
+        )
+
+        self.match_repository = (
+            MatchRepository()
         )
 
     # -----------------------------------------------------
@@ -267,6 +274,12 @@ class ClubEventService:
 
     # -----------------------------------------------------
     # 일정 단건 조회
+    #
+    # 일반 일정:
+    # → 해당 동호회가 직접 소유한 일정
+    #
+    # 팀매칭 일정:
+    # → requester / target 양쪽 모두 조회 가능
     # -----------------------------------------------------
     def get_event(
         self,
@@ -274,11 +287,19 @@ class ClubEventService:
         event_id: int,
         user_id: str,
     ) -> ClubEventDetailResponse:
+
+        # -------------------------------------------------
+        # 1. 현재 동호회의 owner / manager인지 확인
+        # -------------------------------------------------
         self.validate_management_permission(
             club_id=club_id,
             user_id=user_id,
         )
 
+
+        # -------------------------------------------------
+        # 2. 우선 현재 동호회가 직접 소유한 일정 조회
+        # -------------------------------------------------
         event = (
             self.event_repository
             .find_event_by_id(
@@ -287,34 +308,122 @@ class ClubEventService:
             )
         )
 
+
+        # -------------------------------------------------
+        # 3. 직접 소유한 일정이 아니라면
+        #    팀매칭으로 공유된 일정인지 확인
+        #
+        # 예:
+        #
+        # target(HOME) 소유 event
+        # requester(AWAY)가 상세 조회하는 경우
+        # -------------------------------------------------
+        if event is None:
+
+            approved_matches = (
+                self.match_repository
+                .find_approved_matches_by_club(
+                    club_id=club_id,
+                )
+            )
+
+
+            # 현재 동호회가 참여하는 승인 매칭 중
+            # 요청한 event_id와 연결된 매칭이 있는지 확인
+            has_shared_match_event = any(
+
+                match.get("event_id") is not None
+
+                and int(
+                    match["event_id"]
+                ) == event_id
+
+                for match in approved_matches
+            )
+
+
+            # -------------------------------------------------
+            # 공유된 매칭 일정이라면
+            # 실제 club_id와 관계없이 event_id로 조회
+            # -------------------------------------------------
+            if has_shared_match_event:
+
+                shared_events = (
+                    self.event_repository
+                    .find_events_by_ids(
+                        event_ids=[
+                            event_id
+                        ],
+                    )
+                )
+
+                if shared_events:
+
+                    event = (
+                        shared_events[0]
+                    )
+
+
+        # -------------------------------------------------
+        # 4. 존재하지 않거나 취소된 일정
+        # -------------------------------------------------
         if (
             event is None
-            or event.get("status") == "cancelled"
+            or event.get("status")
+            == "cancelled"
         ):
+
             raise LookupError(
                 "존재하지 않거나 삭제된 일정입니다."
             )
 
+
+        # -------------------------------------------------
+        # 5. 참석 투표 조회
+        #
+        # 일반 일정에는 있을 수 있고,
+        # 팀매칭으로 자동 생성한 일정에는
+        # 없을 수도 있다.
+        # -------------------------------------------------
         attendance_vote = (
             self.event_repository
-            .find_attendance_vote(event_id)
+            .find_attendance_vote(
+                event_id
+            )
         )
 
         vote_options = []
 
+
+        # -------------------------------------------------
+        # 6. 참석 투표가 존재하면 선택지 조회
+        # -------------------------------------------------
         if attendance_vote is not None:
+
             option_rows = (
                 self.event_repository
                 .find_vote_options(
-                    int(attendance_vote["vote_id"])
+                    int(
+                        attendance_vote[
+                            "vote_id"
+                        ]
+                    )
                 )
             )
 
             vote_options = [
-                str(option_row["option_text"])
+                str(
+                    option_row[
+                        "option_text"
+                    ]
+                )
                 for option_row in option_rows
             ]
 
+
+        # -------------------------------------------------
+        # 7. 최종 Response
+        # -------------------------------------------------
         return ClubEventDetailResponse(
             **event,
             vote_options=vote_options,
@@ -1346,39 +1455,160 @@ class ClubEventService:
 
     # -----------------------------------------------------
     # 동호회 일정 목록 조회
+    #
+    # 일반 동호회 일정
+    # +
+    # 현재 동호회가 참여하는 확정 팀매칭 일정
+    #
+    # 을 합쳐서 반환한다.
     # -----------------------------------------------------
     def get_events(
         self,
         club_id: int,
         user_id: str,
     ) -> ClubEventListResponse:
-        self.validate_view_permission(
+
+
+        # -------------------------------------------------
+        # 1. 동호회 운영 권한 확인
+        # -------------------------------------------------
+        self.validate_management_permission(
             club_id=club_id,
             user_id=user_id,
         )
 
-        event_rows = (
+
+        # -------------------------------------------------
+        # 2. 원래 이 동호회가 소유한 일정 조회
+        # -------------------------------------------------
+        normal_event_rows = (
             self.event_repository
-            .find_events_by_club(club_id)
+            .find_events_by_club(
+                club_id
+            )
         )
 
+
+        # -------------------------------------------------
+        # 3. 이 동호회가 참여하는
+        #    승인 완료 팀매칭 조회
+        #
+        # requester / target 어느 쪽이든 조회된다.
+        # -------------------------------------------------
+        approved_matches = (
+            self.match_repository
+            .find_approved_matches_by_club(
+                club_id=club_id,
+            )
+        )
+
+
+        # -------------------------------------------------
+        # 4. 승인된 매칭에 연결된 event_id 수집
+        # -------------------------------------------------
+        match_event_ids = list({
+            int(match["event_id"])
+            for match in approved_matches
+            if match.get("event_id") is not None
+        })
+
+
+        # -------------------------------------------------
+        # 5. 팀매칭 일정 조회
+        #
+        # 이 일정의 club_id가 상대 동호회여도
+        # event_id로 직접 가져온다.
+        # -------------------------------------------------
+        match_event_rows = (
+            self.event_repository
+            .find_events_by_ids(
+                event_ids=match_event_ids,
+            )
+        )
+
+
+        # -------------------------------------------------
+        # 6. 일반 일정 + 팀매칭 일정 합치기
+        #
+        # target(HOME) 쪽에서는 같은 매칭 일정이
+        # 두 목록에 모두 들어올 수 있으므로
+        # event_id 기준으로 중복 제거
+        # -------------------------------------------------
+        event_map = {}
+
+        for event_row in (
+            normal_event_rows
+            + match_event_rows
+        ):
+
+            event_id = int(
+                event_row["event_id"]
+            )
+
+            event_map[event_id] = (
+                event_row
+            )
+
+
+        event_rows = list(
+            event_map.values()
+        )
+
+
+        # -------------------------------------------------
+        # 7. 날짜 / 시간 순 정렬
+        #
+        # 서로 다른 두 DB 조회 결과를 합쳤으므로
+        # Service에서 다시 전체 정렬
+        # -------------------------------------------------
+        event_rows.sort(
+            key=lambda event: (
+                str(
+                    event.get(
+                        "event_date",
+                        "",
+                    )
+                ),
+                str(
+                    event.get(
+                        "start_time",
+                        "",
+                    )
+                    or ""
+                ),
+            )
+        )
+
+
+        # -------------------------------------------------
+        # 8. 일정별 참가 / 출석 숫자 계산
+        # -------------------------------------------------
         participant_counts = (
             self.build_event_participant_counts(
                 event_rows
             )
         )
 
+
+        # -------------------------------------------------
+        # 9. Response 생성
+        # -------------------------------------------------
         events = [
             ClubEventListItemResponse(
                 **{
                     **event_row,
                     **participant_counts[
-                        int(event_row["event_id"])
+                        int(
+                            event_row[
+                                "event_id"
+                            ]
+                        )
                     ],
                 }
             )
             for event_row in event_rows
         ]
+
 
         return ClubEventListResponse(
             events=events,

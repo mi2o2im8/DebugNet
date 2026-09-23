@@ -629,3 +629,922 @@ class MatchRepository:
         )
 
         return response.data or []
+
+    # =========================================================
+    # 받은 pending 매칭 신청 수
+    #
+    # 현재 동호회가 target인 신청
+    # =========================================================
+
+    def count_received_pending_requests(
+        self,
+        club_id: int,
+    ) -> int:
+
+        response = (
+            self.admin_client
+            .table("club_matches")
+            .select(
+                "club_match_id",
+                count="exact",
+            )
+            .eq(
+                "target_club_id",
+                club_id,
+            )
+            .eq(
+                "status",
+                "pending",
+            )
+            .execute()
+        )
+
+        return response.count or 0
+
+
+    # =========================================================
+    # 보낸 pending 매칭 신청 수
+    #
+    # 현재 동호회가 requester인 신청
+    # =========================================================
+
+    def count_sent_pending_requests(
+        self,
+        club_id: int,
+    ) -> int:
+
+        response = (
+            self.admin_client
+            .table("club_matches")
+            .select(
+                "club_match_id",
+                count="exact",
+            )
+            .eq(
+                "requester_club_id",
+                club_id,
+            )
+            .eq(
+                "status",
+                "pending",
+            )
+            .execute()
+        )
+
+        return response.count or 0
+
+
+    # =========================================================
+    # 현재 동호회가 참여하는 확정 경기 조회
+    #
+    # approved
+    # + 취소 요청 진행 중인 경기
+    #
+    # 취소 요청 중이라고 해서 경기 자체가
+    # 확정 목록 / 캘린더에서 사라지면 안 된다.
+    # =========================================================
+
+    def find_approved_matches_by_club(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("club_matches")
+            .select(
+                "club_match_id,"
+                "availability_id,"
+                "requester_club_id,"
+                "target_club_id,"
+                "event_id,"
+                "status"
+            )
+            .in_(
+                "status",
+                [
+                    "approved",
+                    "cancel_requested_by_target",
+                    "cancel_requested_by_requester",
+                ],
+            )
+            .or_(
+                f"requester_club_id.eq.{club_id},"
+                f"target_club_id.eq.{club_id}"
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+
+    # =========================================================
+    # availability 여러 건 한 번에 조회
+    #
+    # Summary:
+    # - match_date 확인
+    #
+    # 매칭관리 목록:
+    # - 종목
+    # - 날짜 / 시간
+    # - 지역 / 장소
+    #
+    # 에서 공통 사용
+    # =========================================================
+
+    def find_availabilities_by_ids(
+        self,
+        availability_ids: list[int],
+    ) -> list[dict]:
+
+        if not availability_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("club_match_availabilities")
+            .select(
+                "availability_id,"
+                "club_id,"
+                "sport_id,"
+                "match_date,"
+                "start_time,"
+                "end_time,"
+                "region,"
+                "location_name"
+            )
+            .in_(
+                "availability_id",
+                availability_ids,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # =========================================================
+    # 현재 동호회가 작성한 후기 수
+    # =========================================================
+
+    def count_written_reviews(
+        self,
+        club_id: int,
+    ) -> int:
+
+        response = (
+            self.admin_client
+            .table("match_reviews")
+            .select(
+                "match_review_id",
+                count="exact",
+            )
+            .eq(
+                "reviewer_club_id",
+                club_id,
+            )
+            .execute()
+        )
+
+        return response.count or 0
+
+
+    # =========================================================
+    # 현재 동호회가 받은 후기 수
+    # =========================================================
+
+    def count_received_reviews(
+        self,
+        club_id: int,
+    ) -> int:
+
+        response = (
+            self.admin_client
+            .table("match_reviews")
+            .select(
+                "match_review_id",
+                count="exact",
+            )
+            .eq(
+                "target_club_id",
+                club_id,
+            )
+            .execute()
+        )
+
+        return response.count or 0
+
+    # =========================================================
+    # 받은 매칭 신청 목록 조회
+    #
+    # 현재 동호회가 target인
+    # pending 신청만 조회
+    # =========================================================
+
+    def find_received_pending_matches(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("club_matches")
+            .select(
+                "club_match_id,"
+                "availability_id,"
+                "requester_club_id,"
+                "target_club_id,"
+                "event_id,"
+                "status,"
+                "created_at"
+            )
+            .eq(
+                "target_club_id",
+                club_id,
+            )
+            .eq(
+                "status",
+                "pending",
+            )
+            .order(
+                "created_at",
+                desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+
+    # =========================================================
+    # 보낸 매칭 신청 목록 조회
+    #
+    # 현재 동호회가 requester인
+    # pending 신청만 조회
+    # =========================================================
+
+    def find_sent_pending_matches(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("club_matches")
+            .select(
+                "club_match_id,"
+                "availability_id,"
+                "requester_club_id,"
+                "target_club_id,"
+                "event_id,"
+                "status,"
+                "created_at"
+            )
+            .eq(
+                "requester_club_id",
+                club_id,
+            )
+            .eq(
+                "status",
+                "pending",
+            )
+            .order(
+                "created_at",
+                desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # =========================================================
+    # 여러 매칭의 경기 결과 조회
+    #
+    # upcoming / history 목록에서
+    # 경기 기록 상태를 계산할 때 사용
+    #
+    # club_match_id 기준으로 club_match_results 조회
+    # =========================================================
+
+    def find_match_results_by_match_ids(
+        self,
+        club_match_ids: list[int],
+    ) -> list[dict]:
+
+        # 조회할 매칭이 없으면
+        # DB 호출 없이 빈 리스트 반환
+        if not club_match_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("club_match_results")
+            .select(
+                "match_result_id,"
+                "club_match_id,"
+                "home_score,"
+                "away_score,"
+                "submitted_by,"
+                "home_approval_status,"
+                "away_approval_status,"
+                "status,"
+                "created_at,"
+                "confirmed_at"
+            )
+            .in_(
+                "club_match_id",
+                club_match_ids,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # =========================================================
+    # 내가 작성한 경기 후기 목록 조회
+    #
+    # reviewer_club_id = 현재 동호회
+    # =========================================================
+
+    def find_written_reviews_by_club(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("match_reviews")
+            .select(
+                "match_review_id,"
+                "club_match_id,"
+                "reviewer_user_id,"
+                "reviewer_club_id,"
+                "target_club_id,"
+                "created_at"
+            )
+            .eq(
+                "reviewer_club_id",
+                club_id,
+            )
+            .order(
+                "created_at",
+                desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+
+    # =========================================================
+    # 내가 받은 경기 후기 목록 조회
+    #
+    # target_club_id = 현재 동호회
+    # =========================================================
+
+    def find_received_reviews_by_club(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("match_reviews")
+            .select(
+                "match_review_id,"
+                "club_match_id,"
+                "reviewer_user_id,"
+                "reviewer_club_id,"
+                "target_club_id,"
+                "created_at"
+            )
+            .eq(
+                "target_club_id",
+                club_id,
+            )
+            .order(
+                "created_at",
+                desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+
+    # =========================================================
+    # club_match_id 여러 개로 매칭 정보 조회
+    #
+    # 후기 목록
+    # → review
+    # → club_match_id
+    # → club_matches
+    # → availability_id
+    #
+    # 연결에 사용
+    # =========================================================
+
+    def find_matches_by_ids(
+        self,
+        club_match_ids: list[int],
+    ) -> list[dict]:
+
+        if not club_match_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("club_matches")
+            .select(
+                "club_match_id,"
+                "availability_id,"
+                "requester_club_id,"
+                "target_club_id,"
+                "event_id,"
+                "status,"
+                "created_at,"
+                "responded_at,"
+                "approved_at"
+            )
+            .in_(
+                "club_match_id",
+                club_match_ids,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # =========================================================
+    # 여러 경기 중
+    # 현재 동호회가 작성한 후기 조회
+    #
+    # history 목록의
+    # has_written_review 계산용
+    # =========================================================
+
+    def find_written_reviews_by_match_ids(
+        self,
+        club_id: int,
+        club_match_ids: list[int],
+    ) -> list[dict]:
+
+        if not club_match_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("match_reviews")
+            .select(
+                "match_review_id,"
+                "club_match_id,"
+                "reviewer_club_id,"
+                "target_club_id"
+            )
+            .eq(
+                "reviewer_club_id",
+                club_id,
+            )
+            .in_(
+                "club_match_id",
+                club_match_ids,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+
+    # =========================================================
+    # 여러 경기 중
+    # 현재 동호회가 받은 후기 조회
+    #
+    # history 목록의
+    # has_received_review 계산용
+    # =========================================================
+
+    def find_received_reviews_by_match_ids(
+        self,
+        club_id: int,
+        club_match_ids: list[int],
+    ) -> list[dict]:
+
+        if not club_match_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("match_reviews")
+            .select(
+                "match_review_id,"
+                "club_match_id,"
+                "reviewer_club_id,"
+                "target_club_id"
+            )
+            .eq(
+                "target_club_id",
+                club_id,
+            )
+            .in_(
+                "club_match_id",
+                club_match_ids,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # =========================================================
+    # 매칭 관리 상세용
+    # club_match_id 단건 조회
+    #
+    # GET
+    # /api/matches/management/{club_id}/matches/{club_match_id}
+    #
+    # 여기서는 club_matches의 연결 정보만 가져오고,
+    # 경기 가능일 / 동호회 / 종목 / 결과 / 후기 정보는
+    # Service에서 각각 조합한다.
+    # =========================================================
+
+    def find_match_by_id(
+        self,
+        club_match_id: int,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_matches")
+            .select(
+                "club_match_id,"
+                "availability_id,"
+                "requester_club_id,"
+                "target_club_id,"
+                "event_id,"
+                "status,"
+                "created_at,"
+                "responded_at,"
+                "approved_at"
+            )
+            .eq(
+                "club_match_id",
+                club_match_id,
+            )
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # =========================================================
+    # 매칭 신청 상태 / 연결 정보 수정
+    #
+    # 승인:
+    # - status = approved
+    # - event_id 저장
+    # - responded_at 저장
+    # - approved_at 저장
+    #
+    # 거절:
+    # - status = rejected
+    # - responded_at 저장
+    # =========================================================
+
+    def update_match(
+        self,
+        club_match_id: int,
+        update_data: dict,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_matches")
+            .update(
+                update_data
+            )
+            .eq(
+                "club_match_id",
+                club_match_id,
+            )
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+
+    # =========================================================
+    # 경기 가능일 모집 상태 변경
+    #
+    # 매칭이 승인되면
+    # open → matched
+    #
+    # 더 이상 다른 팀이 신청할 수 없게 한다.
+    # =========================================================
+
+    def update_availability_status(
+        self,
+        availability_id: int,
+        availability_status: str,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table(
+                "club_match_availabilities"
+            )
+            .update(
+                {
+                    "status": availability_status,
+                }
+            )
+            .eq(
+                "availability_id",
+                availability_id,
+            )
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+
+    # =========================================================
+    # 승인된 신청을 제외한
+    # 같은 경기 가능일의 나머지 pending 신청 거절
+    #
+    # 예:
+    #
+    # A팀 신청 pending
+    # B팀 신청 pending  ← 승인
+    # C팀 신청 pending
+    #
+    # 승인 후:
+    #
+    # A팀 rejected
+    # B팀 approved
+    # C팀 rejected
+    # =========================================================
+
+    def reject_other_pending_matches(
+        self,
+        availability_id: int,
+        approved_club_match_id: int,
+        responded_at: str,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("club_matches")
+            .update(
+                {
+                    "status": "rejected",
+                    "responded_at": responded_at,
+                }
+            )
+            .eq(
+                "availability_id",
+                availability_id,
+            )
+            .eq(
+                "status",
+                "pending",
+            )
+            .neq(
+                "club_match_id",
+                approved_club_match_id,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # =========================================================
+    # 경기 결과 단건 조회
+    #
+    # 한 경기(club_match_id)에는
+    # 하나의 club_match_results를 사용한다.
+    # =========================================================
+
+    def find_match_result_by_match_id(
+        self,
+        club_match_id: int,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_match_results")
+            .select(
+                "match_result_id,"
+                "club_match_id,"
+                "home_score,"
+                "away_score,"
+                "submitted_by,"
+                "home_approval_status,"
+                "away_approval_status,"
+                "status,"
+                "created_at,"
+                "confirmed_at"
+            )
+            .eq(
+                "club_match_id",
+                club_match_id,
+            )
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+
+    # =========================================================
+    # 경기 결과 최초 생성
+    #
+    # 아직 club_match_results가 없는 경기에서 사용
+    # =========================================================
+
+    def create_match_result(
+        self,
+        result_data: dict,
+    ) -> dict:
+
+        response = (
+            self.admin_client
+            .table("club_match_results")
+            .insert(
+                result_data
+            )
+            .execute()
+        )
+
+        if not response.data:
+
+            raise RuntimeError(
+                "경기 결과 저장에 실패했습니다."
+            )
+
+        return response.data[0]
+
+
+    # =========================================================
+    # 경기 결과 수정 / 재제출 / 승인
+    #
+    # 기존 match_result_id 한 건을 수정한다.
+    # =========================================================
+
+    def update_match_result(
+        self,
+        match_result_id: int,
+        update_data: dict,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_match_results")
+            .update(
+                update_data
+            )
+            .eq(
+                "match_result_id",
+                match_result_id,
+            )
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # =========================================================
+    # 특정 경기에서
+    # 현재 동호회가 이미 작성한 후기인지 확인
+    #
+    # 한 경기당 한 동호회는 후기 1개만 작성
+    # =========================================================
+
+    def find_match_review_by_reviewer_club(
+        self,
+        club_match_id: int,
+        reviewer_club_id: int,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("match_reviews")
+            .select(
+                "match_review_id,"
+                "club_match_id,"
+                "reviewer_user_id,"
+                "reviewer_club_id,"
+                "target_club_id,"
+                "manner_score,"
+                "punctuality_score,"
+                "roster_accuracy_score,"
+                "safety_score,"
+                "game_flow_score,"
+                "rematch_score,"
+                "content,"
+                "created_at"
+            )
+            .eq(
+                "club_match_id",
+                club_match_id,
+            )
+            .eq(
+                "reviewer_club_id",
+                reviewer_club_id,
+            )
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # =========================================================
+    # 특정 경기에서
+    # 현재 동호회가 받은 후기 단건 조회
+    #
+    # received 후기 상세 조회용
+    #
+    # target_club_id = 현재 동호회
+    # =========================================================
+
+    def find_received_match_review(
+        self,
+        club_match_id: int,
+        target_club_id: int,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("match_reviews")
+            .select(
+                "match_review_id,"
+                "club_match_id,"
+                "reviewer_user_id,"
+                "reviewer_club_id,"
+                "target_club_id,"
+                "manner_score,"
+                "punctuality_score,"
+                "roster_accuracy_score,"
+                "safety_score,"
+                "game_flow_score,"
+                "rematch_score,"
+                "content,"
+                "created_at"
+            )
+            .eq(
+                "club_match_id",
+                club_match_id,
+            )
+            .eq(
+                "target_club_id",
+                target_club_id,
+            )
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+
+    # =========================================================
+    # 경기 후기 생성
+    # =========================================================
+
+    def create_match_review(
+        self,
+        review_data: dict,
+    ) -> dict:
+
+        response = (
+            self.admin_client
+            .table("match_reviews")
+            .insert(
+                review_data
+            )
+            .execute()
+        )
+
+        if not response.data:
+
+            raise RuntimeError(
+                "경기 후기 저장에 실패했습니다."
+            )
+
+        return response.data[0]
