@@ -926,6 +926,8 @@ class ClubRepository:
             .execute()
         )
 
+        print("⭐ [알림 디버그] 동호회장 조회 결과:", owner_response.data)
+
         if owner_response.data:
             owner_id = owner_response.data[0]["user_id"]
 

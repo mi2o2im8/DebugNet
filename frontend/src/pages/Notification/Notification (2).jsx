@@ -1,4 +1,3 @@
-// NotificationContext.jsx를 사용하도록 변경
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
