@@ -146,6 +146,7 @@ class MatchService:
         content: str,
         notification_type: str,
         exclude_user_id: str | None = None,
+        link_path: str | None = None,
     ) -> None:
 
         try:
@@ -167,6 +168,7 @@ class MatchService:
                 content=content,
                 club_id=club_id,
                 notification_type=notification_type,
+                link_path=link_path,
             )
 
         except Exception as e:
@@ -6110,7 +6112,43 @@ class MatchService:
 
 
         # -----------------------------------------------------
-        # 11. Response
+        # 11. 상대 동호회 운영진에게 활동 후기 알림
+        #
+        # - 후기를 받은 동호회(owner / manager)에게 보냄
+        # - 알림 저장이 실패해도 후기 작성은 정상 처리
+        #   (notify_club_managers 안에서 예외 처리)
+        # -----------------------------------------------------
+        try:
+            reviewer_club = self.club_repository.find_club_by_id(
+                club_id
+            )
+
+            reviewer_club_name = (
+                reviewer_club.get("club_name")
+                if reviewer_club
+                else "상대 동호회"
+            )
+
+        except Exception:
+            reviewer_club_name = "상대 동호회"
+
+        self.notify_club_managers(
+            club_id=review_target_club_id,
+            title="새 경기 후기가 도착했어요",
+            content=(
+                f"[{reviewer_club_name}]에서 "
+                "함께한 경기의 후기를 남겼어요."
+            ),
+            notification_type="activity_review",
+            link_path=(
+                f"/clubs/{review_target_club_id}/matches/"
+                f"{club_match_id}/review-detail?type=received"
+            ),
+        )
+
+
+        # -----------------------------------------------------
+        # 12. Response
         # -----------------------------------------------------
         return MatchReviewCreateResponse(
 

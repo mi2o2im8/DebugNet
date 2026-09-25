@@ -961,22 +961,28 @@ class ClubMemberRepository:
         related_id: int,
     ) -> dict | None:
 
-        response = (
-            self.admin_client
-            .table("notifications")
-            .insert(
-                {
-                    "user_id": user_id,
-                    "notification_type": notification_type,
-                    "title": title,
-                    "content": content,
-                    "related_type": related_type,
-                    "related_id": related_id,
-                    "is_read": False,
-                }
+        # 알림 저장이 실패해도
+        # 가입 승인 / 거절 자체는 정상 처리되도록 한다.
+        try:
+            response = (
+                self.admin_client
+                .table("notifications")
+                .insert(
+                    {
+                        "user_id": user_id,
+                        "notification_type": notification_type,
+                        "title": title,
+                        "content": content,
+                        "related_type": related_type,
+                        "related_id": related_id,
+                        "is_read": False,
+                    }
+                )
+                .execute()
             )
-            .execute()
-        )
+        except Exception as e:
+            print("가입 알림 생성 실패:", e)
+            return None
 
         if not response.data:
             return None

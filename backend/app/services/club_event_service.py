@@ -266,6 +266,57 @@ class ClubEventService:
 
             raise
 
+        # -------------------------------------------------
+        # 동호회 회원들에게 참석 투표 알림
+        #
+        # - 일정을 만든 본인은 제외
+        # - 알림 저장이 실패해도 일정 생성은 정상 처리
+        # -------------------------------------------------
+        try:
+            club = self.club_repository.find_club_by_id(
+                club_id
+            )
+
+            club_name = (
+                club.get("club_name")
+                if club
+                else "동호회"
+            )
+
+            member_ids = (
+                self.event_repository
+                .find_active_member_user_ids(
+                    club_id=club_id,
+                )
+            )
+
+            member_ids = [
+                uid for uid in member_ids
+                if uid != user_id
+            ]
+
+            event_date = request_data.event_date
+
+            self.event_repository.create_event_notifications(
+                user_ids=member_ids,
+                notification_type="vote_created",
+                title="새 일정 투표가 열렸어요",
+                content=(
+                    f"[{club_name}] "
+                    f"{event_date.month}월 {event_date.day}일 "
+                    f"'{request_data.title}' "
+                    f"참석 여부를 알려주세요."
+                ),
+                event_id=event_id,
+                link_path=(
+                    f"/clubs/{club_id}/events/"
+                    f"{event_id}/attendance"
+                ),
+            )
+
+        except Exception as e:
+            print("투표 생성 알림 실패:", e)
+        
         return ClubEventCreateResponse(
             event_id=event_id,
             club_id=club_id,
@@ -1289,6 +1340,13 @@ class ClubEventService:
                     user_id=user_id,
                 )
 
+        # 알림용: 저장하기 전의 내 응답 기억
+        previous_status = (
+            self.build_attendance_status_by_user(
+                event_id
+            ).get(str(user_id))
+        )
+
         self.event_repository.replace_vote_response(
             vote_id=int(vote["vote_id"]),
             option_id=int(
@@ -1296,6 +1354,80 @@ class ClubEventService:
             ),
             user_id=user_id,
         )
+
+        # -------------------------------------------------
+        # 운영진에게 참석 여부 응답 알림
+        #
+        # - 응답이 바뀌었을 때만 보냄 (같은 응답 반복 X)
+        # - 응답한 본인은 제외
+        # - 알림 실패해도 참석 응답은 정상 처리
+        # -------------------------------------------------
+        if previous_status != request_data.attendance_status:
+            try:
+                status_labels = {
+                    "attending": "참석",
+                    "absent": "불참",
+                    "undecided": "미정",
+                }
+
+                club = self.club_repository.find_club_by_id(
+                    club_id
+                )
+
+                club_name = (
+                    club.get("club_name")
+                    if club
+                    else "동호회"
+                )
+
+                event = self.event_repository.find_event_by_id(
+                    club_id=club_id,
+                    event_id=event_id,
+                )
+
+                event_title = (
+                    event.get("title")
+                    if event
+                    else "일정"
+                )
+
+                nickname = (
+                    self.event_repository
+                    .find_user_nickname(user_id)
+                    or "회원"
+                )
+
+                manager_ids = (
+                    self.match_repository
+                    .find_club_manager_user_ids(
+                        club_id=club_id,
+                    )
+                )
+
+                manager_ids = [
+                    uid for uid in manager_ids
+                    if uid != user_id
+                ]
+
+                self.event_repository.create_event_notifications(
+                    user_ids=manager_ids,
+                    notification_type="attendance_response",
+                    title="참석 여부 응답",
+                    content=(
+                        f"[{club_name}] '{event_title}' 일정에 "
+                        f"{nickname}님이 "
+                        f"{status_labels[request_data.attendance_status]}"
+                        f"(으)로 응답했어요."
+                    ),
+                    event_id=event_id,
+                    link_path=(
+                        f"/clubs/{club_id}/manage/events/"
+                        f"{event_id}/participants"
+                    ),
+                )
+
+            except Exception as e:
+                print("참석 응답 알림 실패:", e)
 
         status_messages = {
             "attending": "참석으로 응답했습니다.",

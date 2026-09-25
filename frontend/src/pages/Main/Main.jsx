@@ -30,6 +30,7 @@ import soccerImage from "../../assets/img/playbridge_16_assets/soccer.png";
 import basketballImage from "../../assets/img/playbridge_16_assets/basketball.png";
 import badmintonImage from "../../assets/img/playbridge_16_assets/badminton.png";
 import ChatbotButton from "../../components/Chatbot/ChatbotButton";
+import { useNotifications } from "../../context/NotificationContext";
 
 
 function Main() {
@@ -64,53 +65,15 @@ function Main() {
     // =========================================================
     // ⭐ 안 읽은 알림 개수
     // =========================================================
-    const [unreadNotificationCount, setUnreadNotificationCount] =
-        useState(0);
+    // ⭐ NotificationContext 한 곳에서 관리 (실시간 구독도 Context에서만)
+    const { unreadCount: unreadNotificationCount } = useNotifications();
 
 
     // =========================================================
-    // ⭐ 로그인한 사용자 정보 + 안 읽은 알림 + 실시간 알림
+    // ⭐ 로그인한 사용자 정보
     // =========================================================
     useEffect(() => {
-        let notificationChannel = null;
         let isActive = true;
-
-
-        // =====================================================
-        // ⭐ 안 읽은 알림 개수 조회
-        // =====================================================
-        const loadUnreadNotificationCount = async (userId) => {
-            const {
-                count,
-                error,
-            } = await supabase
-                .from("notifications")
-                .select("notification_id", {
-                    count: "exact",
-                    head: true,
-                })
-                .eq("user_id", userId)
-                .eq("is_read", false);
-
-
-            if (error) {
-                console.error(
-                    "안 읽은 알림 개수 조회 오류:",
-                    error
-                );
-                return;
-            }
-
-
-            if (isActive) {
-                setUnreadNotificationCount(count || 0);
-
-                console.log(
-                    "⭐ 안 읽은 알림 개수:",
-                    count || 0
-                );
-            }
-        };
 
 
         // =====================================================
@@ -325,46 +288,6 @@ function Main() {
                 }
 
 
-                // =================================================
-                // ⭐ 8. 닉네임 조회가 끝난 후 알림 조회
-                // =================================================
-                loadUnreadNotificationCount(user.id);
-
-
-                // =================================================
-                // ⭐ 9. 알림 실시간 구독
-                // =================================================
-                if (!isActive) return;
-
-
-                notificationChannel = supabase
-                    .channel(
-                        `notification-badge-${user.id}`
-                    )
-                    .on(
-                        "postgres_changes",
-                        {
-                            event: "*",
-                            schema: "public",
-                            table: "notifications",
-                            filter: `user_id=eq.${user.id}`,
-                        },
-                        async () => {
-
-                            await loadUnreadNotificationCount(
-                                user.id
-                            );
-                        }
-                    )
-                    .subscribe((status) => {
-
-                        console.log(
-                            "⭐ 알림 실시간 연결 상태:",
-                            status
-                        );
-                    });
-
-
             } catch (error) {
 
                 console.error(
@@ -392,14 +315,6 @@ function Main() {
             isActive = false;
 
 
-            if (notificationChannel) {
-
-                supabase.removeChannel(
-                    notificationChannel
-                );
-
-                notificationChannel = null;
-            }
         };
 
     }, []);

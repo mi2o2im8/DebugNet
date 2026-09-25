@@ -1583,6 +1583,7 @@ class MatchRepository:
     # - team_matching           : 매칭 신청 받음
     # - team_matching_approved  : 내 신청이 승인됨
     # - team_matching_rejected  : 내 신청이 거절됨
+    # - activity_review         : 상대 동호회가 경기 후기를 남김
     # =========================================================
 
     def create_match_notifications(
@@ -1592,13 +1593,16 @@ class MatchRepository:
         content: str,
         club_id: int,
         notification_type: str = "team_matching",
+        link_path: str | None = None,
     ) -> None:
 
         if not user_ids:
             return
 
-        rows = [
-            {
+        rows = []
+
+        for uid in user_ids:
+            row = {
                 "user_id": uid,
                 "notification_type": notification_type,
                 "title": title,
@@ -1607,7 +1611,11 @@ class MatchRepository:
                 "related_id": club_id,
                 "is_read": False,
             }
-            for uid in user_ids
-        ]
+
+            # 이동 경로를 직접 지정하는 알림만 link_path 저장
+            if link_path:
+                row["link_path"] = link_path
+
+            rows.append(row)
 
         self.admin_client.table("notifications").insert(rows).execute()

@@ -712,3 +712,154 @@ class ClubEventRepository:
             )
 
         return response.data[0]
+
+    # -----------------------------------------------------
+    # 동호회 활동 회원 user_id 목록 조회 (알림용)
+    # -----------------------------------------------------
+    def find_active_member_user_ids(
+        self,
+        club_id: int,
+    ) -> list[str]:
+
+        response = (
+            self.admin_client
+            .table("club_members")
+            .select("user_id")
+            .eq("club_id", club_id)
+            .eq("status", "active")
+            .execute()
+        )
+
+        return [
+            row["user_id"]
+            for row in (response.data or [])
+            if row.get("user_id")
+        ]
+
+    # -----------------------------------------------------
+    # 일정 관련 알림 생성 (여러 명에게 한 번에)
+    # -----------------------------------------------------
+    def create_event_notifications(
+        self,
+        user_ids: list[str],
+        notification_type: str,
+        title: str,
+        content: str,
+        event_id: int,
+        link_path: str,
+    ) -> None:
+
+        if not user_ids:
+            return
+
+        rows = [
+            {
+                "user_id": uid,
+                "notification_type": notification_type,
+                "title": title,
+                "content": content,
+                "related_type": "event",
+                "related_id": event_id,
+                "link_path": link_path,
+                "is_read": False,
+            }
+            for uid in user_ids
+        ]
+
+        self.admin_client.table("notifications").insert(rows).execute()
+
+    # -----------------------------------------------------
+    # [스케줄러] 특정 날짜의 일정 조회 (취소 제외)
+    #
+    # event_date: "YYYY-MM-DD" (한국 날짜 기준)
+    # -----------------------------------------------------
+    def find_events_on_date(
+        self,
+        event_date: str,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("club_events")
+            .select("*")
+            .eq("event_date", event_date)
+            .neq("status", "cancelled")
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # [스케줄러] 마감 시각이 특정 구간에 들어가는 참석 투표 조회
+    #
+    # start_at / end_at: 타임존이 붙은 ISO 문자열
+    # -----------------------------------------------------
+    def find_attendance_votes_closed_between(
+        self,
+        start_at: str,
+        end_at: str,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("event_votes")
+            .select("vote_id, event_id, deadline")
+            .eq("vote_type", "attendance")
+            .gt("deadline", start_at)
+            .lte("deadline", end_at)
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # [스케줄러] 이미 보낸 알림 조회 (중복 발송 방지)
+    #
+    # 반환: {(user_id, related_id), ...}
+    # -----------------------------------------------------
+    def find_sent_event_notification_keys(
+        self,
+        notification_type: str,
+        event_ids: list[int],
+    ) -> set[tuple[str, int]]:
+
+        if not event_ids:
+            return set()
+
+        response = (
+            self.admin_client
+            .table("notifications")
+            .select("user_id, related_id")
+            .eq("notification_type", notification_type)
+            .eq("related_type", "event")
+            .in_("related_id", event_ids)
+            .execute()
+        )
+
+        return {
+            (str(row["user_id"]), int(row["related_id"]))
+            for row in (response.data or [])
+            if row.get("user_id") and row.get("related_id") is not None
+        }
+
+    # -----------------------------------------------------
+    # 사용자 닉네임 조회 (알림 문구용)
+    # -----------------------------------------------------
+    def find_user_nickname(
+        self,
+        user_id: str,
+    ) -> str | None:
+
+        response = (
+            self.admin_client
+            .table("users")
+            .select("nickname")
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0].get("nickname")

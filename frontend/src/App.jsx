@@ -396,7 +396,7 @@ function App() {
               element={<MySchedule />}
             />
 
-            {/* ⭐ Main의 '전체 일정 보기' 버튼용 */}
+            {/* ⭐ Main의 '내 동호회 전체 일정 보기' 버튼용 */}
             <Route
               path="/schedule"
               element={<MySchedule />}

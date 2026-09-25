@@ -43,6 +43,7 @@ const sportImages = {
 
 // ⭐ 챗봇
 import ChatbotButton from "../../components/Chatbot/ChatbotButton";
+import { useNotifications } from "../../context/NotificationContext";
 import Chatbot from "../Chatbot/Chatbot";
 
 
@@ -102,10 +103,9 @@ function MainHome() {
     // ⭐ 알림
     // =========================================================
 
-    const [
-        unreadNotificationCount,
-        setUnreadNotificationCount,
-    ] = useState(0);
+    // ⭐ 안 읽은 알림 개수는 NotificationContext 한 곳에서 관리
+    //    (실시간 구독도 Context 한 곳에서만 함)
+    const { unreadCount: unreadNotificationCount } = useNotifications();
 
 
     // =========================================================
@@ -747,7 +747,6 @@ function MainHome() {
 
         let isActive = true;
 
-        let notificationChannel = null;
 
 
         const getUserInfo =
@@ -858,170 +857,10 @@ function MainHome() {
                     }
 
 
-                    // -----------------------------------------
-                    // ⭐ 안 읽은 알림 개수
-                    // -----------------------------------------
-
-                    const {
-                        count,
-                        error:
-                            notificationError,
-                    } =
-                        await supabase
-                            .from("notifications")
-                            .select(
-                                "notification_id",
-                                {
-                                    count: "exact",
-                                    head: true,
-                                }
-                            )
-                            .eq(
-                                "user_id",
-                                user.id
-                            )
-                            .eq(
-                                "is_read",
-                                false
-                            );
-
-
-                    if (
-                        notificationError
-                    ) {
-
-                        console.error(
-                            "안 읽은 알림 개수 조회 오류:",
-                            notificationError
-                        );
-
-                    } else if (
-                        isActive
-                    ) {
-
-                        setUnreadNotificationCount(
-                            count || 0
-                        );
-
-                    }
-
-
-                    // -----------------------------------------
-                    // ⭐ 알림 실시간 갱신
-                    //
-                    // 반드시
-                    // channel()
-                    // → on()
-                    // → subscribe()
-                    // 순서
-                    // -----------------------------------------
-
-                    const channelName =
-                        `main-home-notifications-${user.id}`;
-
-
-                    notificationChannel =
-                        supabase.channel(
-                            channelName
-                        );
-
-
-                    notificationChannel.on(
-                        "postgres_changes",
-                        {
-                            event: "*",
-                            schema: "public",
-                            table: "notifications",
-                            filter:
-                                `user_id=eq.${user.id}`,
-                        },
-                        async () => {
-
-                            try {
-
-                                const {
-                                    count:
-                                        latestCount,
-                                    error,
-                                } =
-                                    await supabase
-                                        .from(
-                                            "notifications"
-                                        )
-                                        .select(
-                                            "notification_id",
-                                            {
-                                                count:
-                                                    "exact",
-                                                head: true,
-                                            }
-                                        )
-                                        .eq(
-                                            "user_id",
-                                            user.id
-                                        )
-                                        .eq(
-                                            "is_read",
-                                            false
-                                        );
-
-
-                                if (error) {
-
-                                    console.error(
-                                        "알림 개수 실시간 갱신 오류:",
-                                        error
-                                    );
-
-                                    return;
-                                }
-
-
-                                if (
-                                    isActive
-                                ) {
-
-                                    setUnreadNotificationCount(
-                                        latestCount ||
-                                            0
-                                    );
-
-                                }
-
-                            } catch (
-                                realtimeError
-                            ) {
-
-                                console.error(
-                                    "알림 실시간 갱신 오류:",
-                                    realtimeError
-                                );
-
-                            }
-
-                        }
-                    );
-
-
-                    // -----------------------------------------
-                    // ⭐ on 등록 후 마지막에 subscribe
-                    // -----------------------------------------
-
-                    notificationChannel.subscribe(
-                        (status) => {
-
-                            console.log(
-                                "알림 realtime 상태:",
-                                status
-                            );
-
-                        }
-                    );
-
                 } catch (error) {
 
                     console.error(
-                        "가입 후 홈 사용자/알림 정보 조회 오류:",
+                        "가입 후 홈 사용자 정보 조회 오류:",
                         error
                     );
 
@@ -1042,17 +881,6 @@ function MainHome() {
             isActive = false;
 
 
-            if (
-                notificationChannel
-            ) {
-
-                supabase.removeChannel(
-                    notificationChannel
-                );
-
-                notificationChannel = null;
-
-            }
 
         };
 

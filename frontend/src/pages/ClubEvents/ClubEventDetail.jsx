@@ -84,21 +84,28 @@ function formatTime(timeString) {
 }
 
 
+// ⭐ 마감 시각은 입력한 한국 시각이 "+00" 이 붙은 채로 저장돼 있어서
+//    new Date() 로 바꾸면 9시간이 더해져 보인다.
+//    → 저장된 날짜/시각 숫자를 그대로 보여준다. (수정 폼과 같은 방식)
 function formatDeadline(dateString) {
     if (!dateString) {
         return "마감일 없음";
     }
 
-    return new Intl.DateTimeFormat(
-        "ko-KR",
-        {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
-        }
-    ).format(new Date(dateString));
+    const matched = String(dateString).match(
+        /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/
+    );
+
+    if (!matched) {
+        return "마감일 없음";
+    }
+
+    const [, year, month, day, hour, minute] = matched;
+    const hourNumber = Number(hour);
+    const period = hourNumber < 12 ? "오전" : "오후";
+    const hour12 = String(hourNumber % 12 || 12).padStart(2, "0");
+
+    return `${year}년 ${Number(month)}월 ${Number(day)}일 ${period} ${hour12}:${minute}`;
 }
 
 

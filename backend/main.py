@@ -1,5 +1,10 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+# 예약 알림 스케줄러 (일정 당일 알림 / 투표 결과 알림)
+from app.core.scheduler import start_scheduler, shutdown_scheduler
 
 # 회원가입 API Router 가져오기
 from app.routers.auth import router as auth_router
@@ -31,12 +36,26 @@ from app.routers.matches import ( router as matches_router, )
 
 
 # ---------------------------------------------------------
+# 서버 시작 / 종료 시 실행할 작업
+#
+# - 서버가 켜질 때: 예약 알림 스케줄러 시작
+# - 서버가 꺼질 때: 스케줄러 정리
+# ---------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_scheduler()
+    yield
+    shutdown_scheduler()
+
+
+# ---------------------------------------------------------
 # PlayBridge FastAPI 애플리케이션 생성
 # ---------------------------------------------------------
 app = FastAPI(
     title="PlayBridge API",
     description="PlayBridge 백엔드 API 서버",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 

@@ -914,38 +914,40 @@ class ClubRepository:
                 or "동호회"
             )
 
-        # ⭐ club_members에서 동호회장 조회
-        owner_response = (
-            self.supabase
-            .table("club_members")
-            .select("user_id")
-            .eq("club_id", club_id)
-            .eq("role", "owner")
-            .eq("status", "active")
-            .limit(1)
-            .execute()
-        )
+                # ⭐ 동호회장에게 가입 신청 알림
+        # 알림 저장이 실패해도 가입 신청 자체는 정상 처리
+        try:
+            owner_response = (
+                self.supabase
+                .table("club_members")
+                .select("user_id")
+                .eq("club_id", club_id)
+                .eq("role", "owner")
+                .eq("status", "active")
+                .limit(1)
+                .execute()
+            )
 
-        print("⭐ [알림 디버그] 동호회장 조회 결과:", owner_response.data)
+            if owner_response.data:
+                owner_id = owner_response.data[0]["user_id"]
 
-        if owner_response.data:
-            owner_id = owner_response.data[0]["user_id"]
+                self.admin_client.table("notifications").insert(
+                    {
+                        "user_id": owner_id,
+                        "notification_type": "club_application",
+                        "title": "새로운 가입 신청",
+                        "content": (
+                            f"{club_name}에 "
+                            "새로운 가입 신청이 있습니다."
+                        ),
+                        "related_type": "club",
+                        "related_id": club_id,
+                        "is_read": False,
+                    }
+                ).execute()
 
-            # ⭐ 동호회장에게 가입 신청 알림 저장
-            self.admin_client.table("notifications").insert(
-                {
-                    "user_id": owner_id,
-                    "notification_type": "club_application",
-                    "title": "새로운 가입 신청",
-                    "content": (
-                        f"{club_name}에 "
-                        "새로운 가입 신청이 있습니다."
-                    ),
-                    "related_type": "club",
-                    "related_id": club_id,
-                    "is_read": False,
-                }
-            ).execute()
+        except Exception as e:
+            print("가입 신청 알림 생성 실패:", e)
 
         return application
 

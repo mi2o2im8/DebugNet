@@ -6,3 +6,4 @@ pydantic-settings
 email-validator
 python-dotenv
 python-multipart
+apscheduler

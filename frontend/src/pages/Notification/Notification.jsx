@@ -66,12 +66,15 @@ function Notification() {
         vote_result: FiVolume2,
         schedule_created: FiCalendar,
         schedule_reminder: FiCalendar,
+        attendance_response: FiCalendar,
         club_join: FiUsers,
         join_request: FiUsers,
         club_application: FiUsers,
         join_approved: FiUsers,
         join_rejected: FiUsers,
         team_matching: GiSoccerBall,
+        team_matching_approved: GiSoccerBall,
+        team_matching_rejected: GiSoccerBall,
         community_comment: FiMessageCircle,
         activity_review: FiHeart,
         club_notice: FiFileText,
@@ -143,7 +146,11 @@ function Notification() {
         const type = notification.notification_type || "";
         const relatedType = notification.related_type || "";
         const relatedId = notification.related_id;
-
+        
+        // ⭐ 백엔드가 이동 경로를 직접 지정한 알림은 그 경로를 우선 사용
+        if (notification.link_path) {
+            return notification.link_path;
+        }
 
         if (type === "vote" || type === "vote_created") {
             return "/vote/detail";
@@ -158,7 +165,7 @@ function Notification() {
             type === "schedule_created" ||
             type === "schedule_reminder"
         ) {
-            return "/my-schedule";
+            return "/myschedule";
         }
 
         if (type === "club_application") {
@@ -187,6 +194,16 @@ function Notification() {
                 : null;
         }
 
+        if (type === "team_matching_approved") {
+            return relatedId
+                ? `/clubs/${relatedId}/matches/list?tab=upcoming`
+                : null;
+        }
+
+        if (type === "team_matching_rejected") {
+            return relatedId ? `/clubs/${relatedId}/matches` : null;
+        }
+
         if (type === "comment" || type === "community_comment") {
             return relatedId ? `/community/post/${relatedId}` : "/community";
         }
@@ -200,7 +217,7 @@ function Notification() {
         }
 
         if (relatedType === "event") {
-            return "/my-schedule";
+            return "/myschedule";
         }
 
         if (relatedType === "vote") {
@@ -420,3 +437,9 @@ function Notification() {
 
 
 export default Notification;
+
+
+// TODO: 회원 활동 후기 기능 추가 예정 (후기 필요)
+//  - 알림 타입은 "member_review" 사용 예정
+//    ("activity_review"는 팀매칭 경기 후기 알림이 이미 사용 중)
+//  - 후기 페이지를 만들면 백엔드에서 link_path를 지정해서 보내면 됨
