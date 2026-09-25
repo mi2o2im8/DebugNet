@@ -1548,3 +1548,66 @@ class MatchRepository:
             )
 
         return response.data[0]
+
+
+    # =========================================================
+    # 동호회 운영진(owner / manager) user_id 목록 조회
+    # =========================================================
+
+    def find_club_manager_user_ids(
+        self,
+        club_id: int,
+    ) -> list[str]:
+
+        response = (
+            self.admin_client
+            .table("club_members")
+            .select("user_id")
+            .eq("club_id", club_id)
+            .eq("status", "active")
+            .in_("role", ["owner", "manager"])
+            .execute()
+        )
+
+        return [
+            row["user_id"]
+            for row in (response.data or [])
+            if row.get("user_id")
+        ]
+
+
+    # =========================================================
+    # 팀매칭 알림 생성 (여러 명에게 한 번에)
+    #
+    # notification_type
+    # - team_matching           : 매칭 신청 받음
+    # - team_matching_approved  : 내 신청이 승인됨
+    # - team_matching_rejected  : 내 신청이 거절됨
+    # =========================================================
+
+    def create_match_notifications(
+        self,
+        user_ids: list[str],
+        title: str,
+        content: str,
+        club_id: int,
+        notification_type: str = "team_matching",
+    ) -> None:
+
+        if not user_ids:
+            return
+
+        rows = [
+            {
+                "user_id": uid,
+                "notification_type": notification_type,
+                "title": title,
+                "content": content,
+                "related_type": "club",
+                "related_id": club_id,
+                "is_read": False,
+            }
+            for uid in user_ids
+        ]
+
+        self.admin_client.table("notifications").insert(rows).execute()

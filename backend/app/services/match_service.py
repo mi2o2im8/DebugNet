@@ -133,6 +133,69 @@ class MatchService:
             )
 
 
+    # =====================================================
+    # 동호회 운영진에게 팀매칭 알림 보내기 (공통)
+    #
+    # - 알림을 발생시킨 본인은 제외
+    # - 알림 저장이 실패해도 매칭 기능은 정상 처리
+    # =====================================================
+    def notify_club_managers(
+        self,
+        club_id: int,
+        title: str,
+        content: str,
+        notification_type: str,
+        exclude_user_id: str | None = None,
+    ) -> None:
+
+        try:
+            manager_ids = (
+                self.match_repository
+                .find_club_manager_user_ids(
+                    club_id=club_id,
+                )
+            )
+
+            manager_ids = [
+                uid for uid in manager_ids
+                if uid != exclude_user_id
+            ]
+
+            self.match_repository.create_match_notifications(
+                user_ids=manager_ids,
+                title=title,
+                content=content,
+                club_id=club_id,
+                notification_type=notification_type,
+            )
+
+        except Exception as e:
+            print("팀매칭 알림 생성 실패:", e)
+
+
+    # =====================================================
+    # 알림 문구용 경기 날짜 ("5월 3일")
+    # =====================================================
+    def format_match_date_label(
+        self,
+        match_date,
+    ) -> str:
+
+        try:
+            if isinstance(match_date, str):
+                match_date = date.fromisoformat(
+                    match_date[:10]
+                )
+
+            return (
+                f"{match_date.month}월 "
+                f"{match_date.day}일"
+            )
+
+        except Exception:
+            return "예정된"
+
+
     # =========================================================
     # 팀매칭 등록 옵션 조회
     #
@@ -2024,6 +2087,52 @@ class MatchService:
                 ),
             )
         )
+
+
+        # -----------------------------------------------------
+        # 10-1. 상대 동호회 운영진에게 매칭 신청 알림
+        #
+        # - 신청한 본인은 제외
+        # - 알림 저장이 실패해도 매칭 신청은 정상 처리
+        # -----------------------------------------------------
+        try:
+            requester_club = (
+                self.club_repository
+                .find_club_by_id(
+                    requester_club_id
+                )
+            )
+
+            requester_club_name = (
+                requester_club.get("club_name")
+                if requester_club
+                else "다른 동호회"
+            )
+
+            manager_ids = (
+                self.match_repository
+                .find_club_manager_user_ids(
+                    club_id=target_club_id,
+                )
+            )
+
+            manager_ids = [
+                uid for uid in manager_ids
+                if uid != user_id
+            ]
+
+            self.match_repository.create_match_notifications(
+                user_ids=manager_ids,
+                title="새로운 팀 매칭 신청",
+                content=(
+                    f"{requester_club_name}에서 "
+                    f"{match_date.month}월 {match_date.day}일 경기에 "
+                    f"매칭을 신청했어요."
+                ),
+                club_id=target_club_id,
+            )
+        except Exception as e:
+            print("매칭 신청 알림 생성 실패:", e)
 
 
         # -----------------------------------------------------
@@ -4068,6 +4177,9 @@ class MatchService:
 
         availability_matched = False
 
+        # 이 승인으로 자동 거절된 다른 신청들 (알림용)
+        auto_rejected_matches = []
+
 
         try:
 
@@ -4166,7 +4278,8 @@ class MatchService:
             # 10-4. 같은 경기 가능일에 신청했던
             #      다른 pending 신청은 전부 rejected
             # -------------------------------------------------
-            self.match_repository\
+            auto_rejected_matches = (
+                self.match_repository
                 .reject_other_pending_matches(
                     availability_id=(
                         availability_id
@@ -4178,6 +4291,7 @@ class MatchService:
                         approved_at
                     ),
                 )
+            )
 
 
         # -----------------------------------------------------
@@ -4242,6 +4356,52 @@ class MatchService:
 
 
             raise
+
+
+        # -----------------------------------------------------
+        # 10-5. 매칭 승인 알림
+        #
+        # ① 승인된 신청 동호회(requester) 운영진
+        #    → "매칭이 확정됐어요"
+        #
+        # ② 같은 경기에 신청했다가 자동 거절된 동호회 운영진
+        #    → "다른 팀과 매칭이 확정됐어요"
+        # -----------------------------------------------------
+        match_date_label = self.format_match_date_label(
+            availability.get("match_date")
+        )
+
+        self.notify_club_managers(
+            club_id=requester_club_id,
+            title="팀 매칭이 확정됐어요",
+            content=(
+                f"{target_club['club_name']}과(와)의 "
+                f"{match_date_label} 경기 매칭이 승인됐어요."
+            ),
+            notification_type="team_matching_approved",
+            exclude_user_id=user_id,
+        )
+
+        for rejected_match in auto_rejected_matches or []:
+
+            rejected_club_id = rejected_match.get(
+                "requester_club_id"
+            )
+
+            if rejected_club_id is None:
+                continue
+
+            self.notify_club_managers(
+                club_id=int(rejected_club_id),
+                title="팀 매칭이 성사되지 않았어요",
+                content=(
+                    f"{target_club['club_name']}의 "
+                    f"{match_date_label} 경기는 "
+                    f"다른 팀과 매칭이 확정됐어요."
+                ),
+                notification_type="team_matching_rejected",
+                exclude_user_id=user_id,
+            )
 
 
         # -----------------------------------------------------
@@ -4359,6 +4519,56 @@ class MatchService:
                 "매칭 신청 거절 처리에 "
                 "실패했습니다."
             )
+
+
+        # -----------------------------------------------------
+        # 6-1. 신청한 동호회(requester) 운영진에게 거절 알림
+        # -----------------------------------------------------
+        try:
+            target_club = (
+                self.club_repository
+                .find_club_by_id(
+                    target_club_id
+                )
+            )
+
+            target_club_name = (
+                target_club.get("club_name")
+                if target_club
+                else "상대 동호회"
+            )
+
+            availability = (
+                self.match_repository
+                .find_availability_by_id(
+                    availability_id=int(
+                        match["availability_id"]
+                    ),
+                )
+            )
+
+            match_date_label = self.format_match_date_label(
+                availability.get("match_date")
+                if availability
+                else None
+            )
+
+            self.notify_club_managers(
+                club_id=int(
+                    match["requester_club_id"]
+                ),
+                title="팀 매칭이 거절됐어요",
+                content=(
+                    f"{target_club_name}이(가) "
+                    f"{match_date_label} 경기 매칭 신청을 "
+                    f"거절했어요."
+                ),
+                notification_type="team_matching_rejected",
+                exclude_user_id=user_id,
+            )
+
+        except Exception as e:
+            print("매칭 거절 알림 생성 실패:", e)
 
 
         # -----------------------------------------------------

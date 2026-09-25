@@ -182,11 +182,13 @@ function Notification() {
         }
 
         if (type === "matching" || type === "team_matching") {
-            return "/team-matching";
+            return relatedId
+                ? `/clubs/${relatedId}/matches/list?tab=received`
+                : null;
         }
 
         if (type === "comment" || type === "community_comment") {
-            return "/community";
+            return relatedId ? `/community/post/${relatedId}` : "/community";
         }
 
         if (type === "notice" || type === "club_notice") {

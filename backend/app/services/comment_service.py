@@ -245,6 +245,36 @@ class CommentService:
         )
 
 
+        # -------------------------------------------------
+        # 게시글 작성자에게 댓글 알림 보내기
+        #
+        # - 내 글에 내가 댓글 단 경우는 알림 X
+        # - 알림 저장이 실패해도 댓글 작성은 정상 처리
+        # -------------------------------------------------
+        if post["author_id"] != user_id:
+            try:
+                post_title = post.get("title") or "게시글"
+                if len(post_title) > 20:
+                    post_title = post_title[:20] + "…"
+
+                comment_preview = content
+                if len(comment_preview) > 30:
+                    comment_preview = comment_preview[:30] + "…"
+
+                self.comment_repository.create_comment_notification(
+                    user_id=post["author_id"],
+                    title="내 게시물에 새 댓글",
+                    content=(
+                        f"{author_profile['nickname']}님이 "
+                        f"'{post_title}'에 댓글을 남겼어요: "
+                        f"{comment_preview}"
+                    ),
+                    post_id=post_id,
+                )
+            except Exception as e:
+                print("댓글 알림 생성 실패:", e)
+
+
         comment = CommentResponse(
             id=created_comment["comment_id"],
 

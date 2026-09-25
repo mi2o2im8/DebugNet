@@ -262,3 +262,27 @@ class CommentRepository:
             return None
 
         return response.data[0]
+
+
+    # =====================================================
+    # 5. 댓글 알림 생성
+    # =====================================================
+    def create_comment_notification(
+        self,
+        user_id: str,
+        title: str,
+        content: str,
+        post_id: int,
+    ) -> None:
+
+        self.admin_client.table("notifications").insert(
+            {
+                "user_id": user_id,
+                "notification_type": "community_comment",
+                "title": title,
+                "content": content,
+                "related_type": "post",
+                "related_id": post_id,
+                "is_read": False,
+            }
+        ).execute()

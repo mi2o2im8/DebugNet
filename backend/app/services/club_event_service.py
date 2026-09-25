@@ -289,9 +289,9 @@ class ClubEventService:
     ) -> ClubEventDetailResponse:
 
         # -------------------------------------------------
-        # 1. 현재 동호회의 owner / manager인지 확인
+        # 1. 동호회 회원 권한 확인 (일반 회원도 조회 가능)
         # -------------------------------------------------
-        self.validate_management_permission(
+        self.validate_view_permission(
             club_id=club_id,
             user_id=user_id,
         )
@@ -1470,9 +1470,9 @@ class ClubEventService:
 
 
         # -------------------------------------------------
-        # 1. 동호회 운영 권한 확인
+        # 1. 동호회 회원 권한 확인 (일반 회원도 조회 가능)
         # -------------------------------------------------
-        self.validate_management_permission(
+        self.validate_view_permission(
             club_id=club_id,
             user_id=user_id,
         )
