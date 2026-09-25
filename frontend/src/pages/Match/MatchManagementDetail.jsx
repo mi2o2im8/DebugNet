@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useState,
 } from "react";
 
@@ -17,317 +18,22 @@ import {
 
 import BottomNav from "../../components/BottomNav";
 
+import {
+  getMatchManagementDetail,
+  approveMatchRequest,
+  rejectMatchRequest,
+  cancelSentMatchRequest,
+  requestMatchCancellation,
+  approveMatchCancellation,
+  rejectMatchCancellation,
+  submitMatchResult,
+  approveMatchResult,
+} from "./api/matchApi";
+
 import "./CSS/MatchManagementDetail.css";
 
 
-// ========================================
-// 임시 상세 데이터
-//
-// TODO:
-// 백엔드 연결 후 clubMatchId를 이용한
-// 실제 매칭 상세 조회 API로 교체
-// ========================================
-const SAMPLE_MATCH_DETAILS = {
 
-  1: {
-    clubMatchId: 1,
-
-    type: "received",
-
-    opponentClubId: 21,
-    opponentClubName: "신림 FC",
-    opponentClubProfileImage: "",
-
-    sportName: "축구/풋살",
-
-    matchDate: "2026-09-27",
-
-    startTime: "19:00",
-    endTime: "21:00",
-
-    region: "관악구",
-
-    locationName: "관악구민운동장",
-    address: "서울 관악구",
-
-    skillLevel: "중급",
-
-    requiredPlayers: 8,
-
-    venueType: "실외",
-
-    parkingAvailable: true,
-
-    intro:
-      "즐겁게 경기하실 팀을 찾고 있습니다.",
-
-    statusLabel: "승인 대기",
-  },
-
-
-  2: {
-    clubMatchId: 2,
-
-    type: "received",
-
-    opponentClubId: 22,
-    opponentClubName: "봉천 풋살클럽",
-    opponentClubProfileImage: "",
-
-    sportName: "축구/풋살",
-
-    matchDate: "2026-09-29",
-
-    startTime: "20:00",
-    endTime: "22:00",
-
-    region: "관악구",
-
-    locationName: "신림체육센터",
-    address: "서울 관악구",
-
-    skillLevel: "중급",
-
-    requiredPlayers: 10,
-
-    venueType: "실내",
-
-    parkingAvailable: false,
-
-    intro:
-      "매너 있는 경기 원합니다.",
-
-    statusLabel: "승인 대기",
-  },
-
-
-  3: {
-    clubMatchId: 3,
-
-    type: "sent",
-
-    opponentClubId: 23,
-    opponentClubName: "서울 유나이티드",
-    opponentClubProfileImage: "",
-
-    sportName: "축구/풋살",
-
-    matchDate: "2026-09-28",
-
-    startTime: "18:00",
-    endTime: "20:00",
-
-    region: "동작구",
-
-    locationName: "노량진 축구장",
-    address: "서울 동작구",
-
-    skillLevel: "중급",
-
-    requiredPlayers: 8,
-
-    venueType: "실외",
-
-    parkingAvailable: true,
-
-    intro:
-      "시간 맞춰서 즐겁게 경기하고 싶습니다.",
-
-    statusLabel: "응답 대기",
-  },
-
-
-  4: {
-    clubMatchId: 4,
-
-    type: "upcoming",
-
-    opponentClubId: 24,
-    opponentClubName: "관악 위너스",
-    opponentClubProfileImage: "",
-
-    sportName: "축구/풋살",
-
-    matchDate: "2026-10-02",
-
-    startTime: "19:00",
-    endTime: "21:00",
-
-    region: "관악구",
-
-    locationName: "관악구민운동장",
-    address: "서울 관악구",
-
-    skillLevel: "중급",
-
-    requiredPlayers: 8,
-
-    venueType: "실외",
-
-    parkingAvailable: true,
-
-    intro:
-      "확정된 경기입니다.",
-
-    statusLabel: "경기 예정",
-  },
-
-
-  5: {
-    clubMatchId: 5,
-
-    type: "upcoming",
-
-    opponentClubId: 25,
-    opponentClubName: "신림 스타즈",
-    opponentClubProfileImage: "",
-
-    sportName: "축구/풋살",
-
-    matchDate: "2026-10-05",
-
-    startTime: "20:00",
-    endTime: "22:00",
-
-    region: "관악구",
-
-    locationName: "신림체육센터",
-    address: "서울 관악구",
-
-    skillLevel: "중급",
-
-    requiredPlayers: 10,
-
-    venueType: "실내",
-
-    parkingAvailable: false,
-
-    intro:
-      "확정된 경기입니다.",
-
-    statusLabel: "경기 예정",
-  },
-
-
-  6: {
-    clubMatchId: 6,
-
-    type: "history",
-
-    opponentClubId: 26,
-    opponentClubName: "봉천 FC",
-    opponentClubProfileImage: "",
-
-    sportName: "축구/풋살",
-
-    matchDate: "2026-09-20",
-
-    startTime: "19:00",
-    endTime: "21:00",
-
-    region: "관악구",
-
-    locationName: "관악구민운동장",
-    address: "서울 관악구",
-
-    skillLevel: "중급",
-
-    requiredPlayers: 8,
-
-    venueType: "실외",
-
-    parkingAvailable: true,
-
-    intro: "",
-
-    recordStatus: "RECORD_REQUIRED",
-  },
-
-
-  7: {
-    clubMatchId: 7,
-
-    type: "history",
-
-    opponentClubId: 27,
-    opponentClubName: "서울 킥커스",
-    opponentClubProfileImage: "",
-
-    sportName: "축구/풋살",
-
-    matchDate: "2026-09-18",
-
-    startTime: "20:00",
-    endTime: "22:00",
-
-    region: "동작구",
-
-    locationName: "노량진 축구장",
-    address: "서울 동작구",
-
-    skillLevel: "중급",
-
-    requiredPlayers: 8,
-
-    venueType: "실외",
-
-    parkingAvailable: true,
-
-    intro: "",
-
-    // 상대팀이 경기 기록을 먼저 작성했고
-    // 현재 내가 확인해야 하는 상태
-    recordStatus: "RECORD_CONFIRM_REQUIRED",
-
-    myScore: 2,
-    opponentScore: 2,
-  },
-
-
-  8: {
-    clubMatchId: 8,
-
-    type: "history",
-
-    opponentClubId: 28,
-    opponentClubName: "신림 유나이티드",
-    opponentClubProfileImage: "",
-
-    sportName: "축구/풋살",
-
-    matchDate: "2026-09-15",
-
-    startTime: "19:00",
-    endTime: "21:00",
-
-    region: "관악구",
-
-    locationName: "신림체육센터",
-    address: "서울 관악구",
-
-    skillLevel: "중급",
-
-    requiredPlayers: 8,
-
-    venueType: "실내",
-
-    parkingAvailable: false,
-
-    intro: "",
-
-    recordStatus: "REVIEWED",
-
-    myScore: 3,
-    opponentScore: 2,
-
-    // ========================================
-    // TODO: 백엔드 연결 후 실제 후기 존재 여부 사용
-    // ========================================
-    hasWrittenReview: true,
-    hasReceivedReview: true,
-  },
-
-};
 
 
 // ========================================
@@ -353,7 +59,8 @@ const formatMatchDate = (dateString) => {
 // 지난 경기 상태
 // ========================================
 const getRecordStatusLabel = (
-  recordStatus
+  recordStatus,
+  hasWrittenReview
 ) => {
 
   switch (recordStatus) {
@@ -368,10 +75,10 @@ const getRecordStatusLabel = (
       return "경기 기록 확인 필요";
 
     case "COMPLETED":
-      return "경기 완료";
 
-    case "REVIEWED":
-      return "후기 작성 완료";
+      return hasWrittenReview
+        ? "후기 작성 완료"
+        : "경기 완료";
 
     default:
       return "지난 경기";
@@ -390,26 +97,87 @@ function MatchManagementDetail() {
 
 
   // ========================================
-  // 임시 상세 데이터
-  //
-  // TODO:
-  // API 연결 후 state + useEffect로 교체
-  // ========================================
-  const match =
-    SAMPLE_MATCH_DETAILS[
-      Number(clubMatchId)
-    ];
-
-  // ========================================
-  // 확정 경기 취소 요청 여부
-  //
-  // TODO:
-  // 백엔드 연결 후 실제 매칭 상태값으로 교체
+  // 실제 매칭 상세 데이터
   // ========================================
   const [
-    isCancelRequestSent,
-    setIsCancelRequestSent,
-  ] = useState(false);
+    match,
+    setMatch,
+  ] = useState(null);
+
+
+  // 상세 조회 상태
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
+
+
+  const [
+    loadError,
+    setLoadError,
+  ] = useState("");
+
+
+  // ========================================
+  // 매칭 상세 조회
+  // ========================================
+  useEffect(() => {
+
+    if (
+      !clubId ||
+      !clubMatchId
+    ) {
+      return;
+    }
+
+
+    const loadMatchDetail = async () => {
+
+      setIsLoading(true);
+      setLoadError("");
+
+
+      try {
+
+        const data =
+          await getMatchManagementDetail(
+            clubId,
+            clubMatchId
+          );
+
+
+        setMatch(data);
+
+      } catch (error) {
+
+        console.error(
+          "매칭 상세 조회 실패:",
+          error
+        );
+
+
+        setMatch(null);
+
+        setLoadError(
+          error.message ||
+          "매칭 정보를 불러오지 못했습니다."
+        );
+
+      } finally {
+
+        setIsLoading(false);
+
+      }
+
+    };
+
+
+    loadMatchDetail();
+
+  }, [
+    clubId,
+    clubMatchId,
+  ]);
 
 
   // ========================================
@@ -437,35 +205,21 @@ function MatchManagementDetail() {
   ] = useState("");
 
 
-  // 수정 기록을 상대팀에게 다시 보냈는지
-  // TODO: 백엔드 연결 후 실제 상태값으로 교체
-  const [
-    isRecordResubmitted,
-    setIsRecordResubmitted,
-  ] = useState(false);
-
-
   // ========================================
   // 상대 동호회 상세
   // ========================================
   const handleOpponentClub = () => {
 
-    // TODO:
-    // 실제 상대 동호회 상세 페이지의
-    // 라우트가 확정되면 navigate 연결
-    const handleOpponentClub = () => {
-
-      navigate(
-        `/clubs/${match.opponentClubId}`
-      );
-    };
+    navigate(
+      `/clubs/${match.opponentClubId}`
+    );
   };
 
 
   // ========================================
   // 받은 신청 승인
   // ========================================
-  const handleApprove = () => {
+  const handleApprove = async () => {
 
     const confirmed =
       window.confirm(
@@ -476,18 +230,44 @@ function MatchManagementDetail() {
       return;
     }
 
-    // TODO:
-    // 백엔드 승인 API 연결
-    alert(
-      "매칭 승인 API와 연결할 예정입니다."
-    );
-  };
 
+    try {
+
+      const response =
+        await approveMatchRequest(
+          clubId,
+          clubMatchId
+        );
+
+
+      alert(
+        response.message ||
+        "매칭 신청을 승인했습니다."
+      );
+
+
+      navigate(-1);
+
+    } catch (error) {
+
+      console.error(
+        "매칭 승인 실패:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+        "매칭 승인에 실패했습니다."
+      );
+
+    }
+  };
 
   // ========================================
   // 받은 신청 거절
   // ========================================
-  const handleReject = () => {
+  const handleReject = async () => {
 
     const confirmed =
       window.confirm(
@@ -498,17 +278,44 @@ function MatchManagementDetail() {
       return;
     }
 
-    // TODO:
-    // 백엔드 거절 API 연결
-    alert(
-      "매칭 거절 API와 연결할 예정입니다."
-    );
+
+    try {
+
+      const response =
+        await rejectMatchRequest(
+          clubId,
+          clubMatchId
+        );
+
+
+      alert(
+        response.message ||
+        "매칭 신청을 거절했습니다."
+      );
+
+
+      navigate(-1);
+
+    } catch (error) {
+
+      console.error(
+        "매칭 거절 실패:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+        "매칭 거절에 실패했습니다."
+      );
+
+    }
   };
 
   // ========================================
   // 내가 보낸 매칭 신청 취소
   // ========================================
-  const handleCancelSentRequest = () => {
+  const handleCancelSentRequest = async () => {
 
     const confirmed =
       window.confirm(
@@ -520,29 +327,44 @@ function MatchManagementDetail() {
     }
 
 
-    // ========================================
-    // TODO: 백엔드 연결
-    //
-    // 보낸 매칭 신청 취소 API 연결
-    //
-    // 필요한 값:
-    // clubMatchId
-    //
-    // 백엔드에서는 반드시
-    // 현재 로그인 사용자가 해당 신청을 보낸
-    // 동호회의 운영진인지 확인
-    // ========================================
+    try {
 
-    alert(
-      "매칭 신청 취소 API와 연결할 예정입니다."
-    );
+      const response =
+        await cancelSentMatchRequest(
+          clubId,
+          clubMatchId
+        );
+
+
+      alert(
+        response.message ||
+        "매칭 신청을 취소했습니다."
+      );
+
+
+      navigate(-1);
+
+    } catch (error) {
+
+      console.error(
+        "매칭 신청 취소 실패:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+        "매칭 신청 취소에 실패했습니다."
+      );
+
+    }
   };
 
 
   // ========================================
   // 확정된 경기 취소 요청
   // ========================================
-  const handleCancelMatchRequest = () => {
+  const handleCancelMatchRequest = async () => {
 
     const confirmed =
       window.confirm(
@@ -554,25 +376,164 @@ function MatchManagementDetail() {
     }
 
 
-    // ========================================
-    // TODO: 백엔드 연결
-    //
-    // 확정 경기 취소 요청 API
-    //
-    // 필요한 값:
-    // clubMatchId
-    //
-    // 처리 흐름:
-    // 1. 우리팀 취소 요청
-    // 2. 상대팀 운영진에게 확인 요청
-    // 3. 상대팀 동의
-    // 4. 경기 최종 취소
-    //
-    // 백엔드에서는 현재 로그인 사용자가
-    // 해당 동호회의 운영진인지 확인해야 함
-    // ========================================
+    try {
 
-    setIsCancelRequestSent(true);
+      const response =
+        await requestMatchCancellation(
+          clubId,
+          clubMatchId
+        );
+
+
+      setMatch((prev) => ({
+        ...prev,
+
+        status:
+          response.status ||
+          prev.status,
+
+        statusLabel:
+          "경기 취소 요청 중",
+
+        isCancelRequestSent:
+          true,
+
+        isCancelRequestReceived:
+          false,
+      }));
+
+
+      alert(
+        response.message ||
+        "경기 취소를 요청했습니다."
+      );
+
+    } catch (error) {
+
+      console.error(
+        "경기 취소 요청 실패:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+        "경기 취소 요청에 실패했습니다."
+      );
+
+    }
+  };
+
+  // ========================================
+  // 상대팀 경기 취소 요청 승인
+  // ========================================
+  const handleApproveCancellation = async () => {
+
+    const confirmed =
+      window.confirm(
+        `${match.opponentClubName}의 경기 취소 요청을 승인하시겠습니까?\n\n승인하면 경기가 최종 취소됩니다.`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+
+    try {
+
+      const response =
+        await approveMatchCancellation(
+          clubId,
+          clubMatchId
+        );
+
+
+      alert(
+        response.message ||
+        "경기가 취소되었습니다."
+      );
+
+
+      navigate(-1);
+
+    } catch (error) {
+
+      console.error(
+        "경기 취소 승인 실패:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+        "경기 취소 승인에 실패했습니다."
+      );
+
+    }
+  };
+
+
+  // ========================================
+  // 상대팀 경기 취소 요청 거절
+  // ========================================
+  const handleRejectCancellation = async () => {
+
+    const confirmed =
+      window.confirm(
+        `${match.opponentClubName}의 경기 취소 요청을 거절하시겠습니까?`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+
+    try {
+
+      const response =
+        await rejectMatchCancellation(
+          clubId,
+          clubMatchId
+        );
+
+
+      setMatch((prev) => ({
+        ...prev,
+
+        status:
+          response.status ||
+          "approved",
+
+        statusLabel:
+          "경기 예정",
+
+        isCancelRequestSent:
+          false,
+
+        isCancelRequestReceived:
+          false,
+      }));
+
+
+      alert(
+        response.message ||
+        "경기 취소 요청을 거절했습니다."
+      );
+
+    } catch (error) {
+
+      console.error(
+        "경기 취소 요청 거절 실패:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+        "경기 취소 요청 거절에 실패했습니다."
+      );
+
+    }
   };
 
 
@@ -614,7 +575,7 @@ function MatchManagementDetail() {
   // ========================================
   // 상대팀이 작성한 경기 기록 승인
   // ========================================
-  const handleApproveRecord = () => {
+  const handleApproveRecord = async () => {
 
     const confirmed =
       window.confirm(
@@ -626,17 +587,48 @@ function MatchManagementDetail() {
     }
 
 
-    // ========================================
-    // TODO: 백엔드 연결
-    //
-    // 경기 기록 승인 API 호출
-    // 승인 후 양 팀 확인이 완료되면
-    // 경기 상태를 COMPLETED로 변경
-    // ========================================
+    try {
 
-    alert(
-      "경기 기록을 승인했습니다."
-    );
+      const response =
+        await approveMatchResult(
+          clubId,
+          clubMatchId
+        );
+
+
+      setMatch((prev) => ({
+        ...prev,
+
+        myScore:
+          response.my_score,
+
+        opponentScore:
+          response.opponent_score,
+
+        recordStatus:
+          response.record_status,
+      }));
+
+
+      alert(
+        response.message ||
+        "경기 기록을 승인했습니다."
+      );
+
+    } catch (error) {
+
+      console.error(
+        "경기 기록 승인 실패:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+        "경기 기록 승인에 실패했습니다."
+      );
+
+    }
   };
 
 
@@ -701,7 +693,7 @@ function MatchManagementDetail() {
   // ========================================
   // 수정한 경기 기록 재확인 요청
   // ========================================
-  const handleSubmitCorrectedRecord = () => {
+  const handleSubmitCorrectedRecord = async () => {
 
     if (
       editedMyScore === "" ||
@@ -726,31 +718,92 @@ function MatchManagementDetail() {
     }
 
 
-    // ========================================
-    // TODO: 백엔드 연결
-    //
-    // 수정 경기 기록 재확인 요청 API
-    //
-    // 필요한 값 예시:
-    // clubMatchId
-    // reviewer/요청 동호회 ID
-    // my_score
-    // opponent_score
-    //
-    // 처리 후 상대팀은 다시
-    // "경기 기록 확인 필요" 상태가 되어야 함
-    // ========================================
+    try {
 
-    setIsRecordEditOpen(false);
+      const response =
+        await submitMatchResult(
+          clubId,
+          clubMatchId,
+          {
+            myScore:
+              editedMyScore,
 
-    setIsRecordResubmitted(true);
+            opponentScore:
+              editedOpponentScore,
+          }
+        );
+
+
+      setIsRecordEditOpen(false);
+
+      setEditedMyScore("");
+      setEditedOpponentScore("");
+
+
+      setMatch((prev) => ({
+        ...prev,
+
+        myScore:
+          response.my_score,
+
+        opponentScore:
+          response.opponent_score,
+
+        recordStatus:
+          response.record_status,
+      }));
+
+
+      alert(
+        response.message ||
+        "수정한 경기 기록을 상대팀에게 보냈습니다."
+      );
+
+    } catch (error) {
+
+      console.error(
+        "경기 기록 재제출 실패:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+        "경기 기록 재제출에 실패했습니다."
+      );
+
+    }
   };
 
 
   // ========================================
-  // 데이터 없음
+  // 로딩 중
   // ========================================
-  if (!match) {
+  if (isLoading) {
+
+    return (
+
+      <div className="match-management-detail-container">
+
+        <div className="match-management-detail-empty">
+
+          매칭 정보를 불러오는 중입니다.
+
+        </div>
+
+      </div>
+
+    );
+  }
+
+
+  // ========================================
+  // 조회 실패 / 데이터 없음
+  // ========================================
+  if (
+    loadError ||
+    !match
+  ) {
 
     return (
 
@@ -761,9 +814,7 @@ function MatchManagementDetail() {
           <button
             type="button"
             onClick={() =>
-              navigate(
-                `/clubs/${clubId}/matches`
-              )
+              navigate(-1)
             }
             aria-label="뒤로가기"
           >
@@ -781,7 +832,8 @@ function MatchManagementDetail() {
 
         <div className="match-management-detail-empty">
 
-          매칭 정보를 찾을 수 없습니다.
+          {loadError ||
+            "매칭 정보를 찾을 수 없습니다."}
 
         </div>
 
@@ -888,7 +940,8 @@ function MatchManagementDetail() {
 
             {match.type === "history"
               ? getRecordStatusLabel(
-                  match.recordStatus
+                  match.recordStatus,
+                  match.hasWrittenReview
                 )
               : match.statusLabel}
 
@@ -1106,9 +1159,7 @@ function MatchManagementDetail() {
             match.recordStatus ===
               "RECORD_CONFIRM_REQUIRED" ||
             match.recordStatus ===
-              "COMPLETED" ||
-            match.recordStatus ===
-              "REVIEWED"
+              "COMPLETED"
           ) && (
 
             <section className="match-management-detail-section">
@@ -1244,10 +1295,8 @@ function MatchManagementDetail() {
               경기가 완료된 뒤부터 표시
           ======================================== */}
           {match.type === "history" &&
-            (
-              match.recordStatus === "COMPLETED" ||
-              match.recordStatus === "REVIEWED"
-            ) && (
+            
+              match.recordStatus === "COMPLETED" && (
 
               <section className="match-management-detail-section">
 
@@ -1450,7 +1499,28 @@ function MatchManagementDetail() {
         ======================================== */}
         {match.type === "upcoming" && (
 
-          isCancelRequestSent ? (
+          match.isCancelRequestReceived ? (
+
+            <>
+              <button
+                type="button"
+                className="match-management-reject-btn"
+                onClick={handleRejectCancellation}
+              >
+                취소 요청 거절
+              </button>
+
+
+              <button
+                type="button"
+                className="match-management-primary-btn"
+                onClick={handleApproveCancellation}
+              >
+                경기 취소 승인
+              </button>
+            </>
+
+          ) : match.isCancelRequestSent ? (
 
             <div className="match-management-waiting">
 
@@ -1510,16 +1580,7 @@ function MatchManagementDetail() {
           match.recordStatus ===
             "RECORD_CONFIRM_REQUIRED" && (
 
-          isRecordResubmitted ? (
-
-            /* 수정 기록을 이미 다시 보낸 상태 */
-            <div className="match-management-waiting">
-
-              상대팀의 경기 기록 재확인을 기다리고 있습니다.
-
-            </div>
-
-          ) : isRecordEditOpen ? (
+          isRecordEditOpen ? (
 
             /* 점수 수정 중 */
             <>

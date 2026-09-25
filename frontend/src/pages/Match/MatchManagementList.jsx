@@ -700,7 +700,7 @@ function MatchManagementList() {
 
 
         {/* ========================================
-            매칭 목록
+            매칭 목록[]
         ======================================== */}
         <section className="match-management-match-list">
 

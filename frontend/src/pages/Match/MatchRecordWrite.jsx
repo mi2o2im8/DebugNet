@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useState,
 } from "react";
 
@@ -15,32 +16,16 @@ import {
 
 import BottomNav from "../../components/BottomNav";
 
+import {
+  getMatchManagementDetail,
+  submitMatchResult,
+} from "./api/matchApi";
+
+import {
+  getClubDashboard,
+} from "../../api/clubApi";
+
 import "./CSS/MatchRecordWrite.css";
-
-
-// ========================================
-// 임시 경기 데이터
-//
-// TODO:
-// 백엔드 연결 후 clubMatchId로
-// 경기 상세 데이터를 조회하도록 교체
-// ========================================
-const SAMPLE_MATCH = {
-  myClubName: "사과좋아 풋살클럽",
-
-  opponentClubName: "봉천 FC",
-
-  sportName: "축구/풋살",
-
-  matchDate: "2026-09-20",
-
-  startTime: "19:00",
-  endTime: "21:00",
-
-  locationName: "관악구민운동장",
-
-  region: "관악구",
-};
 
 
 // ========================================
@@ -73,6 +58,42 @@ function MatchRecordWrite() {
 
 
   // ========================================
+  // 실제 경기 정보
+  // ========================================
+  const [
+    match,
+    setMatch,
+  ] = useState(null);
+
+
+  // 현재 관리 중인 우리 동호회 이름
+  const [
+    myClubName,
+    setMyClubName,
+  ] = useState("");
+
+
+  // 조회 상태
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
+
+
+  const [
+    loadError,
+    setLoadError,
+  ] = useState("");
+
+
+  // 제출 중 중복 클릭 방지
+  const [
+    isSubmitting,
+    setIsSubmitting,
+  ] = useState(false);
+
+
+  // ========================================
   // 경기 점수
   // ========================================
   const [
@@ -85,6 +106,89 @@ function MatchRecordWrite() {
     opponentScore,
     setOpponentScore,
   ] = useState("");
+
+  // ========================================
+  // 경기 정보 조회
+  //
+  // 매칭 상세:
+  // 상대팀 / 날짜 / 시간 / 장소 등
+  //
+  // 동호회 대시보드:
+  // 현재 관리 중인 우리팀 이름
+  // ========================================
+  useEffect(() => {
+
+    if (
+      !clubId ||
+      !clubMatchId
+    ) {
+      return;
+    }
+
+
+    const loadMatch = async () => {
+
+      setIsLoading(true);
+      setLoadError("");
+
+
+      try {
+
+        const [
+          matchData,
+          clubData,
+        ] = await Promise.all([
+
+          getMatchManagementDetail(
+            clubId,
+            clubMatchId
+          ),
+
+          getClubDashboard(
+            clubId
+          ),
+        ]);
+
+
+        setMatch(
+          matchData
+        );
+
+
+        setMyClubName(
+          clubData.club_name || "우리팀"
+        );
+
+      } catch (error) {
+
+        console.error(
+          "경기 기록 작성 정보 조회 실패:",
+          error
+        );
+
+
+        setMatch(null);
+
+        setLoadError(
+          error.message ||
+          "경기 정보를 불러오지 못했습니다."
+        );
+
+      } finally {
+
+        setIsLoading(false);
+
+      }
+
+    };
+
+
+    loadMatch();
+
+  }, [
+    clubId,
+    clubMatchId,
+  ]);
 
 
   // ========================================
@@ -119,7 +223,7 @@ function MatchRecordWrite() {
   // ========================================
   // 경기 기록 제출
   // ========================================
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
 
     if (
       myScore === "" ||
@@ -134,9 +238,17 @@ function MatchRecordWrite() {
     }
 
 
+    if (
+      !match ||
+      isSubmitting
+    ) {
+      return;
+    }
+
+
     const confirmed =
       window.confirm(
-        `${SAMPLE_MATCH.myClubName} ${myScore} : ${opponentScore} ${SAMPLE_MATCH.opponentClubName}\n\n이 경기 기록으로 상대팀에게 확인을 요청하시겠습니까?`
+        `${myClubName} ${myScore} : ${opponentScore} ${match.opponentClubName}\n\n이 경기 기록으로 상대팀에게 확인을 요청하시겠습니까?`
       );
 
 
@@ -145,30 +257,126 @@ function MatchRecordWrite() {
     }
 
 
-    // ========================================
-    // TODO: 백엔드 연결
-    //
-    // 추후 전달할 값 예시:
-    //
-    // club_match_id
-    // my_club_id
-    // my_score
-    // opponent_score
-    //
-    // 작성 사용자 ID는 프론트 입력값을
-    // 신뢰하지 않고 JWT에서 확인하는 방향
-    // ========================================
-
-    alert(
-      "경기 기록을 등록했습니다.\n상대팀 운영진의 확인을 기다립니다."
-    );
+    setIsSubmitting(true);
 
 
-    // 등록 후 해당 매칭 상세로 복귀
-    navigate(
-      -1
-    );
+    try {
+
+      const response =
+        await submitMatchResult(
+          clubId,
+          clubMatchId,
+          {
+            myScore,
+            opponentScore,
+          }
+        );
+
+
+      alert(
+        response.message ||
+        "경기 기록을 등록했습니다.\n상대팀 운영진의 확인을 기다립니다."
+      );
+
+
+      // 기존 상세 페이지로 돌아가기
+      navigate(-1);
+
+    } catch (error) {
+
+      console.error(
+        "경기 기록 등록 실패:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+        "경기 기록 등록에 실패했습니다."
+      );
+
+    } finally {
+
+      setIsSubmitting(false);
+
+    }
   };
+
+  // ========================================
+  // 로딩 중
+  // ========================================
+  if (isLoading) {
+
+    return (
+
+      <div className="match-record-write-container">
+
+        <div className="match-record-notice">
+
+          <strong>
+            경기 정보를 불러오는 중입니다.
+          </strong>
+
+        </div>
+
+      </div>
+
+    );
+  }
+
+
+  // ========================================
+  // 조회 실패
+  // ========================================
+  if (
+    loadError ||
+    !match
+  ) {
+
+    return (
+
+      <div className="match-record-write-container">
+
+        <header className="match-record-write-header">
+
+          <button
+            type="button"
+            className="match-record-write-back"
+            onClick={() =>
+              navigate(-1)
+            }
+            aria-label="뒤로가기"
+          >
+            ‹
+          </button>
+
+
+          <h1>
+            경기 기록 작성
+          </h1>
+
+
+          <div className="match-record-write-header-space" />
+
+        </header>
+
+
+        <div className="match-record-notice">
+
+          <strong>
+            경기 정보를 불러오지 못했습니다.
+          </strong>
+
+          <p>
+            {loadError}
+          </p>
+
+        </div>
+
+      </div>
+
+    );
+  }
 
 
   return (
@@ -220,16 +428,16 @@ function MatchRecordWrite() {
 
 
           <h2>
-            {SAMPLE_MATCH.myClubName}
+            {myClubName}
             {" vs "}
-            {SAMPLE_MATCH.opponentClubName}
+            {match.opponentClubName}
           </h2>
 
 
           <div className="match-record-basic-info">
 
             <span>
-              {SAMPLE_MATCH.sportName}
+              {match.sportName}
             </span>
 
 
@@ -237,7 +445,7 @@ function MatchRecordWrite() {
               <FiCalendar />
 
               {formatMatchDate(
-                SAMPLE_MATCH.matchDate
+                match.matchDate
               )}
             </span>
 
@@ -245,18 +453,18 @@ function MatchRecordWrite() {
             <span>
               <FiClock />
 
-              {SAMPLE_MATCH.startTime}
+              {match.startTime}
               {" ~ "}
-              {SAMPLE_MATCH.endTime}
+              {match.endTime}
             </span>
 
 
             <span>
               <FiMapPin />
 
-              {SAMPLE_MATCH.locationName}
+              {match.locationName}
               {" · "}
-              {SAMPLE_MATCH.region}
+              {match.region}
             </span>
 
           </div>
@@ -294,7 +502,7 @@ function MatchRecordWrite() {
               </span>
 
               <strong>
-                {SAMPLE_MATCH.myClubName}
+                {myClubName}
               </strong>
 
 
@@ -331,7 +539,7 @@ function MatchRecordWrite() {
               </span>
 
               <strong>
-                {SAMPLE_MATCH.opponentClubName}
+                {match.opponentClubName}
               </strong>
 
 
@@ -388,8 +596,11 @@ function MatchRecordWrite() {
           type="button"
           className="match-record-submit-btn"
           onClick={handleSubmit}
+          disabled={isSubmitting}
         >
-          경기 완료 요청
+          {isSubmitting
+            ? "등록 중..."
+            : "경기 완료 요청"}
         </button>
 
       </div>

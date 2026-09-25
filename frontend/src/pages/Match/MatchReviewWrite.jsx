@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useState,
 } from "react";
 
@@ -15,37 +16,17 @@ import {
 
 import BottomNav from "../../components/BottomNav";
 
+import {
+  getMatchManagementDetail,
+  createMatchReview,
+} from "./api/matchApi";
+
+import {
+  getClubDashboard,
+} from "../../api/clubApi";
+
 import "./CSS/MatchReview.css";
 
-
-// ========================================
-// 임시 경기 데이터
-//
-// TODO:
-// 백엔드 연결 후 clubMatchId로
-// 실제 완료 경기 데이터를 조회하도록 교체
-// ========================================
-const SAMPLE_MATCH = {
-  myClubName: "사과좋아 풋살클럽",
-
-  opponentClubId: 28,
-  opponentClubName: "신림 유나이티드",
-  opponentClubProfileImage: "",
-
-  sportName: "축구/풋살",
-
-  matchDate: "2026-09-15",
-
-  startTime: "19:00",
-  endTime: "21:00",
-
-  locationName: "신림체육센터",
-
-  region: "관악구",
-
-  myScore: 3,
-  opponentScore: 2,
-};
 
 
 // ========================================
@@ -124,6 +105,41 @@ function MatchReviewWrite() {
     clubMatchId,
   } = useParams();
 
+  // ========================================
+  // 실제 경기 정보
+  // ========================================
+  const [
+    match,
+    setMatch,
+  ] = useState(null);
+
+
+  // 현재 관리 중인 우리 동호회 이름
+  const [
+    myClubName,
+    setMyClubName,
+  ] = useState("");
+
+
+  // 조회 상태
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
+
+
+  const [
+    loadError,
+    setLoadError,
+  ] = useState("");
+
+
+  // 후기 등록 중
+  const [
+    isSubmitting,
+    setIsSubmitting,
+  ] = useState(false);
+
 
   // ========================================
   // 후기 점수
@@ -148,6 +164,83 @@ function MatchReviewWrite() {
     reviewContent,
     setReviewContent,
   ] = useState("");
+
+  // ========================================
+  // 후기 작성에 필요한 실제 경기 정보 조회
+  // ========================================
+  useEffect(() => {
+
+    if (
+      !clubId ||
+      !clubMatchId
+    ) {
+      return;
+    }
+
+
+    const loadMatch = async () => {
+
+      setIsLoading(true);
+      setLoadError("");
+
+
+      try {
+
+        const [
+          matchData,
+          clubData,
+        ] = await Promise.all([
+
+          getMatchManagementDetail(
+            clubId,
+            clubMatchId
+          ),
+
+          getClubDashboard(
+            clubId
+          ),
+        ]);
+
+
+        setMatch(
+          matchData
+        );
+
+
+        setMyClubName(
+          clubData.club_name || "우리팀"
+        );
+
+      } catch (error) {
+
+        console.error(
+          "경기 후기 작성 정보 조회 실패:",
+          error
+        );
+
+
+        setMatch(null);
+
+        setLoadError(
+          error.message ||
+          "경기 정보를 불러오지 못했습니다."
+        );
+
+      } finally {
+
+        setIsLoading(false);
+
+      }
+
+    };
+
+
+    loadMatch();
+
+  }, [
+    clubId,
+    clubMatchId,
+  ]);
 
 
   // ========================================
@@ -181,7 +274,7 @@ function MatchReviewWrite() {
   // ========================================
   // 후기 등록
   // ========================================
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
 
     if (!isAllRated) {
 
@@ -193,9 +286,17 @@ function MatchReviewWrite() {
     }
 
 
+    if (
+      !match ||
+      isSubmitting
+    ) {
+      return;
+    }
+
+
     const confirmed =
       window.confirm(
-        `${SAMPLE_MATCH.opponentClubName}에 대한 경기 후기를 등록하시겠습니까?`
+        `${match.opponentClubName}에 대한 경기 후기를 등록하시겠습니까?`
       );
 
 
@@ -204,52 +305,171 @@ function MatchReviewWrite() {
     }
 
 
-    // ========================================
-    // TODO: 백엔드 연결
-    //
-    // 추후 전송 예정 값
-    //
-    // club_match_id
-    // reviewer_club_id
-    //
-    // manner_score
-    // punctuality_score
-    // roster_accuracy_score
-    // safety_score
-    // game_flow_score
-    // rematch_score
-    // content (선택)
-    //
-    // reviewer_user_id는
-    // JWT 로그인 사용자 기준으로
-    // 백엔드에서 결정
-    // ========================================
-
-    console.log(
-      "경기 후기:",
-      {
-        ...ratings,
-
-        // 직접 작성 후기는 선택사항
-        // 작성하지 않았으면 null 처리
-        content:
-          reviewContent.trim() ||
-          null,
-      }
-    );
+    setIsSubmitting(true);
 
 
-    alert(
-      "경기 후기가 등록되었습니다."
-    );
+    try {
+
+      const response =
+        await createMatchReview(
+          clubId,
+          clubMatchId,
+          {
+            mannerScore:
+              ratings.manner,
+
+            punctualityScore:
+              ratings.punctuality,
+
+            rosterAccuracyScore:
+              ratings.rosterAccuracy,
+
+            safetyScore:
+              ratings.safety,
+
+            gameFlowScore:
+              ratings.gameFlow,
+
+            rematchScore:
+              ratings.rematch,
+
+            content:
+              reviewContent,
+          }
+        );
 
 
-    // 후기 작성 후
-    // 해당 매칭 상세로 이동
-    navigate(
-      -1
-    );
+      alert(
+        response.message ||
+        "경기 후기가 등록되었습니다."
+      );
+
+
+      navigate(-1);
+
+    } catch (error) {
+
+      console.error(
+        "경기 후기 등록 실패:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+        "경기 후기 등록에 실패했습니다."
+      );
+
+    } finally {
+
+      setIsSubmitting(false);
+
+    }
   };
+
+  // ========================================
+  // 로딩 중
+  // ========================================
+  if (isLoading) {
+
+    return (
+
+      <div className="match-review-container">
+
+        <header className="match-review-header">
+
+          <button
+            type="button"
+            className="match-review-back"
+            onClick={() =>
+              navigate(-1)
+            }
+            aria-label="뒤로가기"
+          >
+            ‹
+          </button>
+
+          <h1>
+            경기 후기
+          </h1>
+
+          <div className="match-review-header-space" />
+
+        </header>
+
+
+        <main className="match-review-main">
+
+          <section className="match-review-notice">
+
+            <strong>
+              경기 정보를 불러오는 중입니다.
+            </strong>
+
+          </section>
+
+        </main>
+
+      </div>
+
+    );
+  }
+
+
+  // ========================================
+  // 조회 실패
+  // ========================================
+  if (
+    loadError ||
+    !match
+  ) {
+
+    return (
+
+      <div className="match-review-container">
+
+        <header className="match-review-header">
+
+          <button
+            type="button"
+            className="match-review-back"
+            onClick={() =>
+              navigate(-1)
+            }
+            aria-label="뒤로가기"
+          >
+            ‹
+          </button>
+
+          <h1>
+            경기 후기
+          </h1>
+
+          <div className="match-review-header-space" />
+
+        </header>
+
+
+        <main className="match-review-main">
+
+          <section className="match-review-notice">
+
+            <strong>
+              경기 정보를 불러오지 못했습니다.
+            </strong>
+
+            <p>
+              {loadError}
+            </p>
+
+          </section>
+
+        </main>
+
+      </div>
+
+    );
+  }
 
 
   return (
@@ -297,19 +517,19 @@ function MatchReviewWrite() {
 
           <div className="match-review-opponent-profile">
 
-            {SAMPLE_MATCH.opponentClubProfileImage ? (
+            {match.opponentClubProfileImage ? (
 
               <img
                 src={
-                  SAMPLE_MATCH.opponentClubProfileImage
+                  match.opponentClubProfileImage
                 }
-                alt={`${SAMPLE_MATCH.opponentClubName} 프로필`}
+                alt={`${match.opponentClubName} 프로필`}
               />
 
             ) : (
 
               <span>
-                {SAMPLE_MATCH.opponentClubName.charAt(0)}
+                {match.opponentClubName.charAt(0)}
               </span>
 
             )}
@@ -324,7 +544,7 @@ function MatchReviewWrite() {
             </span>
 
             <strong>
-              {SAMPLE_MATCH.opponentClubName}
+              {match.opponentClubName}
             </strong>
 
           </div>
@@ -342,11 +562,11 @@ function MatchReviewWrite() {
 
             <div>
               <span>
-                {SAMPLE_MATCH.myClubName}
+                {myClubName}
               </span>
 
               <strong>
-                {SAMPLE_MATCH.myScore}
+                {match.myScore}
               </strong>
             </div>
 
@@ -358,11 +578,11 @@ function MatchReviewWrite() {
 
             <div>
               <span>
-                {SAMPLE_MATCH.opponentClubName}
+                {match.opponentClubName}
               </span>
 
               <strong>
-                {SAMPLE_MATCH.opponentScore}
+                {match.opponentScore}
               </strong>
             </div>
 
@@ -372,7 +592,7 @@ function MatchReviewWrite() {
           <div className="match-review-match-info">
 
             <span>
-              {SAMPLE_MATCH.sportName}
+              {match.sportName}
             </span>
 
 
@@ -380,7 +600,7 @@ function MatchReviewWrite() {
               <FiCalendar />
 
               {formatMatchDate(
-                SAMPLE_MATCH.matchDate
+                match.matchDate
               )}
             </span>
 
@@ -388,18 +608,18 @@ function MatchReviewWrite() {
             <span>
               <FiClock />
 
-              {SAMPLE_MATCH.startTime}
+              {match.startTime}
               {" ~ "}
-              {SAMPLE_MATCH.endTime}
+              {match.endTime}
             </span>
 
 
             <span>
               <FiMapPin />
 
-              {SAMPLE_MATCH.locationName}
+              {match.locationName}
               {" · "}
-              {SAMPLE_MATCH.region}
+              {match.region}
             </span>
 
           </div>
@@ -565,9 +785,14 @@ function MatchReviewWrite() {
           type="button"
           className="match-review-submit"
           onClick={handleSubmit}
-          disabled={!isAllRated}
+          disabled={
+            !isAllRated ||
+            isSubmitting
+          }
         >
-          후기 등록하기
+          {isSubmitting
+            ? "등록 중..."
+            : "후기 등록하기"}
         </button>
 
       </div>

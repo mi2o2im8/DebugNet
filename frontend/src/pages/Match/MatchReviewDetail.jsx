@@ -1,4 +1,9 @@
 import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
   useNavigate,
   useParams,
   useSearchParams,
@@ -12,6 +17,15 @@ import {
 } from "react-icons/fi";
 
 import BottomNav from "../../components/BottomNav";
+
+import {
+  getMatchReviewDetail,
+  getMatchManagementDetail,
+} from "./api/matchApi";
+
+import {
+  getClubDashboard,
+} from "../../api/clubApi";
 
 import "./CSS/MatchReviewDetail.css";
 
@@ -46,106 +60,6 @@ const REVIEW_ITEMS = [
   },
 ];
 
-
-// ========================================
-// 임시 후기 데이터
-//
-// TODO:
-// 백엔드 연결 후 clubMatchId와
-// type을 이용해 실제 후기 조회
-// ========================================
-const SAMPLE_REVIEW = {
-
-  written: {
-
-    opponentClubId: 28,
-
-    opponentClubName:
-      "신림 유나이티드",
-
-    opponentClubProfileImage: "",
-
-    myClubName:
-      "사과좋아 풋살클럽",
-
-    sportName:
-      "축구/풋살",
-
-    matchDate:
-      "2026-09-15",
-
-    startTime:
-      "19:00",
-
-    endTime:
-      "21:00",
-
-    locationName:
-      "신림체육센터",
-
-    region:
-      "관악구",
-
-    myScore: 3,
-    opponentScore: 2,
-
-    mannerScore: 5,
-    punctualityScore: 4,
-    rosterAccuracyScore: 5,
-    safetyScore: 4,
-    gameFlowScore: 5,
-    rematchScore: 5,
-
-    content:
-      "매너가 좋고 경기 진행도 원활했습니다.",
-  },
-
-
-  received: {
-
-    opponentClubId: 28,
-
-    opponentClubName:
-      "신림 유나이티드",
-
-    opponentClubProfileImage: "",
-
-    myClubName:
-      "사과좋아 풋살클럽",
-
-    sportName:
-      "축구/풋살",
-
-    matchDate:
-      "2026-09-15",
-
-    startTime:
-      "19:00",
-
-    endTime:
-      "21:00",
-
-    locationName:
-      "신림체육센터",
-
-    region:
-      "관악구",
-
-    myScore: 3,
-    opponentScore: 2,
-
-    mannerScore: 4,
-    punctualityScore: 5,
-    rosterAccuracyScore: 4,
-    safetyScore: 5,
-    gameFlowScore: 4,
-    rematchScore: 5,
-
-    content:
-      "시간 약속을 잘 지켜주시고 즐겁게 경기했습니다.",
-  },
-
-};
 
 
 // ========================================
@@ -196,15 +110,122 @@ function MatchReviewDetail() {
       ? "received"
       : "written";
 
+    // ========================================
+  // 실제 후기 데이터
+  // ========================================
+  const [
+    review,
+    setReview,
+  ] = useState(null);
+
+
+  // 조회 상태
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
+
+
+  const [
+    loadError,
+    setLoadError,
+  ] = useState("");
 
   // ========================================
-  // 임시 데이터
+  // 후기 상세 조회
   //
-  // TODO:
-  // 백엔드 API 응답으로 교체
+  // 후기 자체 데이터 +
+  // 기존 화면에서 필요한 경기/동호회 정보까지
+  // 함께 조회한다.
   // ========================================
-  const review =
-    SAMPLE_REVIEW[reviewType];
+  useEffect(() => {
+
+    if (
+      !clubId ||
+      !clubMatchId
+    ) {
+      return;
+    }
+
+
+    const loadReview = async () => {
+
+      setIsLoading(true);
+      setLoadError("");
+
+
+      try {
+
+        const [
+          reviewData,
+          matchData,
+          clubData,
+        ] = await Promise.all([
+
+          getMatchReviewDetail(
+            clubId,
+            clubMatchId,
+            reviewType
+          ),
+
+          getMatchManagementDetail(
+            clubId,
+            clubMatchId
+          ),
+
+          getClubDashboard(
+            clubId
+          ),
+        ]);
+
+
+        // 후기 API에 없는 화면 표시용 데이터는
+        // 매칭 상세 / 동호회 정보에서 합친다.
+        setReview({
+          ...reviewData,
+
+          myClubName:
+            clubData.club_name ||
+            "우리팀",
+
+          sportName:
+            matchData.sportName,
+
+          region:
+            matchData.region,
+        });
+
+      } catch (error) {
+
+        console.error(
+          "경기 후기 상세 조회 실패:",
+          error
+        );
+
+
+        setReview(null);
+
+        setLoadError(
+          error.message ||
+          "후기를 불러오지 못했습니다."
+        );
+
+      } finally {
+
+        setIsLoading(false);
+
+      }
+
+    };
+
+
+    loadReview();
+
+  }, [
+    clubId,
+    clubMatchId,
+    reviewType,
+  ]);
 
   // ========================================
   // 상대 동호회 상세 페이지 이동
@@ -216,6 +237,114 @@ function MatchReviewDetail() {
     );
   };
 
+  // ========================================
+  // 로딩 중
+  // ========================================
+  if (isLoading) {
+
+    return (
+
+      <div className="match-review-detail-container">
+
+        <header className="match-review-detail-header">
+
+          <button
+            type="button"
+            className="match-review-detail-back"
+            onClick={() =>
+              navigate(-1)
+            }
+            aria-label="뒤로가기"
+          >
+            ‹
+          </button>
+
+
+          <h1>
+            {reviewType === "written"
+              ? "내가 작성한 후기"
+              : "내가 받은 후기"}
+          </h1>
+
+
+          <div className="match-review-detail-header-space" />
+
+        </header>
+
+
+        <main className="match-review-detail-main">
+
+          <section className="match-review-detail-content">
+
+            <p>
+              후기를 불러오는 중입니다.
+            </p>
+
+          </section>
+
+        </main>
+
+      </div>
+
+    );
+  }
+
+
+  // ========================================
+  // 조회 실패 / 후기 없음
+  // ========================================
+  if (
+    loadError ||
+    !review
+  ) {
+
+    return (
+
+      <div className="match-review-detail-container">
+
+        <header className="match-review-detail-header">
+
+          <button
+            type="button"
+            className="match-review-detail-back"
+            onClick={() =>
+              navigate(-1)
+            }
+            aria-label="뒤로가기"
+          >
+            ‹
+          </button>
+
+
+          <h1>
+            {reviewType === "written"
+              ? "내가 작성한 후기"
+              : "내가 받은 후기"}
+          </h1>
+
+
+          <div className="match-review-detail-header-space" />
+
+        </header>
+
+
+        <main className="match-review-detail-main">
+
+          <section className="match-review-detail-content">
+
+            <p className="empty">
+              {loadError ||
+                "후기 정보를 찾을 수 없습니다."}
+            </p>
+
+          </section>
+
+        </main>
+
+      </div>
+
+    );
+  }
 
   // ========================================
   // 후기 평균
