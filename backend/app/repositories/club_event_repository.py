@@ -549,6 +549,107 @@ class ClubEventRepository:
         return response.data[0]
 
     # -----------------------------------------------------
+    # 사용자의 가장 최근 게스트 신청 조회
+    # -----------------------------------------------------
+    def find_latest_guest_application(
+        self,
+        event_id: int,
+        user_id: str,
+    ) -> dict | None:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .select(
+                (
+                    "event_participant_id, "
+                    "event_id, "
+                    "user_id, "
+                    "participant_type, "
+                    "status"
+                )
+            )
+            .eq("event_id", event_id)
+            .eq("user_id", user_id)
+            .eq("participant_type", "guest")
+            .order(
+                "event_participant_id",
+                desc=True,
+            )
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 게스트 참가 신청 생성
+    # -----------------------------------------------------
+    def create_guest_application(
+        self,
+        event_id: int,
+        user_id: str,
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .insert(
+                {
+                    "event_id": event_id,
+                    "user_id": user_id,
+                    "participant_type": "guest",
+                    "status": "pending",
+                }
+            )
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError(
+                "게스트 참가 신청 생성에 실패했습니다."
+            )
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 게스트 참가 신청 취소
+    # -----------------------------------------------------
+    def cancel_guest_application(
+        self,
+        event_id: int,
+        user_id: str,
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .update(
+                {
+                    "status": "cancelled",
+                }
+            )
+            .eq("event_id", event_id)
+            .eq("user_id", user_id)
+            .eq("participant_type", "guest")
+            .in_(
+                "status",
+                [
+                    "pending",
+                    "joined",
+                ],
+            )
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError(
+                "취소할 수 있는 게스트 신청이 없습니다."
+            )
+
+        return response.data[0]
+
+    # -----------------------------------------------------
     # 동호회 회원을 일정 참가자로 등록
     # -----------------------------------------------------
     def create_member_event_participant(

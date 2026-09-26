@@ -15,10 +15,8 @@ import {
     FiChevronRight,
     FiClock,
     FiMapPin,
-    FiPlus,
     FiSave,
-    FiUsers,
-    FiX
+    FiUsers
 } from "react-icons/fi";
 
 import ClubEventPlacePicker

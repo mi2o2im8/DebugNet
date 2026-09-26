@@ -461,6 +461,20 @@ class ClubEventGuestDecisionResponse(BaseModel):
 
     message: str
 
+class ClubEventGuestApplicationResponse(BaseModel):
+    event_id: int
+
+    event_participant_id: int | None = None
+
+    participation_status: Literal[
+        "pending",
+        "joined",
+        "rejected",
+        "cancelled",
+    ] | None = None
+
+    message: str
+
 class ClubEventAttendanceRequest(BaseModel):
     attendance_status: Literal[
         "attending",

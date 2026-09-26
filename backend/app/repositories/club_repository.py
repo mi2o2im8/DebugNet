@@ -1,5 +1,13 @@
 from typing import List, Optional
 
+from datetime import (
+    date,
+    datetime,
+    time,
+    timezone,
+)
+from zoneinfo import ZoneInfo
+
 from app.core.supabase import get_supabase_admin_client
 
 
@@ -1025,15 +1033,110 @@ class ClubRepository:
         return response.data or []
 
     # =========================================================
-    # 게스트 모집 중인 행사 조회
+    # 게스트 모집 중인 일정 조회
     # =========================================================
     def get_guest_recruiting_events(self):
+        current_time = datetime.now(
+            ZoneInfo("Asia/Seoul")
+        )
+
         response = (
-            self.supabase
+            self.admin_client
             .table("club_events")
-            .select("*")
+            .select(
+                (
+                    "event_id, "
+                    "club_id, "
+                    "title, "
+                    "description, "
+                    "event_date, "
+                    "start_time, "
+                    "end_time, "
+                    "location, "
+                    "location_address, "
+                    "latitude, "
+                    "longitude, "
+                    "max_participants, "
+                    "event_image_url, "
+                    "guest_allowed, "
+                    "max_guests, "
+                    "registration_deadline, "
+                    "status"
+                )
+            )
             .eq("guest_allowed", True)
+            .eq("status", "open")
+            .gte(
+                "event_date",
+                current_time.date().isoformat(),
+            )
+            .order(
+                "event_date",
+                desc=False,
+            )
+            .order(
+                "start_time",
+                desc=False,
+            )
             .execute()
         )
 
-        return response.data or []
+        recruiting_events = []
+
+        for event in response.data or []:
+            deadline_value = event.get(
+                "registration_deadline"
+            )
+
+            # 신청 마감 시간이 지난 일정 제외
+            if deadline_value:
+                deadline = datetime.fromisoformat(
+                    str(deadline_value).replace(
+                        "Z",
+                        "+00:00",
+                    )
+                )
+
+                if deadline.tzinfo is None:
+                    deadline = deadline.replace(
+                        tzinfo=timezone.utc
+                    )
+
+                comparison_time = (
+                    current_time.replace(
+                        tzinfo=timezone.utc
+                    )
+                )
+
+                if comparison_time >= deadline:
+                    continue
+
+            event_date_value = event.get(
+                "event_date"
+            )
+
+            start_time_value = event.get(
+                "start_time"
+            )
+
+            # 오늘 일정 중 이미 시작한 일정 제외
+            if (
+                event_date_value
+                and start_time_value
+            ):
+                event_start = datetime.combine(
+                    date.fromisoformat(
+                        str(event_date_value)
+                    ),
+                    time.fromisoformat(
+                        str(start_time_value)
+                    ),
+                    tzinfo=ZoneInfo("Asia/Seoul"),
+                )
+
+                if current_time >= event_start:
+                    continue
+
+            recruiting_events.append(event)
+
+        return recruiting_events

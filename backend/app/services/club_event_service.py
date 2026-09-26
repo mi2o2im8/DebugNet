@@ -27,6 +27,7 @@ from app.schemas.club_events import (
     ClubEventParticipantListResponse,
     ClubEventGuestDecisionRequest,
     ClubEventGuestDecisionResponse,
+    ClubEventGuestApplicationResponse,
 )
 
 KST = ZoneInfo("Asia/Seoul")
@@ -2195,6 +2196,329 @@ class ClubEventService:
         return ClubEventListResponse(
             events=events,
             total=len(events),
+        )
+
+    # -----------------------------------------------------
+    # 게스트 신청 가능 시간 확인
+    # -----------------------------------------------------
+    def validate_guest_application_window(
+        self,
+        event: dict,
+    ) -> None:
+        current_time = datetime.now(
+            ZoneInfo("Asia/Seoul")
+        )
+
+        deadline_value = event.get(
+            "registration_deadline"
+        )
+
+        if deadline_value:
+            deadline = datetime.fromisoformat(
+                str(deadline_value).replace(
+                    "Z",
+                    "+00:00",
+                )
+            )
+
+            if deadline.tzinfo is None:
+                deadline = deadline.replace(
+                    tzinfo=timezone.utc
+                )
+
+            # 현재 프로젝트의 datetime-local 저장 방식에 맞춘 비교
+            comparison_time = current_time.replace(
+                tzinfo=timezone.utc
+            )
+
+            if comparison_time >= deadline:
+                raise ValueError(
+                    "게스트 참가 신청 기간이 마감되었습니다."
+                )
+
+        event_date_value = event.get(
+            "event_date"
+        )
+        start_time_value = event.get(
+            "start_time"
+        )
+
+        if event_date_value:
+            event_start = datetime.fromisoformat(
+                (
+                    f"{event_date_value}T"
+                    f"{start_time_value or '00:00:00'}"
+                )
+            ).replace(
+                tzinfo=ZoneInfo("Asia/Seoul")
+            )
+
+            if current_time >= event_start:
+                raise ValueError(
+                    "이미 시작된 일정에는 "
+                    "게스트로 신청할 수 없습니다."
+                )
+
+    # -----------------------------------------------------
+    # 게스트 참가 신청
+    # -----------------------------------------------------
+    def apply_as_guest(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> ClubEventGuestApplicationResponse:
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if (
+            event is None
+            or event.get("status") == "cancelled"
+        ):
+            raise LookupError(
+                "존재하지 않거나 삭제된 일정입니다."
+            )
+
+        if event.get("status") != "open":
+            raise ValueError(
+                "현재 참가 신청을 받을 수 없는 일정입니다."
+            )
+
+        if not event.get("guest_allowed", False):
+            raise ValueError(
+                "게스트 참가를 허용하지 않는 일정입니다."
+            )
+
+        max_guests = int(
+            event.get("max_guests") or 0
+        )
+
+        if max_guests <= 0:
+            raise ValueError(
+                "게스트 모집 인원이 설정되지 않았습니다."
+            )
+
+        membership = (
+            self.club_repository
+            .find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is not None:
+            raise PermissionError(
+                "동호회 회원은 게스트로 "
+                "신청할 수 없습니다."
+            )
+
+        existing_participant = (
+            self.event_repository
+            .find_user_event_participant(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        if existing_participant is not None:
+            if (
+                existing_participant["status"]
+                == "pending"
+            ):
+                raise ValueError(
+                    "이미 승인 대기 중인 신청이 있습니다."
+                )
+
+            raise ValueError(
+                "이미 참가가 확정된 일정입니다."
+            )
+
+        self.validate_guest_application_window(
+            event
+        )
+
+        joined_guest_count = (
+            self.event_repository
+            .count_joined_guests(event_id)
+        )
+
+        if joined_guest_count >= max_guests:
+            raise ValueError(
+                "게스트 모집 정원이 마감되었습니다."
+            )
+
+        max_participants = event.get(
+            "max_participants"
+        )
+
+        if max_participants is not None:
+            counts = (
+                self.build_event_participant_counts(
+                    [event]
+                )[event_id]
+            )
+
+            confirmed_count = (
+                counts["attending_count"]
+                + counts["guest_count"]
+            )
+
+            if confirmed_count >= int(
+                max_participants
+            ):
+                raise ValueError(
+                    "일정 참여 정원이 마감되었습니다."
+                )
+
+        participant = (
+            self.event_repository
+            .create_guest_application(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        return ClubEventGuestApplicationResponse(
+            event_id=event_id,
+            event_participant_id=int(
+                participant[
+                    "event_participant_id"
+                ]
+            ),
+            participation_status="pending",
+            message=(
+                "게스트 참가 신청이 완료되었습니다. "
+                "운영자 승인을 기다려주세요."
+            ),
+        )
+
+    # -----------------------------------------------------
+    # 내 게스트 신청 상태 조회
+    # -----------------------------------------------------
+    def get_my_guest_application(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> ClubEventGuestApplicationResponse:
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            raise LookupError(
+                "존재하지 않는 일정입니다."
+            )
+
+        participant = (
+            self.event_repository
+            .find_latest_guest_application(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        if participant is None:
+            return ClubEventGuestApplicationResponse(
+                event_id=event_id,
+                event_participant_id=None,
+                participation_status=None,
+                message="게스트 신청 내역이 없습니다.",
+            )
+
+        status_messages = {
+            "pending": "운영자 승인을 기다리고 있습니다.",
+            "joined": "게스트 참여가 승인되었습니다.",
+            "rejected": "게스트 참여 신청이 거절되었습니다.",
+            "cancelled": "게스트 참여 신청을 취소했습니다.",
+        }
+
+        participation_status = participant[
+            "status"
+        ]
+
+        return ClubEventGuestApplicationResponse(
+            event_id=event_id,
+            event_participant_id=int(
+                participant[
+                    "event_participant_id"
+                ]
+            ),
+            participation_status=(
+                participation_status
+            ),
+            message=status_messages.get(
+                participation_status,
+                "게스트 신청 상태입니다.",
+            ),
+        )
+
+    # -----------------------------------------------------
+    # 내 게스트 신청 취소
+    # -----------------------------------------------------
+    def cancel_my_guest_application(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> ClubEventGuestApplicationResponse:
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            raise LookupError(
+                "존재하지 않는 일정입니다."
+            )
+
+        participant = (
+            self.event_repository
+            .find_user_event_participant(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        if (
+            participant is None
+            or participant.get(
+                "participant_type"
+            ) != "guest"
+        ):
+            raise ValueError(
+                "취소할 수 있는 게스트 신청이 없습니다."
+            )
+
+        cancelled_participant = (
+            self.event_repository
+            .cancel_guest_application(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        return ClubEventGuestApplicationResponse(
+            event_id=event_id,
+            event_participant_id=int(
+                cancelled_participant[
+                    "event_participant_id"
+                ]
+            ),
+            participation_status="cancelled",
+            message="게스트 참가 신청을 취소했습니다.",
         )
 
     # -----------------------------------------------------
