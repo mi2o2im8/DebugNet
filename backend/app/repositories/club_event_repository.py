@@ -549,12 +549,13 @@ class ClubEventRepository:
         return response.data[0]
 
     # -----------------------------------------------------
-    # 참석 응답 회원을 일정 참가자로 등록
+    # 동호회 회원을 일정 참가자로 등록
     # -----------------------------------------------------
     def create_member_event_participant(
         self,
         event_id: int,
         user_id: str,
+        participation_status: str = "joined",
     ) -> dict:
         response = (
             self.admin_client
@@ -564,7 +565,7 @@ class ClubEventRepository:
                     "event_id": event_id,
                     "user_id": user_id,
                     "participant_type": "member",
-                    "status": "joined",
+                    "status": participation_status,
                 }
             )
             .execute()
@@ -673,9 +674,9 @@ class ClubEventRepository:
         return len(response.data or [])
 
     # -----------------------------------------------------
-    # 대기 중인 게스트 신청 상태 변경
+    # 대기 중인 참가 신청 상태 변경
     # -----------------------------------------------------
-    def update_pending_guest_status(
+    def update_pending_participant_status(
         self,
         event_id: int,
         event_participant_id: int,
@@ -694,7 +695,6 @@ class ClubEventRepository:
                 "event_participant_id",
                 event_participant_id,
             )
-            .eq("participant_type", "guest")
             .eq("status", "pending")
             .execute()
         )
@@ -702,7 +702,7 @@ class ClubEventRepository:
         if not response.data:
             raise ValueError(
                 "이미 처리되었거나 처리할 수 없는 "
-                "게스트 신청입니다."
+                "참가 신청입니다."
             )
 
         return response.data[0]

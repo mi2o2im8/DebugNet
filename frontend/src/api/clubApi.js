@@ -282,7 +282,7 @@ export async function getClubEventParticipants(
     );
 }
 
-export async function decideClubEventGuest(
+export async function decideClubEventParticipant(
     clubId,
     eventId,
     eventParticipantId,

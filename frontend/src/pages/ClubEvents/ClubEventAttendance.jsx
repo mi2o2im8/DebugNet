@@ -67,6 +67,9 @@ function ClubEventAttendance() {
     const [attendanceStatus, setAttendanceStatus] =
         useState("undecided");
 
+    const [participationStatus, setParticipationStatus] = 
+        useState(null);
+
     const [isLoading, setIsLoading] =
         useState(true);
 
@@ -95,6 +98,11 @@ function ClubEventAttendance() {
                     result.attendance_status
                     || "undecided"
                 );
+
+                setParticipationStatus(
+                    result.participation_status || null
+                );
+
             })
             .catch((error) => {
                 if (cancelled) {
@@ -126,9 +134,20 @@ function ClubEventAttendance() {
     const handleAttendanceChange = async (
         nextStatus
     ) => {
+        const isPendingCancellation = (
+            participationStatus === "pending"
+            && [
+                "absent",
+                "undecided"
+            ].includes(nextStatus)
+        );
+
         if (
             savingStatus
-            || nextStatus === attendanceStatus
+            || (
+                nextStatus === attendanceStatus
+                && !isPendingCancellation
+            )
         ) {
             return;
         }
@@ -146,6 +165,10 @@ function ClubEventAttendance() {
 
             setAttendanceStatus(
                 result.attendance_status
+            );
+
+            setParticipationStatus(
+                result.participation_status || null
             );
 
             alert(result.message);
@@ -207,19 +230,36 @@ function ClubEventAttendance() {
                     </p>
                 )}
 
+                {participationStatus === "pending" && (
+                    <p
+                        className="club-attendance-pending"
+                        role="status"
+                    >
+                        참여 승인 대기 중입니다. 운영자가
+                        승인하면 참석으로 확정됩니다.
+                    </p>
+                )}
+
                 <section className="club-attendance-options">
                     {ATTENDANCE_OPTIONS.map(
                         (option) => {
                             const Icon = option.icon;
 
+                            const isPendingAttending = (
+                                participationStatus === "pending"
+                                && option.status === "attending"
+                            );
+
                             const isSelected = (
-                                attendanceStatus
-                                === option.status
+                                isPendingAttending
+                                || (
+                                    participationStatus !== "pending"
+                                    && attendanceStatus === option.status
+                                )
                             );
 
                             const isSaving = (
-                                savingStatus
-                                === option.status
+                                savingStatus === option.status
                             );
 
                             return (
@@ -236,9 +276,10 @@ function ClubEventAttendance() {
                                         .filter(Boolean)
                                         .join(" ")}
                                     aria-pressed={isSelected}
-                                    disabled={Boolean(
-                                        savingStatus
-                                    )}
+                                    disabled={
+                                        Boolean(savingStatus)
+                                        || isPendingAttending
+                                    }
                                     onClick={() =>
                                         handleAttendanceChange(
                                             option.status
@@ -285,12 +326,16 @@ function ClubEventAttendance() {
                                             + "option-selected"
                                         }
                                     >
-                                        {isSaving
-                                            ? "저장 중"
+                                        {isPendingAttending
+                                            ? "승인 대기"
                                             : (
-                                                isSelected
-                                                    ? "선택됨"
-                                                    : ""
+                                                isSaving
+                                                    ? "저장 중"
+                                                    : (
+                                                        isSelected
+                                                            ? "선택됨"
+                                                            : ""
+                                                    )
                                             )}
                                     </span>
                                 </button>

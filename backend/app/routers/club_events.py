@@ -638,7 +638,7 @@ def decide_club_event_guest(
     try:
         return (
             event_service
-            .decide_guest_application(
+            .decide_participant_application(
                 club_id=club_id,
                 event_id=event_id,
                 event_participant_id=(

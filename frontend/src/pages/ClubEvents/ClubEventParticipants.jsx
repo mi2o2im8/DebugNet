@@ -19,7 +19,7 @@ import {
 } from "react-icons/fi";
 
 import {
-    decideClubEventGuest,
+    decideClubEventParticipant,
     getClubEventParticipants,
     updateClubEventParticipantAttendance
 } from "../../api/clubApi";
@@ -151,8 +151,7 @@ function ParticipantItem({
                         disabled={isProcessing}
                         onClick={() =>
                             onDecision(
-                                participant
-                                    .event_participant_id,
+                                participant,
                                 "approve"
                             )
                         }
@@ -167,8 +166,7 @@ function ParticipantItem({
                         disabled={isProcessing}
                         onClick={() =>
                             onDecision(
-                                participant
-                                    .event_participant_id,
+                                participant,
                                 "reject"
                             )
                         }
@@ -246,7 +244,7 @@ function ClubEventParticipants() {
     }, [loadParticipants]);
 
     const handleDecision = async (
-        eventParticipantId,
+        participant,
         decision
     ) => {
         const actionLabel =
@@ -254,13 +252,22 @@ function ClubEventParticipants() {
                 ? "승인"
                 : "거절";
 
+        const participantLabel =
+            participant.participant_type === "guest"
+                ? "게스트"
+                : "회원";
+
         const confirmed = window.confirm(
-            `이 게스트 신청을 ${actionLabel}하시겠습니까?`
+            `이 ${participantLabel} 참여 신청을 `
+            + `${actionLabel}하시겠습니까?`
         );
 
         if (!confirmed) {
             return;
         }
+
+        const eventParticipantId =
+            participant.event_participant_id;
 
         setProcessingId(eventParticipantId);
         setErrorMessage("");
@@ -268,7 +275,7 @@ function ClubEventParticipants() {
 
         try {
             const result =
-                await decideClubEventGuest(
+                await decideClubEventParticipant(
                     clubId,
                     eventId,
                     eventParticipantId,
@@ -280,13 +287,13 @@ function ClubEventParticipants() {
             await loadParticipants(false);
         } catch (error) {
             console.error(
-                "게스트 신청 처리 실패:",
+                "참가 신청 처리 실패:",
                 error
             );
 
             setErrorMessage(
                 error.message ||
-                "게스트 신청을 처리하지 못했습니다."
+                "참가 신청을 처리하지 못했습니다."
             );
         } finally {
             setProcessingId(null);
@@ -344,10 +351,9 @@ function ClubEventParticipants() {
         );
     }
 
-    const pendingGuests =
+    const pendingParticipants =
         participantData.participants.filter(
             (participant) =>
-                participant.participant_type === "guest" &&
                 participant.participation_status ===
                     "pending"
         );
@@ -420,8 +426,15 @@ function ClubEventParticipants() {
 
                     <strong>
                         {
-                            participantData
-                                .pending_guest_count
+                            Number(
+                                participantData
+                                    .pending_member_count || 0
+                            )
+                            +
+                            Number(
+                                participantData
+                                    .pending_guest_count || 0
+                            )
                         }
                     </strong>
 
@@ -450,30 +463,39 @@ function ClubEventParticipants() {
             <section className="event-participant-section">
                 <div className="event-participant-section-title">
                     <h2>승인 대기</h2>
-                    <span>{pendingGuests.length}명</span>
+
+                    <span>
+                        {pendingParticipants.length}명
+                    </span>
                 </div>
 
-                {pendingGuests.length === 0 ? (
+                {pendingParticipants.length === 0 ? (
                     <p className="event-participant-empty">
-                        대기 중인 게스트 신청이 없습니다.
+                        대기 중인 참여 신청이 없습니다.
                     </p>
                 ) : (
-                    pendingGuests.map((participant) => (
-                        <ParticipantItem
-                            key={
-                                participant
-                                    .event_participant_id
-                            }
-                            participant={participant}
-                            isProcessing={
-                                processingId ===
-                                participant
-                                    .event_participant_id
-                            }
-                            onDecision={handleDecision}
-                            onAttendanceChange={handleAttendanceChange}
-                        />
-                    ))
+                    pendingParticipants.map(
+                        (participant) => (
+                            <ParticipantItem
+                                key={
+                                    participant
+                                        .event_participant_id
+                                }
+                                participant={participant}
+                                isProcessing={
+                                    processingId ===
+                                    participant
+                                        .event_participant_id
+                                }
+                                onDecision={
+                                    handleDecision
+                                }
+                                onAttendanceChange={
+                                    handleAttendanceChange
+                                }
+                            />
+                        )
+                    )
                 )}
             </section>
 

@@ -470,6 +470,7 @@ class ClubEventParticipantItemResponse(BaseModel):
 
 class ClubEventParticipantListResponse(BaseModel):
     event_id: int
+
     participants: list[
         ClubEventParticipantItemResponse
     ]
@@ -477,7 +478,8 @@ class ClubEventParticipantListResponse(BaseModel):
     total: int
     joined_member_count: int
     joined_guest_count: int
-    pending_guest_count: int
+    pending_member_count: int = 0
+    pending_guest_count: int = 0
 
 class ClubEventGuestDecisionRequest(BaseModel):
     decision: Literal[
@@ -518,5 +520,12 @@ class ClubEventAttendanceResponse(BaseModel):
         "absent",
         "undecided",
     ]
+
+    participation_status: Literal[
+        "pending",
+        "joined",
+        "rejected",
+        "cancelled",
+    ] | None = None
 
     message: str
