@@ -155,15 +155,9 @@ class ClubEventRepository:
             .table("club_events")
             .select("*")
             .eq("club_id", club_id)
-            .neq("status", "cancelled")
-            .order(
-                "event_date",
-                desc=False,
-            )
-            .order(
-                "start_time",
-                desc=False,
-            )
+            .eq("status", "open")
+            .order("event_date")
+            .order("start_time")
             .execute()
         )
 

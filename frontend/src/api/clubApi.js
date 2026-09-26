@@ -302,6 +302,27 @@ export async function decideClubEventGuest(
     );
 }
 
+export async function updateClubEventParticipantAttendance(
+    clubId,
+    eventId,
+    eventParticipantId,
+    attendanceStatus
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/${eventId}`
+            + `/participants/${eventParticipantId}`
+            + "/attendance"
+        ),
+        {
+            method: "PATCH",
+            body: {
+                attendanceStatus
+            }
+        }
+    );
+}
+
 export async function getClubEventAttendance(
     clubId,
     eventId

@@ -20,7 +20,8 @@ import {
 
 import {
     decideClubEventGuest,
-    getClubEventParticipants
+    getClubEventParticipants,
+    updateClubEventParticipantAttendance
 } from "../../api/clubApi";
 
 import "./ClubEventParticipants.css";
@@ -43,7 +44,8 @@ const STATUS_LABELS = {
 function ParticipantItem({
     participant,
     isProcessing,
-    onDecision
+    onDecision,
+    onAttendanceChange
 }) {
     const displayName =
         participant.nickname ||
@@ -105,6 +107,40 @@ function ParticipantItem({
                     )}
                 </div>
             </div>
+            
+            {participant.participation_status ===
+                "joined" && (
+                <label className="event-participant-attendance-control">
+                    <span>참석 상태</span>
+
+                    <select
+                        value={
+                            participant.attendance_status
+                            || "undecided"
+                        }
+                        disabled={isProcessing}
+                        onChange={(event) =>
+                            onAttendanceChange(
+                                participant
+                                    .event_participant_id,
+                                event.target.value
+                            )
+                        }
+                    >
+                        <option value="attending">
+                            참석
+                        </option>
+
+                        <option value="absent">
+                            불참
+                        </option>
+
+                        <option value="undecided">
+                            미정
+                        </option>
+                    </select>
+                </label>
+            )}
 
             {participant.participation_status ===
                 "pending" && (
@@ -257,6 +293,41 @@ function ClubEventParticipants() {
         }
     };
 
+    const handleAttendanceChange = async (
+        eventParticipantId,
+        attendanceStatus
+    ) => {
+        setProcessingId(eventParticipantId);
+        setErrorMessage("");
+        setNoticeMessage("");
+
+        try {
+            const result =
+                await updateClubEventParticipantAttendance(
+                    clubId,
+                    eventId,
+                    eventParticipantId,
+                    attendanceStatus
+                );
+
+            setNoticeMessage(result.message);
+
+            await loadParticipants(false);
+        } catch (error) {
+            console.error(
+                "참가자 참석 상태 변경 실패:",
+                error
+            );
+
+            setErrorMessage(
+                error.message ||
+                "참석 상태를 변경하지 못했습니다."
+            );
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
     if (isLoading) {
         return (
             <main className="event-participants-page state">
@@ -400,6 +471,7 @@ function ClubEventParticipants() {
                                     .event_participant_id
                             }
                             onDecision={handleDecision}
+                            onAttendanceChange={handleAttendanceChange}
                         />
                     ))
                 )}
@@ -426,10 +498,14 @@ function ClubEventParticipants() {
                                         .event_participant_id
                                 }
                                 participant={participant}
-                                isProcessing={false}
+                                isProcessing={
+                                    processingId ===
+                                    participant.event_participant_id
+                                }
                                 onDecision={
                                     handleDecision
                                 }
+                                onAttendanceChange={handleAttendanceChange}
                             />
                         )
                     )
@@ -457,6 +533,7 @@ function ClubEventParticipants() {
                                 onDecision={
                                     handleDecision
                                 }
+                                onAttendanceChange={handleAttendanceChange}
                             />
                         )
                     )}

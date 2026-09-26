@@ -1446,6 +1446,124 @@ class ClubEventService:
         )
 
     # -----------------------------------------------------
+    # 운영자: 참가자 참석 상태 변경
+    # -----------------------------------------------------
+    def update_participant_attendance(
+        self,
+        club_id: int,
+        event_id: int,
+        event_participant_id: int,
+        user_id: str,
+        request_data: ClubEventAttendanceRequest,
+    ) -> ClubEventAttendanceResponse:
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if (
+            event is None
+            or event.get("status") == "cancelled"
+        ):
+            raise LookupError(
+                "존재하지 않거나 삭제된 일정입니다."
+            )
+
+        participant = (
+            self.event_repository
+            .find_event_participant(
+                event_id=event_id,
+                event_participant_id=(
+                    event_participant_id
+                ),
+            )
+        )
+
+        if participant is None:
+            raise LookupError(
+                "존재하지 않는 참가자입니다."
+            )
+
+        if participant["status"] != "joined":
+            raise ValueError(
+                "참여가 확정된 참가자만 "
+                "참석 상태를 변경할 수 있습니다."
+            )
+
+        vote, option_rows = (
+            self.get_attendance_vote_data(
+                event_id
+            )
+        )
+
+        option_texts_by_status = {
+            "attending": {
+                "참석",
+                "attending",
+            },
+            "absent": {
+                "불참",
+                "absent",
+            },
+            "undecided": {
+                "미정",
+                "undecided",
+            },
+        }
+
+        accepted_option_texts = (
+            option_texts_by_status[
+                request_data.attendance_status
+            ]
+        )
+
+        selected_option = None
+
+        for option_row in option_rows:
+            option_text = str(
+                option_row["option_text"]
+            ).strip()
+
+            if option_text in accepted_option_texts:
+                selected_option = option_row
+                break
+
+        if selected_option is None:
+            raise ValueError(
+                "선택한 참석 상태에 해당하는 "
+                "투표 항목이 없습니다."
+            )
+
+        self.event_repository.replace_vote_response(
+            vote_id=int(vote["vote_id"]),
+            option_id=int(
+                selected_option["option_id"]
+            ),
+            user_id=str(
+                participant["user_id"]
+            ),
+        )
+
+        return ClubEventAttendanceResponse(
+            event_id=event_id,
+            attendance_status=(
+                request_data.attendance_status
+            ),
+            message=(
+                "참가자의 참석 상태를 "
+                "변경했습니다."
+            ),
+        )
+
+    # -----------------------------------------------------
     # 일정 참가자 관리 목록 조회
     # -----------------------------------------------------
     def get_event_participants(

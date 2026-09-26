@@ -281,6 +281,26 @@ function ClubEventDetail() {
             setAttendanceStatus(
                 result.attendance_status
             );
+
+            try {
+                const eventListResult =
+                    await getClubEvents(clubId);
+
+                const updatedSummary = (
+                    eventListResult.events || []
+                ).find(
+                    (item) =>
+                        Number(item.event_id)
+                        === Number(eventId)
+                );
+
+                setSummary(updatedSummary || null);
+            } catch (summaryError) {
+                console.error(
+                    "참석 현황 새로고침 실패:",
+                    summaryError
+                );
+            }
         } catch (error) {
             alert(
                 error.message ||
