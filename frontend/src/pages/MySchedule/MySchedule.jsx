@@ -8,6 +8,7 @@ import {
 } from "react-icons/fi";
 
 import BackButton from "../../components/BackButton/BackButton";
+import BottomNav from "../../components/BottomNav";
 
 // ⭐ API
 import { getMyEvents } from "../../api/userApi";
@@ -75,8 +76,28 @@ const CLUB_COLORS = [
    ⭐ 일정 상태 뱃지
    ======================================== */
 
+// ⭐ 팀매칭 경기 일정인지 (팀매칭 일정에는 참석 투표가 없음)
+const isMatchEvent = (event) => event.event_type === "match";
+
+
 const getStatusBadge = (event, todayString) => {
 
+    // ---------- 팀매칭 경기 ----------
+    if (isMatchEvent(event)) {
+
+        if (event.event_date >= todayString) {
+            return { text: "팀매칭", className: "match" };
+        }
+
+        // 지난 경기: 운영자는 후기로 이어짐
+        if (event.is_operator) {
+            return { text: "후기", className: "review" };
+        }
+
+        return { text: "종료", className: "done" };
+    }
+
+    // ---------- 일반 일정 ----------
     if (event.event_date < todayString) {
         return { text: "종료", className: "done" };
     }
@@ -255,9 +276,40 @@ function MySchedule() {
 
 
     // =========================================================
-    // ⭐ 일정 카드 클릭 → 참석 응답 페이지
+    // ⭐ 일정 카드 클릭
+    //
+    // 일반 일정    → 참석 응답 페이지
+    // 팀매칭 경기  → 운영자: 팀매칭 화면 / 멤버: 안내만
+    //   (팀매칭 일정에는 참석 투표가 없어서
+    //    참석 응답 페이지로 가면 404가 난다)
     // =========================================================
     const handleEventClick = (event) => {
+
+        if (isMatchEvent(event)) {
+
+            if (!event.is_operator) {
+                alert(
+                    "팀매칭 경기 일정이에요.\n" +
+                    "경기 관리는 동호회 운영진이 해요."
+                );
+                return;
+            }
+
+            // 매칭 번호를 알면 해당 경기 상세로
+            if (event.club_match_id) {
+                navigate(
+                    `/clubs/${event.club_id}/matches/${event.club_match_id}`
+                );
+                return;
+            }
+
+            // 모르면 팀매칭 관리 목록으로
+            navigate(
+                `/clubs/${event.club_id}/matches/list?tab=` +
+                (event.event_date < todayString ? "history" : "upcoming")
+            );
+            return;
+        }
 
         navigate(
             `/clubs/${event.club_id}/events/${event.event_id}/attendance`
@@ -265,13 +317,9 @@ function MySchedule() {
     };
 
 
-    // const handleNext = () => {
-    //     navigate("/review");
-    // };
-
-    // 아래 페이지 활성화 되면 코드 삭제하고 위에 주석 살리기 활동 종료 리뷰는 아직 준비 중
+    // ⭐ 경기 후기 모아보기
     const handleNext = () => {
-        alert("활동 종료 리뷰 기능은 준비 중이에요!");
+        navigate("/my-reviews");
     };
 
 
@@ -468,8 +516,12 @@ function MySchedule() {
                 className="Review-btn"
                 onClick={handleNext}
             >
-                활동 종료 리뷰 화면 보기
+                경기 후기 모아보기
             </button>
+
+
+            {/* ⭐ 공통 하단 네비게이션 */}
+            <BottomNav />
 
         </div>
     );

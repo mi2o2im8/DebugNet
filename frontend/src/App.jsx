@@ -84,6 +84,8 @@ import FavoriteClub from './pages/FavoriteClub/FavoriteClub';
 import Notification from './pages/Notification/Notification';
 // ⭐ 알림 Context (Provider) - 페이지가 아니라 앱 전체를 감싸는 용도로 사용
 import { NotificationProvider } from './context/NotificationContext';
+// 나의 동호회 리뷰들 모아보기
+import MyReviews from './pages/MyReviews/MyReviews';
 
 // 챗봇 페이지
 import Chatbot from './pages/Chatbot/Chatbot';
@@ -394,6 +396,12 @@ function App() {
             <Route
               path="/myschedule"
               element={<MySchedule />}
+            />
+
+            {/* ⭐ 경기 후기 모아보기 */}
+            <Route
+              path="/my-reviews"
+              element={<MyReviews />}
             />
 
             {/* ⭐ Main의 '내 동호회 전체 일정 보기' 버튼용 */}

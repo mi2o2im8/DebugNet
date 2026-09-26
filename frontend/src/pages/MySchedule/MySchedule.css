@@ -8,7 +8,9 @@
     min-height: 100vh;
 
     margin: 0 auto;
-    padding: 10px 20px 40px;
+
+    /* 아래 100px: 하단 네비게이션(68px)에 버튼이 가리지 않도록 */
+    padding: 10px 20px 100px;
 
     box-sizing: border-box;
 
@@ -667,6 +669,22 @@
     color: #01A17F;
 }
 
+.schedule-status.match {
+    border-color: #5b8def;
+
+    background-color: #f1f5ff;
+
+    color: #3f6fd8;
+}
+
+.schedule-status.review {
+    border-color: #f2994a;
+
+    background-color: #fff6ee;
+
+    color: #e07b24;
+}
+
 .schedule-status.done {
     border-color: #e5e9ec;
 
@@ -824,7 +842,7 @@
 @media (max-width: 400px) {
 
     .MySchedule-page {
-        padding: 10px 20px 40px;
+        padding: 10px 20px 100px;
     }
 
 

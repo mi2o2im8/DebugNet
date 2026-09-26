@@ -1,0 +1,405 @@
+/* ========================================
+    경기 후기 모아보기 페이지
+
+   ※ 다른 페이지 CSS와 섞이지 않도록
+     모든 클래스는 my-reviews- 로 시작
+   ======================================== */
+
+.my-reviews-page {
+    width: 100%;
+    max-width: 400px;
+    min-height: 100vh;
+
+    margin: 0 auto;
+
+    /* 아래 100px: 하단 네비게이션(68px)에 내용이 가리지 않도록 */
+    padding: 10px 20px 100px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    font-family: "Maplestory", sans-serif;
+}
+
+
+/* ⭐ 헤더 (달력 페이지와 같은 구조) */
+.my-reviews-header {
+    position: relative;
+
+    width: 100%;
+    height: 60px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.my-reviews-title {
+    position: relative;
+    z-index: 999;
+
+    margin: 0;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    color: #222;
+}
+
+/* 공용 BackButton은 화면 전체 폭의 흰 바라서
+   제목을 덮지 않도록 버튼 크기만큼 줄인다 (달력 페이지와 동일) */
+.my-reviews-back-btn {
+    position: absolute !important;
+
+    left: 0 !important;
+    top: 50% !important;
+
+    width: 38px !important;
+    height: 38px !important;
+
+    padding: 0 !important;
+
+    transform: translateY(-50%) !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    background: transparent !important;
+
+    z-index: 1000 !important;
+}
+
+.my-reviews-back-btn img {
+    margin: 0 !important;
+}
+
+
+/* ⭐ 로딩 / 빈 목록 / 에러 */
+.my-reviews-message {
+    margin: 0;
+    padding: 36px 0;
+
+    text-align: center;
+
+    font-size: 13px;
+    line-height: 1.6;
+
+    color: #8a9a9a;
+}
+
+.my-reviews-warning {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+
+    border-radius: 8px;
+
+    background: #fff6ee;
+
+    font-size: 12px;
+    line-height: 1.5;
+
+    color: #c46a1c;
+}
+
+
+/* ========================================
+   ⭐ 탭
+   ======================================== */
+
+.my-reviews-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+
+    margin-top: 8px;
+    padding: 4px;
+
+    border-radius: 10px;
+
+    background: #f1f5f4;
+}
+
+.my-reviews-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    padding: 10px 0;
+
+    border: none;
+    border-radius: 8px;
+
+    background: transparent;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    color: #6b7c7c;
+
+    cursor: pointer;
+}
+
+.my-reviews-tab.active {
+    background: #ffffff;
+
+    font-weight: 700;
+
+    color: #01a17f;
+
+    box-shadow: 0 1px 3px rgba(0, 60, 45, 0.12);
+}
+
+.my-reviews-tab-count {
+    min-width: 18px;
+
+    padding: 1px 5px;
+
+    box-sizing: border-box;
+
+    border-radius: 9px;
+
+    background: #dfe8e6;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    color: #6b7c7c;
+}
+
+.my-reviews-tab.active .my-reviews-tab-count {
+    background: #01a17f;
+
+    color: #ffffff;
+}
+
+.my-reviews-tab:focus-visible,
+.my-reviews-card:focus-visible,
+.my-reviews-member-list button:focus-visible {
+    outline: 2px solid #01a17f;
+    outline-offset: 2px;
+}
+
+
+/* ========================================
+   ⭐ 후기 카드
+   ======================================== */
+
+.my-reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    margin: 16px 0 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.my-reviews-card {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 14px 12px;
+
+    box-sizing: border-box;
+
+    /* 왼쪽 굵은 선 = 내 동호회 색상 */
+    border: 1px solid #e3ecea;
+    border-left: 4px solid #01a17f;
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    font-family: inherit;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.my-reviews-card:active {
+    background: #f6faf9;
+}
+
+.my-reviews-thumb {
+    flex-shrink: 0;
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+}
+
+.my-reviews-thumb.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #e8f5f1;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    color: #01a17f;
+}
+
+.my-reviews-info {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.my-reviews-opponent {
+    overflow: hidden;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    color: #263b52;
+}
+
+.my-reviews-meta {
+    font-size: 12px;
+
+    color: #7a8a8a;
+}
+
+.my-reviews-club {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+/* ⭐ 오른쪽 버튼 모양 */
+.my-reviews-action {
+    flex-shrink: 0;
+
+    padding: 7px 10px;
+
+    border: 1px solid #dfe5e5;
+    border-radius: 8px;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    color: #6b7c7c;
+}
+
+.my-reviews-action.write {
+    border-color: #01a17f;
+
+    background: #01a17f;
+
+    color: #ffffff;
+}
+
+.my-reviews-action.record {
+    border-color: #f2c9a4;
+
+    background: #fff6ee;
+
+    color: #c46a1c;
+}
+
+.my-reviews-action.view {
+    border-color: #cdebe4;
+
+    background: #f4fbf9;
+
+    color: #008f75;
+}
+
+
+/* ========================================
+   ⭐ 멤버 영역
+   ======================================== */
+
+.my-reviews-member {
+    margin-top: 28px;
+    padding: 16px;
+
+    border-radius: 12px;
+
+    background: #f6f9f9;
+}
+
+/* 운영 동호회가 없으면 멤버 영역이 맨 위에 오므로 간격 줄이기 */
+.my-reviews-header + .my-reviews-member {
+    margin-top: 8px;
+}
+
+.my-reviews-member-title {
+    margin: 0;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    color: #263b52;
+}
+
+.my-reviews-member-desc {
+    margin: 6px 0 12px;
+
+    font-size: 12px;
+    line-height: 1.5;
+
+    color: #7a8a8a;
+}
+
+.my-reviews-member-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.my-reviews-member-list button {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+
+    padding: 12px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e3ecea;
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+
+    color: #263b52;
+
+    cursor: pointer;
+}
+
+.my-reviews-member-sport {
+    flex-shrink: 0;
+
+    font-size: 12px;
+
+    color: #8a9a9a;
+}
