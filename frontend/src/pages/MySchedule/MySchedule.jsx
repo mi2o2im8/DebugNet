@@ -265,8 +265,13 @@ function MySchedule() {
     };
 
 
+    // const handleNext = () => {
+    //     navigate("/review");
+    // };
+
+    // 아래 페이지 활성화 되면 코드 삭제하고 위에 주석 살리기 활동 종료 리뷰는 아직 준비 중
     const handleNext = () => {
-        navigate("/review");
+        alert("활동 종료 리뷰 기능은 준비 중이에요!");
     };
 
 

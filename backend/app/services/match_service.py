@@ -4405,6 +4405,19 @@ class MatchService:
                 exclude_user_id=user_id,
             )
 
+        # ③ 매칭을 올린 동호회(target)의 다른 운영진
+        #    → 수락한 본인은 제외
+        self.notify_club_managers(
+            club_id=target_club_id,
+            title="팀 매칭이 확정됐어요",
+            content=(
+                f"{requester_club['club_name']}과(와)의 "
+                f"{match_date_label} 경기 매칭이 확정됐어요."
+            ),
+            notification_type="team_matching_approved",
+            exclude_user_id=user_id,
+        )
+
 
         # -----------------------------------------------------
         # 11. 최종 Response
