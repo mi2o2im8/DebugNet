@@ -6,8 +6,15 @@ from fastapi import (
 )
 
 from app.core.security import get_current_user_id
-from app.schemas.users import ProfileImageUpdateRequest
-from app.services.user_service import UserService
+from app.schemas.users import (
+    MyProfileResponse,
+    MyProfileUpdateRequest,
+    ProfileImageUpdateRequest,
+)
+from app.services.user_service import (
+    NicknameAlreadyExistsError,
+    UserService,
+)
 
 
 # ---------------------------------------------------------
@@ -17,6 +24,88 @@ router = APIRouter(
     prefix="/api/users",
     tags=["Users"],
 )
+
+# ---------------------------------------------------------
+# 내 정보 조회 (마이페이지 / 내 정보 수정 페이지 공용)
+#
+# GET /api/users/me
+# ---------------------------------------------------------
+@router.get(
+    "/me",
+    response_model=MyProfileResponse,
+)
+def get_my_profile(
+    user_id: str = Depends(get_current_user_id),
+):
+    user_service = UserService()
+
+    try:
+        return user_service.get_my_profile(
+            user_id=user_id
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "내 정보를 조회하는 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+
+# ---------------------------------------------------------
+# 내 정보 수정
+#
+# PATCH /api/users/me
+# ---------------------------------------------------------
+@router.patch(
+    "/me",
+    response_model=MyProfileResponse,
+)
+def update_my_profile(
+    request_data: MyProfileUpdateRequest,
+    user_id: str = Depends(get_current_user_id),
+):
+    user_service = UserService()
+
+    try:
+        return user_service.update_my_profile(
+            user_id=user_id,
+            update_data=request_data,
+        )
+
+    except NicknameAlreadyExistsError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "내 정보를 수정하는 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
 
 # ---------------------------------------------------------
 # 로그인 사용자의 성별 조회
@@ -77,4 +166,4 @@ def update_profile_image(
     return user_service.update_profile_image(
         user_id=user_id,
         profile_image=request_data.profile_image,
-    )
+    )

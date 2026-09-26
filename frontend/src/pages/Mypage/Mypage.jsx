@@ -5,8 +5,9 @@ import { useNavigate, Link } from "react-router-dom";
 
 import BackButton from "../../components/BackButton/BackButton";
 
-// ⭐ Supabase
-import { supabase } from "../../../supabaseClient";
+// ⭐ API
+import { authenticatedRequest } from "../../api/apiClient";
+import { getMyProfile } from "../../api/userApi";
 
 // ⭐ 마이페이지 이미지
 import settingIcon from "../../assets/img/mypage/setting_icon.png";
@@ -51,102 +52,37 @@ function Mypage() {
 
             try {
 
-                // ⭐ 현재 로그인한 Supabase 세션 한 번만 조회
-                const {
-                    data: { session },
-                    error: sessionError,
-                } = await supabase.auth.getSession();
-
-                // ⭐ 세션 조회 오류
-                if (sessionError) {
-                    throw new Error("로그인 세션 조회 실패");
-                }
-
-                // ⭐ 로그인 세션이 없는 경우
-                if (!session?.access_token) {
-                    throw new Error("로그인 세션이 없습니다.");
-                }
-
-                const headers = {
-                    Authorization: `Bearer ${session.access_token}`,
-                };
-
-                // ⭐ 사용자 정보 + 동호회 정보를 동시에 요청
-                const [userResponse, clubResponse] = await Promise.all([
-                    fetch(
-                        "http://127.0.0.1:8000/api/auth/me",
-                        {
-                            method: "GET",
-                            headers,
-                        }
-                    ),
-
-                    fetch(
-                        "http://127.0.0.1:8000/api/clubs/my",
-                        {
-                            method: "GET",
-                            headers,
-                        }
-                    ),
+                // ⭐ 내 정보 + 내 동호회를 동시에 요청
+                // allSettled: 한쪽이 실패해도 다른 쪽은 화면에 표시
+                const [userResult, clubResult] = await Promise.allSettled([
+                    getMyProfile(),
+                    authenticatedRequest("/api/clubs/my", {
+                        method: "GET",
+                    }),
                 ]);
 
-                // ⭐ 사용자 정보 API 오류
-                if (!userResponse.ok) {
-
-                    const errorData = await userResponse
-                        .json()
-                        .catch(() => null);
-
-                    console.error(
-                        "⭐ 사용자 정보 API 오류:",
-                        errorData
-                    );
-
-                    throw new Error(
-                        `내 사용자 정보 조회 실패 (${userResponse.status})`
-                    );
+                if (userResult.status === "fulfilled") {
+                    console.log("⭐ 내 사용자 정보:", userResult.value);
+                    setUserInfo(userResult.value);
+                } else {
+                    console.error("⭐ 사용자 정보 API 오류:", userResult.reason);
+                    setUserInfo(null);
                 }
 
-                // ⭐ 동호회 API 오류
-                if (!clubResponse.ok) {
+                if (clubResult.status === "fulfilled") {
+                    const clubData = clubResult.value;
 
-                    const errorData = await clubResponse
-                        .json()
-                        .catch(() => null);
-
-                    console.error(
-                        "⭐ 내 동호회 API 오류:",
-                        errorData
-                    );
-
-                    throw new Error(
-                        `내 동호회 조회 실패 (${clubResponse.status})`
-                    );
+                    setMyClubs({
+                        operating_club: clubData?.operating_club ?? null,
+                        joined_club: clubData?.joined_club ?? null,
+                    });
+                } else {
+                    console.error("⭐ 내 동호회 API 오류:", clubResult.reason);
+                    setMyClubs({
+                        operating_club: null,
+                        joined_club: null,
+                    });
                 }
-
-                // ⭐ 두 API 응답을 동시에 처리
-                const [userData, clubData] = await Promise.all([
-                    userResponse.json(),
-                    clubResponse.json(),
-                ]);
-
-                console.log(
-                    "⭐ 내 사용자 정보:",
-                    userData
-                );
-
-                console.log(
-                    "⭐ 내가 운영/가입한 동호회:",
-                    clubData
-                );
-
-                // ⭐ 상태 저장
-                setUserInfo(userData);
-
-                setMyClubs({
-                    operating_club: clubData?.operating_club ?? null,
-                    joined_club: clubData?.joined_club ?? null,
-                });
 
             } catch (error) {
 
@@ -191,6 +127,22 @@ function Mypage() {
         );
 
     }
+
+
+    // =========================================================
+    // ⭐ 프로필 표시용 값
+    // =========================================================
+    const sportText =
+        userInfo?.sports?.length > 0
+            ? userInfo.sports
+                .map((sport) => sport.sport_name)
+                .join(" · ")
+            : "운동 종목 없음";
+
+    const regionText =
+        userInfo?.regions?.length > 0
+            ? userInfo.regions.join(" · ")
+            : "활동 지역 없음";
 
 
     // =========================================================
@@ -275,17 +227,17 @@ function Mypage() {
                     <div className="profile-image">
 
                         <img
-                            src={profileIcon}
+                            src={userInfo?.profile_image || profileIcon}
                             alt="프로필"
                         />
 
                     </div>
 
 
-                    {/* ⭐ 사용자 이름 */}
+                    {/* ⭐ 닉네임 (없으면 이름) */}
                     <p className="profile-name">
 
-                        {userInfo?.name || "사용자 이름"}
+                        {userInfo?.nickname || userInfo?.name || "사용자 이름"}
 
                     </p>
 
@@ -293,13 +245,7 @@ function Mypage() {
                     {/* ⭐ 운동 종목 */}
                     <p className="profile-sports">
 
-                        {Array.isArray(userInfo?.sports)
-
-                            ? userInfo.sports.join("ㆍ")
-
-                            : userInfo?.sports || "운동 종목 없음"
-
-                        }
+                        {sportText}
 
                     </p>
 
@@ -307,13 +253,7 @@ function Mypage() {
                     {/* ⭐ 활동 지역 */}
                     <p className="profile-region">
 
-                        {Array.isArray(userInfo?.regions)
-
-                            ? userInfo.regions.join("ㆍ")
-
-                            : userInfo?.regions || "활동 지역 없음"
-
-                        }
+                        {regionText}
 
                     </p>
 
@@ -626,4 +566,4 @@ function Mypage() {
 }
 
 
-export default Mypage;
+export default Mypage;
