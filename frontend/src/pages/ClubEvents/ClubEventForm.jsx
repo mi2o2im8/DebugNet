@@ -56,13 +56,7 @@ const INITIAL_FORM = {
     maxGuests: "0",
 
     registrationDeadline: "",
-    eventImageUrl: "",
-
-    voteOptions: [
-        "참석",
-        "불참",
-        "미정"
-    ]
+    eventImageUrl: ""
 };
 
 const EVENT_STEPS = [
@@ -224,14 +218,8 @@ function ClubEventForm() {
                         ),
 
                     eventImageUrl:
-                        event.event_image_url || "",
+                        event.event_image_url || ""
 
-                    voteOptions:
-                        event.vote_options
-                            ?.length >= 2
-                            ? event.vote_options
-                            : INITIAL_FORM
-                                .voteOptions
                 });
             })
             .catch((error) => {
@@ -310,74 +298,6 @@ function ClubEventForm() {
                     )
                     : "0"
             })
-        );
-    };
-
-    // -----------------------------------------------------
-    // 참석 투표 항목 변경
-    // -----------------------------------------------------
-    const updateVoteOption = (
-        optionIndex,
-        value
-    ) => {
-        setFormData(
-            (current) => ({
-                ...current,
-
-                voteOptions:
-                    current.voteOptions.map(
-                        (option, index) =>
-                            index === optionIndex
-                                ? value
-                                : option
-                    )
-            })
-        );
-    };
-
-
-    const addVoteOption = () => {
-        setFormData(
-            (current) => {
-                if (
-                    current.voteOptions.length >= 5
-                ) {
-                    return current;
-                }
-
-                return {
-                    ...current,
-                    voteOptions: [
-                        ...current.voteOptions,
-                        ""
-                    ]
-                };
-            }
-        );
-    };
-
-
-    const removeVoteOption = (
-        optionIndex
-    ) => {
-        setFormData(
-            (current) => {
-                if (
-                    current.voteOptions.length <= 2
-                ) {
-                    return current;
-                }
-
-                return {
-                    ...current,
-
-                    voteOptions:
-                        current.voteOptions.filter(
-                            (_, index) =>
-                                index !== optionIndex
-                        )
-                };
-            }
         );
     };
 
@@ -504,36 +424,6 @@ function ClubEventForm() {
 
                 return false;
             }
-
-            const normalizedOptions =
-                formData.voteOptions
-                    .map((option) =>
-                        option.trim()
-                    )
-                    .filter(Boolean);
-
-            if (
-                normalizedOptions.length < 2
-            ) {
-                setErrorMessage(
-                    "투표 항목을 두 개 이상 "
-                    + "입력해주세요."
-                );
-
-                return false;
-            }
-
-            if (
-                new Set(normalizedOptions).size
-                !== normalizedOptions.length
-            ) {
-                setErrorMessage(
-                    "같은 투표 항목을 중복해서 "
-                    + "입력할 수 없습니다."
-                );
-
-                return false;
-            }
         }
 
         return true;
@@ -655,14 +545,7 @@ function ClubEventForm() {
 
             eventImageUrl:
                 formData.eventImageUrl ||
-                null,
-
-            voteOptions:
-                formData.voteOptions
-                    .map((option) =>
-                        option.trim()
-                    )
-                    .filter(Boolean)
+                null
         };
 
         setIsSaving(true);
@@ -1117,83 +1000,6 @@ function ClubEventForm() {
                             </label>
                         )}
 
-                        <div className="club-event-vote-editor">
-                            <div className="club-event-vote-heading">
-                                <span>
-                                    참석 투표 항목
-                                </span>
-
-                                <small>
-                                    {
-                                        formData
-                                            .voteOptions
-                                            .length
-                                    }
-                                    /5
-                                </small>
-                            </div>
-
-                            {formData.voteOptions.map(
-                                (option, optionIndex) => (
-                                    <div
-                                        key={optionIndex}
-                                        className="club-event-vote-option"
-                                    >
-                                        <input
-                                            type="text"
-                                            maxLength="30"
-                                            value={option}
-                                            aria-label={
-                                                `투표 항목 ${
-                                                    optionIndex + 1
-                                                }`
-                                            }
-                                            onChange={(event) =>
-                                                updateVoteOption(
-                                                    optionIndex,
-                                                    event
-                                                        .target
-                                                        .value
-                                                )
-                                            }
-                                        />
-
-                                        <button
-                                            type="button"
-                                            aria-label="투표 항목 삭제"
-                                            disabled={
-                                                formData
-                                                    .voteOptions
-                                                    .length
-                                                <= 2
-                                            }
-                                            onClick={() =>
-                                                removeVoteOption(
-                                                    optionIndex
-                                                )
-                                            }
-                                        >
-                                            <FiX />
-                                        </button>
-                                    </div>
-                                )
-                            )}
-
-                            <button
-                                type="button"
-                                className="club-event-add-vote"
-                                disabled={
-                                    formData
-                                        .voteOptions
-                                        .length
-                                    >= 5
-                                }
-                                onClick={addVoteOption}
-                            >
-                                <FiPlus />
-                                투표 항목 추가
-                            </button>
-                        </div>
                     </section>
                 )}
 
@@ -1368,25 +1174,6 @@ function ClubEventForm() {
                                 </span>
                             </div>
 
-                            <div className="vote-options">
-                                <FiCheck />
-
-                                <span>
-                                    <small>투표 항목</small>
-
-                                    <strong>
-                                        {
-                                            formData
-                                                .voteOptions
-                                                .filter(
-                                                    (option) =>
-                                                        option.trim()
-                                                )
-                                                .join(", ")
-                                        }
-                                    </strong>
-                                </span>
-                            </div>
                         </div>
                     </section>
                 )}

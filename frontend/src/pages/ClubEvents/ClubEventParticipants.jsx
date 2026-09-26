@@ -76,7 +76,11 @@ function ParticipantItem({
                     {" · "}
                     {participant.participant_type === "guest"
                         ? "게스트"
-                        : "회원"}
+                        : (
+                            MEMBER_ROLE_LABELS[
+                                participant.member_role
+                            ] || "회원"
+                        )}
                 </span>
 
                 <div className="event-participant-badges">

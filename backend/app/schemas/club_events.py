@@ -160,19 +160,6 @@ class ClubEventCreateRequest(BaseModel):
         ),
     )
 
-    vote_options: list[str] = Field(
-        default_factory=lambda: [
-            "참석",
-            "불참",
-            "미정",
-        ],
-        min_length=2,
-        max_length=5,
-        validation_alias=AliasChoices(
-            "vote_options",
-            "voteOptions",
-        ),
-    )
 
     # -----------------------------------------------------
     # 문자열 정리
@@ -249,37 +236,6 @@ class ClubEventCreateRequest(BaseModel):
         }
 
         return participation_map.get(value, value)
-
-    # -----------------------------------------------------
-    # 참석 투표 항목 정리
-    # -----------------------------------------------------
-
-    @field_validator("vote_options")
-    @classmethod
-    def normalize_vote_options(
-        cls,
-        values: list[str],
-    ) -> list[str]:
-        normalized_values = []
-
-        for value in values:
-            stripped_value = value.strip()
-
-            if (
-                stripped_value
-                and stripped_value
-                not in normalized_values
-            ):
-                normalized_values.append(
-                    stripped_value
-                )
-
-        if len(normalized_values) < 2:
-            raise ValueError(
-                "투표 항목은 두 개 이상 필요합니다."
-            )
-
-        return normalized_values
 
     # -----------------------------------------------------
     # 입력값 간 관계 검증
@@ -453,6 +409,12 @@ class ClubEventParticipantItemResponse(BaseModel):
         "member",
         "guest",
     ]
+
+    member_role: Literal[
+        "owner",
+        "manager",
+        "member",
+    ] | None = None
 
     participation_status: Literal[
         "pending",

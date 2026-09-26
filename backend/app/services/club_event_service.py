@@ -31,6 +31,12 @@ from app.schemas.club_events import (
 
 KST = ZoneInfo("Asia/Seoul")
 
+ATTENDANCE_VOTE_OPTIONS = (
+    "참석",
+    "불참",
+    "미정",
+)
+
 class ClubEventService:
 
     def __init__(self):
@@ -298,7 +304,7 @@ class ClubEventService:
                 "display_order": index,
             }
             for index, option in enumerate(
-                request_data.vote_options,
+                ATTENDANCE_VOTE_OPTIONS,
                 start=1,
             )
         ]
@@ -1421,10 +1427,32 @@ class ClubEventService:
             or "open"
         )
 
+        membership = (
+            self.club_repository
+            .find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        is_operator = (
+            membership is not None
+            and membership.get("role")
+            in {
+                "owner",
+                "manager",
+            }
+        )
+
+        requires_approval = (
+            participation_method == "approval"
+            and not is_operator
+        )
+
         # 이미 승인 대기 중인 회원이 다시 참석을
         # 선택한 경우 중복 신청을 만들지 않는다.
         if (
-            participation_method == "approval"
+            requires_approval
             and participant is not None
             and participant["participant_type"]
             == "member"
@@ -1498,7 +1526,7 @@ class ClubEventService:
         # 승인제 일정
         # -------------------------------------------------
         if (
-            participation_method == "approval"
+            requires_approval
             and (
                 participant is None
                 or participant["status"] == "pending"
@@ -1583,6 +1611,28 @@ class ClubEventService:
                 message=status_messages[
                     request_data.attendance_status
                 ],
+            )
+
+        # 기존에 승인 대기로 저장된 운영진은
+        # 참석 응답 시 바로 참여 확정으로 전환
+        if (
+            is_operator
+            and participant is not None
+            and participant["participant_type"]
+            == "member"
+            and participant["status"] == "pending"
+        ):
+            participant = (
+                self.event_repository
+                .update_pending_participant_status(
+                    event_id=event_id,
+                    event_participant_id=int(
+                        participant[
+                            "event_participant_id"
+                        ]
+                    ),
+                    new_status="joined",
+                )
             )
 
         # 바로 참여 일정은 기존처럼 즉시 확정
@@ -1884,6 +1934,23 @@ class ClubEventService:
                 or {}
             )
 
+            member_role = None
+
+            if participant_type == "member":
+                membership = (
+                    self.club_repository
+                    .find_active_membership(
+                        club_id=club_id,
+                        user_id=participant_user_id,
+                    )
+                )
+
+                if membership is not None:
+                    member_role = membership.get(
+                        "role",
+                        "member",
+                    )
+            
             attendance_status = None
 
             if participation_status == "joined":
@@ -1940,6 +2007,7 @@ class ClubEventService:
                     participant_type=(
                         participant_type
                     ),
+                    member_role=member_role,
                     participation_status=(
                         participation_status
                     ),
