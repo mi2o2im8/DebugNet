@@ -100,3 +100,24 @@ export const updateProfileImage = async (profileImageUrl) => {
         }
     );
 };
+
+// =========================================================
+// 내 동호회 전체 일정 (월별)
+//
+// GET /api/users/me/events?year=2026&month=9
+// 응답: { year, month,
+//         clubs: [{ club_id, club_name, is_operator }],
+//         events: [{ event_id, club_id, club_name, title,
+//                    event_date, start_time, end_time,
+//                    location, event_type, status,
+//                    my_attendance }],
+//         total }
+// =========================================================
+export const getMyEvents = async (year, month) => {
+    return authenticatedRequest(
+        `/api/users/me/events?year=${year}&month=${month}`,
+        {
+            method: "GET"
+        }
+    );
+};

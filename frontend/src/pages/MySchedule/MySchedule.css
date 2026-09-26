@@ -531,6 +531,152 @@
 
 
 /* ========================================
+   ⭐ 내 동호회 일정 (API 연결 후 추가)
+   ======================================== */
+
+/* ⭐ 오늘 날짜 (선택 안 됐을 때) */
+.MySchedule-day.today:not(.selected) > span {
+    border: 1.5px solid #01A17F;
+
+    box-sizing: border-box;
+
+    color: #01A17F;
+
+    font-weight: 700;
+}
+
+
+/* ⭐ 동호회 범례 */
+.MySchedule-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+
+    width: 100%;
+    margin-top: 12px;
+}
+
+.MySchedule-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    font-size: 12px;
+
+    color: #555;
+}
+
+.MySchedule-legend-item i {
+    display: block;
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+}
+
+
+/* ⭐ 목록 제목 (9월 25일 (금) / 9월 전체 일정) */
+.MySchedule-list-title {
+    width: 100%;
+    margin: 20px 0 -10px;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    color: #263b52;
+}
+
+
+/* ⭐ 로딩 / 빈 목록 / 에러 문구 */
+.MySchedule-message {
+    margin: 0;
+    padding: 28px 0;
+
+    text-align: center;
+
+    font-size: 13px;
+    line-height: 1.6;
+
+    color: #8a9a9a;
+}
+
+
+/* ⭐ 일정 카드: 왼쪽 동호회 색상 선 + 클릭 가능 */
+.schedule-item {
+    border-left-width: 4px;
+
+    cursor: pointer;
+}
+
+.schedule-item:active {
+    transform: scale(0.99);
+}
+
+.schedule-date {
+    color: #263b52 !important;
+}
+
+.schedule-club-name {
+    font-weight: 700;
+}
+
+
+/* ⭐ 상태 뱃지 (span으로 바뀌어서 가운데 정렬 추가) */
+.schedule-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 32px;
+
+    font-size: 12px;
+
+    cursor: inherit;
+}
+
+.schedule-status.attend {
+    border-color: #01A17F;
+
+    background-color: #01A17F;
+
+    color: #fff;
+}
+
+.schedule-status.absent {
+    border-color: #f3c7c7;
+
+    background-color: #fdf2f2;
+
+    color: #d9534f;
+}
+
+.schedule-status.undecided {
+    border-color: #e5e9ec;
+
+    background-color: #f6f7f8;
+
+    color: #6b7c7c;
+}
+
+.schedule-status.respond {
+    border-color: #01A17F;
+
+    background-color: #fff;
+
+    color: #01A17F;
+}
+
+.schedule-status.done {
+    border-color: #e5e9ec;
+
+    background-color: #f1f3f4;
+
+    color: #a0a8ab;
+}
+
+
+/* ========================================
    ⭐ 선택한 날짜 일정
    ======================================== */
 

@@ -1,23 +1,18 @@
+// 내 동호회 전체 일정 페이지
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     FiChevronLeft,
     FiChevronRight,
-    FiSettings,
-    FiMoreHorizontal,
 } from "react-icons/fi";
 
 import BackButton from "../../components/BackButton/BackButton";
 
+// ⭐ API
+import { getMyEvents } from "../../api/userApi";
+
 import "./MySchedule.css";
-
-
-// ⭐ 임시 데이터 객체
-const matchingStatus = {
-    received: 2,
-    sent: 1,
-    completed: 3,
-};
 
 
 /* ========================================
@@ -28,41 +23,77 @@ const pad2 = (value) =>
     String(value).padStart(2, "0");
 
 
-const makeDateString = (
-    year,
-    month,
-    day
-) =>
+const makeDateString = (year, month, day) =>
     `${year}-${pad2(month)}-${pad2(day)}`;
 
 
+const getTodayString = () => {
+
+    const now = new Date();
+
+    return makeDateString(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        now.getDate()
+    );
+};
+
+
+// "19:00:00" → "19:00"
+const formatTime = (time) =>
+    time ? String(time).slice(0, 5) : "";
+
+
+// "2026-09-25" → "9월 25일 (금)"
+const formatDateLabel = (dateString) => {
+
+    const [year, month, day] = dateString.split("-").map(Number);
+
+    const weekday = ["일", "월", "화", "수", "목", "금", "토"][
+        new Date(year, month - 1, day).getDay()
+    ];
+
+    return `${month}월 ${day}일 (${weekday})`;
+};
+
+
 /* ========================================
-   ⭐ 달력 초기 날짜
+   ⭐ 동호회별 색상 (달력 점 / 범례 / 카드 왼쪽 선)
    ======================================== */
 
-const getInitialMonth = (
-    selectedDate
-) => {
+const CLUB_COLORS = [
+    "#01a17f",
+    "#5b8def",
+    "#f2994a",
+    "#bb6bd9",
+    "#eb5757",
+    "#27aeb9",
+];
 
-    if (!selectedDate) {
 
-        const now = new Date();
+/* ========================================
+   ⭐ 일정 상태 뱃지
+   ======================================== */
 
-        return {
-            year: now.getFullYear(),
-            month: now.getMonth() + 1,
-        };
+const getStatusBadge = (event, todayString) => {
+
+    if (event.event_date < todayString) {
+        return { text: "종료", className: "done" };
     }
 
-    const [year, month] =
-        selectedDate
-            .split("-")
-            .map(Number);
+    if (event.my_attendance === "참석") {
+        return { text: "참석 예정", className: "attend" };
+    }
 
-    return {
-        year,
-        month,
-    };
+    if (event.my_attendance === "불참") {
+        return { text: "불참", className: "absent" };
+    }
+
+    if (event.my_attendance === "미정") {
+        return { text: "미정", className: "undecided" };
+    }
+
+    return { text: "응답하기", className: "respond" };
 };
 
 
@@ -70,18 +101,174 @@ function MySchedule() {
 
     const navigate = useNavigate();
 
-    const [selectedDate, setSelectedDate] =
-        useState(null);
+    const todayString = getTodayString();
+    const today = new Date();
 
-    // ⭐ 나중에 DB에서 받아올 동호회 정보
-    const club = {
-        clubId: 1,
-        clubName: "강서 FC",
+
+    // =========================================================
+    // ⭐ 보고 있는 달 (이 값이 바뀌면 API 다시 호출)
+    // =========================================================
+    const [viewYear, setViewYear] = useState(today.getFullYear());
+    const [viewMonth, setViewMonth] = useState(today.getMonth() + 1);
+
+    // ⭐ 선택한 날짜 (null이면 그 달 전체 일정 표시)
+    const [selectedDate, setSelectedDate] = useState(todayString);
+
+
+    // =========================================================
+    // ⭐ API 데이터
+    // =========================================================
+    const [clubs, setClubs] = useState([]);
+    const [events, setEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState("");
+
+
+    // =========================================================
+    // ⭐ 월이 바뀔 때마다 일정 조회
+    // =========================================================
+    useEffect(() => {
+
+        // 달을 빠르게 넘길 때 늦게 도착한 이전 응답 무시
+        let ignore = false;
+
+        const fetchMyEvents = async () => {
+
+            try {
+
+                setLoading(true);
+                setErrorMessage("");
+
+                const data = await getMyEvents(viewYear, viewMonth);
+
+                if (ignore) return;
+
+                setClubs(data.clubs ?? []);
+                setEvents(data.events ?? []);
+
+            } catch (error) {
+
+                if (ignore) return;
+
+                console.error("내 동호회 일정 조회 오류:", error);
+                setErrorMessage(error.message);
+                setEvents([]);
+
+            } finally {
+
+                if (!ignore) setLoading(false);
+
+            }
+        };
+
+        fetchMyEvents();
+
+        return () => {
+            ignore = true;
+        };
+
+    }, [viewYear, viewMonth]);
+
+
+    // =========================================================
+    // ⭐ 동호회 id → 색상
+    // =========================================================
+    const colorByClubId = useMemo(() => {
+
+        const map = {};
+
+        clubs.forEach((club, index) => {
+            map[club.club_id] = CLUB_COLORS[index % CLUB_COLORS.length];
+        });
+
+        return map;
+
+    }, [clubs]);
+
+
+    // =========================================================
+    // ⭐ 날짜 → 그날 일정이 있는 동호회 색상들 (달력 점)
+    // =========================================================
+    const dotColorsByDate = useMemo(() => {
+
+        const map = {};
+
+        events.forEach((event) => {
+
+            const color = colorByClubId[event.club_id] ?? CLUB_COLORS[0];
+
+            if (!map[event.event_date]) {
+                map[event.event_date] = [];
+            }
+
+            if (!map[event.event_date].includes(color)) {
+                map[event.event_date].push(color);
+            }
+        });
+
+        return map;
+
+    }, [events, colorByClubId]);
+
+
+    // =========================================================
+    // ⭐ 아래 목록에 보여줄 일정
+    // =========================================================
+    const visibleEvents = selectedDate
+        ? events.filter((event) => event.event_date === selectedDate)
+        : events;
+
+
+    // =========================================================
+    // ⭐ 달 이동 (선택 날짜는 해제 → 그 달 전체 보기)
+    // =========================================================
+    const moveMonth = (direction) => {
+
+        let nextYear = viewYear;
+        let nextMonth = viewMonth + direction;
+
+        if (nextMonth < 1) {
+            nextYear -= 1;
+            nextMonth = 12;
+        }
+
+        if (nextMonth > 12) {
+            nextYear += 1;
+            nextMonth = 1;
+        }
+
+        setViewYear(nextYear);
+        setViewMonth(nextMonth);
+        setSelectedDate(null);
     };
+
+
+    // =========================================================
+    // ⭐ 날짜 선택 (같은 날짜를 다시 누르면 해제)
+    // =========================================================
+    const handleSelectDate = (dateString) => {
+
+        setSelectedDate((prev) =>
+            prev === dateString ? null : dateString
+        );
+    };
+
+
+    // =========================================================
+    // ⭐ 일정 카드 클릭 → 참석 응답 페이지
+    // =========================================================
+    const handleEventClick = (event) => {
+
+        navigate(
+            `/clubs/${event.club_id}/events/${event.event_id}/attendance`
+        );
+    };
+
 
     const handleNext = () => {
         navigate("/review");
     };
+
 
     return (
         <div className="MySchedule-page">
@@ -92,37 +279,14 @@ function MySchedule() {
 
             <div className="MySchedule-header">
 
-                {/* ⭐ 뒤로가기 */}
                 <BackButton
                     className="MySchedule-back-btn"
                     aria-label="뒤로가기"
                 />
 
-                {/* ⭐ 동호회 이름 */}
                 <h2 className="MySchedule-title">
-                    {club.clubName}
+                    내 동호회 일정
                 </h2>
-
-                {/* ⭐ 설정 / 더보기 */}
-                <div className="MySchedule-header-right">
-
-                    <button
-                        type="button"
-                        className="MySchedule-header-btn"
-                        aria-label="동호회 설정"
-                    >
-                        <FiSettings />
-                    </button>
-
-                    <button
-                        type="button"
-                        className="MySchedule-header-btn"
-                        aria-label="더보기"
-                    >
-                        <FiMoreHorizontal />
-                    </button>
-
-                </div>
 
             </div>
 
@@ -132,103 +296,160 @@ function MySchedule() {
                ======================================== */}
 
             <MyScheduleCalendar
+                viewYear={viewYear}
+                viewMonth={viewMonth}
+                onMoveMonth={moveMonth}
                 selectedDate={selectedDate}
-                onSelectDate={setSelectedDate}
-                myAvailabilityDates={[
-                    "2026-09-23",
-                    "2026-09-27",
-                ]}
-                opponentAvailableDates={[
-                    "2026-09-25",
-                    "2026-09-27",
-                ]}
+                todayString={todayString}
+                onSelectDate={handleSelectDate}
+                dotColorsByDate={dotColorsByDate}
             />
+
+
+            {/* ========================================
+               ⭐ 동호회 범례 (2개 이상일 때)
+               ======================================== */}
+
+            {clubs.length > 1 && (
+                <div className="MySchedule-legend">
+                    {clubs.map((club) => (
+                        <span
+                            key={club.club_id}
+                            className="MySchedule-legend-item"
+                        >
+                            <i
+                                style={{
+                                    background: colorByClubId[club.club_id],
+                                }}
+                            />
+                            {club.club_name}
+                        </span>
+                    ))}
+                </div>
+            )}
 
 
             {/* ========================================
                ⭐ 일정 목록
                ======================================== */}
 
+            <p className="MySchedule-list-title">
+                {selectedDate
+                    ? formatDateLabel(selectedDate)
+                    : `${viewMonth}월 전체 일정`}
+            </p>
+
             <div className="schedule-list">
 
-                {/* ⭐ 일정 1 */}
+                {loading ? (
 
-                <div className="schedule-item">
+                    <p className="MySchedule-message">
+                        일정을 불러오는 중...
+                    </p>
 
-                    <div className="schedule-time">
+                ) : errorMessage ? (
 
-                        <span>
-                            19:00
-                        </span>
+                    <p className="MySchedule-message">
+                        일정을 불러오지 못했습니다.
+                        <br />
+                        {errorMessage}
+                    </p>
 
-                        <span>
-                            ~21:00
-                        </span>
+                ) : clubs.length === 0 ? (
 
-                    </div>
+                    <p className="MySchedule-message">
+                        가입한 동호회가 없어요.
+                    </p>
+
+                ) : visibleEvents.length === 0 ? (
+
+                    <p className="MySchedule-message">
+                        {selectedDate
+                            ? "이 날은 일정이 없어요."
+                            : "이번 달 일정이 없어요."}
+                    </p>
+
+                ) : (
+
+                    visibleEvents.map((event) => {
+
+                        const badge = getStatusBadge(event, todayString);
+
+                        return (
+                            <div
+                                key={event.event_id}
+                                className="schedule-item"
+                                style={{
+                                    borderLeftColor:
+                                        colorByClubId[event.club_id],
+                                }}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => handleEventClick(event)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        handleEventClick(event);
+                                    }
+                                }}
+                            >
+
+                                <div className="schedule-time">
+
+                                    {/* 날짜를 안 골랐을 때는 날짜도 표시 */}
+                                    {!selectedDate && (
+                                        <span className="schedule-date">
+                                            {Number(event.event_date.slice(8))}일
+                                        </span>
+                                    )}
+
+                                    <span>
+                                        {formatTime(event.start_time)}
+                                    </span>
+
+                                    {event.end_time && (
+                                        <span>
+                                            ~{formatTime(event.end_time)}
+                                        </span>
+                                    )}
+
+                                </div>
 
 
-                    <div className="schedule-info">
+                                <div className="schedule-info">
 
-                        <h4>
-                            강서 FC 정기모임
-                        </h4>
+                                    <h4>
+                                        {event.title}
+                                    </h4>
 
-                        <p>
-                            강서구 체육공원 1구장
-                        </p>
+                                    <p>
+                                        <span
+                                            className="schedule-club-name"
+                                            style={{
+                                                color: colorByClubId[event.club_id],
+                                            }}
+                                        >
+                                            {event.club_name}
+                                        </span>
 
-                    </div>
+                                        {event.location && (
+                                            <> · {event.location}</>
+                                        )}
+                                    </p>
 
-
-                    <button
-                        type="button"
-                        className="schedule-status"
-                    >
-                        참여 예정
-                    </button>
-
-                </div>
-
-
-                {/* ⭐ 일정 2 */}
-
-                <div className="schedule-item">
-
-                    <div className="schedule-time">
-
-                        <span>
-                            18:30
-                        </span>
-
-                        <span>
-                            ~20:30
-                        </span>
-
-                    </div>
+                                </div>
 
 
-                    <div className="schedule-info">
+                                <span
+                                    className={`schedule-status ${badge.className}`}
+                                >
+                                    {badge.text}
+                                </span>
 
-                        <h4>
-                            강서 FC 풋살 모임
-                        </h4>
+                            </div>
+                        );
+                    })
 
-                        <p>
-                            강서 풋살장
-                        </p>
-
-                    </div>
-
-
-                    <button
-                        type="button"
-                        className="schedule-status"
-                    >
-                        참여 예정
-                    </button>
-
-                </div>
+                )}
 
             </div>
 
@@ -252,223 +473,70 @@ function MySchedule() {
 
 /* ========================================
    ⭐ 일정 달력
+   (보고 있는 달은 부모가 관리 → 달이 바뀌면 부모가 API 호출)
    ======================================== */
 
 function MyScheduleCalendar({
+    viewYear,
+    viewMonth,
+    onMoveMonth,
     selectedDate,
+    todayString,
     onSelectDate,
-    myAvailabilityDates = [],
-    opponentAvailableDates = [],
+    dotColorsByDate = {},
 }) {
 
-    const initialMonth =
-        getInitialMonth(selectedDate);
+    const calendarCells = useMemo(() => {
 
+        const firstDay = new Date(viewYear, viewMonth - 1, 1).getDay();
+        const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
 
-    const [viewYear, setViewYear] =
-        useState(initialMonth.year);
+        const cells = [];
 
-    const [viewMonth, setViewMonth] =
-        useState(initialMonth.month);
-
-
-    /* ========================================
-       ⭐ 선택 날짜가 변경되면 해당 월로 이동
-       ======================================== */
-
-    useEffect(() => {
-
-        if (!selectedDate) {
-            return;
+        // ⭐ 시작 전 빈칸
+        for (let i = 0; i < firstDay; i++) {
+            cells.push(null);
         }
 
-
-        const [year, month] =
-            selectedDate
-                .split("-")
-                .map(Number);
-
-
-        setViewYear(year);
-        setViewMonth(month);
-
-    }, [selectedDate]);
-
-
-    /* ========================================
-       ⭐ 내가 등록한 일정
-       ======================================== */
-
-    const myDateSet =
-        useMemo(
-            () =>
-                new Set(
-                    myAvailabilityDates
-                ),
-            [myAvailabilityDates]
-        );
-
-
-    /* ========================================
-       ⭐ 다른 팀 일정
-       ======================================== */
-
-    const opponentDateSet =
-        useMemo(
-            () =>
-                new Set(
-                    opponentAvailableDates
-                ),
-            [opponentAvailableDates]
-        );
-
-
-    /* ========================================
-       ⭐ 달력 날짜 생성
-       ======================================== */
-
-    const calendarCells =
-        useMemo(() => {
-
-            const firstDay =
-                new Date(
-                    viewYear,
-                    viewMonth - 1,
-                    1
-                ).getDay();
-
-
-            const daysInMonth =
-                new Date(
-                    viewYear,
-                    viewMonth,
-                    0
-                ).getDate();
-
-
-            const cells = [];
-
-
-            /* ⭐ 시작 전 빈칸 */
-
-            for (
-                let i = 0;
-                i < firstDay;
-                i++
-            ) {
-
-                cells.push(null);
-
-            }
-
-
-            /* ⭐ 실제 날짜 */
-
-            for (
-                let day = 1;
-                day <= daysInMonth;
-                day++
-            ) {
-
-                cells.push(day);
-
-            }
-
-
-            /* ⭐ 마지막 줄 빈칸 */
-
-            while (
-                cells.length % 7 !== 0
-            ) {
-
-                cells.push(null);
-
-            }
-
-
-            return cells;
-
-        }, [viewYear, viewMonth]);
-
-
-    /* ========================================
-       ⭐ 이전 / 다음 달
-       ======================================== */
-
-    const moveMonth = (
-        direction
-    ) => {
-
-        let nextYear =
-            viewYear;
-
-        let nextMonth =
-            viewMonth + direction;
-
-
-        if (nextMonth < 1) {
-
-            nextYear -= 1;
-            nextMonth = 12;
-
+        // ⭐ 실제 날짜
+        for (let day = 1; day <= daysInMonth; day++) {
+            cells.push(day);
         }
 
-
-        if (nextMonth > 12) {
-
-            nextYear += 1;
-            nextMonth = 1;
-
+        // ⭐ 마지막 줄 빈칸
+        while (cells.length % 7 !== 0) {
+            cells.push(null);
         }
 
+        return cells;
 
-        setViewYear(nextYear);
-        setViewMonth(nextMonth);
-
-    };
+    }, [viewYear, viewMonth]);
 
 
-    const weekdayLabels = [
-        "일",
-        "월",
-        "화",
-        "수",
-        "목",
-        "금",
-        "토",
-    ];
+    const weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 
 
     return (
         <section className="MySchedule-calendar">
 
-            {/* ========================================
-               ⭐ 달력 헤더
-               ======================================== */}
-
+            {/* ⭐ 달력 헤더 */}
             <div className="MySchedule-calendar-header">
 
                 <button
                     type="button"
-                    onClick={() =>
-                        moveMonth(-1)
-                    }
+                    onClick={() => onMoveMonth(-1)}
                     aria-label="이전 달"
                 >
                     <FiChevronLeft />
                 </button>
 
-
                 <strong>
                     {viewYear}년 {viewMonth}월
                 </strong>
 
-
                 <button
                     type="button"
-                    onClick={() =>
-                        moveMonth(1)
-                    }
+                    onClick={() => onMoveMonth(1)}
                     aria-label="다음 달"
                 >
                     <FiChevronRight />
@@ -477,121 +545,73 @@ function MyScheduleCalendar({
             </div>
 
 
-            {/* ========================================
-               ⭐ 요일
-               ======================================== */}
-
+            {/* ⭐ 요일 */}
             <div className="MySchedule-weekdays">
-
-                {weekdayLabels.map(
-                    (label, index) => (
-
-                        <span
-                            key={label}
-                            className={
-                                index === 0
-                                    ? "sunday"
-                                    : index === 6
-                                        ? "saturday"
-                                        : ""
-                            }
-                        >
-                            {label}
-                        </span>
-
-                    )
-                )}
-
+                {weekdayLabels.map((label, index) => (
+                    <span
+                        key={label}
+                        className={
+                            index === 0
+                                ? "sunday"
+                                : index === 6
+                                    ? "saturday"
+                                    : ""
+                        }
+                    >
+                        {label}
+                    </span>
+                ))}
             </div>
 
 
-            {/* ========================================
-               ⭐ 날짜
-               ======================================== */}
-
+            {/* ⭐ 날짜 */}
             <div className="MySchedule-grid">
 
-                {calendarCells.map(
-                    (day, index) => {
+                {calendarCells.map((day, index) => {
 
-                        /* ⭐ 빈 날짜 */
-
-                        if (!day) {
-
-                            return (
-                                <div
-                                    key={`empty-${index}`}
-                                    className="MySchedule-empty-day"
-                                />
-                            );
-
-                        }
-
-
-                        const dateString =
-                            makeDateString(
-                                viewYear,
-                                viewMonth,
-                                day
-                            );
-
-
-                        const isSelected =
-                            dateString ===
-                            selectedDate;
-
-
-                        const isMine =
-                            myDateSet.has(
-                                dateString
-                            );
-
-
-                        const hasTeams =
-                            opponentDateSet.has(
-                                dateString
-                            );
-
-
+                    if (!day) {
                         return (
-                            <button
-                                key={dateString}
-                                type="button"
-                                className={
-                                    isSelected
-                                        ? "MySchedule-day selected"
-                                        : "MySchedule-day"
-                                }
-                                onClick={() =>
-                                    onSelectDate(
-                                        dateString
-                                    )
-                                }
-                            >
-
-                                <span>
-                                    {day}
-                                </span>
-
-
-                                <div className="MySchedule-dots">
-
-                                    {isMine && (
-                                        <i className="mine" />
-                                    )}
-
-
-                                    {hasTeams && (
-                                        <i className="team" />
-                                    )}
-
-                                </div>
-
-                            </button>
+                            <div
+                                key={`empty-${index}`}
+                                className="MySchedule-empty-day"
+                            />
                         );
-
                     }
-                )}
+
+                    const dateString = makeDateString(viewYear, viewMonth, day);
+
+                    const classNames = ["MySchedule-day"];
+
+                    if (dateString === selectedDate) classNames.push("selected");
+                    if (dateString === todayString) classNames.push("today");
+
+                    // 한 칸에 점은 최대 3개
+                    const dotColors = (dotColorsByDate[dateString] ?? []).slice(0, 3);
+
+                    return (
+                        <button
+                            key={dateString}
+                            type="button"
+                            className={classNames.join(" ")}
+                            onClick={() => onSelectDate(dateString)}
+                        >
+
+                            <span>
+                                {day}
+                            </span>
+
+                            <div className="MySchedule-dots">
+                                {dotColors.map((color) => (
+                                    <i
+                                        key={color}
+                                        style={{ background: color }}
+                                    />
+                                ))}
+                            </div>
+
+                        </button>
+                    );
+                })}
 
             </div>
 

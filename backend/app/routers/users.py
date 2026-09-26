@@ -1,11 +1,16 @@
+from datetime import date
+
 from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
+    Query,
     status,
 )
 
 from app.core.security import get_current_user_id
+from app.schemas.my_events import MyEventListResponse
+from app.services.my_event_service import MyEventService
 from app.schemas.users import (
     MyProfileResponse,
     MyProfileUpdateRequest,
@@ -57,6 +62,57 @@ def get_my_profile(
             ),
             detail=(
                 "내 정보를 조회하는 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+
+# ---------------------------------------------------------
+# 내 동호회 전체 일정 (월별)
+#
+# GET /api/users/me/events?year=2026&month=9
+# year / month 를 안 보내면 이번 달
+# ---------------------------------------------------------
+@router.get(
+    "/me/events",
+    response_model=MyEventListResponse,
+)
+def get_my_events(
+    year: int | None = Query(
+        default=None,
+        ge=2000,
+        le=2100,
+    ),
+    month: int | None = Query(
+        default=None,
+        ge=1,
+        le=12,
+    ),
+    user_id: str = Depends(get_current_user_id),
+):
+    today = date.today()
+
+    my_event_service = MyEventService()
+
+    try:
+        return my_event_service.get_my_events(
+            user_id=user_id,
+            year=year or today.year,
+            month=month or today.month,
+        )
+
+    except Exception as error:
+        print(
+            "내 동호회 일정 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "내 동호회 일정을 조회하는 중 "
                 "오류가 발생했습니다."
             ),
         ) from error
@@ -166,4 +222,4 @@ def update_profile_image(
     return user_service.update_profile_image(
         user_id=user_id,
         profile_image=request_data.profile_image,
-    )
+    )
