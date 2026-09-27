@@ -41,6 +41,37 @@ class CommentService:
         # 이미 만들어둔 사용자/게시글 관련 조회 기능 재사용
         self.post_repository = PostRepository()
 
+    # =====================================================
+    # 0. 동호회 게시글 댓글 접근 권한 확인
+    # =====================================================
+    def _validate_club_post_access(
+        self,
+        post: dict,
+        user_id: str,
+    ) -> None:
+
+        # 일반 커뮤니티 게시글은 기존 방식 유지
+        if post.get("board_type") != "club":
+            return
+
+        club_id = post.get("club_id")
+
+        if (
+            club_id is None
+            or not self.post_repository
+                .is_active_club_member(
+                    club_id=int(club_id),
+                    user_id=user_id,
+                )
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "해당 동호회의 활동 회원만 "
+                    "댓글을 이용할 수 있습니다."
+                ),
+            )
+
 
     # =====================================================
     # 1. 댓글 목록 조회
@@ -64,6 +95,11 @@ class CommentService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="게시글을 찾을 수 없습니다.",
             )
+
+        self._validate_club_post_access(
+            post=post,
+            user_id=user_id,
+        )
 
 
         # -------------------------------------------------
@@ -203,6 +239,20 @@ class CommentService:
             if post is None:
                 continue
 
+            if post.get("board_type") == "club":
+
+                club_id = post.get("club_id")
+
+                if (
+                    club_id is None
+                    or not self.post_repository
+                        .is_active_club_member(
+                            club_id=int(club_id),
+                            user_id=user_id,
+                        )
+                ):
+                    continue
+
             items.append(
                 MyCommentItem(
                     commentId=comment["comment_id"],
@@ -243,6 +293,11 @@ class CommentService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="게시글을 찾을 수 없습니다.",
             )
+
+        self._validate_club_post_access(
+            post=post,
+            user_id=user_id,
+        )
 
 
         # -------------------------------------------------
@@ -380,6 +435,20 @@ class CommentService:
                 detail="댓글을 찾을 수 없습니다.",
             )
 
+        post = self.post_repository.get_post_by_id(
+            post_id=comment["post_id"],
+        )
+
+        if post is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="게시글을 찾을 수 없습니다.",
+            )
+
+        self._validate_club_post_access(
+            post=post,
+            user_id=user_id,
+        )
 
         # -------------------------------------------------
         # 댓글 작성자와 현재 로그인 사용자 비교
@@ -428,6 +497,21 @@ class CommentService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="댓글을 찾을 수 없습니다.",
             )
+
+        post = self.post_repository.get_post_by_id(
+            post_id=comment["post_id"],
+        )
+
+        if post is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="게시글을 찾을 수 없습니다.",
+            )
+
+        self._validate_club_post_access(
+            post=post,
+            user_id=user_id,
+        )
 
 
         # -----------------------------------------------------

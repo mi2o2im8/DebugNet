@@ -121,6 +121,16 @@ def get_posts(
     ),
 
     # -----------------------------------------------------
+    # 동호회게시판 동호회 별 필터
+    #
+    # sport_id 와 동일 설정
+    # -----------------------------------------------------
+    club_id: int | None = Query(
+        default=None,
+        gt=0,
+    ),
+
+    # -----------------------------------------------------
     # 현재 페이지
     #
     # 최소 1
@@ -195,6 +205,7 @@ def get_posts(
         user_id=user_id,
         board_type=board_type,
         sport_id=sport_id,
+        club_id=club_id,
         page=page,
         size=size,
         sort=sort,

@@ -642,6 +642,65 @@
     font-size: 11px;
 }
 
+
+/* 동호회 커뮤니티 최근 글 */
+
+.club-dashboard-community-list {
+    overflow: hidden;
+    border: 1px solid var(--club-line);
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.club-dashboard-community-list > button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 14px;
+    border: 0;
+    border-bottom: 1px solid var(--club-line);
+    background: #ffffff;
+    color: var(--club-navy);
+    text-align: left;
+    cursor: pointer;
+}
+
+.club-dashboard-community-list > button:last-child {
+    border-bottom: 0;
+}
+
+.club-dashboard-community-list
+    > button
+    > span:first-child {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.club-dashboard-community-list strong {
+    overflow: hidden;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.club-dashboard-community-list small {
+    color: var(--club-subtext);
+    font-size: 10px;
+}
+
+.club-dashboard-community-meta {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+
 /* 빈 화면 */
 
 .club-dashboard-empty,

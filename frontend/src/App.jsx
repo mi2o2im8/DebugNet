@@ -252,81 +252,111 @@ function App() {
                 ⭐ 동호회 운영 기능
             ===================================================== */}
 
-            {/* 동호회 운영 기능: BottomNav 공통 적용 */}
+            {/* 동호회 운영 화면에 BottomNav 공통 적용 */}
             <Route element={<ClubManageLayout />}>
 
-              {/* 이후 아래 위치에 동호회 운영 기능 관련 화면들을 추가 */}
-
+              {/* 동호회 운영 관리 홈 */}
               <Route
                 path="/clubs/:clubId/manage"
                 element={<ClubDashboard />}
               />
 
+              {/* 동호회 회원 관리 */}
               <Route
                 path="/clubs/:clubId/manage/members"
                 element={<ClubMemberManagement />}
               />
 
+              {/* 동호회 전체 일정 목록 */}
               <Route
                 path="/clubs/:clubId/manage/events"
                 element={<ClubEventList />}
               />
 
+              {/* 동호회 새 일정 만들기 */}
               <Route
                 path="/clubs/:clubId/manage/events/new"
                 element={<ClubEventForm />}
               />
 
+              {/* 동호회 일정 상세 */}
               <Route
                 path="/clubs/:clubId/manage/events/:eventId"
                 element={<ClubEventDetail />}
               />
 
+              {/* 동호회 일정 수정 */}
               <Route
                 path="/clubs/:clubId/manage/events/:eventId/edit"
                 element={<ClubEventForm />}
               />
 
+              {/* 동호회 일정 참가자 관리 */}
               <Route
                 path="/clubs/:clubId/manage/events/:eventId/participants"
                 element={<ClubEventParticipants />}
               />
 
+              {/* 동호회 회원 상세 */}
               <Route
-
                 path="/clubs/:clubId/manage/members/:clubMemberId"
                 element={<ClubMemberDetail />}
               />
 
+              {/* 동호회 팀 매칭 관리 홈 */}
               <Route
                 path="/clubs/:clubId/matches"
                 element={<MatchManagement />}
               />
 
+              {/* 동호회 팀 매칭 목록 */}
               <Route
                 path="/clubs/:clubId/matches/list"
                 element={<MatchManagementList />}
               />
 
+              {/* 동호회 팀 매칭 상세 */}
               <Route
                 path="/clubs/:clubId/matches/:clubMatchId"
                 element={<MatchManagementDetail />}
               />
 
+              {/* 동호회 경기 결과 기록 */}
               <Route
                 path="/clubs/:clubId/matches/:clubMatchId/record"
                 element={<MatchRecordWrite />}
               />
 
+              {/* 동호회 경기 후기 작성 */}
               <Route
                 path="/clubs/:clubId/matches/:clubMatchId/review"
                 element={<MatchReviewWrite />}
               />
 
+              {/* 동호회 경기 후기 상세 */}
               <Route
                 path="/clubs/:clubId/matches/:clubMatchId/review-detail"
                 element={<MatchReviewDetail />}
               />
+
+              {/* 동호회 전용 커뮤니티 게시글 목록 */}
+              <Route
+                path="/clubs/:clubId/manage/community"
+                element={<Community />}
+              />
+
+              {/* 동호회 전용 커뮤니티 게시글 작성 */}
+              <Route
+                path="/clubs/:clubId/manage/community/write"
+                element={<PostWrite />}
+              />
+
+              {/* 동호회 전용 커뮤니티 게시글 상세 */}
+              <Route
+                path="/clubs/:clubId/manage/community/post/:postId"
+                element={<PostDetail />}
+              />
+
                             
 
 

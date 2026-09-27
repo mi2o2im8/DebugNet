@@ -86,6 +86,7 @@ class PostRepository:
         offset: int,
         limit: int,
         sport_id: int | None = None,
+        club_id: int | None = None,
         sort: str = "latest",
         search_type: str | None = None,
         keyword: str | None = None,
@@ -114,6 +115,12 @@ class PostRepository:
             query = query.eq(
                 "sport_id",
                 sport_id,
+            )
+
+        if club_id is not None:
+            query = query.eq(
+                "club_id",
+                club_id,
             )
 
         # -------------------------------------------------
@@ -253,6 +260,7 @@ class PostRepository:
         self,
         board_type: str,
         sport_id: int | None = None,
+        club_id: int | None = None,
         search_type: str | None = None,
         keyword: str | None = None,
         blocked_user_ids: list[str] | None = None,
@@ -270,6 +278,18 @@ class PostRepository:
                 board_type,
             )
         )
+
+        if sport_id is not None:
+            query = query.eq(
+                "sport_id",
+                sport_id,
+            )
+
+        if club_id is not None:
+            query = query.eq(
+                "club_id",
+                club_id,
+            )
 
 
         # 차단 사용자 제외
@@ -380,6 +400,7 @@ class PostRepository:
         self,
         board_type: str,
         sport_id: int | None = None,
+        club_id: int | None = None,
         search_type: str | None = None,
         keyword: str | None = None,
         blocked_user_ids: list[str] | None = None,
@@ -412,6 +433,11 @@ class PostRepository:
                 sport_id,
             )
 
+        if club_id is not None:
+            query = query.eq(
+                "club_id",
+                club_id,
+            )
 
         if blocked_user_ids:
 
@@ -1020,6 +1046,28 @@ class PostRepository:
         )
 
         return response.data or []
+
+    # -----------------------------------------------------
+    # 특정 동호회의 활동 회원 여부 확인
+    # -----------------------------------------------------
+    def is_active_club_member(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> bool:
+
+        response = (
+            self.admin_client
+            .table("club_members")
+            .select("club_member_id")
+            .eq("club_id", club_id)
+            .eq("user_id", user_id)
+            .eq("status", "active")
+            .limit(1)
+            .execute()
+        )
+
+        return bool(response.data)
 
 
     # -----------------------------------------------------
