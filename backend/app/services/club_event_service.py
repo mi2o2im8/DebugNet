@@ -28,6 +28,7 @@ from app.schemas.club_events import (
     ClubEventGuestDecisionRequest,
     ClubEventGuestDecisionResponse,
     ClubEventGuestApplicationResponse,
+    ClubEventParticipantCancelResponse,
 )
 
 KST = ZoneInfo("Asia/Seoul")
@@ -2519,6 +2520,94 @@ class ClubEventService:
             ),
             participation_status="cancelled",
             message="게스트 참가 신청을 취소했습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 운영자: 승인된 게스트 일정 참여 취소
+    # -----------------------------------------------------
+    def cancel_guest_participant_by_manager(
+        self,
+        club_id: int,
+        event_id: int,
+        event_participant_id: int,
+        user_id: str,
+    ) -> ClubEventParticipantCancelResponse:
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            raise LookupError(
+                "존재하지 않는 일정입니다."
+            )
+
+        if event.get("status") == "cancelled":
+            raise ValueError(
+                "삭제된 일정의 참가자는 "
+                "변경할 수 없습니다."
+            )
+
+        participant = (
+            self.event_repository
+            .find_event_participant(
+                event_id=event_id,
+                event_participant_id=(
+                    event_participant_id
+                ),
+            )
+        )
+
+        if participant is None:
+            raise LookupError(
+                "존재하지 않는 일정 참가자입니다."
+            )
+
+        if (
+            participant.get("participant_type")
+            != "guest"
+        ):
+            raise ValueError(
+                "게스트 참가자만 이 기능으로 "
+                "제외할 수 있습니다."
+            )
+
+        if participant.get("status") != "joined":
+            raise ValueError(
+                "참여가 확정된 게스트만 "
+                "제외할 수 있습니다."
+            )
+
+        cancelled_participant = (
+            self.event_repository
+            .cancel_joined_guest_participant(
+                event_id=event_id,
+                event_participant_id=(
+                    event_participant_id
+                ),
+            )
+        )
+
+        return ClubEventParticipantCancelResponse(
+            event_participant_id=int(
+                cancelled_participant[
+                    "event_participant_id"
+                ]
+            ),
+            event_id=event_id,
+            participation_status="cancelled",
+            message=(
+                "승인된 게스트의 일정 참여를 "
+                "취소했습니다."
+            ),
         )
 
     # -----------------------------------------------------

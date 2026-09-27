@@ -19,6 +19,7 @@ from app.schemas.club_events import (
     ClubEventGuestDecisionRequest,
     ClubEventGuestDecisionResponse,
     ClubEventGuestApplicationResponse,
+    ClubEventParticipantCancelResponse,
 )
 
 from app.services.club_event_service import (
@@ -704,6 +705,79 @@ def get_club_event_participants(
             ),
             detail=(
                 "일정 참가자 목록 조회 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# ---------------------------------------------------------
+# 운영자: 승인된 게스트 일정 참여 취소
+#
+# DELETE /api/clubs/{club_id}/events/{event_id}
+#        /participants/{event_participant_id}
+# ---------------------------------------------------------
+@router.delete(
+    (
+        "/{event_id}/participants/"
+        "{event_participant_id}"
+    ),
+    response_model=(
+        ClubEventParticipantCancelResponse
+    ),
+    status_code=status.HTTP_200_OK,
+)
+def cancel_club_event_guest_participant(
+    club_id: int,
+    event_id: int,
+    event_participant_id: int,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
+        return (
+            event_service
+            .cancel_guest_participant_by_manager(
+                club_id=club_id,
+                event_id=event_id,
+                event_participant_id=(
+                    event_participant_id
+                ),
+                user_id=user_id,
+            )
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "운영자 게스트 참가 취소 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "게스트 참가 취소 중 "
                 "오류가 발생했습니다."
             ),
         ) from error

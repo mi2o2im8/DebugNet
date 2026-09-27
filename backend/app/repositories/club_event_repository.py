@@ -650,6 +650,40 @@ class ClubEventRepository:
         return response.data[0]
 
     # -----------------------------------------------------
+    # 운영자: 승인된 게스트 참가 취소
+    # -----------------------------------------------------
+    def cancel_joined_guest_participant(
+        self,
+        event_id: int,
+        event_participant_id: int,
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .update(
+                {
+                    "status": "cancelled",
+                }
+            )
+            .eq("event_id", event_id)
+            .eq(
+                "event_participant_id",
+                event_participant_id,
+            )
+            .eq("participant_type", "guest")
+            .eq("status", "joined")
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError(
+                "이미 취소되었거나 제외할 수 없는 "
+                "게스트 참가자입니다."
+            )
+
+        return response.data[0]
+
+    # -----------------------------------------------------
     # 동호회 회원을 일정 참가자로 등록
     # -----------------------------------------------------
     def create_member_event_participant(

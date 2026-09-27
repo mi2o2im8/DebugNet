@@ -475,6 +475,18 @@ class ClubEventGuestApplicationResponse(BaseModel):
 
     message: str
 
+class ClubEventParticipantCancelResponse(
+    BaseModel
+):
+    event_participant_id: int
+    event_id: int
+
+    participation_status: Literal[
+        "cancelled",
+    ]
+
+    message: str
+
 class ClubEventAttendanceRequest(BaseModel):
     attendance_status: Literal[
         "attending",
