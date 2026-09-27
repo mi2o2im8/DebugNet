@@ -9,7 +9,8 @@ import "./MainHome.css";
 import { supabase } from "../../../supabaseClient";
 
 // ⭐ API
-import { getMyClub, getClubEvents } from "../../api/clubApi";
+import { getClubEvents } from "../../api/clubApi";
+import { getMyClubShared as getMyClub } from "../../api/myClubCache";
 
 // ⭐ 이미지
 import profileIcon from "../../assets/img/basic_profile_img.png";
