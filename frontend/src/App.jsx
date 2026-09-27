@@ -67,7 +67,7 @@ import MatchReviewDetail from "./pages/Match/MatchReviewDetail";
 import Mypage from "./pages/Mypage/Mypage";
 // 내정보 수정
 import MyInfoEdit from './pages/Mypage/MyInfoEdit';
-// 성정 페이지
+// 설정 페이지
 import Settings from './pages/Settings/Settings';
 // 내 동호회 일정 전체보기
 import MySchedule from "./pages/MySchedule/MySchedule";
@@ -79,6 +79,10 @@ import TrustScore from './pages/TrustScore/TrustScore';
 import MyPostComment from './pages/MyPostComment/MyPostComment';
 // 찜한 동호회
 import FavoriteClub from './pages/FavoriteClub/FavoriteClub';
+// 개인정보 관리
+import PrivacySettings from './pages/Settings/PrivacySettings';
+// 비밀번호 변경
+import ChangePassword from './pages/Settings/ChangePassword';
 
 // 알림 페이지
 import Notification from './pages/Notification/Notification';
@@ -86,6 +90,9 @@ import Notification from './pages/Notification/Notification';
 import { NotificationProvider } from './context/NotificationContext';
 // 나의 동호회 리뷰들 모아보기
 import MyReviews from './pages/MyReviews/MyReviews';
+
+// 알림 설정
+import NotificationSettings from './pages/Settings/NotificationSettings';
 
 // 챗봇 페이지
 import Chatbot from './pages/Chatbot/Chatbot';
@@ -440,6 +447,20 @@ function App() {
 
             {/* 챗봇 */}
             <Route path="/chatbot" element={<Chatbot />}/>
+            
+            {/* 알림 설정 */}
+            <Route path="/notification-settings"element={<NotificationSettings />}/>
+            {/* 개인정보 관리 */}
+            <Route
+              path="/privacy"
+              element={<PrivacySettings />}
+            />
+
+            {/* 비밀번호 변경 */}
+            <Route
+              path="/change-password"
+              element={<ChangePassword />}
+            />
 
           </Routes>
         </SignupProvider>

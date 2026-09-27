@@ -14,6 +14,12 @@ import {
 
 import { supabase } from "../../supabaseClient";
 
+import {
+    loadNotificationSettings,
+    isNotificationEnabled,
+    NOTIFICATION_SETTINGS_EVENT,
+} from "../utils/notificationSettings";
+
 
 // 알림 Context
 // - 알림 목록 / 안읽은 개수를 앱 전체에서 공유하기 위한 Context
@@ -31,6 +37,33 @@ export function NotificationProvider({ children }) {
 
     // ⭐ 현재 로그인한 사용자 id (로그인/로그아웃을 따라감)
     const [userId, setUserId] = useState(null);
+
+    // ⭐ 알림 설정 (설정 페이지에서 바꾸면 바로 반영)
+    const [notificationSettings, setNotificationSettings] = useState(
+        loadNotificationSettings
+    );
+
+
+    // ⭐ 알림 설정 변경 감지
+    useEffect(() => {
+
+        const handleSettingsChange = () => {
+            setNotificationSettings(loadNotificationSettings());
+        };
+
+        window.addEventListener(
+            NOTIFICATION_SETTINGS_EVENT,
+            handleSettingsChange
+        );
+
+        return () => {
+            window.removeEventListener(
+                NOTIFICATION_SETTINGS_EVENT,
+                handleSettingsChange
+            );
+        };
+
+    }, []);
 
 
     // ⭐ 로그인 상태 추적
@@ -211,14 +244,25 @@ export function NotificationProvider({ children }) {
     }, [userId]);
 
 
+    // ⭐ 알림 설정에서 끈 종류는 목록/배지에서 제외
+    // (DB에서 지우는 게 아니라 화면에서만 숨김 → 다시 켜면 다시 보임)
+    const visibleNotifications = notifications.filter(
+        (notification) =>
+            isNotificationEnabled(
+                notification.notification_type,
+                notificationSettings
+            )
+    );
+
+
     // ⭐ 안읽은 알림 개수 (벨 아이콘 배지에서 사용)
-    const unreadCount = notifications.filter(
+    const unreadCount = visibleNotifications.filter(
         (notification) => !notification.is_read
     ).length;
 
 
     const value = {
-        notifications,
+        notifications: visibleNotifications,
         loading,
         unreadCount,
         fetchNotifications,
