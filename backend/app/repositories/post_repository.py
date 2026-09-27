@@ -206,6 +206,45 @@ class PostRepository:
 
         return response.data or []
 
+    # -----------------------------------------------------
+    # 내가 작성한 게시글 조회
+    #
+    # 현재 로그인한 사용자의 author_id와
+    # posts.author_id가 같은 게시글만 조회한다.
+    # -----------------------------------------------------
+    def get_my_posts(
+        self,
+        user_id: str,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("posts")
+            .select(
+                "post_id, "
+                "author_id, "
+                "board_type, "
+                "sport_id, "
+                "club_id, "
+                "title, "
+                "content, "
+                "view_count, "
+                "created_at, "
+                "updated_at"
+            )
+            .eq(
+                "author_id",
+                user_id,
+            )
+            .order(
+                "created_at",
+                desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
 
     # -----------------------------------------------------
     # 검색/차단 조건까지 적용한 전체 게시글 개수

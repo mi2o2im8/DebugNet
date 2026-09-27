@@ -163,6 +163,20 @@ class PostListResponse(BaseModel):
 
     totalPages: int
 
+# ---------------------------------------------------------
+# 내가 작성한 게시글 목록
+# ---------------------------------------------------------
+
+class MyPostItem(BaseModel):
+    id: int
+    title: str
+    content: str
+    comments: int = 0
+    createdAt: datetime
+
+
+class MyPostListResponse(BaseModel):
+    items: list[MyPostItem]
 
 # =========================================================
 # 게시글 작성

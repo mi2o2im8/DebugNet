@@ -11,6 +11,8 @@ from app.schemas.comments import (
     CommentResponse,
     CommentUpdateRequest,
     CommentUpdateResponse,
+    MyCommentItem,
+    MyCommentListResponse,
 )
 
 
@@ -161,6 +163,62 @@ class CommentService:
             totalCount=len(response_comments),
         )
 
+    # =====================================================
+    # 내가 작성한 댓글 조회
+    # =====================================================
+
+    def get_my_comments(
+        self,
+        user_id: str,
+    ) -> MyCommentListResponse:
+
+        # -------------------------------------------------
+        # 1. 현재 사용자가 작성한 댓글 조회
+        # -------------------------------------------------
+        comments = self.comment_repository.get_my_comments(
+            user_id=user_id,
+        )
+
+        # -------------------------------------------------
+        # 2. 댓글이 없으면 빈 목록 반환
+        # -------------------------------------------------
+        if not comments:
+            return MyCommentListResponse(
+                items=[]
+            )
+
+        # -------------------------------------------------
+        # 3. Frontend용 데이터 생성
+        # -------------------------------------------------
+        items = []
+
+        for comment in comments:
+
+            # 댓글이 작성된 게시글 조회
+            post = self.post_repository.get_post_by_id(
+                post_id=comment["post_id"],
+            )
+
+            # 게시글이 삭제된 경우 제외
+            if post is None:
+                continue
+
+            items.append(
+                MyCommentItem(
+                    commentId=comment["comment_id"],
+                    postId=comment["post_id"],
+                    postTitle=post["title"],
+                    content=comment["content"],
+                    createdAt=comment["created_at"],
+                )
+            )
+
+        # -------------------------------------------------
+        # 4. 최종 Response
+        # -------------------------------------------------
+        return MyCommentListResponse(
+            items=items
+        )
 
     # =====================================================
     # 2. 댓글 작성
@@ -545,3 +603,5 @@ class CommentService:
 
             "trust_score": trust_score,
         }
+
+    

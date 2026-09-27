@@ -134,3 +134,19 @@ class CommentListResponse(BaseModel):
 class CommentCreateResponse(BaseModel):
 
     comment: CommentResponse
+
+
+# =========================================================
+# 내가 작성한 댓글
+# =========================================================
+
+class MyCommentItem(BaseModel):
+    commentId: int
+    postId: int
+    postTitle: str
+    content: str
+    createdAt: datetime
+
+
+class MyCommentListResponse(BaseModel):
+    items: list[MyCommentItem]

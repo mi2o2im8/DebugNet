@@ -104,6 +104,42 @@ class CommentRepository:
 
         return response.data or []
 
+    # -----------------------------------------------------
+    # 내가 작성한 댓글 조회
+    #
+    # 현재 로그인한 사용자의 author_id와
+    # comments.author_id가 같은 댓글만 조회한다.
+    # -----------------------------------------------------
+    def get_my_comments(
+        self,
+        user_id: str,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("comments")
+            .select(
+                "comment_id, "
+                "post_id, "
+                "author_id, "
+                "parent_comment_id, "
+                "content, "
+                "created_at, "
+                "updated_at"
+            )
+            .eq(
+                "author_id",
+                user_id,
+            )
+            .order(
+                "created_at",
+                desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
 
     # =====================================================
     # 2. 댓글 1개 조회

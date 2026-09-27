@@ -11,6 +11,7 @@ from app.core.security import get_current_user_id
 from app.schemas.posts import (
     BoardType,
     CommunityWriteOptionsResponse,
+    MyPostListResponse,
     PostCreateRequest,
     PostCreateResponse,
     PostDetailResponse,
@@ -66,6 +67,31 @@ router = APIRouter(
 # 현재 사용자가 차단한 사람의 게시글과 댓글을
 # 목록에서 제외해야 하기 때문이다.
 # ---------------------------------------------------------
+
+# ---------------------------------------------------------
+# 내가 작성한 게시글 조회
+#
+# GET /api/posts/my
+#
+# 현재 로그인한 사용자의 게시글만 조회한다.
+# ---------------------------------------------------------
+@router.get(
+    "/my",
+    response_model=MyPostListResponse,
+)
+def get_my_posts(
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    post_service = PostService()
+
+    return post_service.get_my_posts(
+        user_id=user_id,
+    )
+
 @router.get(
     "",
     response_model=PostListResponse,
