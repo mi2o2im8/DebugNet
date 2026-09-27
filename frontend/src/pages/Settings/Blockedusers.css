@@ -1,0 +1,202 @@
+/* ========================================
+   ⭐ 차단회원 관리
+   (기본 틀은 Settings.css / AccountSettings.css 공용 클래스 사용)
+   ======================================== */
+
+
+/* ⭐ 차단 인원 */
+
+.blocked-count {
+    margin: 0 0 10px;
+
+    font-size: 14px;
+
+    color: #60708c;
+}
+
+
+/* ⭐ 사용자 1명 */
+
+.blocked-user-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 12px 14px;
+}
+
+.blocked-user-image {
+    width: 44px;
+    height: 44px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    background: #f1f3f6;
+}
+
+.blocked-user-info {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.blocked-user-info strong {
+    font-size: 15px;
+    font-weight: 700;
+
+    color: #172b4d;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.blocked-user-info span {
+    font-size: 12px;
+
+    color: #8a96a8;
+}
+
+
+/* ⭐ 해제 버튼 */
+
+.blocked-unblock-button {
+    flex-shrink: 0;
+
+    height: 34px;
+
+    padding: 0 14px;
+
+    border: 1px solid #e1e6ed;
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 13px;
+
+    color: #172b4d;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+}
+
+.blocked-unblock-button:hover {
+    background: #f8fafc;
+}
+
+.blocked-unblock-button:focus-visible,
+.blocked-retry-button:focus-visible {
+    outline: 2px solid #01A17F;
+    outline-offset: 2px;
+}
+
+
+/* ⭐ 로딩 / 에러 / 빈 목록 */
+
+.blocked-message {
+    padding: 60px 0;
+
+    text-align: center;
+
+    color: #60708c;
+}
+
+.blocked-message p {
+    margin: 0 0 8px;
+
+    font-size: 15px;
+
+    color: #172b4d;
+}
+
+.blocked-message span {
+    font-size: 13px;
+
+    color: #8a96a8;
+}
+
+.blocked-retry-button {
+    margin-top: 8px;
+
+    height: 38px;
+
+    padding: 0 18px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #01A17F;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 14px;
+
+    color: #ffffff;
+
+    cursor: pointer;
+}
+
+
+/* ⭐ 하단 안내 */
+
+.blocked-guide {
+    margin: 12px 4px 0;
+
+    font-size: 12px;
+
+    color: #8a96a8;
+}
+
+
+/* ⭐ 모달 버튼 비활성 */
+
+.logout-modal-buttons button:disabled {
+    opacity: 0.6;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   ⭐ 다크모드
+========================================================= */
+
+.dark-mode .blocked-count,
+.dark-mode .blocked-message {
+    color: #9ba7b7;
+}
+
+.dark-mode .blocked-user-info strong,
+.dark-mode .blocked-message p {
+    color: #e9edf2;
+}
+
+.dark-mode .blocked-user-info span,
+.dark-mode .blocked-message span,
+.dark-mode .blocked-guide {
+    color: #9ba7b7;
+}
+
+.dark-mode .blocked-user-image {
+    background: #303844;
+}
+
+.dark-mode .blocked-unblock-button {
+    background: #1b2129;
+
+    border-color: #303844;
+
+    color: #e9edf2;
+}
+
+.dark-mode .blocked-unblock-button:hover {
+    background: #242b34;
+}

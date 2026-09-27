@@ -83,6 +83,8 @@ import FavoriteClub from './pages/FavoriteClub/FavoriteClub';
 import PrivacySettings from './pages/Settings/PrivacySettings';
 // 비밀번호 변경
 import ChangePassword from './pages/Settings/ChangePassword';
+// 차단 인물 설정
+import BlockedUsers from './pages/Settings/BlockedUsers';
 
 // 알림 페이지
 import Notification from './pages/Notification/Notification';
@@ -455,6 +457,9 @@ function App() {
               path="/privacy"
               element={<PrivacySettings />}
             />
+
+            {/* 차단회원 관리 */}
+            <Route path="/blocked-users"element={<BlockedUsers />}/>
 
             {/* 비밀번호 변경 */}
             <Route

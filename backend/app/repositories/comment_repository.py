@@ -77,13 +77,9 @@ class CommentRepository:
         # -------------------------------------------------
         if blocked_user_ids:
 
-            blocked_ids = ",".join(
-                blocked_user_ids
-            )
-
             query = query.not_.in_(
                 "author_id",
-                f"({blocked_ids})",
+                list(blocked_user_ids),
             )
 
 
