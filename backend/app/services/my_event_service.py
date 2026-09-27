@@ -1,13 +1,21 @@
 from app.repositories.club_event_repository import (
     ClubEventRepository,
 )
+from app.repositories.club_member_repository import (
+    ClubMemberRepository,
+)
 from app.repositories.match_repository import (
     MatchRepository,
 )
 from app.repositories.my_event_repository import (
     MyEventRepository,
 )
+from datetime import date, datetime, timezone
+
 from app.schemas.my_events import (
+    MyActivityItemResponse,
+    MyActivityResponse,
+    MyWarningResponse,
     MyEventClubResponse,
     MyEventItemResponse,
     MyEventListResponse,
@@ -38,16 +46,21 @@ class MyEventService:
         self.event_repository = ClubEventRepository()
         self.match_repository = MatchRepository()
 
+        # 팀원 멤버 상세 통계와 같은 투표 조회 함수를 재사용
+        self.club_member_repository = ClubMemberRepository()
+
     # -----------------------------------------------------
     # 한 동호회의 일정 행 모으기
     #
     # get_events 의 2~6단계와 같은 규칙
     # (동호회 일정 + 승인된 팀매칭 일정, 취소 일정 제외)
+    #
+    # 반환: (일정 목록, {event_id: club_match_id})
     # -----------------------------------------------------
     def collect_club_event_rows(
         self,
         club_id: int,
-    ) -> list[dict]:
+    ) -> tuple[list[dict], dict[int, int]]:
 
         normal_event_rows = (
             self.event_repository
@@ -61,11 +74,15 @@ class MyEventService:
             )
         )
 
-        match_event_ids = list({
-            int(match["event_id"])
+        # 팀매칭 일정 event_id → club_match_id
+        match_id_by_event = {
+            int(match["event_id"]): int(match["club_match_id"])
             for match in approved_matches
             if match.get("event_id") is not None
-        })
+            and match.get("club_match_id") is not None
+        }
+
+        match_event_ids = list(match_id_by_event.keys())
 
         match_event_rows = (
             self.event_repository
@@ -79,7 +96,7 @@ class MyEventService:
         for event_row in normal_event_rows + match_event_rows:
             event_map[int(event_row["event_id"])] = event_row
 
-        return list(event_map.values())
+        return list(event_map.values()), match_id_by_event
 
     # -----------------------------------------------------
     # 여러 일정에 대한 "내" 참석 투표 응답
@@ -203,12 +220,18 @@ class MyEventService:
 
         event_rows_by_id = {}
         club_by_event_id = {}
+        match_id_by_event = {}
 
         for club in clubs:
 
-            for event_row in self.collect_club_event_rows(
-                club.club_id
-            ):
+            club_event_rows, club_match_ids = (
+                self.collect_club_event_rows(club.club_id)
+            )
+
+            for event_id, club_match_id in club_match_ids.items():
+                match_id_by_event.setdefault(event_id, club_match_id)
+
+            for event_row in club_event_rows:
                 event_id = int(event_row["event_id"])
 
                 if not str(
@@ -266,6 +289,7 @@ class MyEventService:
                     my_attendance=my_attendance_by_event.get(
                         event_id
                     ),
+                    club_match_id=match_id_by_event.get(event_id),
                 )
             )
 
@@ -275,4 +299,270 @@ class MyEventService:
             clubs=clubs,
             events=events,
             total=len(events),
+        )
+
+    # -----------------------------------------------------
+    # Supabase 날짜 문자열 → datetime
+    #
+    # club_member_service._parse_datetime 과 같은 규칙
+    # (시간대가 없으면 UTC로 본다)
+    # -----------------------------------------------------
+    @staticmethod
+    def parse_datetime(value) -> datetime | None:
+
+        if value is None:
+            return None
+
+        if isinstance(value, datetime):
+            parsed = value
+        else:
+            parsed = datetime.fromisoformat(
+                str(value).replace("Z", "+00:00")
+            )
+
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+
+        return parsed
+
+    # -----------------------------------------------------
+    # 일정별 "가입 이후에 만들어진 참석 투표"가 있는지
+    #
+    # 팀원 club_member_service._get_eligible_votes 와 같은 기준:
+    #   투표 생성일 >= 가입일 이면 집계 대상
+    #   (가입일 / 생성일을 모르면 대상에 포함)
+    #
+    # 반환: 집계 대상인 event_id 집합
+    # -----------------------------------------------------
+    def find_vote_eligible_event_ids(
+        self,
+        event_ids: list[int],
+        joined_at_by_event: dict[int, str | None],
+    ) -> set[int]:
+
+        if not event_ids:
+            return set()
+
+        vote_rows = (
+            self.club_member_repository
+            .find_event_votes(event_ids)
+        )
+
+        # 일정마다 가장 최근 참석 투표
+        latest_vote_by_event = {}
+
+        for vote_row in vote_rows:
+
+            if vote_row.get("vote_type") != "attendance":
+                continue
+
+            event_id = int(vote_row["event_id"])
+            current = latest_vote_by_event.get(event_id)
+
+            if (
+                current is None
+                or int(vote_row["vote_id"]) > int(current["vote_id"])
+            ):
+                latest_vote_by_event[event_id] = vote_row
+
+        eligible_event_ids = set()
+
+        for event_id, vote_row in latest_vote_by_event.items():
+
+            joined_at = self.parse_datetime(
+                joined_at_by_event.get(event_id)
+            )
+            vote_created_at = self.parse_datetime(
+                vote_row.get("created_at")
+            )
+
+            if (
+                joined_at is None
+                or vote_created_at is None
+                or vote_created_at >= joined_at
+            ):
+                eligible_event_ids.add(event_id)
+
+        return eligible_event_ids
+
+    # -----------------------------------------------------
+    # 내 활동 (지난 일정 전체)
+    #
+    # 1. 내가 활동 중인 동호회 + 가입일
+    # 2. 동호회마다 일정 모으기 (팀매칭 포함)
+    # 3. 어제까지의 일정만 남기기
+    # 4. 집계 대상 판단 (팀원 멤버 상세 통계와 같은 기준)
+    #    - 일반 일정: 참석 투표가 가입 이후에 만들어졌는지
+    #    - 팀매칭:    경기 날짜가 가입일 이후인지
+    # 5. 내 참석 응답 붙이기
+    # 6. 최신순 정렬
+    #
+    # ※ 오늘 일정은 아직 진행 전일 수 있어서 제외
+    # -----------------------------------------------------
+    def get_my_activity(
+        self,
+        user_id: str,
+    ) -> MyActivityResponse:
+
+        # 1. 내 동호회
+        my_clubs = (
+            self.my_event_repository
+            .find_active_clubs_by_user(user_id)
+        )
+
+        sport_names_by_club = (
+            self.my_event_repository
+            .find_sport_names_by_club_ids(
+                [club["club_id"] for club in my_clubs]
+            )
+        )
+
+        today_string = date.today().isoformat()
+
+        event_rows_by_id = {}
+        club_by_event_id = {}
+        match_event_ids = set()
+
+        for club in my_clubs:
+
+            # 2. 일정 모으기
+            club_event_rows, club_match_ids = (
+                self.collect_club_event_rows(club["club_id"])
+            )
+
+            match_event_ids.update(club_match_ids.keys())
+
+            for event_row in club_event_rows:
+                event_id = int(event_row["event_id"])
+                event_date = str(event_row.get("event_date", ""))[:10]
+
+                # 3. 지난 일정만 (오늘 제외)
+                if not event_date or event_date >= today_string:
+                    continue
+
+                # 두 내 동호회가 붙은 팀매칭은 한 번만
+                if event_id in event_rows_by_id:
+                    continue
+
+                event_rows_by_id[event_id] = event_row
+                club_by_event_id[event_id] = club
+
+        # 4. 집계 대상 판단
+        vote_eligible_event_ids = self.find_vote_eligible_event_ids(
+            event_ids=[
+                event_id
+                for event_id in event_rows_by_id
+                if event_id not in match_event_ids
+            ],
+            joined_at_by_event={
+                event_id: club.get("joined_at")
+                for event_id, club in club_by_event_id.items()
+            },
+        )
+
+        for event_id in list(event_rows_by_id.keys()):
+            event_row = event_rows_by_id[event_id]
+            club = club_by_event_id[event_id]
+
+            is_match = (
+                event_id in match_event_ids
+                or event_row.get("event_type") == "match"
+            )
+
+            joined_date = str(club.get("joined_at") or "")[:10]
+            event_date = str(event_row.get("event_date", ""))[:10]
+
+            # 팀매칭: 가입 전에 열린 경기는 제외
+            if is_match and joined_date and event_date < joined_date:
+                del event_rows_by_id[event_id]
+
+            # 일반 일정: 가입 전 투표 + 가입 전 날짜면 제외
+            # (가입 후 투표가 있거나, 투표 없이 가입 후 날짜인 일정은 유지)
+            elif (
+                not is_match
+                and event_id not in vote_eligible_event_ids
+                and joined_date
+                and event_date < joined_date
+            ):
+                del event_rows_by_id[event_id]
+
+        # 5. 내 참석 응답 (일반 일정만 투표가 있음)
+        my_attendance_by_event = (
+            self.build_my_attendance_by_event(
+                event_ids=list(event_rows_by_id.keys()),
+                user_id=user_id,
+            )
+        )
+
+        # 6. 최신순
+        event_rows = sorted(
+            event_rows_by_id.values(),
+            key=lambda event: (
+                str(event.get("event_date", "")),
+                str(event.get("start_time", "") or ""),
+            ),
+            reverse=True,
+        )
+
+        activities = []
+
+        for event_row in event_rows:
+            event_id = int(event_row["event_id"])
+            club = club_by_event_id[event_id]
+
+            club_sports = sport_names_by_club.get(club["club_id"], [])
+
+            is_match = (
+                event_id in match_event_ids
+                or event_row.get("event_type") == "match"
+            )
+
+            activities.append(
+                MyActivityItemResponse(
+                    event_id=event_id,
+                    club_id=club["club_id"],
+                    club_name=club["club_name"],
+                    title=event_row["title"],
+                    event_date=event_row["event_date"],
+                    start_time=event_row["start_time"],
+                    end_time=event_row.get("end_time"),
+                    location=event_row.get("location"),
+                    sport_name=club_sports[0] if club_sports else None,
+                    is_match=is_match,
+                    my_attendance=(
+                        None
+                        if is_match
+                        else my_attendance_by_event.get(event_id)
+                    ),
+                    vote_eligible=(
+                        not is_match
+                        and event_id in vote_eligible_event_ids
+                    ),
+                )
+            )
+
+        # 7. 내가 받은 경고 (신뢰점수 계산용)
+        warnings = [
+            MyWarningResponse(
+                warning_id=int(row["warning_id"]),
+                club_id=int(row["club_id"]),
+                club_name=row["club_name"],
+                warning_type=str(row.get("warning_type") or "other"),
+                reason=row.get("reason"),
+                created_at=(
+                    str(row["created_at"])
+                    if row.get("created_at")
+                    else None
+                ),
+            )
+            for row in (
+                self.my_event_repository
+                .find_warnings_by_user(user_id)
+            )
+        ]
+
+        return MyActivityResponse(
+            activities=activities,
+            total=len(activities),
+            warnings=warnings,
         )

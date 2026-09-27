@@ -9,7 +9,7 @@ from fastapi import (
 )
 
 from app.core.security import get_current_user_id
-from app.schemas.my_events import MyEventListResponse
+from app.schemas.my_events import (MyActivityResponse, MyEventListResponse,)
 from app.services.my_event_service import MyEventService
 from app.schemas.users import (
     MyProfileResponse,
@@ -117,6 +117,32 @@ def get_my_events(
             ),
         ) from error
 
+# ---------------------------------------------------------
+# 내 활동 (가입 후 지난 일정 전체)
+#
+# GET /api/users/me/activity
+# ---------------------------------------------------------
+@router.get(
+    "/me/activity",
+    response_model=MyActivityResponse,
+)
+def get_my_activity(
+    user_id: str = Depends(get_current_user_id),
+):
+    my_event_service = MyEventService()
+
+    try:
+        return my_event_service.get_my_activity(
+            user_id=user_id,
+        )
+
+    except Exception as error:
+        print("내 활동 조회 실제 오류:", repr(error))
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="내 활동을 조회하는 중 오류가 발생했습니다.",
+        ) from error
 
 # ---------------------------------------------------------
 # 내 정보 수정

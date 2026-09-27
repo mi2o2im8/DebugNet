@@ -9,6 +9,9 @@ import BackButton from "../../components/BackButton/BackButton";
 import { authenticatedRequest } from "../../api/apiClient";
 import { getMyProfile } from "../../api/userApi";
 
+// ⭐ 신뢰점수 계산 (신뢰점수 페이지와 같은 계산)
+import { calculateTrustScore } from "../../utils/trustScore";
+
 // ⭐ 마이페이지 이미지
 import settingIcon from "../../assets/img/mypage/setting_icon.png";
 import profileIcon from "../../assets/img/basic_profile_img.png";
@@ -74,6 +77,9 @@ function Mypage() {
     const [clubIndex, setClubIndex] = useState(0);
     const sliderRef = useRef(null);
 
+    // ⭐ 신뢰점수 (null = 아직 못 불러옴)
+    const [trust, setTrust] = useState(null);
+
     // ⭐ 페이지 전체 데이터 로딩 상태
     const [loading, setLoading] = useState(true);
 
@@ -89,9 +95,13 @@ function Mypage() {
 
                 // ⭐ 내 정보 + 내 동호회를 동시에 요청
                 // allSettled: 한쪽이 실패해도 다른 쪽은 화면에 표시
-                const [userResult, clubResult] = await Promise.allSettled([
+                const [userResult, clubResult, activityResult] = await Promise.allSettled([
                     getMyProfile(),
                     authenticatedRequest("/api/clubs/my", {
+                        method: "GET",
+                    }),
+                    // ⭐ 신뢰점수 계산용
+                    authenticatedRequest("/api/users/me/activity", {
                         method: "GET",
                     }),
                 ]);
@@ -112,6 +122,22 @@ function Mypage() {
 
                     console.error("⭐ 내 동호회 API 오류:", clubResult.reason);
                     setMyClubs([]);
+
+                }
+
+                if (activityResult.status === "fulfilled") {
+
+                    setTrust(
+                        calculateTrustScore(
+                            activityResult.value.activities,
+                            activityResult.value.warnings
+                        )
+                    );
+
+                } else {
+
+                    console.error("⭐ 신뢰점수 API 오류:", activityResult.reason);
+                    setTrust(null);
 
                 }
 
@@ -332,7 +358,7 @@ function Mypage() {
                     <button
                         type="button"
                         onClick={() =>
-                            navigate("/myschedule")
+                            navigate("/my-reviews")
                         }
                     >
                         전체보기
@@ -573,23 +599,26 @@ function Mypage() {
                     >
 
                         <h2>
-                            92
+                            {trust?.score ?? "-"}
                         </h2>
 
 
                         <p>
-                            참석률과 참여 기록 기반
+                            투표 · 참석 기록 기반
                         </p>
 
 
                         <p>
-                            매우 좋음
+                            {trust?.level.short ?? "측정 중"}
                         </p>
 
 
                         <div className="trust-progress">
 
-                            <div className="trust-progress-bar" />
+                            <div
+                                className="trust-progress-bar"
+                                style={{ width: `${trust?.score ?? 0}%` }}
+                            />
 
                         </div>
 
