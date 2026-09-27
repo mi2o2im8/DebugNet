@@ -66,6 +66,8 @@ function Notification() {
         vote_result: FiVolume2,
         schedule_created: FiCalendar,
         schedule_reminder: FiCalendar,
+        schedule_updated: FiCalendar,
+        schedule_cancelled: FiCalendar,
         attendance_response: FiCalendar,
         club_join: FiUsers,
         join_request: FiUsers,

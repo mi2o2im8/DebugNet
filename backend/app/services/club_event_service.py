@@ -733,6 +733,70 @@ class ClubEventService:
                 deadline=registration_deadline,
             )
 
+        # -------------------------------------------------
+        # 참여 확정 사용자에게 일정 수정 알림
+        #
+        # 알림 저장 실패가 일정 수정 자체를 막지는 않는다.
+        # -------------------------------------------------
+        try:
+            notification_user_ids = list(
+                dict.fromkeys(
+                    str(participant_row["user_id"])
+                    for participant_row in participant_rows
+                    if (
+                        participant_row.get("user_id")
+                        and participant_row.get("status")
+                            == "joined"
+                        and str(
+                            participant_row["user_id"]
+                        ) != str(user_id)
+                    )
+                )
+            )
+
+            club = (
+                self.club_repository
+                .find_club_by_id(club_id)
+            )
+
+            club_name = (
+                club.get("club_name")
+                if club
+                else "동호회"
+            )
+
+            event_date = request_data.event_date
+
+            self.event_repository \
+                .create_event_notifications(
+                    user_ids=notification_user_ids,
+                    notification_type=(
+                        "schedule_updated"
+                    ),
+                    title=(
+                        "일정 정보가 변경되었어요"
+                    ),
+                    content=(
+                        f"[{club_name}] "
+                        f"{event_date.month}월 "
+                        f"{event_date.day}일 "
+                        f"'{request_data.title}' 일정이 "
+                        "변경되었습니다. "
+                        "변경된 내용을 확인해주세요."
+                    ),
+                    event_id=event_id,
+                    link_path=(
+                        f"/clubs/{club_id}/events/"
+                        f"{event_id}/attendance"
+                    ),
+                )
+
+        except Exception as error:
+            print(
+                "일정 수정 알림 생성 실패:",
+                repr(error),
+            )
+
         return ClubEventCreateResponse(
             event_id=event_id,
             club_id=club_id,
@@ -878,6 +942,74 @@ class ClubEventService:
             event_id=event_id,
         )
 
+        # -------------------------------------------------
+        # 참여 신청자 및 확정 참가자에게 일정 취소 알림
+        #
+        # 취소된 일정 상세 화면은 조회할 수 없으므로
+        # 알림 목록 화면으로 연결한다.
+        # -------------------------------------------------
+        try:
+            participant_rows = (
+                self.event_repository
+                .find_participant_details(event_id)
+            )
+
+            notification_user_ids = list(
+                dict.fromkeys(
+                    str(participant_row["user_id"])
+                    for participant_row in participant_rows
+                    if (
+                        participant_row.get("user_id")
+                        and participant_row.get("status")
+                            in {
+                                "pending",
+                                "joined",
+                            }
+                        and str(
+                            participant_row["user_id"]
+                        ) != str(user_id)
+                    )
+                )
+            )
+
+            club = (
+                self.club_repository
+                .find_club_by_id(club_id)
+            )
+
+            club_name = (
+                club.get("club_name")
+                if club
+                else "동호회"
+            )
+
+            event_title = (
+                event.get("title")
+                or "일정"
+            )
+
+            self.event_repository \
+                .create_event_notifications(
+                    user_ids=notification_user_ids,
+                    notification_type=(
+                        "schedule_cancelled"
+                    ),
+                    title="일정이 취소되었어요",
+                    content=(
+                        f"[{club_name}] "
+                        f"'{event_title}' 일정이 "
+                        "운영자에 의해 취소되었습니다."
+                    ),
+                    event_id=event_id,
+                    link_path="/notification",
+                )
+
+        except Exception as error:
+            print(
+                "일정 취소 알림 생성 실패:",
+                repr(error),
+            )
+
         return ClubEventCreateResponse(
             event_id=event_id,
             club_id=club_id,
@@ -922,6 +1054,11 @@ class ClubEventService:
             for event_id in event_ids
         }
 
+        guest_user_ids_by_event = {
+            event_id: set()
+            for event_id in event_ids
+        }
+
         for participant_row in participant_rows:
             event_id = int(
                 participant_row["event_id"]
@@ -939,6 +1076,12 @@ class ClubEventService:
             )
 
             if participant_type == "guest":
+                guest_user_ids_by_event[
+                    event_id
+                ].add(
+                    str(participant_row["user_id"])
+                )
+
                 if participant_status == "joined":
                     counts[event_id][
                         "guest_count"
@@ -1084,13 +1227,22 @@ class ClubEventService:
                 vote_id
             ]
 
+            # 게스트의 참석 응답은 회원 참석·불참 수에
+            # 포함하지 않는다.
             if (
                 user_id
-                not in joined_member_ids_by_event[
+                in guest_user_ids_by_event[
                     event_id
                 ]
             ):
                 continue
+
+            is_joined_member = (
+                user_id
+                in joined_member_ids_by_event[
+                    event_id
+                ]
+            )
 
             option_id = int(
                 response_row["option_id"]
@@ -1114,28 +1266,46 @@ class ClubEventService:
                 "참석",
                 "attending",
             }:
+                # 승인형 일정의 참석 신청은
+                # 운영자 승인 전까지 집계하지 않는다.
+                if not is_joined_member:
+                    continue
+
                 counts[event_id][
                     "attending_count"
                 ] += 1
 
                 counts[event_id][
                     "undecided_count"
-                ] -= 1
+                ] = max(
+                    0,
+                    counts[event_id][
+                        "undecided_count"
+                    ] - 1,
+                )
 
             elif option_text in {
                 "불참",
                 "absent",
             }:
+                # 불참은 참여 승인이 필요하지 않으므로
+                # joined 여부와 관계없이 즉시 집계한다.
                 counts[event_id][
                     "absent_count"
                 ] += 1
 
-                counts[event_id][
-                    "undecided_count"
-                ] -= 1
+                if is_joined_member:
+                    counts[event_id][
+                        "undecided_count"
+                    ] = max(
+                        0,
+                        counts[event_id][
+                            "undecided_count"
+                        ] - 1,
+                    )
 
             # 미정 또는 응답 없음은
-            # 기존 undecided_count를 그대로 유지
+            # joined 회원의 기본 미응답 수를 유지한다.
 
         return counts
 
@@ -1451,26 +1621,6 @@ class ClubEventService:
             and not is_operator
         )
 
-        # 이미 승인 대기 중인 회원이 다시 참석을
-        # 선택한 경우 중복 신청을 만들지 않는다.
-        if (
-            requires_approval
-            and participant is not None
-            and participant["participant_type"]
-            == "member"
-            and participant["status"] == "pending"
-            and request_data.attendance_status
-            == "attending"
-        ):
-            return ClubEventAttendanceResponse(
-                event_id=event_id,
-                attendance_status="undecided",
-                participation_status="pending",
-                message=(
-                    "이미 참여 승인 대기 중입니다."
-                ),
-            )
-
         self.validate_member_attendance_rules(
             event=event,
             user_id=user_id,
@@ -1549,6 +1699,42 @@ class ClubEventService:
                                 "pending"
                             ),
                         )
+                    )
+
+                # 이전에 불참으로 응답한 회원이
+                # 참석 신청으로 변경한 경우,
+                # 불참 집계가 남지 않도록 미정으로 변경한다.
+                undecided_option = next(
+                    (
+                        option_row
+                        for option_row in option_rows
+                        if str(
+                            option_row["option_text"]
+                        ).strip()
+                        in {
+                            "미정",
+                            "undecided",
+                        }
+                    ),
+                    None,
+                )
+
+                if undecided_option is None:
+                    raise ValueError(
+                        "미정 투표 항목을 찾을 수 없습니다."
+                    )
+
+                self.event_repository \
+                    .replace_vote_response(
+                        vote_id=int(
+                            vote["vote_id"]
+                        ),
+                        option_id=int(
+                            undecided_option[
+                                "option_id"
+                            ]
+                        ),
+                        user_id=user_id,
                     )
 
                 return ClubEventAttendanceResponse(
