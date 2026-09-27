@@ -195,9 +195,22 @@ export async function getClubDashboard(clubId) {
     );
 }
 
+
 export async function getClubEvents(clubId) {
     return authenticatedRequest(
         `/api/clubs/${clubId}/events`,
+        {
+            method: "GET"
+        }
+    );
+}
+
+// ---------------------------------------------------------
+// 게스트 모집 중인 일정 조회
+// ---------------------------------------------------------
+export async function getGuestRecruitingEvents() {
+    return authenticatedRequest(
+        "/api/clubs/guest-recruiting",
         {
             method: "GET"
         }
@@ -298,6 +311,82 @@ export async function decideClubEventParticipant(
             body: {
                 decision
             }
+        }
+    );
+}
+
+// ---------------------------------------------------------
+// 운영자: 승인된 게스트 일정 참여 취소
+// ---------------------------------------------------------
+export async function cancelClubEventGuestParticipant(
+    clubId,
+    eventId,
+    eventParticipantId
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/${eventId}`
+            + `/participants/${eventParticipantId}`
+        ),
+        {
+            method: "DELETE"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// 게스트 일정 참가 신청
+// ---------------------------------------------------------
+export async function applyClubEventAsGuest(
+    clubId,
+    eventId
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/${eventId}`
+            + "/guest-application"
+        ),
+        {
+            method: "POST"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// 내 게스트 신청 상태 조회
+// ---------------------------------------------------------
+export async function getMyClubEventGuestApplication(
+    clubId,
+    eventId
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/${eventId}`
+            + "/guest-application"
+        ),
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// 내 게스트 신청 취소
+// ---------------------------------------------------------
+export async function cancelMyClubEventGuestApplication(
+    clubId,
+    eventId
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/${eventId}`
+            + "/guest-application"
+        ),
+        {
+            method: "DELETE"
         }
     );
 }

@@ -222,9 +222,23 @@
     color: #c23b3b;
 }
 
+.event-participant-controls {
+    display: flex;
+    flex: 0 0 86px;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .event-participant-attendance-control {
     display: flex;
-    flex: 0 0 78px;
+    width: 100%;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.event-participant-attendance-control {
+    display: flex;
+    width: 100%;
     flex-direction: column;
     gap: 4px;
 }
@@ -259,6 +273,29 @@
 .event-participant-attendance-control select:disabled {
     cursor: wait;
     opacity: 0.6;
+}
+
+.event-participant-cancel-guest {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 30px;
+    padding: 0 5px;
+    border: 1px solid #e17070;
+    border-radius: 7px;
+    background: #fff6f6;
+    color: #c83f3f;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.event-participant-cancel-guest:disabled {
+    cursor: wait;
+    opacity: 0.5;
 }
 
 .event-participant-actions {
