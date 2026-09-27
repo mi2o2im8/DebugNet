@@ -546,6 +546,17 @@ function ClubEventForm() {
                 null
         };
 
+                if (isEditMode) {
+            const confirmed = window.confirm(
+                "일정을 수정하면 참여 확정 사용자에게 "
+                + "변경 알림이 발송됩니다. 수정할까요?"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+        }
+
         setIsSaving(true);
 
         try {
@@ -563,7 +574,12 @@ function ClubEventForm() {
             alert(result.message);
 
             navigate(
-                `/clubs/${clubId}/manage/events`,
+                isEditMode
+                    ? (
+                        `/clubs/${clubId}/manage/events/`
+                        + eventId
+                    )
+                    : `/clubs/${clubId}/manage/events`,
                 {
                     replace: true
                 }
@@ -807,6 +823,7 @@ function ClubEventForm() {
                                 value={
                                     formData.recurrenceType
                                 }
+                                disabled={isEditMode}
                                 onChange={(event) =>
                                     updateField(
                                         "recurrenceType",
@@ -832,7 +849,17 @@ function ClubEventForm() {
                             </select>
                         </label>
 
+                        {isEditMode && (
+                            <p className="club-event-recurrence-note">
+                                반복 설정 변경은 날짜별 일정과
+                                참석 기록 보호를 위해 지원하지
+                                않습니다.
+                            </p>
+                        )}
+
                         {
+                            !isEditMode
+                            &&
                             formData.recurrenceType
                             !== "none"
                             && (

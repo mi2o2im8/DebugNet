@@ -625,6 +625,49 @@ class ClubEventService:
             if participant_row.get("status") == "joined"
         )
 
+        pending_member_rows = [
+            participant_row
+            for participant_row in participant_rows
+            if (
+                participant_row.get(
+                    "participant_type"
+                ) == "member"
+                and participant_row.get("status")
+                    == "pending"
+            )
+        ]
+
+        if (
+            request_data.participation_method == "open"
+            and pending_member_rows
+        ):
+            raise ValueError(
+                "승인 대기 중인 회원이 있어 참여 방식을 "
+                "바로 참여로 변경할 수 없습니다. "
+                "대기 신청을 먼저 승인하거나 거절해주세요."
+            )
+
+        if request_data.max_participants is not None:
+            current_counts = (
+                self.build_event_participant_counts(
+                    [current_event]
+                )[event_id]
+            )
+
+            occupied_count = (
+                current_counts["attending_count"]
+                + current_counts["guest_count"]
+            )
+
+            if (
+                request_data.max_participants
+                < occupied_count
+            ):
+                raise ValueError(
+                    "전체 정원은 현재 참석이 확정된 "
+                    f"{occupied_count}명보다 적을 수 없습니다."
+                )
+
         if (
             not request_data.guest_allowed
             and active_guest_rows
