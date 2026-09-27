@@ -125,6 +125,11 @@ function ClubEventDetail() {
         setAttendanceStatus
     ] = useState("undecided");
 
+    const [
+        participationStatus,
+        setParticipationStatus
+    ] = useState(null);
+
     const [isLoading, setIsLoading] =
         useState(true);
 
@@ -187,6 +192,12 @@ function ClubEventDetail() {
                             attendanceResult
                                 .attendance_status
                             || "undecided"
+                        );
+
+                        setParticipationStatus(
+                            attendanceResult
+                                .participation_status
+                            || null
                         );
                     }
                 } catch (attendanceError) {
@@ -281,6 +292,12 @@ function ClubEventDetail() {
             setAttendanceStatus(
                 result.attendance_status
             );
+
+            setParticipationStatus(
+                result.participation_status || null
+            );
+
+            alert(result.message);
 
             try {
                 const eventListResult =
@@ -495,15 +512,31 @@ function ClubEventDetail() {
             <section className="club-event-detail-section">
                 <h3>내 참석 응답</h3>
 
+                {participationStatus === "pending" && (
+                    <p
+                        className="club-event-detail-pending"
+                        role="status"
+                    >
+                        참여 승인 대기 중입니다. 운영자가
+                        승인하면 참석으로 확정됩니다.
+                    </p>
+                )}
+
                 <div className="club-event-attendance-options">
                     <button
                         type="button"
                         className={
-                            attendanceStatus === "attending"
+                            (
+                                attendanceStatus === "attending"
+                                || participationStatus === "pending"
+                            )
                                 ? "attending active"
                                 : "attending"
                         }
-                        disabled={isAttendanceSaving}
+                        disabled={
+                            isAttendanceSaving
+                            || participationStatus === "pending"
+                        }
                         onClick={() =>
                             handleAttendanceChange(
                                 "attending"
@@ -511,7 +544,10 @@ function ClubEventDetail() {
                         }
                     >
                         <FiCheckCircle />
-                        참석
+
+                        {participationStatus === "pending"
+                            ? "승인 대기"
+                            : "참석"}
                     </button>
 
                     <button

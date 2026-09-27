@@ -170,6 +170,42 @@ function ParticipantItem({
                     )}
                 </div>
             )}
+
+            {participant.participation_status ===
+                "pending" && (
+                <div className="event-participant-actions">
+                    <button
+                        type="button"
+                        className="approve"
+                        disabled={isProcessing}
+                        onClick={() =>
+                            onDecision(
+                                participant,
+                                "approve"
+                            )
+                        }
+                    >
+                        <FiCheck />
+                        승인
+                    </button>
+
+                    <button
+                        type="button"
+                        className="reject"
+                        disabled={isProcessing}
+                        onClick={() =>
+                            onDecision(
+                                participant,
+                                "reject"
+                            )
+                        }
+                    >
+                        <FiX />
+                        거절
+                    </button>
+                </div>
+            )}
+
         </article>
     );
 }
