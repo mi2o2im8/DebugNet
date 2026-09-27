@@ -92,6 +92,8 @@ import Notification from './pages/Notification/Notification';
 import { NotificationProvider } from './context/NotificationContext';
 // 나의 동호회 리뷰들 모아보기
 import MyReviews from './pages/MyReviews/MyReviews';
+// FAQ 화면
+import Faq from './pages/Settings/Faq';
 
 // 알림 설정
 import NotificationSettings from './pages/Settings/NotificationSettings';
@@ -466,6 +468,9 @@ function App() {
               path="/change-password"
               element={<ChangePassword />}
             />
+
+            {/* FAQ */}
+            <Route path="/faq" element={<Faq />} />
 
           </Routes>
         </SignupProvider>
