@@ -358,7 +358,7 @@ function Mypage() {
                     <button
                         type="button"
                         onClick={() =>
-                            navigate("/my-reviews")
+                            navigate("/myschedule")
                         }
                     >
                         전체보기

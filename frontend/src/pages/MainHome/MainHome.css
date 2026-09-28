@@ -1788,3 +1788,45 @@ body {
 .section-more img {
     transform: rotate(180deg);
 }
+
+/* ========================================
+   ⭐ 게스트 모집 - 실제 데이터 연결용 추가
+======================================== */
+
+/* ⭐ 불러오는 중 / 모집 일정 없음 (4칸 전체 차지) */
+.guest-empty {
+    grid-column: 1 / -1;
+
+    margin: 0;
+    padding: 22px 12px;
+
+    border: 1px dashed #d8e2de;
+    border-radius: 8px;
+
+    font-size: 11px;
+    text-align: center;
+
+    color: #999;
+}
+
+
+/* ⭐ 일정 이미지가 없을 때 달력 아이콘 */
+.guest-image img.guest-image-fallback {
+    width: 60%;
+    height: 60%;
+
+    margin: 20% auto 0;
+
+    object-fit: contain;
+    object-position: center;
+
+    filter: none;
+
+    transform: translateY(-15%);
+}
+
+.dark-mode .guest-empty {
+    border-color: #303844;
+
+    color: #7f8b9c;
+}

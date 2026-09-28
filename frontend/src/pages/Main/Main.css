@@ -869,3 +869,46 @@
 .main-page {
     padding-bottom: 100px;
 }
+
+/* ========================================
+   ⭐ 게스트 모집 / 이런 활동도 있어요 - 실제 데이터 연결용 추가
+======================================== */
+
+/* ⭐ 불러오는 중 / 데이터 없음 (4칸 전체 차지) */
+.main-list-empty {
+    grid-column: 1 / -1;
+
+    margin: 0;
+    padding: 22px 12px;
+
+    border: 1px dashed #d8e2de;
+    border-radius: 8px;
+
+    font-size: 11px;
+    text-align: center;
+
+    color: #999;
+}
+
+
+/* ⭐ 일정 이미지가 없을 때 달력 아이콘 */
+.guest-item-image-link img.main-card-fallback {
+    width: 60%;
+    height: 60%;
+
+    margin: 12% auto 0;
+
+    object-fit: contain;
+
+    background: transparent;
+}
+
+.guest-item-image-link:has(img.main-card-fallback) {
+    background: #edf3f1;
+}
+
+.dark-mode .main-list-empty {
+    border-color: #303844;
+
+    color: #7f8b9c;
+}

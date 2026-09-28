@@ -4,12 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
+import { attachClubInfoToEvents } from "../../utils/attachClubInfo";
 import "./MainHome.css";
 
 import { supabase } from "../../../supabaseClient";
 
 // ⭐ API
-import { getClubEvents } from "../../api/clubApi";
+import {
+    getClubEvents,
+    getGuestRecruitingEvents,
+} from "../../api/clubApi";
 import { getMyClubShared as getMyClub } from "../../api/myClubCache";
 
 // ⭐ 이미지
@@ -46,6 +50,46 @@ const sportImages = {
 import ChatbotButton from "../../components/Chatbot/ChatbotButton";
 import { useNotifications } from "../../context/NotificationContext";
 import Chatbot from "../Chatbot/Chatbot";
+
+
+// =========================================================
+// ⭐ 게스트 일정 이미지
+//
+// 우선순위: 일정 이미지 → 동호회 대표 이미지 → 종목 기본 이미지 → 달력 아이콘
+// 이미지 주소가 깨지면 다음 순서로 넘어감
+// =========================================================
+
+function GuestEventImage({ event }) {
+
+    const candidates = [
+        event.event_image_url,
+        event.club_image_url,
+        sportImages[event.club_sport],
+    ].filter(Boolean);
+
+    const [index, setIndex] = useState(0);
+
+    const src = candidates[index];
+
+    if (!src) {
+        return (
+            <img
+                src={calendarIcon}
+                alt=""
+                className="guest-image-fallback"
+            />
+        );
+    }
+
+    return (
+        <img
+            src={src}
+            alt={event.club_name || event.title || "게스트 모집 일정"}
+            onError={() => setIndex((prev) => prev + 1)}
+        />
+    );
+
+}
 
 
 function MainHome() {
@@ -414,41 +458,116 @@ function MainHome() {
     // ⭐ 게스트 모집
     // =========================================================
 
-    const guests = [
+    // ⭐ 백엔드 GET /api/clubs/guest-recruiting
+    //    (게스트 허용 + 모집 중 + 마감 전 일정만 내려옴)
+    // ⭐ 내가 운영/가입한 동호회 일정은 제외 → "다른 동호회"만 표시
+    const [guestEvents, setGuestEvents] = useState([]);
 
-        {
-            image: soccerImage,
-            alt: "미국 풋살 모임",
-            title: "미국 풋살 모임",
-            time: "수요일 오후 19:00",
-            place: "마곡 풋살장",
-        },
+    const [isGuestLoading, setIsGuestLoading] = useState(true);
 
-        {
-            image: basketballImage,
-            alt: "아하 농구 모임",
-            title: "아하 농구 모임",
-            time: "토요일 17:00",
-            place: "한강 농구공원",
-        },
 
-        {
-            image: runningImage,
-            alt: "러닝 함께해요",
-            title: "러닝 함께해요",
-            time: "일요일 07:00",
-            place: "한강공원",
-        },
+    useEffect(() => {
 
-        {
-            image: climbingImage,
-            alt: "클라이밍 입문",
-            title: "클라이밍 입문",
-            time: "매주 화 19:00",
-            place: "강서 클라이밍장",
-        },
+        let isActive = true;
 
-    ];
+        const loadGuestEvents = async () => {
+
+            try {
+
+                setIsGuestLoading(true);
+
+                const data = await getGuestRecruitingEvents();
+
+                const eventList =
+                    Array.isArray(data)
+                        ? data
+                        : Array.isArray(data?.items)
+                            ? data.items
+                            : [];
+
+                // ⭐ 내 동호회 ID
+                const myClubIds = new Set(
+                    myClubs
+                        .map(
+                            (club) =>
+                                club?.club_id ||
+                                club?.id ||
+                                club?.clubId
+                        )
+                        .filter(Boolean)
+                        .map(String)
+                );
+
+                const otherClubEvents = eventList
+                    .filter(
+                        (event) =>
+                            !myClubIds.has(String(event?.club_id))
+                    )
+                    .slice(0, 4);
+
+                // ⭐ 동호회 이미지 / 이름 붙이기
+                const eventsWithClub =
+                    await attachClubInfoToEvents(
+                        otherClubEvents
+                    );
+
+                if (isActive) {
+                    setGuestEvents(eventsWithClub);
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "⭐ MainHome 게스트 모집 조회 오류:",
+                    error
+                );
+
+                if (isActive) {
+                    setGuestEvents([]);
+                }
+
+            } finally {
+
+                if (isActive) {
+                    setIsGuestLoading(false);
+                }
+
+            }
+
+        };
+
+        loadGuestEvents();
+
+        return () => {
+            isActive = false;
+        };
+
+    }, [myClubs]);
+
+
+    // ⭐ 게스트 일정 날짜/시간 표시 (예: 10.3(토) 19:00)
+    const formatGuestSchedule = (eventDate, startTime) => {
+
+        if (!eventDate) {
+            return "일정 미정";
+        }
+
+        const [year, month, day] =
+            String(eventDate).split("-").map(Number);
+
+        const date = new Date(year, month - 1, day);
+
+        const weekday =
+            ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
+
+        const time =
+            startTime
+                ? String(startTime).slice(0, 5)
+                : "";
+
+        return `${month}.${day}(${weekday}) ${time}`.trim();
+
+    };
 
 
     // =========================================================
@@ -1394,10 +1513,14 @@ function MainHome() {
                                         clubIdValue ||
                                         `${clubName}-${index}`
                                     }
+                                    // ⭐ 운영자 → 운영 대시보드
+                                    // ⭐ 가입자 → 동호회 상세 (가입 완료 상태로 보임)
                                     to={
-                                        clubIdValue
-                                            ? `/clubs/${clubIdValue}`
-                                            : "/clubs"
+                                        !clubIdValue
+                                            ? "/clubs"
+                                            : isOperating
+                                                ? `/clubs/${clubIdValue}/manage`
+                                                : `/clubs/${clubIdValue}`
                                     }
                                     className="my-club-card"
                                 >
@@ -1445,7 +1568,7 @@ function MainHome() {
                                     <div className="my-club-status-row">
 
                                         <span className="my-club-active-badge">
-                                            활동 중
+                                            {isOperating ? "운영 중" : "활동 중"}
                                         </span>
 
                                         <span className="my-club-member-count">
@@ -1457,7 +1580,7 @@ function MainHome() {
                                     <div className="my-club-action">
 
                                         <span>
-                                            동호회 보기
+                                            {isOperating ? "운영 관리" : "동호회 보기"}
                                         </span>
 
                                         <span>
@@ -1726,27 +1849,33 @@ function MainHome() {
 
                     <div className="guest-list">
 
-                        {guests.map(
-                            (guest) => (
+                        {isGuestLoading ? (
 
+                            <p className="guest-empty">
+                                게스트 모집 일정을 불러오는 중이에요.
+                            </p>
+
+                        ) : guestEvents.length === 0 ? (
+
+                            <p className="guest-empty">
+                                지금 게스트를 모집 중인 일정이 없어요.
+                            </p>
+
+                        ) : (
+
+                            guestEvents.map((event) => (
+
+                                // ⭐ 게스트 전용 일정 상세 페이지가 아직 없어서
+                                //    해당 동호회 상세 페이지로 이동
                                 <Link
-                                    key={
-                                        guest.title
-                                    }
-                                    to="/clubs"
+                                    key={event.event_id}
+                                    to={`/clubs/${event.club_id}`}
                                     className="guest-card"
                                 >
 
                                     <div className="guest-image">
 
-                                        <img
-                                            src={
-                                                guest.image
-                                            }
-                                            alt={
-                                                guest.alt
-                                            }
-                                        />
+                                        <GuestEventImage event={event} />
 
                                         {/* ⭐ 게스트 모집 팝업 글씨 */}
                                         <span className="guest-badge">
@@ -1756,21 +1885,18 @@ function MainHome() {
                                     </div>
 
                                     <h4>
-                                        {
-                                            guest.title
-                                        }
+                                        {event.title || "게스트 모집"}
                                     </h4>
 
                                     <p>
-                                        {
-                                            guest.time
-                                        }
+                                        {formatGuestSchedule(
+                                            event.event_date,
+                                            event.start_time
+                                        )}
                                     </p>
 
                                     <p>
-                                        {
-                                            guest.place
-                                        }
+                                        {event.location || "장소 미정"}
                                     </p>
 
                                     <span>
@@ -1779,7 +1905,8 @@ function MainHome() {
 
                                 </Link>
 
-                            )
+                            ))
+
                         )}
 
                     </div>
@@ -1902,6 +2029,21 @@ function MainHome() {
                             </h3>
 
                         </div>
+
+
+                        <Link
+                            to="/clubs/all"
+                            className="section-more"
+                        >
+
+                            더보기
+
+                            <img
+                                src={backIcon}
+                                alt="이동"
+                            />
+
+                        </Link>
 
                     </div>
 

@@ -7,6 +7,8 @@ import BottomNav from "../../components/BottomNav";
 // ⭐ Supabase
 import { supabase } from "../../../supabaseClient";
 
+import { attachClubInfoToEvents } from "../../utils/attachClubInfo";
+
 import "./Main.css";
 
 // ⭐ 베이직 홈 이미지
@@ -31,6 +33,117 @@ import basketballImage from "../../assets/img/playbridge_16_assets/basketball.pn
 import badmintonImage from "../../assets/img/playbridge_16_assets/badminton.png";
 import ChatbotButton from "../../components/Chatbot/ChatbotButton";
 import { useNotifications } from "../../context/NotificationContext";
+
+
+// =========================================================
+// ⭐ 백엔드 주소 (apiClient.js 와 같은 방식)
+// =========================================================
+
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ||
+    "http://127.0.0.1:8000";
+
+
+// ⭐ 종목별 기본 이미지 (동호회 이미지가 없을 때)
+const SPORT_IMAGES = {
+    "축구": soccerImage,
+    "풋살": soccerImage,
+    "축구ㆍ풋살": soccerImage,
+    "농구": basketballImage,
+    "배드민턴": badmintonImage,
+    "탁구": tabletennisImage,
+    "클라이밍": climbingImage,
+    "러닝": runningImage,
+    "요가": yogaImage,
+};
+
+
+// ⭐ 게스트 일정 날짜/시간 표시 (예: 10.3(토) 19:00)
+const formatGuestSchedule = (eventDate, startTime) => {
+
+    if (!eventDate) {
+        return "일정 미정";
+    }
+
+    const [year, month, day] =
+        String(eventDate).split("-").map(Number);
+
+    const date = new Date(year, month - 1, day);
+
+    const weekday =
+        ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
+
+    const time =
+        startTime
+            ? String(startTime).slice(0, 5)
+            : "";
+
+    return `${month}.${day}(${weekday}) ${time}`.trim();
+
+};
+
+
+// ⭐ 카드 글씨 공통 스타일 (기존 인라인 스타일 그대로)
+const cardTextStyle = {
+    margin: "3px 5px",
+    fontSize: "7px",
+    color: "#888",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+};
+
+const cardButtonStyle = {
+    display: "block",
+    margin: "6px 5px 7px",
+    padding: "4px 0",
+    border: "1px solid #01A17F",
+    borderRadius: "5px",
+    background: "#fff",
+    color: "#01A17F",
+    textAlign: "center",
+    fontSize: "7px",
+};
+
+
+// =========================================================
+// ⭐ 게스트 일정 이미지
+//
+// 우선순위: 일정 이미지 → 동호회 대표 이미지 → 종목 기본 이미지 → 달력 아이콘
+// 이미지 주소가 깨지면 다음 순서로 넘어감
+// =========================================================
+
+function GuestEventImage({ event }) {
+
+    const candidates = [
+        event.event_image_url,
+        event.club_image_url,
+        SPORT_IMAGES[event.club_sport],
+    ].filter(Boolean);
+
+    const [index, setIndex] = useState(0);
+
+    const src = candidates[index];
+
+    if (!src) {
+        return (
+            <img
+                src={calendarIcon}
+                alt=""
+                className="main-card-fallback"
+            />
+        );
+    }
+
+    return (
+        <img
+            src={src}
+            alt={event.club_name || event.title || "게스트 모집 일정"}
+            onError={() => setIndex((prev) => prev + 1)}
+        />
+    );
+
+}
 
 
 function Main() {
@@ -67,6 +180,146 @@ function Main() {
     // =========================================================
     // ⭐ NotificationContext 한 곳에서 관리 (실시간 구독도 Context에서만)
     const { unreadCount: unreadNotificationCount } = useNotifications();
+
+
+    // =========================================================
+    // ⭐ 다른 동호회 게스트 모집 (실제 데이터)
+    // GET /api/clubs/guest-recruiting
+    // =========================================================
+
+    const [guestEvents, setGuestEvents] = useState([]);
+
+    const [isGuestLoading, setIsGuestLoading] = useState(true);
+
+
+    useEffect(() => {
+
+        let isActive = true;
+
+        const loadGuestEvents = async () => {
+
+            try {
+
+                // ⭐ 로그인 안 한 사용자도 볼 수 있도록
+                //    인증 없이 호출 (백엔드도 인증 필요 없는 API)
+                const response = await fetch(
+                    `${API_BASE_URL}/api/clubs/guest-recruiting`
+                );
+
+                if (!response.ok) {
+                    throw new Error("게스트 모집 일정을 불러오지 못했습니다.");
+                }
+
+                const data = await response.json();
+
+                const eventList =
+                    Array.isArray(data)
+                        ? data
+                        : Array.isArray(data?.items)
+                            ? data.items
+                            : [];
+
+                // ⭐ 동호회 이미지 / 이름 붙이기
+                const eventsWithClub =
+                    await attachClubInfoToEvents(
+                        eventList.slice(0, 4)
+                    );
+
+                if (isActive) {
+                    setGuestEvents(eventsWithClub);
+                }
+
+            } catch (error) {
+
+                console.error("⭐ Main 게스트 모집 조회 오류:", error);
+
+                if (isActive) {
+                    setGuestEvents([]);
+                }
+
+            } finally {
+
+                if (isActive) {
+                    setIsGuestLoading(false);
+                }
+
+            }
+
+        };
+
+        loadGuestEvents();
+
+        return () => {
+            isActive = false;
+        };
+
+    }, []);
+
+
+    // =========================================================
+    // ⭐ 이런 활동도 있어요 (실제 데이터)
+    // GET /api/clubs/search
+    // =========================================================
+
+    const [activityClubs, setActivityClubs] = useState([]);
+
+    const [isActivityLoading, setIsActivityLoading] = useState(true);
+
+
+    useEffect(() => {
+
+        let isActive = true;
+
+        const loadActivityClubs = async () => {
+
+            try {
+
+                const response = await fetch(
+                    `${API_BASE_URL}/api/clubs/search`
+                );
+
+                if (!response.ok) {
+                    throw new Error("활동 추천 동호회를 불러오지 못했습니다.");
+                }
+
+                const data = await response.json();
+
+                const clubList =
+                    Array.isArray(data)
+                        ? data
+                        : Array.isArray(data?.items)
+                            ? data.items
+                            : [];
+
+                if (isActive) {
+                    setActivityClubs(clubList.slice(0, 4));
+                }
+
+            } catch (error) {
+
+                console.error("⭐ Main 활동 추천 조회 오류:", error);
+
+                if (isActive) {
+                    setActivityClubs([]);
+                }
+
+            } finally {
+
+                if (isActive) {
+                    setIsActivityLoading(false);
+                }
+
+            }
+
+        };
+
+        loadActivityClubs();
+
+        return () => {
+            isActive = false;
+        };
+
+    }, []);
 
 
     // =========================================================
@@ -693,253 +946,68 @@ function Main() {
                         className="guest-list"
                     >
 
-                        {/* ⭐ 게스트 1 */}
-                        <Link
-                            to="/clubs"
-                            className="guest-item"
-                        >
+                        {isGuestLoading ? (
 
-                            <div
-                                className="guest-item-image-link"
-                            >
-                                <span
-                                    className="image-popup popup-green"
+                            <p className="main-list-empty">
+                                게스트 모집 일정을 불러오는 중이에요.
+                            </p>
+
+                        ) : guestEvents.length === 0 ? (
+
+                            <p className="main-list-empty">
+                                지금 게스트를 모집 중인 일정이 없어요.
+                            </p>
+
+                        ) : (
+
+                            guestEvents.map((event) => (
+
+                                // ⭐ 게스트 전용 일정 상세 페이지가 아직 없어서
+                                //    해당 동호회 상세 페이지로 이동
+                                <Link
+                                    key={event.event_id}
+                                    to={`/clubs/${event.club_id}`}
+                                    className="guest-item"
                                 >
-                                    게스트 모집
-                                </span>
 
-                                <img
-                                    src={soccerImage}
-                                    alt="미국 풋살 모임"
-                                />
-                            </div>
+                                    <div
+                                        className="guest-item-image-link"
+                                    >
+                                        <span
+                                            className="image-popup popup-green"
+                                        >
+                                            게스트 모집
+                                        </span>
 
-                            <h4
-                                className="guest-item-title"
-                            >
-                                미국 풋살 모임
-                            </h4>
+                                        <GuestEventImage event={event} />
+                                    </div>
 
-                            <p style={{
-                                margin: "3px 5px",
-                                fontSize: "7px",
-                                color: "#888",
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                            }}>
-                                수요일 오후 19:00
-                            </p>
+                                    <h4
+                                        className="guest-item-title"
+                                    >
+                                        {event.title || "게스트 모집"}
+                                    </h4>
 
-                            <p style={{
-                                margin: "3px 5px",
-                                fontSize: "7px",
-                                color: "#888",
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                            }}>
-                                마곡 풋살장
-                            </p>
+                                    <p style={cardTextStyle}>
+                                        {formatGuestSchedule(
+                                            event.event_date,
+                                            event.start_time
+                                        )}
+                                    </p>
 
-                            <span style={{
-                                display: "block",
-                                margin: "6px 5px 7px",
-                                padding: "4px 0",
-                                border: "1px solid #01A17F",
-                                borderRadius: "5px",
-                                background: "#fff",
-                                color: "#01A17F",
-                                textAlign: "center",
-                                fontSize: "7px",
-                            }}>
-                                자세히 보기
-                            </span>
+                                    <p style={cardTextStyle}>
+                                        {event.location || "장소 미정"}
+                                    </p>
 
-                        </Link>
+                                    <span style={cardButtonStyle}>
+                                        자세히 보기
+                                    </span>
 
-                        {/* ⭐ 게스트 2 */}
-                        <Link
-                            to="/clubs"
-                            className="guest-item"
-                        >
+                                </Link>
 
-                            <div
-                                className="guest-item-image-link"
-                            >
-                                <span
-                                    className="image-popup popup-green"
-                                >
-                                    게스트 모집
-                                </span>
+                            ))
 
-                                <img
-                                    src={basketballImage}
-                                    alt="아하 농구 모임"
-                                />
-                            </div>
-
-                            <h4
-                                className="guest-item-title"
-                            >
-                                아하 농구 모임
-                            </h4>
-
-                            <p style={{
-                                margin: "3px 5px",
-                                fontSize: "7px",
-                                color: "#888",
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                            }}>
-                                토요일 17:00
-                            </p>
-
-                            <p style={{
-                                margin: "3px 5px",
-                                fontSize: "7px",
-                                color: "#888",
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                            }}>
-                                한강 농구공원
-                            </p>
-
-                            <span style={{
-                                display: "block",
-                                margin: "6px 5px 7px",
-                                padding: "4px 0",
-                                border: "1px solid #01A17F",
-                                borderRadius: "5px",
-                                background: "#fff",
-                                color: "#01A17F",
-                                textAlign: "center",
-                                fontSize: "7px",
-                            }}>
-                                자세히 보기
-                            </span>
-
-                        </Link>
-
-                        {/* ⭐ 게스트 3 */}
-                        <Link
-                            to="/clubs"
-                            className="guest-item"
-                        >
-
-                            <div
-                                className="guest-item-image-link"
-                            >
-                                <span
-                                    className="image-popup popup-green"
-                                >
-                                    게스트 모집
-                                </span>
-
-                                <img
-                                    src={runningImage}
-                                    alt="러닝 함께해요"
-                                />
-                            </div>
-
-                            <h4
-                                className="guest-item-title"
-                            >
-                                러닝 함께해요
-                            </h4>
-
-                            <p style={{
-                                margin: "3px 5px",
-                                fontSize: "7px",
-                                color: "#888",
-                            }}>
-                                일요일 07:00
-                            </p>
-
-                            <p style={{
-                                margin: "3px 5px",
-                                fontSize: "7px",
-                                color: "#888",
-                            }}>
-                                한강공원
-                            </p>
-
-                            <span style={{
-                                display: "block",
-                                margin: "6px 5px 7px",
-                                padding: "4px 0",
-                                border: "1px solid #01A17F",
-                                borderRadius: "5px",
-                                background: "#fff",
-                                color: "#01A17F",
-                                textAlign: "center",
-                                fontSize: "7px",
-                            }}>
-                                자세히 보기
-                            </span>
-
-                        </Link>
-
-                        {/* ⭐ 게스트 4 */}
-                        <Link
-                            to="/clubs"
-                            className="guest-item"
-                        >
-
-                            <div
-                                className="guest-item-image-link"
-                            >
-                                <span
-                                    className="image-popup popup-green"
-                                >
-                                    게스트 모집
-                                </span>
-
-                                <img
-                                    src={climbingImage}
-                                    alt="클라이밍 입문"
-                                />
-                            </div>
-
-                            <h4
-                                className="guest-item-title"
-                            >
-                                클라이밍 입문
-                            </h4>
-
-                            <p style={{
-                                margin: "3px 5px",
-                                fontSize: "7px",
-                                color: "#888",
-                            }}>
-                                매주 화 19:00
-                            </p>
-
-                            <p style={{
-                                margin: "3px 5px",
-                                fontSize: "7px",
-                                color: "#888",
-                            }}>
-                                강서 클라이밍장
-                            </p>
-
-                            <span style={{
-                                display: "block",
-                                margin: "6px 5px 7px",
-                                padding: "4px 0",
-                                border: "1px solid #01A17F",
-                                borderRadius: "5px",
-                                background: "#fff",
-                                color: "#01A17F",
-                                textAlign: "center",
-                                fontSize: "7px",
-                            }}>
-                                자세히 보기
-                            </span>
-
-                        </Link>
+                        )}
 
                     </div>
 
@@ -968,90 +1036,111 @@ function Main() {
                         className="recommendation-list"
                     >
 
-                        {[
-                            {
-                                image: climbingImage,
-                                title: "클라이밍 입문",
-                                sport: "클라이밍",
-                                region: "강서",
-                                badge: "입문",
-                                badgeClass: "popup-green",
-                            },
-                            {
-                                image: tabletennisImage,
-                                title: "탁구 모임",
-                                sport: "탁구",
-                                region: "서울",
-                                badge: "인기",
-                                badgeClass: "popup-green",
-                            },
-                            {
-                                image: runningImage,
-                                title: "러닝 크루",
-                                sport: "러닝",
-                                region: "한강",
-                                badge: "추천",
-                                badgeClass: "popup-green",
-                            },
-                            {
-                                image: yogaImage,
-                                title: "요가 클래스",
-                                sport: "요가",
-                                region: "서울",
-                                badge: "NEW",
-                                badgeClass: "popup-blue",
-                            },
-                        ].map((activity) => (
+                        {isActivityLoading ? (
 
-                            <Link
-                                key={activity.title}
-                                to="/clubs"
-                                className="recommendation-item"
-                            >
+                            <p className="main-list-empty">
+                                추천 동호회를 불러오는 중이에요.
+                            </p>
 
-                                <div
-                                    className="recommendation-image-link"
-                                >
+                        ) : activityClubs.length === 0 ? (
 
-                                    <span
-                                        className={`image-popup ${activity.badgeClass}`}
+                            <p className="main-list-empty">
+                                아직 추천할 동호회가 없어요.
+                            </p>
+
+                        ) : (
+
+                            activityClubs.map((club, index) => {
+
+                                const clubIdValue =
+                                    club?.club_id ||
+                                    club?.id;
+
+                                const clubName =
+                                    club?.club_name ||
+                                    club?.name ||
+                                    "동호회";
+
+                                const sportName =
+                                    club?.sport_name ||
+                                    club?.sports?.[0] ||
+                                    "";
+
+                                const region =
+                                    club?.region ||
+                                    club?.regions?.[0] ||
+                                    "";
+
+                                const fallbackImage =
+                                    SPORT_IMAGES[sportName] ||
+                                    badmintonImage;
+
+                                const image =
+                                    club?.representative_image_url ||
+                                    club?.image_url ||
+                                    fallbackImage;
+
+                                // ⭐ 종목·지역 정보가 없으면 소개글로 대신 표시
+                                const subText =
+                                    [sportName, region]
+                                        .filter(Boolean)
+                                        .join(" · ") ||
+                                    club?.club_intro ||
+                                    "";
+
+                                return (
+
+                                    <Link
+                                        key={clubIdValue || `${clubName}-${index}`}
+                                        to={
+                                            clubIdValue
+                                                ? `/clubs/${clubIdValue}`
+                                                : "/clubs"
+                                        }
+                                        className="recommendation-item"
                                     >
-                                        {activity.badge}
-                                    </span>
 
-                                    <img
-                                        src={activity.image}
-                                        alt={activity.title}
-                                    />
+                                        <div
+                                            className="recommendation-image-link"
+                                        >
 
-                                </div>
+                                            <span
+                                                className="image-popup popup-green"
+                                            >
+                                                추천
+                                            </span>
 
-                                <h4
-                                    className="recommendation-title"
-                                >
-                                    {activity.title}
-                                </h4>
+                                            <img
+                                                src={image}
+                                                alt={clubName}
+                                                onError={(e) => {
+                                                    e.currentTarget.src = fallbackImage;
+                                                }}
+                                            />
 
-                                <p style={{
-                                    margin: "3px 5px",
-                                    fontSize: "7px",
-                                    color: "#888",
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                }}>
-                                    {activity.sport}
-                                    {" · "}
-                                    {activity.region}
-                                </p>
+                                        </div>
 
-                                <span
-                                >
-                                </span>
+                                        <h4
+                                            className="recommendation-title"
+                                        >
+                                            {clubName}
+                                        </h4>
 
-                            </Link>
+                                        <p style={cardTextStyle}>
+                                            {subText}
+                                        </p>
 
-                        ))}
+                                        <span
+                                        >
+                                        </span>
+
+                                    </Link>
+
+                                );
+
+                            })
+
+                        )}
 
                     </div>
 
@@ -1070,4 +1159,4 @@ function Main() {
     );
 }
 
-export default Main;
+export default Main;
