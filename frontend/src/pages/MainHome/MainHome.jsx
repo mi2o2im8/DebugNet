@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
 import { attachClubInfoToEvents } from "../../utils/attachClubInfo";
+import { buildRecommendedClubs } from "../../utils/recommendClubs";
 import "./MainHome.css";
 
 import { supabase } from "../../../supabaseClient";
@@ -113,6 +114,10 @@ function MainHome() {
 
     // ⭐ 현재 동호회 ID
     const [clubId, setClubId] = useState(null);
+
+    // ⭐ 첫 번째 동호회가 운영 중인 동호회인지
+    // (전체 일정 보기: 운영자 → 일정 관리 / 회원 → 내 일정)
+    const [isClubOperator, setIsClubOperator] = useState(false);
 
     // ⭐ 내 동호회
     // 운영 중인 동호회 1개 + 가입 동호회 최대 3개
@@ -750,6 +755,8 @@ function MainHome() {
 
                     if (isActive) {
                         setClubId(currentClubId);
+                        // ⭐ 첫 번째 동호회가 운영 중인 동호회인지
+                        setIsClubOperator(operatingClubList.length > 0);
                         setMyClubs(displayClubs);
                     }
 
@@ -1239,26 +1246,18 @@ function MainHome() {
                             )
                     );
 
-                // ⭐ 내 동호회를 제외한 다른 동호회
+                // ⭐ 내 동호회를 제외하고 랜덤 4개
+                //    + 실제 이미지/종목/지역 + 추천·신규·HOT 뱃지
                 const recommendedClubs =
-                    clubList
-                        .filter((club) => {
+                    await buildRecommendedClubs({
+                        clubs: clubList,
+                        excludeIds: [...myClubIds],
+                        count: 4,
+                    });
 
-                            const currentId =
-                                club?.club_id ||
-                                club?.id ||
-                                club?.clubId;
-
-                            if (!currentId) {
-                                return true;
-                            }
-
-                            return !myClubIds.has(
-                                String(currentId)
-                            );
-
-                        })
-                        .slice(0, 4);
+                if (!isActive) {
+                    return;
+                }
 
                 setActivityClubs(
                     recommendedClubs
@@ -1279,7 +1278,11 @@ function MainHome() {
 
         };
 
-        loadActivityClubs();
+        // ⭐ 내 동호회 정보가 들어온 뒤에 한 번만 뽑기
+        //    (처음 빈 목록일 때 뽑으면 내 동호회가 섞였다가 바뀌며 깜빡임)
+        if (myClubs.length > 0) {
+            loadActivityClubs();
+        }
 
         return () => {
             isActive = false;
@@ -1451,6 +1454,9 @@ function MainHome() {
                     </div>
 
 
+                    {/* ⭐ 왼쪽: 내 동호회 슬라이드 / 오른쪽: 동호회 만들기 고정 */}
+                    <div className="my-club-row">
+
                     <div
                         className={`my-club-list-wrap ${
                             canScrollLeft ? "has-left-shadow" : ""
@@ -1514,13 +1520,13 @@ function MainHome() {
                                         `${clubName}-${index}`
                                     }
                                     // ⭐ 운영자 → 운영 대시보드
-                                    // ⭐ 가입자 → 동호회 상세 (가입 완료 상태로 보임)
+                                    // ⭐ 가입자 → 동호회 이용자 대시보드
                                     to={
                                         !clubIdValue
                                             ? "/clubs"
                                             : isOperating
                                                 ? `/clubs/${clubIdValue}/manage`
-                                                : `/clubs/${clubIdValue}`
+                                                : `/clubs/${clubIdValue}/home`
                                     }
                                     className="my-club-card"
                                 >
@@ -1595,31 +1601,32 @@ function MainHome() {
 
                         })}
 
-
-                        {/* ⭐ 동호회 만들기 - 기존 코드 그대로 유지 */}
-
-                        <Link
-                            to="/clubs/create"
-                            className="my-club-create-card"
-                        >
-
-                            <img
-                                src={
-                                    createClubImage
-                                }
-                                alt="동호회 만들기"
-                            />
-
-                            <p>
-                                내 동호회를
-                                <br />
-                                만들어보세요!
-                            </p>
-
-                        </Link>
-
                         </div>
 
+                    </div>
+
+
+                    {/* ⭐ 동호회 만들기 - 오른쪽에 고정 (슬라이드되지 않음) */}
+
+                    <Link
+                        to="/clubs/create"
+                        className="my-club-create-card my-club-create-fixed"
+                    >
+
+                        <img
+                            src={
+                                createClubImage
+                            }
+                            alt="동호회 만들기"
+                        />
+
+                        <p>
+                            내 동호회를
+                            <br />
+                            만들어보세요!
+                        </p>
+
+                    </Link>
 
                     </div>
 
@@ -1651,7 +1658,11 @@ function MainHome() {
 
 
                         <Link
-                            to={clubId ? `/clubs/${clubId}/manage/events` : "/myschedule"}
+                            to={
+                            clubId && isClubOperator
+                                ? `/clubs/${clubId}/manage/events`
+                                : "/myschedule"
+                        }
                             className="section-more"
                         >
                             전체 일정 보기
@@ -1797,7 +1808,11 @@ function MainHome() {
                     {/* ⭐ 전체 일정 */}
 
                     <Link 
-                        to={clubId ? `/clubs/${clubId}/manage/events` : "/myschedule"}
+                        to={
+                            clubId && isClubOperator
+                                ? `/clubs/${clubId}/manage/events`
+                                : "/myschedule"
+                        }
                         className="schedule-all-button"
                     >
                         전체 일정 보기
@@ -1831,7 +1846,7 @@ function MainHome() {
 
 
                         <Link
-                            to="/clubs"
+                            to="/guest-recruit"
                             className="section-more"
                         >
 
@@ -1865,11 +1880,12 @@ function MainHome() {
 
                             guestEvents.map((event) => (
 
-                                // ⭐ 게스트 전용 일정 상세 페이지가 아직 없어서
-                                //    해당 동호회 상세 페이지로 이동
+                                // ⭐ 게스트 모집 상세 페이지로 이동
+                                //    (event를 같이 넘겨서 상세 페이지가 다시 불러오지 않게)
                                 <Link
                                     key={event.event_id}
-                                    to={`/clubs/${event.club_id}`}
+                                    to={`/guest-recruit/${event.event_id}`}
+                                    state={{ event }}
                                     className="guest-card"
                                 >
 
@@ -2062,82 +2078,46 @@ function MainHome() {
                         }}
                     >
 
-                        {activityClubs.slice(0, 4).map(
-                            (club, index) => {
+                        {activityClubs.map((club) => {
 
-                                const clubIdValue =
-                                    club?.club_id ||
-                                    club?.id ||
-                                    club?.clubId;
+                            // ⭐ recommendClubs.js에서 정리된 실제 동호회 데이터
+                            const fallbackImage =
+                                sportImages[club.sports[0]] ||
+                                badmintonImage;
 
-                                const clubName =
-                                    club?.club_name ||
-                                    club?.name ||
-                                    club?.title ||
-                                    "동호회";
+                            return (
 
-                                const sportName =
-                                    club?.sport_name ||
-                                    club?.sport ||
-                                    club?.sportName ||
-                                    "운동";
+                                <Link
+                                    key={club.id}
+                                    to={`/clubs/${club.id}`}
+                                    className="main-home-activity-card"
+                                    style={{
+                                        flex: "0 0 calc((100% - 18px) / 4)",
+                                        width: "calc((100% - 18px) / 4)",
+                                        minWidth: "calc((100% - 18px) / 4)",
+                                        display: "block",
+                                        boxSizing: "border-box",
+                                        border: "1px solid #ddd",
+                                        borderRadius: "8px",
+                                        overflow: "hidden",
+                                        background: "#fff",
+                                        textDecoration: "none",
+                                        color: "#333",
+                                    }}
+                                >
 
-                                const memberCount =
-                                    club?.current_members ??
-                                    club?.member_count ??
-                                    club?.members_count ??
-                                    0;
-
-                                const image =
-                                    club?.representative_image_url ||
-                                    club?.club_image ||
-                                    sportImages[sportName] ||
-                                    badmintonImage;
-
-                                const region =
-                                    club?.region ||
-                                    club?.club_region ||
-                                    club?.activity_region ||
-                                    "지역 정보 없음";
-
-                                return (
-
-                                    <Link
-                                        key={
-                                            clubIdValue ||
-                                            `${clubName}-${index}`
-                                        }
-                                        to={
-                                            clubIdValue
-                                                ? `/clubs/${clubIdValue}`
-                                                : "/clubs"
-                                        }
-                                        className="main-home-activity-card"
+                                    <div
+                                        className="main-home-activity-image"
                                         style={{
-                                            flex: "0 0 calc((100% - 18px) / 4)",
-                                            width: "calc((100% - 18px) / 4)",
-                                            minWidth: "calc((100% - 18px) / 4)",
-                                            display: "block",
-                                            boxSizing: "border-box",
-                                            border: "1px solid #ddd",
-                                            borderRadius: "8px",
+                                            position: "relative",
+                                            width: "100%",
+                                            height: "58px",
                                             overflow: "hidden",
-                                            background: "#fff",
-                                            textDecoration: "none",
-                                            color: "#333",
                                         }}
                                     >
 
-                                        <div
-                                            className="main-home-activity-image"
-                                            style={{
-                                                position: "relative",
-                                                width: "100%",
-                                                height: "58px",
-                                                overflow: "hidden",
-                                            }}
-                                        >
-
+                                        {/* ⭐ 추천 / 신규 / HOT (해당 없으면 표시 안 함) */}
+                                        {club.badge && (
                                             <span
                                                 className="main-home-activity-category"
                                                 style={{
@@ -2147,89 +2127,84 @@ function MainHome() {
                                                     zIndex: 2,
                                                     padding: "2px 5px",
                                                     borderRadius: "4px",
-                                                    background: "#01A17F",
+                                                    background: club.badge.color,
                                                     color: "#fff",
                                                     fontSize: "7px",
                                                     lineHeight: 1.2,
                                                 }}
                                             >
-                                                운동
+                                                {club.badge.label}
                                             </span>
+                                        )}
 
-                                            <img
-                                                src={image}
-                                                alt={clubName}
-                                                style={{
-                                                    width: "100%",
-                                                    height: "100%",
-                                                    display: "block",
-                                                    objectFit: "cover",
-                                                }}
-                                                onError={(e) => {
-
-                                                    e.currentTarget.src =
-                                                        sportImages[sportName] ||
-                                                        badmintonImage;
-
-                                                }}
-                                            />
-
-                                        </div>
-
-
-                                        <h4
+                                        <img
+                                            src={club.image || fallbackImage}
+                                            alt={club.name}
                                             style={{
-                                                margin: "6px 5px 4px",
-                                                fontSize: "9px",
-                                                fontWeight: 700,
-                                                whiteSpace: "nowrap",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                            }}
-                                        >
-                                            {clubName}
-                                        </h4>
-
-
-                                        <p
-                                            style={{
-                                                margin: "3px 5px",
-                                                fontSize: "7px",
-                                                color: "#888",
-                                                whiteSpace: "nowrap",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                            }}
-                                        >
-                                            {sportName}
-                                            {" · "}
-                                            {region}
-                                        </p>
-
-
-                                        <span
-                                            className="main-home-activity-action"
-                                            style={{
+                                                width: "100%",
+                                                height: "100%",
                                                 display: "block",
-                                                margin: "6px 5px 7px",
-                                                padding: "4px 0",
-                                                border: "1px solid #01A17F",
-                                                borderRadius: "5px",
-                                                background: "#fff",
-                                                color: "#01A17F",
-                                                textAlign: "center",
-                                                fontSize: "7px",
+                                                objectFit: "cover",
                                             }}
-                                        >
-                                            자세히 보기
-                                        </span>
+                                            onError={(e) => {
+                                                e.currentTarget.src =
+                                                    fallbackImage;
+                                            }}
+                                        />
 
-                                    </Link>
+                                    </div>
 
-                                );
 
-                            }
-                        )}
+                                    <h4
+                                        style={{
+                                            margin: "6px 5px 4px",
+                                            fontSize: "9px",
+                                            fontWeight: 700,
+                                            whiteSpace: "nowrap",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                        }}
+                                    >
+                                        {club.name}
+                                    </h4>
+
+
+                                    <p
+                                        style={{
+                                            margin: "3px 5px",
+                                            fontSize: "7px",
+                                            color: "#888",
+                                            whiteSpace: "nowrap",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                        }}
+                                    >
+                                        {club.subText}
+                                    </p>
+
+
+                                    <span
+                                        className="main-home-activity-action"
+                                        style={{
+                                            display: "block",
+                                            margin: "6px 5px 7px",
+                                            padding: "4px 0",
+                                            border: "1px solid #01A17F",
+                                            borderRadius: "5px",
+                                            background: "#fff",
+                                            color: "#01A17F",
+                                            textAlign: "center",
+                                            fontSize: "7px",
+                                        }}
+                                    >
+                                        자세히 보기
+                                    </span>
+
+                                </Link>
+
+                            );
+
+                        })}
 
                     </div>
 

@@ -8,6 +8,7 @@ import BottomNav from "../../components/BottomNav";
 import { supabase } from "../../../supabaseClient";
 
 import { attachClubInfoToEvents } from "../../utils/attachClubInfo";
+import { buildRecommendedClubs } from "../../utils/recommendClubs";
 
 import "./Main.css";
 
@@ -296,8 +297,15 @@ function Main() {
                             ? data.items
                             : [];
 
+                // ⭐ 랜덤 4개 + 실제 이미지/종목/지역 + 추천·신규·HOT 뱃지
+                const recommendedClubs =
+                    await buildRecommendedClubs({
+                        clubs: clubList,
+                        count: 4,
+                    });
+
                 if (isActive) {
-                    setActivityClubs(clubList.slice(0, 4));
+                    setActivityClubs(recommendedClubs);
                 }
 
             } catch (error) {
@@ -934,7 +942,7 @@ function Main() {
                         </div>
 
                         <Link
-                            to="/clubs"
+                            to="/guest-recruit"
                             className="section-more"
                         >
                             더보기
@@ -967,11 +975,12 @@ function Main() {
 
                             guestEvents.map((event) => (
 
-                                // ⭐ 게스트 전용 일정 상세 페이지가 아직 없어서
-                                //    해당 동호회 상세 페이지로 이동
+                                // ⭐ 게스트 모집 상세 페이지로 이동
+                                //    (event를 같이 넘겨서 상세 페이지가 다시 불러오지 않게)
                                 <Link
                                     key={event.event_id}
-                                    to={`/clubs/${event.club_id}`}
+                                    to={`/guest-recruit/${event.event_id}`}
+                                    state={{ event }}
                                     className="guest-item"
                                 >
 
@@ -1024,16 +1033,33 @@ function Main() {
                 ===================================================== */}
                 <section className="activity-recommendation">
 
-                    <div className="recommendation-header">
+                    {/* ⭐ 게스트 모집 섹션과 같은 헤더 구조 (더보기 포함) */}
+                    <div className="section-header">
 
-                        <img
-                            src={activityIcon}
-                            alt="활동 추천 아이콘"
-                        />
+                        <div className="section-title">
 
-                        <h3>
-                            이런 활동도 있어요
-                        </h3>
+                            <img
+                                src={activityIcon}
+                                alt="활동 추천 아이콘"
+                            />
+
+                            <h3>
+                                이런 활동도 있어요
+                            </h3>
+
+                        </div>
+
+                        <Link
+                            to="/clubs/all"
+                            className="section-more"
+                        >
+                            더보기
+
+                            <img
+                                src={backIcon}
+                                alt="이동"
+                            />
+                        </Link>
 
                     </div>
 
@@ -1055,53 +1081,18 @@ function Main() {
 
                         ) : (
 
-                            activityClubs.map((club, index) => {
+                            activityClubs.map((club) => {
 
-                                const clubIdValue =
-                                    club?.club_id ||
-                                    club?.id;
-
-                                const clubName =
-                                    club?.club_name ||
-                                    club?.name ||
-                                    "동호회";
-
-                                const sportName =
-                                    club?.sport_name ||
-                                    club?.sports?.[0] ||
-                                    "";
-
-                                const region =
-                                    club?.region ||
-                                    club?.regions?.[0] ||
-                                    "";
-
+                                // ⭐ recommendClubs.js에서 정리된 실제 동호회 데이터
                                 const fallbackImage =
-                                    SPORT_IMAGES[sportName] ||
+                                    SPORT_IMAGES[club.sports[0]] ||
                                     badmintonImage;
-
-                                const image =
-                                    club?.representative_image_url ||
-                                    club?.image_url ||
-                                    fallbackImage;
-
-                                // ⭐ 종목·지역 정보가 없으면 소개글로 대신 표시
-                                const subText =
-                                    [sportName, region]
-                                        .filter(Boolean)
-                                        .join(" · ") ||
-                                    club?.club_intro ||
-                                    "";
 
                                 return (
 
                                     <Link
-                                        key={clubIdValue || `${clubName}-${index}`}
-                                        to={
-                                            clubIdValue
-                                                ? `/clubs/${clubIdValue}`
-                                                : "/clubs"
-                                        }
+                                        key={club.id}
+                                        to={`/clubs/${club.id}`}
                                         className="recommendation-item"
                                     >
 
@@ -1109,15 +1100,22 @@ function Main() {
                                             className="recommendation-image-link"
                                         >
 
-                                            <span
-                                                className="image-popup popup-green"
-                                            >
-                                                추천
-                                            </span>
+                                            {/* ⭐ 추천 / 신규 / HOT (해당 없으면 표시 안 함) */}
+                                            {club.badge && (
+                                                <span
+                                                    className="image-popup"
+                                                    style={{
+                                                        backgroundColor:
+                                                            club.badge.color,
+                                                    }}
+                                                >
+                                                    {club.badge.label}
+                                                </span>
+                                            )}
 
                                             <img
-                                                src={image}
-                                                alt={clubName}
+                                                src={club.image || fallbackImage}
+                                                alt={club.name}
                                                 onError={(e) => {
                                                     e.currentTarget.src = fallbackImage;
                                                 }}
@@ -1128,16 +1126,12 @@ function Main() {
                                         <h4
                                             className="recommendation-title"
                                         >
-                                            {clubName}
+                                            {club.name}
                                         </h4>
 
                                         <p style={cardTextStyle}>
-                                            {subText}
+                                            {club.subText}
                                         </p>
-
-                                        <span
-                                        >
-                                        </span>
 
                                     </Link>
 
@@ -1151,7 +1145,12 @@ function Main() {
 
                 </section>
             
-            <div className="basic-home-bottom-space" />
+            {/* ⭐ 맨 아래까지 내려도 챗봇 버튼이 카드를 가리지 않게 */}
+            <div
+                className="basic-home-bottom-space"
+                aria-hidden="true"
+                style={{ height: "60px" }}
+            />
 
             </main>
 
