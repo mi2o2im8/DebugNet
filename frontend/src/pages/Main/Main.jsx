@@ -32,6 +32,7 @@ import soccerImage from "../../assets/img/playbridge_16_assets/soccer.png";
 import basketballImage from "../../assets/img/playbridge_16_assets/basketball.png";
 import badmintonImage from "../../assets/img/playbridge_16_assets/badminton.png";
 import ChatbotButton from "../../components/Chatbot/ChatbotButton";
+import Chatbot from "../Chatbot/Chatbot";
 import { useNotifications } from "../../context/NotificationContext";
 
 
@@ -123,6 +124,7 @@ function GuestEventImage({ event }) {
 
     const [index, setIndex] = useState(0);
 
+
     const src = candidates[index];
 
     if (!src) {
@@ -148,6 +150,9 @@ function GuestEventImage({ event }) {
 
 function Main() {
     const navigate = useNavigate();
+
+    // ⭐ 챗봇 열림 여부
+    const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
     // =========================================================
     // ⭐ 로그인한 사용자 닉네임
@@ -1151,7 +1156,19 @@ function Main() {
             </main>
 
             {/* 공통 하단 네비게이션 */}
-            <ChatbotButton />
+            
+            {/* ⭐ 챗봇 */}
+            {!isChatbotOpen && (
+                <ChatbotButton
+                    onClick={() => setIsChatbotOpen(true)}
+                />
+            )}
+
+            {isChatbotOpen && (
+                <Chatbot
+                    onClose={() => setIsChatbotOpen(false)}
+                />
+            )}
             
             <BottomNav />
 
@@ -1159,4 +1176,4 @@ function Main() {
     );
 }
 
-export default Main;
+export default Main;
