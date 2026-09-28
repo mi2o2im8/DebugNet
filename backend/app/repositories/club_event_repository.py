@@ -921,6 +921,25 @@ class ClubEventRepository:
 
         schedule_data = schedule.data
 
+        response = (
+            self.admin_client
+            .table("club_events")
+            .select("*")
+            .eq("club_id", club_id)
+            .eq("event_date", occurrence_date)
+            .eq("event_type", "regular")
+            .eq("start_time", schedule_data["start_time"])
+            .eq("end_time", schedule_data["end_time"])
+            .neq("status", "cancelled")
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
     # -----------------------------------------------------
     # 동호회 활동 회원 user_id 목록 조회 (알림용)
     # -----------------------------------------------------
@@ -993,12 +1012,6 @@ class ClubEventRepository:
                 "event_id, club_id, title, event_date, "
                 "start_time, end_time, event_type"
             )
-            .eq("club_id", club_id)
-            .eq("event_date", occurrence_date)
-            .eq("event_type", "regular")
-            .eq("start_time", schedule_data["start_time"])
-            .eq("end_time", schedule_data["end_time"])
-            .select("*")
             .eq("event_date", event_date)
             .neq("status", "cancelled")
             .execute()
