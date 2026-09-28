@@ -953,3 +953,69 @@
 .club-user-upcoming-item {
     cursor: pointer;
 }
+
+/* ========================================
+   최근 소식
+   ======================================== */
+
+.club-user-news-list {
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid #e1e7ed;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.club-user-news-item {
+    width: 100%;
+    padding: 14px 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    border: none;
+    border-bottom: 1px solid #edf0f3;
+    background: #fff;
+
+    text-align: left;
+    cursor: pointer;
+}
+
+.club-user-news-item:last-child {
+    border-bottom: none;
+}
+
+.club-user-news-item:hover {
+    background: #f8fafb;
+}
+
+.club-user-news-content {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.club-user-news-content strong {
+    overflow: hidden;
+
+    color: #222;
+    font-size: 14px;
+    font-weight: 700;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.club-user-news-content span {
+    color: #8a929b;
+    font-size: 11px;
+}
+
+.club-user-news-item > svg {
+    flex-shrink: 0;
+    color: #999;
+    font-size: 16px;
+}
