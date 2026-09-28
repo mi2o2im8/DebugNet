@@ -230,8 +230,15 @@ function PostWrite() {
   const isEditMode =
     Boolean(editPost);
 
+  // 동호회 공지 작성/수정 여부
+  const isClubNoticeMode =
+    isClubCommunity &&
+    Boolean(
+      location.state?.isClubNotice ||
+      editPost?.isClubNotice
+    );
 
- // 동호회 커뮤니티는 동호회 게시판으로 고정
+  // 동호회 커뮤니티는 동호회 게시판으로 고정
   // 일반 커뮤니티는 이전 화면에서 선택한 게시판 사용
   const receivedBoard = isClubCommunity
     ? "club"
@@ -836,6 +843,8 @@ function PostWrite() {
             ? selectedClubId
             : null,
 
+        is_club_notice: isClubNoticeMode,
+
         title: title.trim(),
         content: serializedContent,
       };
@@ -854,6 +863,12 @@ function PostWrite() {
         ...(boardType === "recruit"
           ? {
               club_id: selectedClubId,
+            }
+          : {}),
+
+        ...(isClubNoticeMode
+          ? {
+              is_club_notice: true,
             }
           : {}),
       };
@@ -964,8 +979,16 @@ function PostWrite() {
 
         <h1>
           {isEditMode
-            ? "게시글 수정"
-            : "새 게시글"}
+            ? (
+                isClubNoticeMode
+                  ? "공지 수정"
+                  : "게시글 수정"
+              )
+            : (
+                isClubNoticeMode
+                  ? "공지 작성"
+                  : "새 게시글"
+              )}
         </h1>
       </header>
 
@@ -981,7 +1004,9 @@ function PostWrite() {
               disabled
             >
               <option value="club">
-                동호회 게시판
+                {isClubNoticeMode
+                  ? "동호회 공지"
+                  : "동호회 게시판"}
               </option>
             </select>
           ) : (
@@ -1226,7 +1251,11 @@ function PostWrite() {
             <div className="post-preview-modal-body">
               <div className="post-preview-board">
                 {boardType === "club"
-                  ? "동호회 게시판"
+                    ? (
+                        isClubNoticeMode
+                          ? "동호회 공지"
+                          : "동호회 게시판"
+                      )
                   : boardType === "free"
                   ? "자유게시판"
                   : boardType === "sports"

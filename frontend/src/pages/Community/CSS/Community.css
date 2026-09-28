@@ -353,6 +353,20 @@
   cursor: pointer;
 }
 
+/* 동호회 공지 게시글 */
+.community-post-item.club-notice {
+  background-color: #f4fbf7;
+}
+
+/* 제목 앞 공지 표시 */
+.community-club-notice-badge {
+  display: inline-block;
+  margin-right: 6px;
+
+  color: #00a866;
+  font-size: 12px;
+  font-weight: 700;
+}
 
 .community-post-item:active {
   background-color: #fafafa;

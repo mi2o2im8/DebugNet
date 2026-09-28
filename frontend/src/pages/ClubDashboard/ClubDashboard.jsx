@@ -25,7 +25,8 @@ import {
 } from "react-router-dom";
 
 import {
-    getClubDashboard
+    getClubDashboard,
+    getClubEvents
 } from "../../api/clubApi";
 
 import {
@@ -92,6 +93,38 @@ function formatRecentPostDate(value) {
     ).format(new Date(value));
 }
 
+function getTodayDateKey() {
+    const today = new Date();
+
+    return [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0")
+    ].join("-");
+}
+
+
+function getEventDateParts(dateString) {
+    const [
+        year,
+        month,
+        day
+    ] = dateString
+        .split("-")
+        .map(Number);
+
+    const date = new Date(
+        year,
+        month - 1,
+        day
+    );
+
+    return {
+        month,
+        day,
+        weekday: WEEK_LABELS[date.getDay()]
+    };
+}
 
 function getNextScheduleDate(dayOfWeek) {
     const today = new Date();
@@ -125,6 +158,15 @@ function ClubDashboard() {
     const [dashboard, setDashboard] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
+
+    const [clubEvents, setClubEvents] =
+        useState([]);
+
+    const [eventsLoading, setEventsLoading] =
+        useState(true);
+
+    const [eventsError, setEventsError] =
+        useState("");
 
     const [recentPosts, setRecentPosts] =
         useState([]);
@@ -224,6 +266,53 @@ function ClubDashboard() {
         };
     }, [clubId]);
 
+    // =========================
+    // 실제 생성 일정 조회
+    // =========================
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadClubEvents = async () => {
+            setEventsLoading(true);
+            setEventsError("");
+
+            try {
+                const result =
+                    await getClubEvents(clubId);
+
+                if (!cancelled) {
+                    setClubEvents(
+                        result.events || []
+                    );
+                }
+            } catch (error) {
+                console.error(
+                    "운영진 대시보드 일정 조회 실패:",
+                    error
+                );
+
+                if (!cancelled) {
+                    setClubEvents([]);
+
+                    setEventsError(
+                        error.message ||
+                        "일정을 불러오지 못했습니다."
+                    );
+                }
+            } finally {
+                if (!cancelled) {
+                    setEventsLoading(false);
+                }
+            }
+        };
+
+        loadClubEvents();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [clubId]);
+
     const calendarData = useMemo(() => {
         const today = new Date();
 
@@ -290,6 +379,32 @@ function ClubDashboard() {
             .slice(0, 3);
     }, [dashboard]);
 
+    const upcomingEvents = useMemo(() => {
+        const todayKey = getTodayDateKey();
+
+        return clubEvents
+            .filter(
+                (event) =>
+                    event.status === "open" &&
+                    event.event_date >= todayKey
+            )
+            .sort((first, second) => {
+                const dateDifference =
+                    first.event_date.localeCompare(
+                        second.event_date
+                    );
+
+                if (dateDifference !== 0) {
+                    return dateDifference;
+                }
+
+                return first.start_time.localeCompare(
+                    second.start_time
+                );
+            })
+            .slice(0, 3);
+    }, [clubEvents]);
+
     const handleManagementMenu = (menuId) => {
         if (menuId === "members") {
             navigate(
@@ -306,8 +421,14 @@ function ClubDashboard() {
         }
 
         if (menuId === "notice") {
-            alert(
-                "공지 기능은 팀원 작업과 연결할 예정입니다."
+            navigate(
+                `/clubs/${clubId}/manage/community/write`,
+                {
+                    state: {
+                        board: "club",
+                        isClubNotice: true
+                    }
+                }
             );
             return;
         }
@@ -686,90 +807,113 @@ function ClubDashboard() {
                         </div>
 
                         <div className="club-dashboard-upcoming-list">
-                            {upcomingSchedules.map(
-                                (schedule, index) => (
-                                    <article
-                                        key={
-                                            schedule.club_schedule_id
-                                        }
-                                        className="club-dashboard-upcoming-item"
-                                    >
-                                        <div className="club-dashboard-upcoming-date">
-                                            <strong>
-                                                {schedule.nextDate.getMonth() +
-                                                    1}
-                                                .
-                                                {schedule.nextDate.getDate()}
-                                            </strong>
+                            {eventsLoading ? (
+                                <div className="club-dashboard-small-empty">
+                                    일정을 불러오는 중입니다.
+                                </div>
+                            ) : eventsError ? (
+                                <div className="club-dashboard-small-empty">
+                                    {eventsError}
+                                </div>
+                            ) : upcomingEvents.length === 0 ? (
+                                <div className="club-dashboard-small-empty">
+                                    예정된 일정이 없습니다.
+                                </div>
+                            ) : (
+                                upcomingEvents.map((event, index) => {
+                                    const eventDate =
+                                        getEventDateParts(
+                                            event.event_date
+                                        );
 
-                                            <span>
-                                                {
-                                                    WEEK_LABELS[
-                                                        schedule.nextDate.getDay()
-                                                    ]
+                                    const openEventDetail = () => {
+                                        navigate(
+                                            `/clubs/${clubId}/manage/events/${event.event_id}`
+                                        );
+                                    };
+
+                                    return (
+                                        <article
+                                            key={event.event_id}
+                                            className="club-dashboard-upcoming-item"
+                                            role="button"
+                                            tabIndex={0}
+                                            onClick={openEventDetail}
+                                            onKeyDown={(keyboardEvent) => {
+                                                if (
+                                                    keyboardEvent.key === "Enter" ||
+                                                    keyboardEvent.key === " "
+                                                ) {
+                                                    keyboardEvent.preventDefault();
+                                                    openEventDetail();
                                                 }
-                                            </span>
-                                        </div>
-
-                                        <div className="club-dashboard-upcoming-thumbnail">
-                                            {dashboard
-                                                .activity_image_urls?.[
-                                                index
-                                            ] || coverImage ? (
-                                                <img
-                                                    src={
-                                                        dashboard
-                                                            .activity_image_urls?.[
-                                                            index
-                                                        ] ||
-                                                        coverImage
-                                                    }
-                                                    alt=""
-                                                />
-                                            ) : (
-                                                <FiCalendar />
-                                            )}
-                                        </div>
-
-                                        <div className="club-dashboard-upcoming-info">
-                                            <strong>
-                                                {
-                                                    schedule.day_of_week
-                                                } 정기 활동
-                                            </strong>
-
-                                            <span>
-                                                <FiClock />
-                                                {schedule.start_time.slice(
-                                                    0,
-                                                    5
-                                                )}
-                                                {" - "}
-                                                {schedule.end_time.slice(
-                                                    0,
-                                                    5
-                                                )}
-                                            </span>
-
-                                            <span>
-                                                <FiMapPin />
-                                                {dashboard.venue_name ||
-                                                    "장소 미정"}
-                                            </span>
-                                        </div>
-
-                                        <span className="club-dashboard-schedule-status">
-                                            예정
-                                        </span>
-
-                                        <button
-                                            type="button"
-                                            className="club-dashboard-item-more"
+                                            }}
                                         >
-                                            <FiMoreHorizontal />
-                                        </button>
-                                    </article>
-                                )
+                                            <div className="club-dashboard-upcoming-date">
+                                                <strong>
+                                                    {eventDate.month}.
+                                                    {eventDate.day}
+                                                </strong>
+
+                                                <span>
+                                                    {eventDate.weekday}
+                                                </span>
+                                            </div>
+
+                                            <div className="club-dashboard-upcoming-thumbnail">
+                                                {event.event_image_url ||
+                                                dashboard.activity_image_urls?.[index] ||
+                                                coverImage ? (
+                                                    <img
+                                                        src={
+                                                            event.event_image_url ||
+                                                            dashboard.activity_image_urls?.[index] ||
+                                                            coverImage
+                                                        }
+                                                        alt=""
+                                                    />
+                                                ) : (
+                                                    <FiCalendar />
+                                                )}
+                                            </div>
+
+                                            <div className="club-dashboard-upcoming-info">
+                                                <strong>
+                                                    {event.title}
+                                                </strong>
+
+                                                <span>
+                                                    <FiClock />
+
+                                                    {event.start_time.slice(0, 5)}
+
+                                                    {event.end_time
+                                                        ? ` - ${event.end_time.slice(0, 5)}`
+                                                        : ""}
+                                                </span>
+
+                                                <span>
+                                                    <FiMapPin />
+
+                                                    {event.location ||
+                                                        event.location_address ||
+                                                        "장소 미정"}
+                                                </span>
+                                            </div>
+
+                                            <span className="club-dashboard-schedule-status">
+                                                예정
+                                            </span>
+
+                                            <span
+                                                className="club-dashboard-item-more"
+                                                aria-hidden="true"
+                                            >
+                                                <FiChevronRight />
+                                            </span>
+                                        </article>
+                                    );
+                                })
                             )}
                         </div>
                     </section>
@@ -842,6 +986,11 @@ function ClubDashboard() {
                                     <button
                                         key={post.id}
                                         type="button"
+                                        className={
+                                            post.isClubNotice
+                                                ? "club-dashboard-community-notice"
+                                                : ""
+                                        }
                                         onClick={() =>
                                             navigate(
                                                 `/clubs/${clubId}/manage/community/post/${post.id}`
@@ -850,6 +999,12 @@ function ClubDashboard() {
                                     >
                                         <span>
                                             <strong>
+                                                {post.isClubNotice && (
+                                                    <span className="club-dashboard-notice-badge">
+                                                        [공지]
+                                                    </span>
+                                                )}
+
                                                 {post.title}
                                             </strong>
 

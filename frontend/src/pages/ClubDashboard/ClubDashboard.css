@@ -500,6 +500,17 @@
     min-height: 70px;
     padding: 9px 8px;
     border-bottom: 1px solid #edf0f4;
+    cursor: pointer;
+}
+
+.club-dashboard-upcoming-item:hover {
+    background-color: #f8fbfa;
+}
+
+
+.club-dashboard-upcoming-item:focus-visible {
+    outline: 2px solid var(--club-green);
+    outline-offset: -2px;
 }
 
 .club-dashboard-upcoming-item:last-child {
@@ -690,6 +701,20 @@
 .club-dashboard-community-list small {
     color: var(--club-subtext);
     font-size: 10px;
+}
+
+/* 운영진 대시보드 공지 미리보기 */
+.club-dashboard-community-list
+    > button.club-dashboard-community-notice {
+    background: #f4fbf7;
+}
+
+/* 운영진 대시보드 공지 표시 */
+.club-dashboard-notice-badge {
+    margin-right: 6px;
+    color: var(--club-green);
+    font-size: 11px;
+    font-weight: 700;
 }
 
 .club-dashboard-community-meta {

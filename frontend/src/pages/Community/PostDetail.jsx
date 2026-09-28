@@ -963,7 +963,11 @@ function PostDetail() {
 
         <h1>
           {isClubCommunity
-            ? "동호회 게시글"
+            ? (
+                post?.isClubNotice
+                  ? "동호회 공지"
+                  : "동호회 게시글"
+              )
             : "게시글"}
         </h1>
       </header>

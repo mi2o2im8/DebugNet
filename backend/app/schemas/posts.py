@@ -139,6 +139,9 @@ class PostListItem(BaseModel):
     clubId: int | None = None
     clubName: str | None = None
 
+    # 동호회 공지
+    isClubNotice: bool = False
+
     views: int = 0
 
     comments: int = 0
@@ -206,6 +209,8 @@ class PostCreateRequest(BaseModel):
         gt=0,
     )
 
+    is_club_notice: bool = False
+
     # Frontend maxLength=100과 동일
     title: str = Field(
         min_length=1,
@@ -237,6 +242,14 @@ class PostCreateRequest(BaseModel):
     # -----------------------------------------------------
     @model_validator(mode="after")
     def validate_board_fields(self):
+
+        if (
+            self.is_club_notice
+            and self.board_type != "club"
+        ):
+            raise ValueError(
+                "동호회 공지는 동호회 커뮤니티에서만 사용할 수 있습니다."
+            )
 
         # ---------------------------------------------
         # 자유게시판
@@ -389,6 +402,8 @@ class PostDetailResponse(BaseModel):
     clubId: int | None = None
     clubName: str | None = None
 
+    isClubNotice: bool = False
+
     views: int = 0
 
     comments: int = 0
@@ -527,6 +542,8 @@ class PostUpdateRequest(BaseModel):
         default=None,
         gt=0,
     )
+
+    is_club_notice: bool | None = None
 
 
 # =========================================================

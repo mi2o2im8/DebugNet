@@ -525,9 +525,36 @@ function ClubUserDashboard() {
 
     // 바로가기 메뉴
     const handleQuickMenu = (menuName) => {
+        if (menuName === "공지사항") {
+            if (newsLoading) {
+                alert("공지사항을 불러오는 중입니다.");
+                return;
+            }
+
+            if (newsError) {
+                alert(newsError);
+                return;
+            }
+
+            const latestNotice = clubNews.find(
+                (post) => post.isClubNotice
+            );
+
+            if (!latestNotice) {
+                alert("등록된 공지사항이 없습니다.");
+                return;
+            }
+
+            navigate(
+                `/clubs/${clubId}/community/post/${latestNotice.id}`
+            );
+
+            return;
+        }
+
         if (menuName === "소통하기") {
             navigate(
-            `/clubs/${clubId}/community`
+                `/clubs/${clubId}/community`
             );
 
             return;
@@ -536,7 +563,7 @@ function ClubUserDashboard() {
         alert(
             `${menuName} 기능은 화면 연결 예정입니다.`
         );
-        };
+    };
 
 
     // 로딩
@@ -1099,7 +1126,14 @@ function ClubUserDashboard() {
                                 <button
                                     key={post.id}
                                     type="button"
-                                    className="club-user-news-item"
+                                    className={[
+                                        "club-user-news-item",
+                                        post.isClubNotice
+                                            ? "club-notice"
+                                            : ""
+                                    ]
+                                        .filter(Boolean)
+                                        .join(" ")}
                                     onClick={() =>
                                         navigate(
                                             `/clubs/${clubId}/community/post/${post.id}`
@@ -1108,6 +1142,12 @@ function ClubUserDashboard() {
                                 >
                                     <div className="club-user-news-content">
                                         <strong>
+                                            {post.isClubNotice && (
+                                                <span className="club-user-news-notice-badge">
+                                                    [공지]
+                                                </span>
+                                            )}
+
                                             {post.title}
                                         </strong>
 

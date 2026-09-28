@@ -511,6 +511,17 @@ class PostService:
             # ---------------------------------------------
             all_posts.sort(
                 key=lambda post: (
+                    (
+                        1
+                        if (
+                            board_type == "club"
+                            and post.get(
+                                "is_club_notice",
+                                False,
+                            )
+                        )
+                        else 0
+                    ),
                     all_comment_counts.get(
                         post["post_id"],
                         0,
@@ -781,6 +792,14 @@ class PostService:
                         )
                         if club_id is not None
                         else None
+                    ),
+
+                    # 공지사항
+                    "isClubNotice": bool(
+                        post.get(
+                            "is_club_notice",
+                            False,
+                        )
                     ),
 
                     # 조회수
@@ -1114,6 +1133,13 @@ class PostService:
 
             clubName=club_name,
 
+            isClubNotice=bool(
+                post.get(
+                    "is_club_notice",
+                    False,
+                )
+            ),
+
             views=new_view_count,
 
             comments=comment_count,
@@ -1201,6 +1227,18 @@ class PostService:
 
 
         board_type = post["board_type"]
+
+        if (
+            board_type != "club"
+            and "is_club_notice" in update_data
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "동호회 공지 여부는 "
+                    "동호회 게시글에서만 수정할 수 있습니다."
+                ),
+            )
 
 
         # -----------------------------------------------------
@@ -1401,6 +1439,41 @@ class PostService:
             # 실제 소속 동호회는 변경하지 않음
             update_data.pop("club_id", None)
 
+            if "is_club_notice" in update_data:
+
+                next_notice_status = update_data[
+                    "is_club_notice"
+                ]
+
+                if next_notice_status is None:
+                    raise HTTPException(
+                        status_code=(
+                            status.HTTP_400_BAD_REQUEST
+                        ),
+                        detail=(
+                            "공지 여부는 true 또는 false로 "
+                            "입력해주세요."
+                        ),
+                    )
+
+                is_club_staff = (
+                    self.post_repository.is_club_staff(
+                        club_id=target_club_id,
+                        user_id=user_id,
+                    )
+                )
+
+                if not is_club_staff:
+                    raise HTTPException(
+                        status_code=(
+                            status.HTTP_403_FORBIDDEN
+                        ),
+                        detail=(
+                            "동호회장 또는 운영진만 "
+                            "공지 여부를 변경할 수 있습니다."
+                        ),
+                    )
+
         # -----------------------------------------------------
         # 7. 수정 시간 갱신
         # -----------------------------------------------------
@@ -1540,6 +1613,9 @@ class PostService:
         # -------------------------------------------------
         title = post_data.title.strip()
         content = post_data.content.strip()
+        is_club_notice = bool(
+            post_data.is_club_notice
+        )
 
         if not title:
             raise HTTPException(
@@ -1688,6 +1764,25 @@ class PostService:
                 user_id=user_id,
             )
 
+            if is_club_notice:
+                is_club_staff = (
+                    self.post_repository.is_club_staff(
+                        club_id=club_id,
+                        user_id=user_id,
+                    )
+                )
+
+                if not is_club_staff:
+                    raise HTTPException(
+                        status_code=(
+                            status.HTTP_403_FORBIDDEN
+                        ),
+                        detail=(
+                            "동호회장 또는 운영진만 "
+                            "공지를 작성할 수 있습니다."
+                        ),
+                    )
+
 
         # =================================================
         # DB 저장 데이터
@@ -1709,6 +1804,8 @@ class PostService:
             "sport_id": sport_id,
 
             "club_id": club_id,
+
+            "is_club_notice": is_club_notice,
 
             "title": title,
 
@@ -1739,7 +1836,11 @@ class PostService:
 
         return PostCreateResponse(
             id=created_post["post_id"],
-            message="게시글이 등록되었습니다.",
+            message=(
+                "동호회 공지가 등록되었습니다."
+                if is_club_notice
+                else "게시글이 등록되었습니다."
+            ),
         )
 
 

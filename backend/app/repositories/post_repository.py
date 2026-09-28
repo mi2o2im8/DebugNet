@@ -102,6 +102,7 @@ class PostRepository:
                 "board_type, "
                 "sport_id, "
                 "club_id, "
+                "is_club_notice, "
                 "title, "
                 "content, "
                 "view_count, "
@@ -170,6 +171,12 @@ class PostRepository:
         # -------------------------------------------------
         # 정렬
         # -------------------------------------------------
+        if board_type == "club":
+            query = query.order(
+                "is_club_notice",
+                desc=True,
+            )
+
         if sort == "views":
 
             query = (
@@ -415,6 +422,7 @@ class PostRepository:
                 "board_type, "
                 "sport_id, "
                 "club_id, "
+                "is_club_notice, "
                 "title, "
                 "content, "
                 "view_count, "
@@ -473,6 +481,12 @@ class PostRepository:
                 )
 
 
+        if board_type == "club":
+            query = query.order(
+                "is_club_notice",
+                desc=True,
+            )
+
         response = (
             query
             .order(
@@ -508,6 +522,7 @@ class PostRepository:
                 "board_type, "
                 "sport_id, "
                 "club_id, "
+                "is_club_notice, "
                 "title, "
                 "content, "
                 "view_count, "

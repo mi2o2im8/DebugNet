@@ -990,6 +990,23 @@
     background: #f8fafb;
 }
 
+/* 공지 미리보기 강조 */
+.club-user-news-item.club-notice {
+    background: #f4fbf7;
+}
+
+/* 공지 표시 */
+.club-user-news-notice-badge {
+    margin-right: 6px;
+    color: #00a866;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.club-user-news-item.club-notice:hover {
+    background: #edf8f2;
+}
+
 .club-user-news-content {
     min-width: 0;
 

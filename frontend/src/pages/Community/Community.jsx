@@ -618,7 +618,14 @@ function Community() {
 
                 <article
                   key={post.id}
-                  className="community-post-item"
+                  className={[
+                    "community-post-item",
+                    isClubCommunity && post.isClubNotice
+                      ? "club-notice"
+                      : ""
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                   onClick={() =>
                     navigate(
                       `${communityBasePath}/post/${post.id}`
@@ -627,6 +634,12 @@ function Community() {
                 >
 
                   <h3>
+                    {isClubCommunity && post.isClubNotice && (
+                      <span className="community-club-notice-badge">
+                        [공지]
+                      </span>
+                    )}
+
                     {post.title}
                   </h3>
 
