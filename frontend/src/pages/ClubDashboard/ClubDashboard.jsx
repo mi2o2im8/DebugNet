@@ -126,6 +126,33 @@ function getEventDateParts(dateString) {
     };
 }
 
+function getEventImageUrl(event) {
+    if (!event) {
+        return "";
+    }
+
+    if (Array.isArray(event.event_image_urls)) {
+        const firstImage = event.event_image_urls.find(
+            (imageUrl) =>
+                typeof imageUrl === "string"
+                && imageUrl.trim()
+        );
+
+        if (firstImage) {
+            return firstImage.trim();
+        }
+    }
+
+    if (
+        typeof event.event_image_url === "string"
+        && event.event_image_url.trim()
+    ) {
+        return event.event_image_url.trim();
+    }
+
+    return "";
+}
+
 function getNextScheduleDate(dayOfWeek) {
     const today = new Date();
     const targetDay = DAY_INDEX[dayOfWeek];
@@ -167,6 +194,12 @@ function ClubDashboard() {
 
     const [eventsError, setEventsError] =
         useState("");
+
+    // 활동 일정 달력에서 선택한 날짜
+    const [
+        selectedEventDateKey,
+        setSelectedEventDateKey
+    ] = useState("");
 
     const [recentPosts, setRecentPosts] =
         useState([]);
@@ -347,37 +380,6 @@ function ClubDashboard() {
         };
     }, []);
 
-    const scheduledWeekdays = useMemo(() => {
-        if (!dashboard) {
-            return new Set();
-        }
-
-        return new Set(
-            dashboard.schedules.map(
-                (schedule) =>
-                    DAY_INDEX[schedule.day_of_week]
-            )
-        );
-    }, [dashboard]);
-
-    const upcomingSchedules = useMemo(() => {
-        if (!dashboard) {
-            return [];
-        }
-
-        return dashboard.schedules
-            .map((schedule) => ({
-                ...schedule,
-                nextDate: getNextScheduleDate(
-                    schedule.day_of_week
-                )
-            }))
-            .sort(
-                (first, second) =>
-                    first.nextDate - second.nextDate
-            )
-            .slice(0, 3);
-    }, [dashboard]);
 
     const upcomingEvents = useMemo(() => {
         const todayKey = getTodayDateKey();
@@ -398,12 +400,76 @@ function ClubDashboard() {
                     return dateDifference;
                 }
 
-                return first.start_time.localeCompare(
-                    second.start_time
+                return (first.start_time || "").localeCompare(
+                    second.start_time || ""
                 );
             })
             .slice(0, 3);
     }, [clubEvents]);
+
+    // 실제 일정이 등록된 날짜
+    const eventDateKeys = useMemo(() => {
+        return new Set(
+            clubEvents
+                .filter(
+                    (event) =>
+                        event.status === "open"
+                )
+                .map(
+                    (event) =>
+                        event.event_date
+                )
+        );
+    }, [clubEvents]);
+
+
+    // 달력에서 선택한 날짜의 일정
+    const selectedDateEvents = useMemo(() => {
+        if (!selectedEventDateKey) {
+            return [];
+        }
+
+        return clubEvents
+            .filter(
+                (event) =>
+                    event.status === "open" &&
+                    event.event_date ===
+                        selectedEventDateKey
+            )
+            .sort(
+                (first, second) =>
+                    (first.start_time || "")
+                        .localeCompare(
+                            second.start_time || ""
+                        )
+            );
+    }, [
+        clubEvents,
+        selectedEventDateKey
+    ]);
+
+
+    // 선택 날짜에서 가장 빠른 일정
+    const selectedEvent =
+        selectedDateEvents[0] || null;
+
+
+    // 일정 조회가 끝나면 가장 가까운 일정을 기본 선택
+    useEffect(() => {
+        if (
+            selectedEventDateKey ||
+            upcomingEvents.length === 0
+        ) {
+            return;
+        }
+
+        setSelectedEventDateKey(
+            upcomingEvents[0].event_date
+        );
+    }, [
+        selectedEventDateKey,
+        upcomingEvents
+    ]);
 
     const handleManagementMenu = (menuId) => {
         if (menuId === "members") {
@@ -491,8 +557,15 @@ function ClubDashboard() {
             ? "운영자"
             : "운영진";
 
-    const selectedSchedule =
-        upcomingSchedules[0];
+    const selectedEventDate =
+        selectedEvent
+            ? getEventDateParts(
+                selectedEvent.event_date
+            )
+            : null;
+
+    const selectedEventImage =
+        getEventImageUrl(selectedEvent);
 
     return (
         <main className="club-dashboard-page">
@@ -654,7 +727,14 @@ function ClubDashboard() {
                                         {calendarData.month}월
                                     </strong>
 
-                                    <button type="button">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setSelectedEventDateKey(
+                                                getTodayDateKey()
+                                            )
+                                        }
+                                    >
                                         오늘
                                     </button>
                                 </div>
@@ -680,34 +760,69 @@ function ClubDashboard() {
                                                 );
                                             }
 
-                                            const date = new Date(
+                                            const dateKey = [
                                                 calendarData.year,
-                                                calendarData.month - 1,
-                                                day
-                                            );
+                                                String(
+                                                    calendarData.month
+                                                ).padStart(2, "0"),
+                                                String(day).padStart(2, "0")
+                                            ].join("-");
 
-                                            const hasSchedule =
-                                                scheduledWeekdays.has(
-                                                    date.getDay()
-                                                );
+                                            const hasEvent =
+                                                eventDateKeys.has(dateKey);
 
                                             const isToday =
-                                                day ===
-                                                calendarData.today;
+                                                dateKey === getTodayDateKey();
+
+                                            const isSelected =
+                                                dateKey === selectedEventDateKey;
 
                                             return (
                                                 <span
                                                     key={day}
                                                     className={[
-                                                        hasSchedule
+                                                        hasEvent
                                                             ? "scheduled"
                                                             : "",
                                                         isToday
                                                             ? "today"
+                                                            : "",
+                                                        isSelected
+                                                            ? "selected"
                                                             : ""
                                                     ]
                                                         .filter(Boolean)
                                                         .join(" ")}
+                                                    role={
+                                                        hasEvent
+                                                            ? "button"
+                                                            : undefined
+                                                    }
+                                                    tabIndex={
+                                                        hasEvent
+                                                            ? 0
+                                                            : undefined
+                                                    }
+                                                    onClick={() => {
+                                                        if (hasEvent) {
+                                                            setSelectedEventDateKey(
+                                                                dateKey
+                                                            );
+                                                        }
+                                                    }}
+                                                    onKeyDown={(event) => {
+                                                        if (
+                                                            hasEvent &&
+                                                            (
+                                                                event.key === "Enter" ||
+                                                                event.key === " "
+                                                            )
+                                                        ) {
+                                                            setSelectedEventDateKey(
+                                                                dateKey
+                                                            );
+                                                        }
+                                                    }}
                                                 >
                                                     {day}
                                                 </span>
@@ -718,71 +833,76 @@ function ClubDashboard() {
                             </div>
 
                             <div className="club-dashboard-selected-schedule">
-                                {selectedSchedule ? (
+                                {eventsLoading ? (
+                                    <div className="club-dashboard-small-empty">
+                                        일정을 불러오는 중입니다.
+                                    </div>
+                                ) : eventsError ? (
+                                    <div className="club-dashboard-small-empty">
+                                        {eventsError}
+                                    </div>
+                                ) : selectedEvent ? (
                                     <>
                                         <div className="club-dashboard-selected-date">
-                                            {selectedSchedule.nextDate.getMonth() +
-                                                1}
-                                            월{" "}
-                                            {selectedSchedule.nextDate.getDate()}
-                                            일 일정
+                                            {selectedEventDate.month}월{" "}
+                                            {selectedEventDate.day}일 일정
                                         </div>
 
                                         <div className="club-dashboard-selected-image">
-                                            {dashboard.activity_image_urls?.[1] ||
-                                            coverImage ? (
+                                            {selectedEventImage ? (
                                                 <img
-                                                    src={
-                                                        dashboard
-                                                            .activity_image_urls?.[1] ||
-                                                        coverImage
-                                                    }
-                                                    alt=""
+                                                    src={selectedEventImage}
+                                                    alt={`${selectedEvent.title} 일정`}
                                                 />
                                             ) : (
-                                                <FiCalendar />
+                                                <FiCalendar aria-hidden="true" />
                                             )}
                                         </div>
 
                                         <strong>
-                                            {
-                                                selectedSchedule.day_of_week
-                                            } 정기 활동
+                                            {selectedEvent.title}
                                         </strong>
 
                                         <span>
                                             <FiClock />
-                                            {selectedSchedule.start_time.slice(
-                                                0,
-                                                5
-                                            )}
-                                            {" - "}
-                                            {selectedSchedule.end_time.slice(
-                                                0,
-                                                5
-                                            )}
+
+                                            {selectedEvent.start_time
+                                                ? selectedEvent.start_time.slice(
+                                                    0,
+                                                    5
+                                                )
+                                                : "시간 미정"}
+
+                                            {selectedEvent.end_time
+                                                ? (
+                                                    ` - ${selectedEvent.end_time.slice(
+                                                        0,
+                                                        5
+                                                    )}`
+                                                )
+                                                : ""}
                                         </span>
 
                                         <span>
                                             <FiMapPin />
-                                            {dashboard.venue_name ||
+                                            {selectedEvent.location ||
                                                 "장소 미정"}
                                         </span>
 
                                         <button
                                             type="button"
                                             onClick={() =>
-                                                handleManagementMenu(
-                                                    "schedules"
+                                                navigate(
+                                                    `/clubs/${clubId}/manage/events/${selectedEvent.event_id}`
                                                 )
                                             }
                                         >
-                                            일정 관리
+                                            일정 상세
                                         </button>
                                     </>
                                 ) : (
                                     <div className="club-dashboard-small-empty">
-                                        등록된 일정이 없습니다.
+                                        선택한 날짜에 일정이 없습니다.
                                     </div>
                                 )}
                             </div>
@@ -820,11 +940,14 @@ function ClubDashboard() {
                                     예정된 일정이 없습니다.
                                 </div>
                             ) : (
-                                upcomingEvents.map((event, index) => {
+                                upcomingEvents.map((event) => {
                                     const eventDate =
                                         getEventDateParts(
                                             event.event_date
                                         );
+
+                                    const eventImage =
+                                        getEventImageUrl(event);
 
                                     const openEventDetail = () => {
                                         navigate(
@@ -861,19 +984,13 @@ function ClubDashboard() {
                                             </div>
 
                                             <div className="club-dashboard-upcoming-thumbnail">
-                                                {event.event_image_url ||
-                                                dashboard.activity_image_urls?.[index] ||
-                                                coverImage ? (
+                                                {eventImage ? (
                                                     <img
-                                                        src={
-                                                            event.event_image_url ||
-                                                            dashboard.activity_image_urls?.[index] ||
-                                                            coverImage
-                                                        }
-                                                        alt=""
+                                                        src={eventImage}
+                                                        alt={`${event.title} 일정`}
                                                     />
                                                 ) : (
-                                                    <FiCalendar />
+                                                    <FiCalendar aria-hidden="true" />
                                                 )}
                                             </div>
 
