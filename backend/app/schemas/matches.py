@@ -1090,3 +1090,21 @@ class MatchReviewDetailResponse(BaseModel):
 
     # 선택 후기 내용
     content: str | None = None
+
+#매칭 추천
+class MatchRecommendationRequest(BaseModel):
+    sport_id: int
+    match_date: date
+    start_time: time
+    end_time: time
+    region: str
+
+    location_name: str | None = None
+    address: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+
+    skill_level: MatchSkillLevel
+    required_players: int
+
+    limit: int = 5
