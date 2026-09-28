@@ -347,4 +347,37 @@ def get_club_dashboard(
             detail="동호회 허브를 불러오는 중 오류가 발생했습니다.",
         ) from error
 
+# -----------------------------------------------------
+# 이용자용 동호회 대시보드 조회
+# -----------------------------------------------------
+@router.get(
+    "/{club_id}/user-dashboard",
+    response_model=ClubDashboardResponse,
+)
+def get_club_user_dashboard(
+    club_id: int,
+    user_id: str = Depends(get_current_user_id),
+):
+    club_service = ClubService()  
+
+    try:
+        return club_service.get_user_dashboard(
+            club_id=club_id,
+            user_id=user_id,
+        )
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="이용자용 동호회 대시보드를 불러오는 중 오류가 발생했습니다.",
+        ) from error
 

@@ -461,9 +461,8 @@ class ClubEventGuestDecisionResponse(BaseModel):
 
     message: str
 
-class ClubEventGuestApplicationResponse(BaseModel):
+class ClubEventGuestApplyResponse(BaseModel):
     event_id: int
-
     event_participant_id: int | None = None
 
     participation_status: Literal[
@@ -475,13 +474,12 @@ class ClubEventGuestApplicationResponse(BaseModel):
 
     message: str
 
-class ClubEventParticipantCancelResponse(
-    BaseModel
-):
+class ClubEventParticipantCancelResponse(BaseModel):
     event_participant_id: int
     event_id: int
 
     participation_status: Literal[
+        "pending",
         "cancelled",
     ]
 

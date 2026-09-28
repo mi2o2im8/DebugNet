@@ -50,6 +50,11 @@ function ClubDetail() {
         const data = await response.json();
 
         setMemberStatus(data.status);
+
+        if (data.status === "active") {
+          navigate(`/clubs/${clubId}/home`);
+          return;
+        }
       } catch (error) {
         console.error("가입 상태 조회 오류:", error);
       }

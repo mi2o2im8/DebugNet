@@ -1,9 +1,10 @@
-import { BrowserRouter, Routes, Route} from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import Home from './pages/LoginPage/Home'
 import Login from './pages/LoginPage/Login';
 import Signup from './pages/Signup/SignupAccount';
 import SignupProfile from './pages/Signup/SignupProfile'
+
 // 회원가입 전체 데이터 공용 저장공간
 import { SignupProvider } from './pages/Signup/SignupContext';
 import SignupSport from './pages/Signup/SignupSport';
@@ -14,8 +15,8 @@ import SignupFrequency from './pages/Signup/SignupFrequency'
 import SignupClubPreference from './pages/Signup/SignupClubPreference'
 import SignupFee from './pages/Signup/SignupFee'
 import SignupReview from './pages/Signup/SignupReview'
-import ClubDashboard from "./pages/ClubDashboard/ClubDashboard";
 
+import ClubDashboard from "./pages/ClubDashboard/ClubDashboard";
 
 import ClubHome from './pages/ClubHome/ClubHome';
 import ClubDetail from "./pages/ClubDetail/ClubDetail";
@@ -27,12 +28,15 @@ import ClubEventAttendance from "./pages/ClubEvents/ClubEventAttendance";
 // 동호회 가입 전 후 메인페이지들
 // import Home from "./pages/Home/Home";
 import Main from "./pages/Main/Main";
-import MainHome from "./pages/MainHome/MainHome"; 
+import MainHome from "./pages/MainHome/MainHome";
 
-// 동호회 페이지
+// 동호회
 import ClubCreate from './pages/ClubCreate/ClubCreate';
 import AllClub from "./pages/AllClub/AllClub";
 import ClubRecruit from "./pages/ClubRecruit/ClubRecruit";
+import GuestRecruit from "./pages/GuestRecruit/GuestRecruit";
+import GuestRecruitDetail from "./pages/GuestRecruitDetail/GuestRecruitDetail";
+import ClubUserDashboard from "./pages/ClubUserDashboard/ClubUserDashboard";
 
 import Community from "./pages/Community/Community";
 import PostDetail from './pages/Community/PostDetail';
@@ -53,7 +57,6 @@ import ClubEventDetail from "./pages/ClubEvents/ClubEventDetail";
 import ClubMemberManagement from "./pages/ClubMembers/ClubMemberManagement";
 import ClubMemberDetail from "./pages/ClubMembers/ClubMemberDetail";
 
-
 import MatchManagement from "./pages/Match/MatchManagement";
 import MatchManagementList from "./pages/Match/MatchManagementList";
 import MatchManagementDetail from "./pages/Match/MatchManagementDetail";
@@ -61,37 +64,48 @@ import MatchRecordWrite from "./pages/Match/MatchRecordWrite";
 import MatchReviewWrite from "./pages/Match/MatchReviewWrite";
 import MatchReviewDetail from "./pages/Match/MatchReviewDetail";
 
-
-
 // 내 정보
 import Mypage from "./pages/Mypage/Mypage";
+
 // 내정보 수정
 import MyInfoEdit from './pages/Mypage/MyInfoEdit';
+
 // 설정 페이지
 import Settings from './pages/Settings/Settings';
+
 // 내 동호회 일정 전체보기
 import MySchedule from "./pages/MySchedule/MySchedule";
+
 // 내 활동
 import MyActivity from "./pages/MyActivity/MyActivity";
+
 // 신뢰점수
 import TrustScore from './pages/TrustScore/TrustScore';
+
 // 내가 쓴 글/댓글
 import MyPostComment from './pages/MyPostComment/MyPostComment';
+
 // 찜한 동호회
 import FavoriteClub from './pages/FavoriteClub/FavoriteClub';
+
 // 개인정보 관리
 import PrivacySettings from './pages/Settings/PrivacySettings';
+
 // 비밀번호 변경
 import ChangePassword from './pages/Settings/ChangePassword';
+
 // 차단 인물 설정
 import BlockedUsers from './pages/Settings/BlockedUsers';
 
 // 알림 페이지
 import Notification from './pages/Notification/Notification';
+
 // ⭐ 알림 Context (Provider) - 페이지가 아니라 앱 전체를 감싸는 용도로 사용
 import { NotificationProvider } from './context/NotificationContext';
+
 // 나의 동호회 리뷰들 모아보기
 import MyReviews from './pages/MyReviews/MyReviews';
+
 // FAQ 화면
 import Faq from './pages/Settings/Faq';
 
@@ -101,34 +115,39 @@ import NotificationSettings from './pages/Settings/NotificationSettings';
 // 챗봇 페이지
 import Chatbot from './pages/Chatbot/Chatbot';
 
-
 import './App.css'
 
 function App() {
   return (
     <BrowserRouter>
+
       {/* ⭐ 알림 데이터를 앱 전체에서 공유하기 위해 최상단에서 감싸줌 */}
       <NotificationProvider>
+
         <SignupProvider>
+
           <Routes>
 
             {/* 시작 페이지 */}
-            <Route path='/' element={<Home/>}/>
+            <Route path='/' element={<Home />} />
 
             {/* 로그인 페이지 */}
-            <Route path='/Login' element={<Login/>}/>
+            <Route path='/Login' element={<Login />} />
 
             {/* 동호회 가입 전 메인 페이지 */}
-            <Route path="/main" element={<Main/>} />
+            <Route path="/main" element={<Main />} />
 
             {/* 가입 후 메인 홈 */}
             <Route path="/mainhome" element={<MainHome />} />
-            
+
             {/* 회원가입 버튼 연동 */}
-            <Route path='/signup' element={<Signup/>}/>
+            <Route path='/signup' element={<Signup />} />
 
             {/* 기본 정보 입력 페이지 */}
-            <Route path='/signup/basic' element={<SignupProfile/>}/>
+            <Route
+              path='/signup/basic'
+              element={<SignupProfile />}
+            />
 
             {/* 운동 종목 선택 페이지 */}
             <Route
@@ -177,16 +196,12 @@ function App() {
               element={<SignupReview />}
             />
 
-
             {/* =====================================================
                 ⭐ 동호회 찾기
             ===================================================== */}
 
             {/* 동호회 찾기 홈 화면 페이지 */}
-            <Route
-              path='/clubs'
-              element={<ClubHome />}
-            />
+            <Route path='/clubs' element={<ClubHome />} />
 
             {/* 전체 동호회 페이지 */}
             <Route
@@ -200,10 +215,28 @@ function App() {
               element={<ClubRecruit />}
             />
 
+            {/* 게스트 모집 중 페이지 */}
+            <Route
+              path="/guest-recruit"
+              element={<GuestRecruit />}
+            />
+
+            {/* 게스트 모집 상세 페이지 */}
+            <Route
+              path="/guest-recruit/:eventId"
+              element={<GuestRecruitDetail />}
+            />
+
             {/* 동호회 상세 페이지 */}
             <Route
               path="/clubs/:clubId"
               element={<ClubDetail />}
+            />
+
+            {/* 동호회 이용자용 대시보드 */}
+            <Route
+              path="/clubs/:clubId/home"
+              element={<ClubUserDashboard />}
             />
 
             {/* 동호회 가입 페이지 */}
@@ -224,7 +257,6 @@ function App() {
               element={<ClubCreate />}
             />
 
-
             {/* =====================================================
                 ⭐ 커뮤니티
             ===================================================== */}
@@ -232,7 +264,7 @@ function App() {
             {/* 커뮤니티 페이지 */}
             <Route
               path="/community"
-              element={<Community/>}
+              element={<Community />}
             />
 
             {/* 커뮤니티 상세보기 */}
@@ -246,7 +278,6 @@ function App() {
               path="/community/write"
               element={<PostWrite />}
             />
-
 
             {/* =====================================================
                 ⭐ 동호회 운영 기능
@@ -357,10 +388,6 @@ function App() {
                 element={<PostDetail />}
               />
 
-                            
-
-
-
               {/* =================================================
                   ⭐ 팀 매칭
               ================================================= */}
@@ -409,7 +436,6 @@ function App() {
 
             </Route>
 
-
             {/* 내 정보 */}
 
             {/* 내 정보 */}
@@ -430,7 +456,6 @@ function App() {
               element={<Settings />}
             />
 
-
             {/* 내 동호회 일정 전체보기 */}
 
             {/* 기존 주소 */}
@@ -450,7 +475,6 @@ function App() {
               path="/schedule"
               element={<MySchedule />}
             />
-
 
             {/* 내 활동 */}
             <Route
@@ -476,14 +500,24 @@ function App() {
               element={<FavoriteClub />}
             />
 
-            {/* 알림 */}
-            <Route path="/notification" element={<Notification />}/>
-
             {/* 챗봇 */}
-            <Route path="/chatbot" element={<Chatbot />}/>
-            
+            <Route
+              path="/chatbot"
+              element={<Chatbot />}
+            />
+
+            {/* 알림 */}
+            <Route
+              path="/notification"
+              element={<Notification />}
+            />
+
             {/* 알림 설정 */}
-            <Route path="/notification-settings"element={<NotificationSettings />}/>
+            <Route
+              path="/notification-settings"
+              element={<NotificationSettings />}
+            />
+
             {/* 개인정보 관리 */}
             <Route
               path="/privacy"
@@ -491,7 +525,10 @@ function App() {
             />
 
             {/* 차단회원 관리 */}
-            <Route path="/blocked-users"element={<BlockedUsers />}/>
+            <Route
+              path="/blocked-users"
+              element={<BlockedUsers />}
+            />
 
             {/* 비밀번호 변경 */}
             <Route
@@ -500,11 +537,17 @@ function App() {
             />
 
             {/* FAQ */}
-            <Route path="/faq" element={<Faq />} />
+            <Route
+              path="/faq"
+              element={<Faq />}
+            />
 
           </Routes>
+
         </SignupProvider>
+
       </NotificationProvider>
+
     </BrowserRouter>
   )
 }

@@ -578,3 +578,103 @@ class ClubService:
     # =========================================================
     def get_guest_recruiting_events(self):
         return self.club_repository.get_guest_recruiting_events()
+
+    # -----------------------------------------------------
+    # 이용자용 동호회 대시보드 조회
+    # 가입 승인된 활성 회원만 접근 가능
+    # -----------------------------------------------------
+    def get_user_dashboard(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> ClubDashboardResponse:
+
+        # 1. 동호회 존재 여부 확인
+        club = self.club_repository.find_club_by_id(
+            club_id
+        )
+
+        if club is None:
+            raise LookupError(
+                "존재하지 않거나 비활성화된 동호회입니다."
+            )
+
+        # 2. 로그인 사용자의 활성 회원 여부 확인
+        membership = (
+            self.club_repository.find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        # 가입 승인되지 않았거나 활성 회원이 아닌 경우
+        if membership is None:
+            raise PermissionError(
+                "가입 승인된 회원만 접근할 수 있습니다."
+            )
+
+        # 3. 동호회 이미지 조회
+        images = self.club_repository.find_club_images(
+            club_id
+        )
+
+        representative_image_url = next(
+            (
+                image["image_url"]
+                for image in images
+                if image["image_type"] == "representative"
+            ),
+            None,
+        )
+
+        activity_image_urls = [
+            image["image_url"]
+            for image in images
+            if image["image_type"] == "activity"
+        ]
+
+        # 4. 대시보드 데이터 반환
+        return ClubDashboardResponse(
+            club_id=club["club_id"],
+            club_name=club["club_name"],
+            club_intro=club.get("club_intro"),
+
+            sport_name=(
+                self.club_repository
+                .find_club_sport_name(club_id)
+            ),
+
+            region=(
+                self.club_repository
+                .find_club_region(club_id)
+            ),
+
+            venue_name=(
+                self.club_repository
+                .find_club_venue(club_id)
+            ),
+
+            representative_image_url=(
+                representative_image_url
+            ),
+
+            activity_image_urls=activity_image_urls,
+
+            current_members=(
+                self.club_repository
+                .count_active_members(club_id)
+            ),
+
+            max_members=club.get("max_members"),
+
+            activity_frequency=club.get(
+                "activity_frequency"
+            ),
+
+            user_role=membership["role"],
+
+            schedules=(
+                self.club_repository
+                .find_club_schedules(club_id)
+            ),
+        )
