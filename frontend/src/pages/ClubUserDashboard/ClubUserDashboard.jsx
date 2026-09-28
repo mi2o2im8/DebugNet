@@ -525,8 +525,18 @@ function ClubUserDashboard() {
 
     // 바로가기 메뉴
     const handleQuickMenu = (menuName) => {
-        alert(`${menuName} 기능은 화면 연결 예정입니다.`);
-    };
+        if (menuName === "소통하기") {
+            navigate(
+            `/clubs/${clubId}/community`
+            );
+
+            return;
+        }
+
+        alert(
+            `${menuName} 기능은 화면 연결 예정입니다.`
+        );
+        };
 
 
     // 로딩
