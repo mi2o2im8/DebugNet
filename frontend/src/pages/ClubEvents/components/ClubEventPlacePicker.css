@@ -1,0 +1,214 @@
+.club-event-place-picker {
+    display: grid;
+    gap: 12px;
+}
+
+.club-event-place-mode {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    padding: 4px;
+    border-radius: 11px;
+    background: #edf3ef;
+}
+
+.club-event-place-mode button {
+    min-height: 38px;
+    padding: 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #6e7972;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.club-event-place-mode button.active {
+    background: #ffffff;
+    color: #008f35;
+    font-weight: 700;
+    box-shadow:
+        0 2px 8px
+        rgba(24, 55, 35, 0.08);
+}
+
+.club-event-place-search {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding-left: 12px;
+    border: 1px solid #d9e3dc;
+    border-radius: 11px;
+    background: #ffffff;
+}
+
+.club-event-place-search > svg {
+    color: #7c8981;
+    font-size: 17px;
+}
+
+.club-event-place-search input {
+    min-width: 0;
+    padding: 12px 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.club-event-place-search input:focus {
+    border: 0;
+    box-shadow: none;
+}
+
+.club-event-place-search button {
+    align-self: stretch;
+    min-width: 62px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 0 10px 10px 0;
+    background: #009b3a;
+    color: #ffffff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.club-event-place-search button:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.club-event-place-results {
+    display: grid;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid #dce5df;
+    border-radius: 11px;
+    background: #ffffff;
+}
+
+.club-event-place-results button {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    padding: 12px;
+    border: 0;
+    background: #ffffff;
+    color: #263029;
+    text-align: left;
+    cursor: pointer;
+}
+
+.club-event-place-results button + button {
+    border-top: 1px solid #edf1ee;
+}
+
+.club-event-place-results button:hover {
+    background: #f2f8f4;
+}
+
+.club-event-place-results button > svg {
+    flex: 0 0 auto;
+    margin-top: 2px;
+    color: #009b3a;
+    font-size: 17px;
+}
+
+.club-event-place-results button > span {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.club-event-place-results strong {
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.club-event-place-results small {
+    color: #7b867f;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.club-event-selected-place {
+    overflow: hidden;
+    border: 1px solid #cfe4d6;
+    border-radius: 13px;
+    background: #ffffff;
+}
+
+.club-event-place-map {
+    height: 190px;
+    background: #edf3ef;
+}
+
+.club-event-place-map > div {
+    width: 100%;
+    height: 100%;
+}
+
+.club-event-selected-place-info {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+}
+
+.club-event-selected-place-info > svg {
+    color: #009b3a;
+    font-size: 19px;
+}
+
+.club-event-selected-place-info > span {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.club-event-selected-place-info strong {
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.club-event-selected-place-info small {
+    color: #77827b;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.club-event-selected-place-info button {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #f0f4f1;
+    color: #667169;
+    cursor: pointer;
+}
+
+.club-event-manual-place {
+    display: grid;
+    gap: 7px;
+}
+
+.club-event-manual-place > small {
+    color: #7b867f;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+}

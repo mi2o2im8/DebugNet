@@ -1,10 +1,19 @@
 from uuid import uuid4
 
+from datetime import (
+    datetime,
+    timezone,
+)
+from zoneinfo import ZoneInfo
+
 from app.repositories.club_event_repository import (
     ClubEventRepository,
 )
 from app.repositories.club_repository import (
     ClubRepository,
+)
+from app.repositories.match_repository import (
+    MatchRepository,
 )
 from app.schemas.club_events import (
     ClubEventAttendanceRequest,
@@ -19,8 +28,17 @@ from app.schemas.club_events import (
     ClubEventGuestDecisionRequest,
     ClubEventGuestDecisionResponse,
     ClubEventGuestApplyResponse,
+    ClubEventGuestApplicationResponse,
+    ClubEventParticipantCancelResponse,
 )
 
+KST = ZoneInfo("Asia/Seoul")
+
+ATTENDANCE_VOTE_OPTIONS = (
+    "참석",
+    "불참",
+    "미정",
+)
 
 class ClubEventService:
 
@@ -29,6 +47,10 @@ class ClubEventService:
 
         self.event_repository = (
             ClubEventRepository()
+        )
+
+        self.match_repository = (
+            MatchRepository()
         )
 
     # -----------------------------------------------------
@@ -71,6 +93,111 @@ class ClubEventService:
             )
 
     # -----------------------------------------------------
+    # 동호회 일정 조회 권한 확인
+    # ⭐ 일반 가입 회원도 일정 조회 가능
+    # ⭐ 일정 생성/수정/삭제는 기존 운영 권한 유지
+    # -----------------------------------------------------
+    def validate_view_permission(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> None:
+        club = self.club_repository.find_club_by_id(
+            club_id
+        )
+
+        if club is None:
+            raise LookupError(
+                "존재하지 않거나 비활성화된 동호회입니다."
+            )
+
+        membership = (
+            self.club_repository
+            .find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is None:
+            raise PermissionError(
+                "이 동호회의 회원만 일정을 조회할 수 있습니다."
+            )
+
+    # -----------------------------------------------------
+    # 회원 참석 응답 규칙 검증
+    #
+    # - 모집 마감 이후 응답 변경 차단
+    # - 참석으로 변경할 때 전체 정원 확인
+    # - 게스트는 승인 시점에 정원을 확인하므로 제외
+    # -----------------------------------------------------
+    def validate_member_attendance_rules(
+        self,
+        event: dict,
+        user_id: str,
+        next_status: str,
+        previous_status: str | None,
+    ) -> None:
+        deadline_value = event.get(
+            "registration_deadline"
+        )
+
+        if deadline_value:
+            deadline = datetime.fromisoformat(
+                str(deadline_value).replace(
+                    "Z",
+                    "+00:00",
+                )
+            )
+
+            if deadline.tzinfo is None:
+                deadline = deadline.replace(
+                    tzinfo=timezone.utc
+                )
+
+            # 현재 프로젝트는 datetime-local로 입력한
+            # 한국 시각이 +00 형태로 저장되므로
+            # 기존 알림 스케줄러와 같은 기준으로 비교
+            current_time = (
+                datetime.now(KST)
+                .replace(tzinfo=timezone.utc)
+            )
+
+            if current_time >= deadline:
+                raise ValueError(
+                    "참석 응답 마감 시간이 지났습니다."
+                )
+
+        if (
+            next_status != "attending"
+            or previous_status == "attending"
+        ):
+            return
+
+        max_participants = event.get(
+            "max_participants"
+        )
+
+        if max_participants is None:
+            return
+
+        event_id = int(event["event_id"])
+
+        counts = self.build_event_participant_counts(
+            [event]
+        )[event_id]
+
+        occupied_count = (
+            counts["attending_count"]
+            + counts["guest_count"]
+        )
+
+        if occupied_count >= int(max_participants):
+            raise ValueError(
+                "일정 참여 정원이 마감되었습니다."
+            )
+
+    # -----------------------------------------------------
     # 일정 기본 정보 저장
     # -----------------------------------------------------
     def create_base_event(
@@ -102,6 +229,12 @@ class ClubEventService:
                     else None
                 ),
                 "location": request_data.location,
+                "location_address": (
+                    request_data.location_address
+                ),
+                "latitude": request_data.latitude,
+                "longitude": request_data.longitude,
+
                 "max_participants": (
                     request_data.max_participants
                 ),
@@ -174,7 +307,7 @@ class ClubEventService:
                 "display_order": index,
             }
             for index, option in enumerate(
-                request_data.vote_options,
+                ATTENDANCE_VOTE_OPTIONS,
                 start=1,
             )
         ]
@@ -222,6 +355,57 @@ class ClubEventService:
 
             raise
 
+        # -------------------------------------------------
+        # 동호회 회원들에게 참석 투표 알림
+        #
+        # - 일정을 만든 본인은 제외
+        # - 알림 저장이 실패해도 일정 생성은 정상 처리
+        # -------------------------------------------------
+        try:
+            club = self.club_repository.find_club_by_id(
+                club_id
+            )
+
+            club_name = (
+                club.get("club_name")
+                if club
+                else "동호회"
+            )
+
+            member_ids = (
+                self.event_repository
+                .find_active_member_user_ids(
+                    club_id=club_id,
+                )
+            )
+
+            member_ids = [
+                uid for uid in member_ids
+                if uid != user_id
+            ]
+
+            event_date = request_data.event_date
+
+            self.event_repository.create_event_notifications(
+                user_ids=member_ids,
+                notification_type="vote_created",
+                title="새 일정 투표가 열렸어요",
+                content=(
+                    f"[{club_name}] "
+                    f"{event_date.month}월 {event_date.day}일 "
+                    f"'{request_data.title}' "
+                    f"참석 여부를 알려주세요."
+                ),
+                event_id=event_id,
+                link_path=(
+                    f"/clubs/{club_id}/events/"
+                    f"{event_id}/attendance"
+                ),
+            )
+
+        except Exception as e:
+            print("투표 생성 알림 실패:", e)
+        
         return ClubEventCreateResponse(
             event_id=event_id,
             club_id=club_id,
@@ -230,6 +414,12 @@ class ClubEventService:
 
     # -----------------------------------------------------
     # 일정 단건 조회
+    #
+    # 일반 일정:
+    # → 해당 동호회가 직접 소유한 일정
+    #
+    # 팀매칭 일정:
+    # → requester / target 양쪽 모두 조회 가능
     # -----------------------------------------------------
     def get_event(
         self,
@@ -237,11 +427,19 @@ class ClubEventService:
         event_id: int,
         user_id: str,
     ) -> ClubEventDetailResponse:
-        self.validate_management_permission(
+
+        # -------------------------------------------------
+        # 1. 동호회 회원 권한 확인 (일반 회원도 조회 가능)
+        # -------------------------------------------------
+        self.validate_view_permission(
             club_id=club_id,
             user_id=user_id,
         )
 
+
+        # -------------------------------------------------
+        # 2. 우선 현재 동호회가 직접 소유한 일정 조회
+        # -------------------------------------------------
         event = (
             self.event_repository
             .find_event_by_id(
@@ -250,34 +448,122 @@ class ClubEventService:
             )
         )
 
+
+        # -------------------------------------------------
+        # 3. 직접 소유한 일정이 아니라면
+        #    팀매칭으로 공유된 일정인지 확인
+        #
+        # 예:
+        #
+        # target(HOME) 소유 event
+        # requester(AWAY)가 상세 조회하는 경우
+        # -------------------------------------------------
+        if event is None:
+
+            approved_matches = (
+                self.match_repository
+                .find_approved_matches_by_club(
+                    club_id=club_id,
+                )
+            )
+
+
+            # 현재 동호회가 참여하는 승인 매칭 중
+            # 요청한 event_id와 연결된 매칭이 있는지 확인
+            has_shared_match_event = any(
+
+                match.get("event_id") is not None
+
+                and int(
+                    match["event_id"]
+                ) == event_id
+
+                for match in approved_matches
+            )
+
+
+            # -------------------------------------------------
+            # 공유된 매칭 일정이라면
+            # 실제 club_id와 관계없이 event_id로 조회
+            # -------------------------------------------------
+            if has_shared_match_event:
+
+                shared_events = (
+                    self.event_repository
+                    .find_events_by_ids(
+                        event_ids=[
+                            event_id
+                        ],
+                    )
+                )
+
+                if shared_events:
+
+                    event = (
+                        shared_events[0]
+                    )
+
+
+        # -------------------------------------------------
+        # 4. 존재하지 않거나 취소된 일정
+        # -------------------------------------------------
         if (
             event is None
-            or event.get("status") == "cancelled"
+            or event.get("status")
+            == "cancelled"
         ):
+
             raise LookupError(
                 "존재하지 않거나 삭제된 일정입니다."
             )
 
+
+        # -------------------------------------------------
+        # 5. 참석 투표 조회
+        #
+        # 일반 일정에는 있을 수 있고,
+        # 팀매칭으로 자동 생성한 일정에는
+        # 없을 수도 있다.
+        # -------------------------------------------------
         attendance_vote = (
             self.event_repository
-            .find_attendance_vote(event_id)
+            .find_attendance_vote(
+                event_id
+            )
         )
 
         vote_options = []
 
+
+        # -------------------------------------------------
+        # 6. 참석 투표가 존재하면 선택지 조회
+        # -------------------------------------------------
         if attendance_vote is not None:
+
             option_rows = (
                 self.event_repository
                 .find_vote_options(
-                    int(attendance_vote["vote_id"])
+                    int(
+                        attendance_vote[
+                            "vote_id"
+                        ]
+                    )
                 )
             )
 
             vote_options = [
-                str(option_row["option_text"])
+                str(
+                    option_row[
+                        "option_text"
+                    ]
+                )
                 for option_row in option_rows
             ]
 
+
+        # -------------------------------------------------
+        # 7. 최종 Response
+        # -------------------------------------------------
         return ClubEventDetailResponse(
             **event,
             vote_options=vote_options,
@@ -339,6 +625,49 @@ class ClubEventService:
             for participant_row in active_guest_rows
             if participant_row.get("status") == "joined"
         )
+
+        pending_member_rows = [
+            participant_row
+            for participant_row in participant_rows
+            if (
+                participant_row.get(
+                    "participant_type"
+                ) == "member"
+                and participant_row.get("status")
+                    == "pending"
+            )
+        ]
+
+        if (
+            request_data.participation_method == "open"
+            and pending_member_rows
+        ):
+            raise ValueError(
+                "승인 대기 중인 회원이 있어 참여 방식을 "
+                "바로 참여로 변경할 수 없습니다. "
+                "대기 신청을 먼저 승인하거나 거절해주세요."
+            )
+
+        if request_data.max_participants is not None:
+            current_counts = (
+                self.build_event_participant_counts(
+                    [current_event]
+                )[event_id]
+            )
+
+            occupied_count = (
+                current_counts["attending_count"]
+                + current_counts["guest_count"]
+            )
+
+            if (
+                request_data.max_participants
+                < occupied_count
+            ):
+                raise ValueError(
+                    "전체 정원은 현재 참석이 확정된 "
+                    f"{occupied_count}명보다 적을 수 없습니다."
+                )
 
         if (
             not request_data.guest_allowed
@@ -405,6 +734,12 @@ class ClubEventService:
                     else None
                 ),
                 "location": request_data.location,
+                "location_address": (
+                    request_data.location_address
+                ),
+                "latitude": request_data.latitude,
+                "longitude": request_data.longitude,
+
                 "max_participants": (
                     request_data.max_participants
                 ),
@@ -440,6 +775,70 @@ class ClubEventService:
             .update_attendance_vote_deadline(
                 event_id=event_id,
                 deadline=registration_deadline,
+            )
+
+        # -------------------------------------------------
+        # 참여 확정 사용자에게 일정 수정 알림
+        #
+        # 알림 저장 실패가 일정 수정 자체를 막지는 않는다.
+        # -------------------------------------------------
+        try:
+            notification_user_ids = list(
+                dict.fromkeys(
+                    str(participant_row["user_id"])
+                    for participant_row in participant_rows
+                    if (
+                        participant_row.get("user_id")
+                        and participant_row.get("status")
+                            == "joined"
+                        and str(
+                            participant_row["user_id"]
+                        ) != str(user_id)
+                    )
+                )
+            )
+
+            club = (
+                self.club_repository
+                .find_club_by_id(club_id)
+            )
+
+            club_name = (
+                club.get("club_name")
+                if club
+                else "동호회"
+            )
+
+            event_date = request_data.event_date
+
+            self.event_repository \
+                .create_event_notifications(
+                    user_ids=notification_user_ids,
+                    notification_type=(
+                        "schedule_updated"
+                    ),
+                    title=(
+                        "일정 정보가 변경되었어요"
+                    ),
+                    content=(
+                        f"[{club_name}] "
+                        f"{event_date.month}월 "
+                        f"{event_date.day}일 "
+                        f"'{request_data.title}' 일정이 "
+                        "변경되었습니다. "
+                        "변경된 내용을 확인해주세요."
+                    ),
+                    event_id=event_id,
+                    link_path=(
+                        f"/clubs/{club_id}/events/"
+                        f"{event_id}/attendance"
+                    ),
+                )
+
+        except Exception as error:
+            print(
+                "일정 수정 알림 생성 실패:",
+                repr(error),
             )
 
         return ClubEventCreateResponse(
@@ -499,6 +898,15 @@ class ClubEventService:
                     ),
                     "location": (
                         source_event.location
+                    ),
+                    "location_address": (
+                        source_event.location_address
+                    ),
+                    "latitude": (
+                        source_event.latitude
+                    ),
+                    "longitude": (
+                        source_event.longitude
                     ),
                     "max_participants": (
                         source_event.max_participants
@@ -578,6 +986,74 @@ class ClubEventService:
             event_id=event_id,
         )
 
+        # -------------------------------------------------
+        # 참여 신청자 및 확정 참가자에게 일정 취소 알림
+        #
+        # 취소된 일정 상세 화면은 조회할 수 없으므로
+        # 알림 목록 화면으로 연결한다.
+        # -------------------------------------------------
+        try:
+            participant_rows = (
+                self.event_repository
+                .find_participant_details(event_id)
+            )
+
+            notification_user_ids = list(
+                dict.fromkeys(
+                    str(participant_row["user_id"])
+                    for participant_row in participant_rows
+                    if (
+                        participant_row.get("user_id")
+                        and participant_row.get("status")
+                            in {
+                                "pending",
+                                "joined",
+                            }
+                        and str(
+                            participant_row["user_id"]
+                        ) != str(user_id)
+                    )
+                )
+            )
+
+            club = (
+                self.club_repository
+                .find_club_by_id(club_id)
+            )
+
+            club_name = (
+                club.get("club_name")
+                if club
+                else "동호회"
+            )
+
+            event_title = (
+                event.get("title")
+                or "일정"
+            )
+
+            self.event_repository \
+                .create_event_notifications(
+                    user_ids=notification_user_ids,
+                    notification_type=(
+                        "schedule_cancelled"
+                    ),
+                    title="일정이 취소되었어요",
+                    content=(
+                        f"[{club_name}] "
+                        f"'{event_title}' 일정이 "
+                        "운영자에 의해 취소되었습니다."
+                    ),
+                    event_id=event_id,
+                    link_path="/notification",
+                )
+
+        except Exception as error:
+            print(
+                "일정 취소 알림 생성 실패:",
+                repr(error),
+            )
+
         return ClubEventCreateResponse(
             event_id=event_id,
             club_id=club_id,
@@ -622,6 +1098,11 @@ class ClubEventService:
             for event_id in event_ids
         }
 
+        guest_user_ids_by_event = {
+            event_id: set()
+            for event_id in event_ids
+        }
+
         for participant_row in participant_rows:
             event_id = int(
                 participant_row["event_id"]
@@ -639,6 +1120,12 @@ class ClubEventService:
             )
 
             if participant_type == "guest":
+                guest_user_ids_by_event[
+                    event_id
+                ].add(
+                    str(participant_row["user_id"])
+                )
+
                 if participant_status == "joined":
                     counts[event_id][
                         "guest_count"
@@ -784,13 +1271,22 @@ class ClubEventService:
                 vote_id
             ]
 
+            # 게스트의 참석 응답은 회원 참석·불참 수에
+            # 포함하지 않는다.
             if (
                 user_id
-                not in joined_member_ids_by_event[
+                in guest_user_ids_by_event[
                     event_id
                 ]
             ):
                 continue
+
+            is_joined_member = (
+                user_id
+                in joined_member_ids_by_event[
+                    event_id
+                ]
+            )
 
             option_id = int(
                 response_row["option_id"]
@@ -814,28 +1310,46 @@ class ClubEventService:
                 "참석",
                 "attending",
             }:
+                # 승인형 일정의 참석 신청은
+                # 운영자 승인 전까지 집계하지 않는다.
+                if not is_joined_member:
+                    continue
+
                 counts[event_id][
                     "attending_count"
                 ] += 1
 
                 counts[event_id][
                     "undecided_count"
-                ] -= 1
+                ] = max(
+                    0,
+                    counts[event_id][
+                        "undecided_count"
+                    ] - 1,
+                )
 
             elif option_text in {
                 "불참",
                 "absent",
             }:
+                # 불참은 참여 승인이 필요하지 않으므로
+                # joined 여부와 관계없이 즉시 집계한다.
                 counts[event_id][
                     "absent_count"
                 ] += 1
 
-                counts[event_id][
-                    "undecided_count"
-                ] -= 1
+                if is_joined_member:
+                    counts[event_id][
+                        "undecided_count"
+                    ] = max(
+                        0,
+                        counts[event_id][
+                            "undecided_count"
+                        ] - 1,
+                    )
 
             # 미정 또는 응답 없음은
-            # 기존 undecided_count를 그대로 유지
+            # joined 회원의 기본 미응답 수를 유지한다.
 
         return counts
 
@@ -964,13 +1478,20 @@ class ClubEventService:
         )
 
         if participant is not None:
-            if participant["status"] != "joined":
-                raise PermissionError(
-                    "승인된 참가자만 "
-                    "참석 여부를 선택할 수 있습니다."
-                )
+            if participant["status"] == "joined":
+                return participant
 
-            return participant
+            if (
+                participant["participant_type"]
+                == "member"
+                and participant["status"] == "pending"
+            ):
+                return participant
+
+            raise PermissionError(
+                "승인된 참가자만 "
+                "참석 여부를 선택할 수 있습니다."
+            )
 
         membership = (
             self.club_repository
@@ -1028,10 +1549,12 @@ class ClubEventService:
         event_id: int,
         user_id: str,
     ) -> ClubEventAttendanceResponse:
-        self.validate_attendance_access(
-            club_id=club_id,
-            event_id=event_id,
-            user_id=user_id,
+        participant = (
+            self.validate_attendance_access(
+                club_id=club_id,
+                event_id=event_id,
+                user_id=user_id,
+            )
         )
 
         self.get_attendance_vote_data(
@@ -1051,10 +1574,28 @@ class ClubEventService:
             )
         )
 
+        participation_status = None
+
+        if participant is not None:
+            participation_status = (
+                participant["status"]
+            )
+
+            if participation_status == "pending":
+                attendance_status = "undecided"
+
+        message = "현재 참석 응답입니다."
+
+        if participation_status == "pending":
+            message = "현재 참여 승인 대기 중입니다."
+
         return ClubEventAttendanceResponse(
             event_id=event_id,
             attendance_status=attendance_status,
-            message="현재 참석 응답입니다.",
+            participation_status=(
+                participation_status
+            ),
+            message=message,
         )
 
     # -----------------------------------------------------
@@ -1073,6 +1614,64 @@ class ClubEventService:
                 event_id=event_id,
                 user_id=user_id,
             )
+        )
+
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            raise LookupError(
+                "존재하지 않는 일정입니다."
+            )
+
+        previous_status = (
+            self.build_attendance_status_by_user(
+                event_id
+            ).get(
+                str(user_id),
+                "undecided",
+            )
+        )
+
+        participation_method = (
+            event.get("participation_method")
+            or "open"
+        )
+
+        membership = (
+            self.club_repository
+            .find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        is_operator = (
+            membership is not None
+            and membership.get("role")
+            in {
+                "owner",
+                "manager",
+            }
+        )
+
+        requires_approval = (
+            participation_method == "approval"
+            and not is_operator
+        )
+
+        self.validate_member_attendance_rules(
+            event=event,
+            user_id=user_id,
+            next_status=(
+                request_data.attendance_status
+            ),
+            previous_status=previous_status,
         )
 
         vote, option_rows = (
@@ -1119,14 +1718,165 @@ class ClubEventService:
                 "투표 항목이 없습니다."
             )
 
-        # 기존 참가 정보가 없는 동호회 회원은
-        # 첫 응답 시 member + joined로 등록
+        # -------------------------------------------------
+        # 승인제 일정
+        # -------------------------------------------------
+        if (
+            requires_approval
+            and (
+                participant is None
+                or participant["status"] == "pending"
+            )
+        ):
+            # 참석 선택은 승인 대기 신청으로 저장
+            if (
+                request_data.attendance_status
+                == "attending"
+            ):
+                if participant is None:
+                    participant = (
+                        self.event_repository
+                        .create_member_event_participant(
+                            event_id=event_id,
+                            user_id=user_id,
+                            participation_status=(
+                                "pending"
+                            ),
+                        )
+                    )
+
+                # 이전에 불참으로 응답한 회원이
+                # 참석 신청으로 변경한 경우,
+                # 불참 집계가 남지 않도록 미정으로 변경한다.
+                undecided_option = next(
+                    (
+                        option_row
+                        for option_row in option_rows
+                        if str(
+                            option_row["option_text"]
+                        ).strip()
+                        in {
+                            "미정",
+                            "undecided",
+                        }
+                    ),
+                    None,
+                )
+
+                if undecided_option is None:
+                    raise ValueError(
+                        "미정 투표 항목을 찾을 수 없습니다."
+                    )
+
+                self.event_repository \
+                    .replace_vote_response(
+                        vote_id=int(
+                            vote["vote_id"]
+                        ),
+                        option_id=int(
+                            undecided_option[
+                                "option_id"
+                            ]
+                        ),
+                        user_id=user_id,
+                    )
+
+                return ClubEventAttendanceResponse(
+                    event_id=event_id,
+                    attendance_status="undecided",
+                    participation_status="pending",
+                    message=(
+                        "참여 신청이 완료되었습니다. "
+                        "운영자 승인을 기다려주세요."
+                    ),
+                )
+
+            # 대기 중 불참 또는 미정 선택은
+            # 기존 신청 취소로 처리
+            participation_status = None
+
+            if participant is not None:
+                updated_participant = (
+                    self.event_repository
+                    .update_pending_participant_status(
+                        event_id=event_id,
+                        event_participant_id=int(
+                            participant[
+                                "event_participant_id"
+                            ]
+                        ),
+                        new_status="cancelled",
+                    )
+                )
+
+                participation_status = (
+                    updated_participant["status"]
+                )
+
+            self.event_repository.replace_vote_response(
+                vote_id=int(vote["vote_id"]),
+                option_id=int(
+                    selected_option["option_id"]
+                ),
+                user_id=user_id,
+            )
+
+            status_messages = {
+                "absent": (
+                    "참여 신청을 취소하고 "
+                    "불참으로 응답했습니다."
+                ),
+                "undecided": (
+                    "참여 신청을 취소하고 "
+                    "미정으로 응답했습니다."
+                ),
+            }
+
+            return ClubEventAttendanceResponse(
+                event_id=event_id,
+                attendance_status=(
+                    request_data.attendance_status
+                ),
+                participation_status=(
+                    participation_status
+                ),
+                message=status_messages[
+                    request_data.attendance_status
+                ],
+            )
+
+        # 기존에 승인 대기로 저장된 운영진은
+        # 참석 응답 시 바로 참여 확정으로 전환
+        if (
+            is_operator
+            and participant is not None
+            and participant["participant_type"]
+            == "member"
+            and participant["status"] == "pending"
+        ):
+            participant = (
+                self.event_repository
+                .update_pending_participant_status(
+                    event_id=event_id,
+                    event_participant_id=int(
+                        participant[
+                            "event_participant_id"
+                        ]
+                    ),
+                    new_status="joined",
+                )
+            )
+
+        # 바로 참여 일정은 기존처럼 즉시 확정
         if participant is None:
-            self.event_repository \
+            participant = (
+                self.event_repository
                 .create_member_event_participant(
                     event_id=event_id,
                     user_id=user_id,
+                    participation_status="joined",
                 )
+            )
 
         self.event_repository.replace_vote_response(
             vote_id=int(vote["vote_id"]),
@@ -1135,6 +1885,80 @@ class ClubEventService:
             ),
             user_id=user_id,
         )
+
+        # -------------------------------------------------
+        # 운영진에게 참석 여부 응답 알림
+        #
+        # - 응답이 바뀌었을 때만 보냄 (같은 응답 반복 X)
+        # - 응답한 본인은 제외
+        # - 알림 실패해도 참석 응답은 정상 처리
+        # -------------------------------------------------
+        if previous_status != request_data.attendance_status:
+            try:
+                status_labels = {
+                    "attending": "참석",
+                    "absent": "불참",
+                    "undecided": "미정",
+                }
+
+                club = self.club_repository.find_club_by_id(
+                    club_id
+                )
+
+                club_name = (
+                    club.get("club_name")
+                    if club
+                    else "동호회"
+                )
+
+                event = self.event_repository.find_event_by_id(
+                    club_id=club_id,
+                    event_id=event_id,
+                )
+
+                event_title = (
+                    event.get("title")
+                    if event
+                    else "일정"
+                )
+
+                nickname = (
+                    self.event_repository
+                    .find_user_nickname(user_id)
+                    or "회원"
+                )
+
+                manager_ids = (
+                    self.match_repository
+                    .find_club_manager_user_ids(
+                        club_id=club_id,
+                    )
+                )
+
+                manager_ids = [
+                    uid for uid in manager_ids
+                    if uid != user_id
+                ]
+
+                self.event_repository.create_event_notifications(
+                    user_ids=manager_ids,
+                    notification_type="attendance_response",
+                    title="참석 여부 응답",
+                    content=(
+                        f"[{club_name}] '{event_title}' 일정에 "
+                        f"{nickname}님이 "
+                        f"{status_labels[request_data.attendance_status]}"
+                        f"(으)로 응답했어요."
+                    ),
+                    event_id=event_id,
+                    link_path=(
+                        f"/clubs/{club_id}/manage/events/"
+                        f"{event_id}/participants"
+                    ),
+                )
+
+            except Exception as e:
+                print("참석 응답 알림 실패:", e)
 
         status_messages = {
             "attending": "참석으로 응답했습니다.",
@@ -1146,6 +1970,11 @@ class ClubEventService:
             event_id=event_id,
             attendance_status=(
                 request_data.attendance_status
+            ),
+            participation_status=(
+                participant.get("status")
+                if participant
+                else None
             ),
             message=status_messages[
                 request_data.attendance_status
@@ -1357,6 +2186,124 @@ class ClubEventService:
             "message": "참석 여부가 저장되었습니다.",
         }
     # -----------------------------------------------------
+    # 운영자: 참가자 참석 상태 변경
+    # -----------------------------------------------------
+    def update_participant_attendance(
+        self,
+        club_id: int,
+        event_id: int,
+        event_participant_id: int,
+        user_id: str,
+        request_data: ClubEventAttendanceRequest,
+    ) -> ClubEventAttendanceResponse:
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if (
+            event is None
+            or event.get("status") == "cancelled"
+        ):
+            raise LookupError(
+                "존재하지 않거나 삭제된 일정입니다."
+            )
+
+        participant = (
+            self.event_repository
+            .find_event_participant(
+                event_id=event_id,
+                event_participant_id=(
+                    event_participant_id
+                ),
+            )
+        )
+
+        if participant is None:
+            raise LookupError(
+                "존재하지 않는 참가자입니다."
+            )
+
+        if participant["status"] != "joined":
+            raise ValueError(
+                "참여가 확정된 참가자만 "
+                "참석 상태를 변경할 수 있습니다."
+            )
+
+        vote, option_rows = (
+            self.get_attendance_vote_data(
+                event_id
+            )
+        )
+
+        option_texts_by_status = {
+            "attending": {
+                "참석",
+                "attending",
+            },
+            "absent": {
+                "불참",
+                "absent",
+            },
+            "undecided": {
+                "미정",
+                "undecided",
+            },
+        }
+
+        accepted_option_texts = (
+            option_texts_by_status[
+                request_data.attendance_status
+            ]
+        )
+
+        selected_option = None
+
+        for option_row in option_rows:
+            option_text = str(
+                option_row["option_text"]
+            ).strip()
+
+            if option_text in accepted_option_texts:
+                selected_option = option_row
+                break
+
+        if selected_option is None:
+            raise ValueError(
+                "선택한 참석 상태에 해당하는 "
+                "투표 항목이 없습니다."
+            )
+
+        self.event_repository.replace_vote_response(
+            vote_id=int(vote["vote_id"]),
+            option_id=int(
+                selected_option["option_id"]
+            ),
+            user_id=str(
+                participant["user_id"]
+            ),
+        )
+
+        return ClubEventAttendanceResponse(
+            event_id=event_id,
+            attendance_status=(
+                request_data.attendance_status
+            ),
+            message=(
+                "참가자의 참석 상태를 "
+                "변경했습니다."
+            ),
+        )
+
+    # -----------------------------------------------------
     # 일정 참가자 관리 목록 조회
     # -----------------------------------------------------
     def get_event_participants(
@@ -1402,6 +2349,7 @@ class ClubEventService:
         participants = []
         joined_member_count = 0
         joined_guest_count = 0
+        pending_member_count = 0
         pending_guest_count = 0
 
         for participant_row in participant_rows:
@@ -1422,6 +2370,23 @@ class ClubEventService:
                 or {}
             )
 
+            member_role = None
+
+            if participant_type == "member":
+                membership = (
+                    self.club_repository
+                    .find_active_membership(
+                        club_id=club_id,
+                        user_id=participant_user_id,
+                    )
+                )
+
+                if membership is not None:
+                    member_role = membership.get(
+                        "role",
+                        "member",
+                    )
+            
             attendance_status = None
 
             if participation_status == "joined":
@@ -1443,6 +2408,12 @@ class ClubEventService:
                 and participation_status == "joined"
             ):
                 joined_guest_count += 1
+
+            elif (
+                participant_type == "member"
+                and participation_status == "pending"
+            ):
+                pending_member_count += 1
 
             elif (
                 participant_type == "guest"
@@ -1472,6 +2443,7 @@ class ClubEventService:
                     participant_type=(
                         participant_type
                     ),
+                    member_role=member_role,
                     participation_status=(
                         participation_status
                     ),
@@ -1491,6 +2463,9 @@ class ClubEventService:
             joined_guest_count=(
                 joined_guest_count
             ),
+            pending_member_count=(
+                pending_member_count
+            ),
             pending_guest_count=(
                 pending_guest_count
             ),
@@ -1498,39 +2473,160 @@ class ClubEventService:
 
     # -----------------------------------------------------
     # 동호회 일정 목록 조회
+    #
+    # 일반 동호회 일정
+    # +
+    # 현재 동호회가 참여하는 확정 팀매칭 일정
+    #
+    # 을 합쳐서 반환한다.
     # -----------------------------------------------------
     def get_events(
         self,
         club_id: int,
         user_id: str,
     ) -> ClubEventListResponse:
-        self.validate_management_permission(
+
+
+        # -------------------------------------------------
+        # 1. 동호회 회원 권한 확인 (일반 회원도 조회 가능)
+        # -------------------------------------------------
+        self.validate_view_permission(
             club_id=club_id,
             user_id=user_id,
         )
 
-        event_rows = (
+
+        # -------------------------------------------------
+        # 2. 원래 이 동호회가 소유한 일정 조회
+        # -------------------------------------------------
+        normal_event_rows = (
             self.event_repository
-            .find_events_by_club(club_id)
+            .find_events_by_club(
+                club_id
+            )
         )
 
+
+        # -------------------------------------------------
+        # 3. 이 동호회가 참여하는
+        #    승인 완료 팀매칭 조회
+        #
+        # requester / target 어느 쪽이든 조회된다.
+        # -------------------------------------------------
+        approved_matches = (
+            self.match_repository
+            .find_approved_matches_by_club(
+                club_id=club_id,
+            )
+        )
+
+
+        # -------------------------------------------------
+        # 4. 승인된 매칭에 연결된 event_id 수집
+        # -------------------------------------------------
+        match_event_ids = list({
+            int(match["event_id"])
+            for match in approved_matches
+            if match.get("event_id") is not None
+        })
+
+
+        # -------------------------------------------------
+        # 5. 팀매칭 일정 조회
+        #
+        # 이 일정의 club_id가 상대 동호회여도
+        # event_id로 직접 가져온다.
+        # -------------------------------------------------
+        match_event_rows = (
+            self.event_repository
+            .find_events_by_ids(
+                event_ids=match_event_ids,
+            )
+        )
+
+
+        # -------------------------------------------------
+        # 6. 일반 일정 + 팀매칭 일정 합치기
+        #
+        # target(HOME) 쪽에서는 같은 매칭 일정이
+        # 두 목록에 모두 들어올 수 있으므로
+        # event_id 기준으로 중복 제거
+        # -------------------------------------------------
+        event_map = {}
+
+        for event_row in (
+            normal_event_rows
+            + match_event_rows
+        ):
+
+            event_id = int(
+                event_row["event_id"]
+            )
+
+            event_map[event_id] = (
+                event_row
+            )
+
+
+        event_rows = list(
+            event_map.values()
+        )
+
+
+        # -------------------------------------------------
+        # 7. 날짜 / 시간 순 정렬
+        #
+        # 서로 다른 두 DB 조회 결과를 합쳤으므로
+        # Service에서 다시 전체 정렬
+        # -------------------------------------------------
+        event_rows.sort(
+            key=lambda event: (
+                str(
+                    event.get(
+                        "event_date",
+                        "",
+                    )
+                ),
+                str(
+                    event.get(
+                        "start_time",
+                        "",
+                    )
+                    or ""
+                ),
+            )
+        )
+
+
+        # -------------------------------------------------
+        # 8. 일정별 참가 / 출석 숫자 계산
+        # -------------------------------------------------
         participant_counts = (
             self.build_event_participant_counts(
                 event_rows
             )
         )
 
+
+        # -------------------------------------------------
+        # 9. Response 생성
+        # -------------------------------------------------
         events = [
             ClubEventListItemResponse(
                 **{
                     **event_row,
                     **participant_counts[
-                        int(event_row["event_id"])
+                        int(
+                            event_row[
+                                "event_id"
+                            ]
+                        )
                     ],
                 }
             )
             for event_row in event_rows
         ]
+
 
         return ClubEventListResponse(
             events=events,
@@ -1637,9 +2733,420 @@ class ClubEventService:
         )
 
     # -----------------------------------------------------
-    # 게스트 신청 승인 또는 거절
+    # 게스트 신청 가능 시간 확인
     # -----------------------------------------------------
-    def decide_guest_application(
+    def validate_guest_application_window(
+        self,
+        event: dict,
+    ) -> None:
+        current_time = datetime.now(
+            ZoneInfo("Asia/Seoul")
+        )
+
+        deadline_value = event.get(
+            "registration_deadline"
+        )
+
+        if deadline_value:
+            deadline = datetime.fromisoformat(
+                str(deadline_value).replace(
+                    "Z",
+                    "+00:00",
+                )
+            )
+
+            if deadline.tzinfo is None:
+                deadline = deadline.replace(
+                    tzinfo=timezone.utc
+                )
+
+            # 현재 프로젝트의 datetime-local 저장 방식에 맞춘 비교
+            comparison_time = current_time.replace(
+                tzinfo=timezone.utc
+            )
+
+            if comparison_time >= deadline:
+                raise ValueError(
+                    "게스트 참가 신청 기간이 마감되었습니다."
+                )
+
+        event_date_value = event.get(
+            "event_date"
+        )
+        start_time_value = event.get(
+            "start_time"
+        )
+
+        if event_date_value:
+            event_start = datetime.fromisoformat(
+                (
+                    f"{event_date_value}T"
+                    f"{start_time_value or '00:00:00'}"
+                )
+            ).replace(
+                tzinfo=ZoneInfo("Asia/Seoul")
+            )
+
+            if current_time >= event_start:
+                raise ValueError(
+                    "이미 시작된 일정에는 "
+                    "게스트로 신청할 수 없습니다."
+                )
+
+    # -----------------------------------------------------
+    # 게스트 참가 신청
+    # -----------------------------------------------------
+    def apply_as_guest(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> ClubEventGuestApplicationResponse:
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if (
+            event is None
+            or event.get("status") == "cancelled"
+        ):
+            raise LookupError(
+                "존재하지 않거나 삭제된 일정입니다."
+            )
+
+        if event.get("status") != "open":
+            raise ValueError(
+                "현재 참가 신청을 받을 수 없는 일정입니다."
+            )
+
+        if not event.get("guest_allowed", False):
+            raise ValueError(
+                "게스트 참가를 허용하지 않는 일정입니다."
+            )
+
+        max_guests = int(
+            event.get("max_guests") or 0
+        )
+
+        if max_guests <= 0:
+            raise ValueError(
+                "게스트 모집 인원이 설정되지 않았습니다."
+            )
+
+        membership = (
+            self.club_repository
+            .find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is not None:
+            raise PermissionError(
+                "동호회 회원은 게스트로 "
+                "신청할 수 없습니다."
+            )
+
+        existing_participant = (
+            self.event_repository
+            .find_user_event_participant(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        if existing_participant is not None:
+            if (
+                existing_participant["status"]
+                == "pending"
+            ):
+                raise ValueError(
+                    "이미 승인 대기 중인 신청이 있습니다."
+                )
+
+            raise ValueError(
+                "이미 참가가 확정된 일정입니다."
+            )
+
+        self.validate_guest_application_window(
+            event
+        )
+
+        joined_guest_count = (
+            self.event_repository
+            .count_joined_guests(event_id)
+        )
+
+        if joined_guest_count >= max_guests:
+            raise ValueError(
+                "게스트 모집 정원이 마감되었습니다."
+            )
+
+        max_participants = event.get(
+            "max_participants"
+        )
+
+        if max_participants is not None:
+            counts = (
+                self.build_event_participant_counts(
+                    [event]
+                )[event_id]
+            )
+
+            confirmed_count = (
+                counts["attending_count"]
+                + counts["guest_count"]
+            )
+
+            if confirmed_count >= int(
+                max_participants
+            ):
+                raise ValueError(
+                    "일정 참여 정원이 마감되었습니다."
+                )
+
+        participant = (
+            self.event_repository
+            .create_guest_application(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        return ClubEventGuestApplicationResponse(
+            event_id=event_id,
+            event_participant_id=int(
+                participant[
+                    "event_participant_id"
+                ]
+            ),
+            participation_status="pending",
+            message=(
+                "게스트 참가 신청이 완료되었습니다. "
+                "운영자 승인을 기다려주세요."
+            ),
+        )
+
+    # -----------------------------------------------------
+    # 내 게스트 신청 상태 조회
+    # -----------------------------------------------------
+    def get_my_guest_application(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> ClubEventGuestApplicationResponse:
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            raise LookupError(
+                "존재하지 않는 일정입니다."
+            )
+
+        participant = (
+            self.event_repository
+            .find_latest_guest_application(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        if participant is None:
+            return ClubEventGuestApplicationResponse(
+                event_id=event_id,
+                event_participant_id=None,
+                participation_status=None,
+                message="게스트 신청 내역이 없습니다.",
+            )
+
+        status_messages = {
+            "pending": "운영자 승인을 기다리고 있습니다.",
+            "joined": "게스트 참여가 승인되었습니다.",
+            "rejected": "게스트 참여 신청이 거절되었습니다.",
+            "cancelled": "게스트 참여 신청을 취소했습니다.",
+        }
+
+        participation_status = participant[
+            "status"
+        ]
+
+        return ClubEventGuestApplicationResponse(
+            event_id=event_id,
+            event_participant_id=int(
+                participant[
+                    "event_participant_id"
+                ]
+            ),
+            participation_status=(
+                participation_status
+            ),
+            message=status_messages.get(
+                participation_status,
+                "게스트 신청 상태입니다.",
+            ),
+        )
+
+    # -----------------------------------------------------
+    # 내 게스트 신청 취소
+    # -----------------------------------------------------
+    def cancel_my_guest_application(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> ClubEventGuestApplicationResponse:
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            raise LookupError(
+                "존재하지 않는 일정입니다."
+            )
+
+        participant = (
+            self.event_repository
+            .find_user_event_participant(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        if (
+            participant is None
+            or participant.get(
+                "participant_type"
+            ) != "guest"
+        ):
+            raise ValueError(
+                "취소할 수 있는 게스트 신청이 없습니다."
+            )
+
+        cancelled_participant = (
+            self.event_repository
+            .cancel_guest_application(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        return ClubEventGuestApplicationResponse(
+            event_id=event_id,
+            event_participant_id=int(
+                cancelled_participant[
+                    "event_participant_id"
+                ]
+            ),
+            participation_status="cancelled",
+            message="게스트 참가 신청을 취소했습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 운영자: 승인된 게스트 일정 참여 취소
+    # -----------------------------------------------------
+    def cancel_guest_participant_by_manager(
+        self,
+        club_id: int,
+        event_id: int,
+        event_participant_id: int,
+        user_id: str,
+    ) -> ClubEventParticipantCancelResponse:
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            raise LookupError(
+                "존재하지 않는 일정입니다."
+            )
+
+        if event.get("status") == "cancelled":
+            raise ValueError(
+                "삭제된 일정의 참가자는 "
+                "변경할 수 없습니다."
+            )
+
+        participant = (
+            self.event_repository
+            .find_event_participant(
+                event_id=event_id,
+                event_participant_id=(
+                    event_participant_id
+                ),
+            )
+        )
+
+        if participant is None:
+            raise LookupError(
+                "존재하지 않는 일정 참가자입니다."
+            )
+
+        if (
+            participant.get("participant_type")
+            != "guest"
+        ):
+            raise ValueError(
+                "게스트 참가자만 이 기능으로 "
+                "제외할 수 있습니다."
+            )
+
+        if participant.get("status") != "joined":
+            raise ValueError(
+                "참여가 확정된 게스트만 "
+                "제외할 수 있습니다."
+            )
+
+        cancelled_participant = (
+            self.event_repository
+            .cancel_joined_guest_participant(
+                event_id=event_id,
+                event_participant_id=(
+                    event_participant_id
+                ),
+            )
+        )
+
+        return ClubEventParticipantCancelResponse(
+            event_participant_id=int(
+                cancelled_participant[
+                    "event_participant_id"
+                ]
+            ),
+            event_id=event_id,
+            participation_status="cancelled",
+            message=(
+                "승인된 게스트의 일정 참여를 "
+                "취소했습니다."
+            ),
+        )
+
+    # -----------------------------------------------------
+    # 회원 또는 게스트 참가 신청 승인·거절
+    # -----------------------------------------------------
+    def decide_participant_application(
         self,
         club_id: int,
         event_id: int,
@@ -1683,53 +3190,116 @@ class ClubEventService:
                 "존재하지 않는 참가 신청입니다."
             )
 
-        if participant["participant_type"] != "guest":
-            raise ValueError(
-                "게스트 신청만 승인하거나 "
-                "거절할 수 있습니다."
-            )
-
         if participant["status"] != "pending":
             raise ValueError(
-                "이미 처리된 게스트 신청입니다."
+                "이미 처리된 참가 신청입니다."
+            )
+
+        participant_type = (
+            participant["participant_type"]
+        )
+
+        if participant_type not in {
+            "member",
+            "guest",
+        }:
+            raise ValueError(
+                "처리할 수 없는 참가자 유형입니다."
+            )
+
+        if (
+            participant_type == "member"
+            and event.get("participation_method")
+            != "approval"
+        ):
+            raise ValueError(
+                "승인제 일정의 회원 신청만 "
+                "처리할 수 있습니다."
             )
 
         if request_data.decision == "approve":
-            if not event.get("guest_allowed", False):
-                raise ValueError(
-                    "게스트 모집이 허용되지 않은 "
-                    "일정입니다."
+            # 게스트 전용 조건
+            if participant_type == "guest":
+                if not event.get(
+                    "guest_allowed",
+                    False,
+                ):
+                    raise ValueError(
+                        "게스트 모집이 허용되지 않은 "
+                        "일정입니다."
+                    )
+
+                max_guests = int(
+                    event.get("max_guests") or 0
                 )
 
-            max_guests = int(
-                event.get("max_guests") or 0
-            )
-
-            joined_guest_count = (
-                self.event_repository
-                .count_joined_guests(event_id)
-            )
-
-            if joined_guest_count >= max_guests:
-                raise ValueError(
-                    "게스트 모집 정원이 "
-                    "마감되었습니다."
+                joined_guest_count = (
+                    self.event_repository
+                    .count_joined_guests(
+                        event_id
+                    )
                 )
+
+                if (
+                    joined_guest_count
+                    >= max_guests
+                ):
+                    raise ValueError(
+                        "게스트 모집 정원이 "
+                        "마감되었습니다."
+                    )
+
+            # 전체 참여 정원 재검사
+            max_participants = event.get(
+                "max_participants"
+            )
+
+            if max_participants is not None:
+                counts = (
+                    self.build_event_participant_counts(
+                        [event]
+                    )[event_id]
+                )
+
+                occupied_count = (
+                    counts["attending_count"]
+                    + counts["guest_count"]
+                )
+
+                if occupied_count >= int(
+                    max_participants
+                ):
+                    raise ValueError(
+                        "일정 참여 정원이 "
+                        "마감되었습니다."
+                    )
 
             new_status = "joined"
-            message = (
-                "게스트 신청을 승인했습니다."
-            )
+
+            if participant_type == "member":
+                message = (
+                    "회원 참여 신청을 승인했습니다."
+                )
+            else:
+                message = (
+                    "게스트 신청을 승인했습니다."
+                )
 
         else:
             new_status = "rejected"
-            message = (
-                "게스트 신청을 거절했습니다."
-            )
+
+            if participant_type == "member":
+                message = (
+                    "회원 참여 신청을 거절했습니다."
+                )
+            else:
+                message = (
+                    "게스트 신청을 거절했습니다."
+                )
 
         updated_participant = (
             self.event_repository
-            .update_pending_guest_status(
+            .update_pending_participant_status(
                 event_id=event_id,
                 event_participant_id=(
                     event_participant_id
@@ -1737,6 +3307,47 @@ class ClubEventService:
                 new_status=new_status,
             )
         )
+
+        # 승인된 회원은 참석으로 자동 반영
+        if (
+            participant_type == "member"
+            and new_status == "joined"
+        ):
+            vote, option_rows = (
+                self.get_attendance_vote_data(
+                    event_id
+                )
+            )
+
+            attending_option = next(
+                (
+                    option_row
+                    for option_row in option_rows
+                    if str(
+                        option_row["option_text"]
+                    ).strip()
+                    in {
+                        "참석",
+                        "attending",
+                    }
+                ),
+                None,
+            )
+
+            if attending_option is None:
+                raise ValueError(
+                    "참석 투표 항목을 찾을 수 없습니다."
+                )
+
+            self.event_repository.replace_vote_response(
+                vote_id=int(vote["vote_id"]),
+                option_id=int(
+                    attending_option["option_id"]
+                ),
+                user_id=str(
+                    participant["user_id"]
+                ),
+            )
 
         return ClubEventGuestDecisionResponse(
             event_participant_id=int(

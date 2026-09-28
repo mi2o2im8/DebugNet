@@ -17,6 +17,7 @@ import {
     FiChevronRight,
     FiChevronUp,
     FiClock,
+    FiSearch,
     FiShield,
     FiUser,
     FiUsers,
@@ -144,6 +145,23 @@ function ClubMemberManagement() {
     const [errorMessage, setErrorMessage] =
         useState("");
 
+    const [memberSearchKeyword, setMemberSearchKeyword] =
+        useState("");
+
+    const [memberStatusFilter, setMemberStatusFilter] =
+        useState("all");
+
+    const [memberRoleFilter, setMemberRoleFilter] =
+        useState("all");
+
+    const [
+        memberManagementFilter,
+        setMemberManagementFilter
+    ] = useState("all");
+
+    const [memberSortOption, setMemberSortOption] =
+        useState("default");
+
 
     // -----------------------------------------------------
     // 가입 신청 및 현재 회원 목록 조회
@@ -245,10 +263,174 @@ function ClubMemberManagement() {
                 (member) =>
                     member.status === "inactive"
                     || member.status === "suspended"
+                    || member.warning_count > 0
+                    || (
+                        member.vote_participation_rate !== null
+                        && member.vote_participation_rate < 50
+                    )
             ).length
         }),
         [members]
     );
+
+
+    // -----------------------------------------------------
+    // 현재 회원 검색·필터·정렬
+    // -----------------------------------------------------
+    const filteredMembers = useMemo(
+        () => {
+            const normalizedKeyword =
+                memberSearchKeyword
+                    .trim()
+                    .toLocaleLowerCase("ko-KR");
+
+            const nextMembers = members.filter(
+                (member) => {
+                    const searchableName = (
+                        `${member.name || ""} `
+                        + `${member.nickname || ""}`
+                    ).toLocaleLowerCase("ko-KR");
+
+                    const matchesSearch =
+                        !normalizedKeyword
+                        || searchableName.includes(
+                            normalizedKeyword
+                        );
+
+                    const matchesStatus =
+                        memberStatusFilter === "all"
+                        || member.status
+                            === memberStatusFilter;
+
+                    const matchesRole =
+                        memberRoleFilter === "all"
+                        || member.role
+                            === memberRoleFilter;
+
+                    let matchesManagement = true;
+
+                    if (
+                        memberManagementFilter === "warning"
+                    ) {
+                        matchesManagement =
+                            member.warning_count > 0;
+                    }
+
+                    if (
+                        memberManagementFilter === "warning_2"
+                    ) {
+                        matchesManagement =
+                            member.warning_count >= 2;
+                    }
+
+                    if (
+                        memberManagementFilter === "low_vote"
+                    ) {
+                        matchesManagement =
+                            member.vote_participation_rate
+                                !== null
+                            && member.vote_participation_rate
+                                < 50;
+                    }
+
+                    if (
+                        memberManagementFilter
+                        === "unmeasured_vote"
+                    ) {
+                        matchesManagement =
+                            member.vote_participation_rate
+                                === null;
+                    }
+
+                    return (
+                        matchesSearch
+                        && matchesStatus
+                        && matchesRole
+                        && matchesManagement
+                    );
+                }
+            );
+
+            return [...nextMembers].sort(
+                (firstMember, secondMember) => {
+                    if (memberSortOption === "newest") {
+                        return (
+                            new Date(
+                                secondMember.joined_at
+                            ).getTime()
+                            - new Date(
+                                firstMember.joined_at
+                            ).getTime()
+                        );
+                    }
+
+                    if (memberSortOption === "name") {
+                        const firstName =
+                            firstMember.nickname
+                            || firstMember.name
+                            || "";
+
+                        const secondName =
+                            secondMember.nickname
+                            || secondMember.name
+                            || "";
+
+                        return firstName.localeCompare(
+                            secondName,
+                            "ko"
+                        );
+                    }
+
+                    if (memberSortOption === "warning") {
+                        return (
+                            (secondMember.warning_count || 0)
+                            - (firstMember.warning_count || 0)
+                        );
+                    }
+
+                    if (memberSortOption === "low_vote") {
+                        const firstRate =
+                            firstMember
+                                .vote_participation_rate
+                            ?? Number.POSITIVE_INFINITY;
+
+                        const secondRate =
+                            secondMember
+                                .vote_participation_rate
+                            ?? Number.POSITIVE_INFINITY;
+
+                        return firstRate - secondRate;
+                    }
+
+                    return 0;
+                }
+            );
+        },
+        [
+            members,
+            memberSearchKeyword,
+            memberStatusFilter,
+            memberRoleFilter,
+            memberManagementFilter,
+            memberSortOption
+        ]
+    );
+
+
+    const hasActiveMemberFilters = Boolean(
+        memberSearchKeyword.trim()
+        || memberStatusFilter !== "all"
+        || memberRoleFilter !== "all"
+        || memberManagementFilter !== "all"
+    );
+
+
+    const resetMemberFilters = () => {
+        setMemberSearchKeyword("");
+        setMemberStatusFilter("all");
+        setMemberRoleFilter("all");
+        setMemberManagementFilter("all");
+    };
 
 
     // -----------------------------------------------------
@@ -801,6 +983,176 @@ function ClubMemberManagement() {
                         </div>
                     </section>
 
+                    {members.length > 0 && (
+                        <section className="club-member-tools">
+                            <div className="club-member-search">
+                                <FiSearch aria-hidden="true" />
+
+                                <input
+                                    type="search"
+                                    value={memberSearchKeyword}
+                                    placeholder="이름 또는 닉네임으로 검색"
+                                    aria-label="회원 이름 또는 닉네임 검색"
+                                    onChange={(event) =>
+                                        setMemberSearchKeyword(
+                                            event.target.value
+                                        )
+                                    }
+                                />
+
+                                {memberSearchKeyword && (
+                                    <button
+                                        type="button"
+                                        className="club-member-search-clear"
+                                        aria-label="검색어 지우기"
+                                        onClick={() =>
+                                            setMemberSearchKeyword("")
+                                        }
+                                    >
+                                        <FiX />
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="club-member-filter-grid">
+                                <label className="club-member-filter-control">
+                                    <select
+                                        value={memberStatusFilter}
+                                        aria-label="회원 활동 상태 필터"
+                                        onChange={(event) =>
+                                            setMemberStatusFilter(
+                                                event.target.value
+                                            )
+                                        }
+                                    >
+                                        <option value="all">
+                                            활동 상태
+                                        </option>
+                                        <option value="active">
+                                            활동 중
+                                        </option>
+                                        <option value="inactive">
+                                            비활성
+                                        </option>
+                                        <option value="suspended">
+                                            활동 정지
+                                        </option>
+                                    </select>
+
+                                    <FiChevronDown />
+                                </label>
+
+                                <label className="club-member-filter-control">
+                                    <select
+                                        value={memberRoleFilter}
+                                        aria-label="회원 역할 필터"
+                                        onChange={(event) =>
+                                            setMemberRoleFilter(
+                                                event.target.value
+                                            )
+                                        }
+                                    >
+                                        <option value="all">
+                                            역할
+                                        </option>
+                                        <option value="owner">
+                                            동호회장
+                                        </option>
+                                        <option value="manager">
+                                            운영진
+                                        </option>
+                                        <option value="member">
+                                            일반 회원
+                                        </option>
+                                    </select>
+
+                                    <FiChevronDown />
+                                </label>
+
+                                <label className="club-member-filter-control">
+                                    <select
+                                        value={memberManagementFilter}
+                                        aria-label="회원 관리 지표 필터"
+                                        onChange={(event) =>
+                                            setMemberManagementFilter(
+                                                event.target.value
+                                            )
+                                        }
+                                    >
+                                        <option value="all">
+                                            관리 지표
+                                        </option>
+                                        <option value="warning">
+                                            경고 있음
+                                        </option>
+                                        <option value="warning_2">
+                                            경고 2회 이상
+                                        </option>
+                                        <option value="low_vote">
+                                            투표율 50% 미만
+                                        </option>
+                                        <option value="unmeasured_vote">
+                                            투표율 미집계
+                                        </option>
+                                    </select>
+
+                                    <FiChevronDown />
+                                </label>
+                            </div>
+
+                            <div className="club-member-result-bar">
+                                <p>
+                                    검색 결과
+                                    <strong>
+                                        {filteredMembers.length}명
+                                    </strong>
+                                </p>
+
+                                <div className="club-member-result-actions">
+                                    {hasActiveMemberFilters && (
+                                        <button
+                                            type="button"
+                                            className="club-member-filter-reset"
+                                            onClick={resetMemberFilters}
+                                        >
+                                            초기화
+                                        </button>
+                                    )}
+
+                                    <label className="club-member-sort-control">
+                                        <select
+                                            value={memberSortOption}
+                                            aria-label="회원 목록 정렬"
+                                            onChange={(event) =>
+                                                setMemberSortOption(
+                                                    event.target.value
+                                                )
+                                            }
+                                        >
+                                            <option value="default">
+                                                기본순
+                                            </option>
+                                            <option value="newest">
+                                                최근 가입순
+                                            </option>
+                                            <option value="name">
+                                                이름순
+                                            </option>
+                                            <option value="warning">
+                                                경고 많은 순
+                                            </option>
+                                            <option value="low_vote">
+                                                투표율 낮은 순
+                                            </option>
+                                        </select>
+
+                                        <FiChevronDown />
+                                    </label>
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
                     <section className="club-member-list">
                         {members.length === 0 ? (
                             <div className="club-member-empty">
@@ -815,8 +1167,29 @@ function ClubMemberManagement() {
                                     이곳에 표시됩니다.
                                 </p>
                             </div>
+                        ) : filteredMembers.length === 0 ? (
+                            <div className="club-member-empty">
+                                <FiSearch />
+
+                                <strong>
+                                    조건에 맞는 회원이 없습니다.
+                                </strong>
+
+                                <p>
+                                    검색어나 필터 조건을
+                                    변경해 주세요.
+                                </p>
+
+                                <button
+                                    type="button"
+                                    className="club-member-empty-reset"
+                                    onClick={resetMemberFilters}
+                                >
+                                    필터 초기화
+                                </button>
+                            </div>
                         ) : (
-                            members.map((member) => (
+                            filteredMembers.map((member) => (
                                 <article
                                     key={member.club_member_id}
                                     className={

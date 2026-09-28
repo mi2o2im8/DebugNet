@@ -73,7 +73,14 @@ const parsePostContent = (content) => {
 
 function PostDetail() {
   const navigate = useNavigate();
-  const { postId } = useParams();
+
+  const {
+    postId,
+    clubId
+  } = useParams();
+
+  const isClubCommunity =
+    Boolean(clubId);
 
   // 현재 로그인 사용자 UUID
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -219,6 +226,20 @@ function PostDetail() {
         const data =
           await response.json();
 
+        // 현재 주소의 동호회 게시글인지 확인
+        if (
+          isClubCommunity &&
+          (
+            data.board !== "club" ||
+            Number(data.clubId) !==
+              Number(clubId)
+          )
+        ) {
+          throw new Error(
+            "해당 동호회의 게시글이 아닙니다."
+          );
+        }
+
         setPost(data);
 
       } catch (error) {
@@ -241,7 +262,12 @@ function PostDetail() {
 
     fetchPostDetail();
 
-  }, [postId, navigate]);
+  }, [
+    postId,
+    clubId,
+    isClubCommunity,
+    navigate
+  ]);
 
 
   // =========================
@@ -388,10 +414,15 @@ function PostDetail() {
 
       setShowPostMenu(false);
 
-      // 삭제 성공 후 커뮤니티 목록으로 이동
-      navigate("/community", {
-        replace: true,
-      });
+      // 삭제 성공 후 해당 커뮤니티 목록으로 이동
+      navigate(
+        isClubCommunity
+          ? `/clubs/${clubId}/manage/community`
+          : "/community",
+        {
+          replace: true,
+        }
+      );
 
     } catch (error) {
       console.error(
@@ -864,7 +895,7 @@ function PostDetail() {
           </p>
         </main>
 
-        <BottomNav />
+        {!isClubCommunity && <BottomNav />}
 
       </div>
     );
@@ -891,7 +922,11 @@ function PostDetail() {
           <button
             type="button"
             onClick={() =>
-              navigate("/community")
+              navigate(
+                isClubCommunity
+                  ? `/clubs/${clubId}/manage/community`
+                  : "/community"
+              )
             }
           >
             커뮤니티로 돌아가기
@@ -899,7 +934,7 @@ function PostDetail() {
 
         </main>
 
-        <BottomNav />
+        {!isClubCommunity && <BottomNav />}
 
       </div>
     );
@@ -917,7 +952,11 @@ function PostDetail() {
           ←
         </button>
 
-        <h1>게시글</h1>
+        <h1>
+          {isClubCommunity
+            ? "동호회 게시글"
+            : "게시글"}
+        </h1>
       </header>
 
       <main className="post-detail-main">
@@ -983,12 +1022,17 @@ function PostDetail() {
                         onClick={() => {
                           setShowPostMenu(false);
 
-                          navigate("/community/write", {
-                            state: {
-                              board: post.board,
-                              editPost: post,
-                            },
-                          });
+                          navigate(
+                            isClubCommunity
+                              ? `/clubs/${clubId}/manage/community/write`
+                              : "/community/write",
+                            {
+                              state: {
+                                board: post.board,
+                                editPost: post,
+                              },
+                            }
+                          );
                         }}
                       >
                         수정하기
@@ -1340,7 +1384,7 @@ function PostDetail() {
         </div>
       )}
 
-      <BottomNav />
+      {!isClubCommunity && <BottomNav />}
     </div>
   );
 }

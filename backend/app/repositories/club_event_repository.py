@@ -103,6 +103,47 @@ class ClubEventRepository:
         return response.data[0]
 
     # -----------------------------------------------------
+    # event_id 여러 개로 일정 조회
+    #
+    # 팀매칭에서 하나의 club_event를
+    # 양쪽 동호회 캘린더에 보여주기 위해 사용
+    #
+    # club_id 조건을 걸지 않는다.
+    # -----------------------------------------------------
+    def find_events_by_ids(
+        self,
+        event_ids: list[int],
+    ) -> list[dict]:
+
+        if not event_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("club_events")
+            .select("*")
+            .in_(
+                "event_id",
+                event_ids,
+            )
+            .neq(
+                "status",
+                "cancelled",
+            )
+            .order(
+                "event_date",
+                desc=False,
+            )
+            .order(
+                "start_time",
+                desc=False,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
     # 동호회 일정 목록 조회
     # -----------------------------------------------------
     def find_events_by_club(
@@ -114,15 +155,9 @@ class ClubEventRepository:
             .table("club_events")
             .select("*")
             .eq("club_id", club_id)
-            .neq("status", "cancelled")
-            .order(
-                "event_date",
-                desc=False,
-            )
-            .order(
-                "start_time",
-                desc=False,
-            )
+            .eq("status", "open")
+            .order("event_date")
+            .order("start_time")
             .execute()
         )
 
@@ -514,9 +549,45 @@ class ClubEventRepository:
         return response.data[0]
 
     # -----------------------------------------------------
-    # 참석 응답 회원을 일정 참가자로 등록
+    # 사용자의 가장 최근 게스트 신청 조회
     # -----------------------------------------------------
-    def create_member_event_participant(
+    def find_latest_guest_application(
+        self,
+        event_id: int,
+        user_id: str,
+    ) -> dict | None:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .select(
+                (
+                    "event_participant_id, "
+                    "event_id, "
+                    "user_id, "
+                    "participant_type, "
+                    "status"
+                )
+            )
+            .eq("event_id", event_id)
+            .eq("user_id", user_id)
+            .eq("participant_type", "guest")
+            .order(
+                "event_participant_id",
+                desc=True,
+            )
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 게스트 참가 신청 생성
+    # -----------------------------------------------------
+    def create_guest_application(
         self,
         event_id: int,
         user_id: str,
@@ -528,8 +599,108 @@ class ClubEventRepository:
                 {
                     "event_id": event_id,
                     "user_id": user_id,
+                    "participant_type": "guest",
+                    "status": "pending",
+                }
+            )
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError(
+                "게스트 참가 신청 생성에 실패했습니다."
+            )
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 게스트 참가 신청 취소
+    # -----------------------------------------------------
+    def cancel_guest_application(
+        self,
+        event_id: int,
+        user_id: str,
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .update(
+                {
+                    "status": "cancelled",
+                }
+            )
+            .eq("event_id", event_id)
+            .eq("user_id", user_id)
+            .eq("participant_type", "guest")
+            .in_(
+                "status",
+                [
+                    "pending",
+                    "joined",
+                ],
+            )
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError(
+                "취소할 수 있는 게스트 신청이 없습니다."
+            )
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 운영자: 승인된 게스트 참가 취소
+    # -----------------------------------------------------
+    def cancel_joined_guest_participant(
+        self,
+        event_id: int,
+        event_participant_id: int,
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .update(
+                {
+                    "status": "cancelled",
+                }
+            )
+            .eq("event_id", event_id)
+            .eq(
+                "event_participant_id",
+                event_participant_id,
+            )
+            .eq("participant_type", "guest")
+            .eq("status", "joined")
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError(
+                "이미 취소되었거나 제외할 수 없는 "
+                "게스트 참가자입니다."
+            )
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 동호회 회원을 일정 참가자로 등록
+    # -----------------------------------------------------
+    def create_member_event_participant(
+        self,
+        event_id: int,
+        user_id: str,
+        participation_status: str = "joined",
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .insert(
+                {
+                    "event_id": event_id,
+                    "user_id": user_id,
                     "participant_type": "member",
-                    "status": "joined",
+                    "status": participation_status,
                 }
             )
             .execute()
@@ -668,9 +839,9 @@ class ClubEventRepository:
         return len(response.data or [])
 
     # -----------------------------------------------------
-    # 대기 중인 게스트 신청 상태 변경
+    # 대기 중인 참가 신청 상태 변경
     # -----------------------------------------------------
-    def update_pending_guest_status(
+    def update_pending_participant_status(
         self,
         event_id: int,
         event_participant_id: int,
@@ -689,7 +860,6 @@ class ClubEventRepository:
                 "event_participant_id",
                 event_participant_id,
             )
-            .eq("participant_type", "guest")
             .eq("status", "pending")
             .execute()
         )
@@ -697,10 +867,11 @@ class ClubEventRepository:
         if not response.data:
             raise ValueError(
                 "이미 처리되었거나 처리할 수 없는 "
-                "게스트 신청입니다."
+                "참가 신청입니다."
             )
 
         return response.data[0]
+
     # -----------------------------------------------------
     # 일정 반복 발생일 단건 조회
     # -----------------------------------------------------
@@ -750,6 +921,71 @@ class ClubEventRepository:
 
         schedule_data = schedule.data
 
+    # -----------------------------------------------------
+    # 동호회 활동 회원 user_id 목록 조회 (알림용)
+    # -----------------------------------------------------
+    def find_active_member_user_ids(
+        self,
+        club_id: int,
+    ) -> list[str]:
+
+        response = (
+            self.admin_client
+            .table("club_members")
+            .select("user_id")
+            .eq("club_id", club_id)
+            .eq("status", "active")
+            .execute()
+        )
+
+        return [
+            row["user_id"]
+            for row in (response.data or [])
+            if row.get("user_id")
+        ]
+
+    # -----------------------------------------------------
+    # 일정 관련 알림 생성 (여러 명에게 한 번에)
+    # -----------------------------------------------------
+    def create_event_notifications(
+        self,
+        user_ids: list[str],
+        notification_type: str,
+        title: str,
+        content: str,
+        event_id: int,
+        link_path: str,
+    ) -> None:
+
+        if not user_ids:
+            return
+
+        rows = [
+            {
+                "user_id": uid,
+                "notification_type": notification_type,
+                "title": title,
+                "content": content,
+                "related_type": "event",
+                "related_id": event_id,
+                "link_path": link_path,
+                "is_read": False,
+            }
+            for uid in user_ids
+        ]
+
+        self.admin_client.table("notifications").insert(rows).execute()
+
+    # -----------------------------------------------------
+    # [스케줄러] 특정 날짜의 일정 조회 (취소 제외)
+    #
+    # event_date: "YYYY-MM-DD" (한국 날짜 기준)
+    # -----------------------------------------------------
+    def find_events_on_date(
+        self,
+        event_date: str,
+    ) -> list[dict]:
+
         response = (
             self.admin_client
             .table("club_events")
@@ -762,6 +998,81 @@ class ClubEventRepository:
             .eq("event_type", "regular")
             .eq("start_time", schedule_data["start_time"])
             .eq("end_time", schedule_data["end_time"])
+            .select("*")
+            .eq("event_date", event_date)
+            .neq("status", "cancelled")
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # [스케줄러] 마감 시각이 특정 구간에 들어가는 참석 투표 조회
+    #
+    # start_at / end_at: 타임존이 붙은 ISO 문자열
+    # -----------------------------------------------------
+    def find_attendance_votes_closed_between(
+        self,
+        start_at: str,
+        end_at: str,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("event_votes")
+            .select("vote_id, event_id, deadline")
+            .eq("vote_type", "attendance")
+            .gt("deadline", start_at)
+            .lte("deadline", end_at)
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # [스케줄러] 이미 보낸 알림 조회 (중복 발송 방지)
+    #
+    # 반환: {(user_id, related_id), ...}
+    # -----------------------------------------------------
+    def find_sent_event_notification_keys(
+        self,
+        notification_type: str,
+        event_ids: list[int],
+    ) -> set[tuple[str, int]]:
+
+        if not event_ids:
+            return set()
+
+        response = (
+            self.admin_client
+            .table("notifications")
+            .select("user_id, related_id")
+            .eq("notification_type", notification_type)
+            .eq("related_type", "event")
+            .in_("related_id", event_ids)
+            .execute()
+        )
+
+        return {
+            (str(row["user_id"]), int(row["related_id"]))
+            for row in (response.data or [])
+            if row.get("user_id") and row.get("related_id") is not None
+        }
+
+    # -----------------------------------------------------
+    # 사용자 닉네임 조회 (알림 문구용)
+    # -----------------------------------------------------
+    def find_user_nickname(
+        self,
+        user_id: str,
+    ) -> str | None:
+
+        response = (
+            self.admin_client
+            .table("users")
+            .select("nickname")
+            .eq("user_id", user_id)
+
             .limit(1)
             .execute()
         )
@@ -790,3 +1101,5 @@ class ClubEventRepository:
             )
 
         return response.data[0]
+        return response.data[0].get("nickname")
+

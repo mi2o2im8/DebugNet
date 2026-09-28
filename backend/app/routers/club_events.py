@@ -19,6 +19,8 @@ from app.schemas.club_events import (
     ClubEventGuestDecisionRequest,
     ClubEventGuestDecisionResponse,
     ClubEventGuestApplyResponse,
+    ClubEventGuestApplicationResponse,
+    ClubEventParticipantCancelResponse,
 )
 
 from app.services.club_event_service import (
@@ -485,6 +487,176 @@ def update_my_club_event_attendance(
         ) from error
 
 # ---------------------------------------------------------
+# 게스트 참가 신청
+#
+# POST /api/clubs/{club_id}/events/{event_id}/guest-application
+# ---------------------------------------------------------
+@router.post(
+    "/{event_id}/guest-application",
+    response_model=ClubEventGuestApplicationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def apply_club_event_as_guest(
+    club_id: int,
+    event_id: int,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
+        return event_service.apply_as_guest(
+            club_id=club_id,
+            event_id=event_id,
+            user_id=user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "게스트 참가 신청 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "게스트 참가 신청 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+
+# ---------------------------------------------------------
+# 내 게스트 신청 상태 조회
+#
+# GET /api/clubs/{club_id}/events/{event_id}/guest-application
+# ---------------------------------------------------------
+@router.get(
+    "/{event_id}/guest-application",
+    response_model=ClubEventGuestApplicationResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_my_club_event_guest_application(
+    club_id: int,
+    event_id: int,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
+        return (
+            event_service
+            .get_my_guest_application(
+                club_id=club_id,
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "게스트 신청 상태 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "게스트 신청 상태 조회 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+
+# ---------------------------------------------------------
+# 내 게스트 신청 취소
+#
+# DELETE /api/clubs/{club_id}/events/{event_id}/guest-application
+# ---------------------------------------------------------
+@router.delete(
+    "/{event_id}/guest-application",
+    response_model=ClubEventGuestApplicationResponse,
+    status_code=status.HTTP_200_OK,
+)
+def cancel_my_club_event_guest_application(
+    club_id: int,
+    event_id: int,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
+        return (
+            event_service
+            .cancel_my_guest_application(
+                club_id=club_id,
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "게스트 신청 취소 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "게스트 신청 취소 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# ---------------------------------------------------------
 # 일정 참가자 관리 목록 조회
 #
 # GET /api/clubs/{club_id}/events/{event_id}/participants
@@ -558,11 +730,78 @@ def apply_club_event_guest(
     event_service = ClubEventService()
 
     try:
+        return event_service.apply_guest_application(
+            club_id=club_id,
+            event_id=event_id,
+            user_id=user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "게스트 신청 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "게스트 신청 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# ---------------------------------------------------------
+# 운영자: 승인된 게스트 일정 참여 취소
+#
+# DELETE /api/clubs/{club_id}/events/{event_id}
+#        /participants/{event_participant_id}
+# ---------------------------------------------------------
+@router.delete(
+    (
+        "/{event_id}/participants/"
+        "{event_participant_id}"
+    ),
+    response_model=(
+        ClubEventParticipantCancelResponse
+    ),
+    status_code=status.HTTP_200_OK,
+)
+def cancel_club_event_guest_participant(
+    club_id: int,
+    event_id: int,
+    event_participant_id: int,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
         return (
             event_service
             .apply_guest_application(
                 club_id=club_id,
                 event_id=event_id,
+            .cancel_guest_participant_by_manager(
+                club_id=club_id,
+                event_id=event_id,
+                event_participant_id=(
+                    event_participant_id
+                ),
                 user_id=user_id,
             )
         )
@@ -587,7 +826,7 @@ def apply_club_event_guest(
 
     except Exception as error:
         print(
-            "게스트 신청 실제 오류:",
+            "운영자 게스트 참가 취소 실제 오류:",
             repr(error),
         )
 
@@ -596,7 +835,81 @@ def apply_club_event_guest(
                 status.HTTP_500_INTERNAL_SERVER_ERROR
             ),
             detail=(
-                "게스트 신청 중 "
+
+                "게스트 참가 취소 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# ---------------------------------------------------------
+# 운영자: 참가자 참석 상태 변경
+#
+# PATCH /api/clubs/{club_id}/events/{event_id}
+#       /participants/{event_participant_id}/attendance
+# ---------------------------------------------------------
+@router.patch(
+    (
+        "/{event_id}/participants/"
+        "{event_participant_id}/attendance"
+    ),
+    response_model=ClubEventAttendanceResponse,
+    status_code=status.HTTP_200_OK,
+)
+def update_club_event_participant_attendance(
+    club_id: int,
+    event_id: int,
+    event_participant_id: int,
+    request_data: ClubEventAttendanceRequest,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    event_service = ClubEventService()
+
+    try:
+        return (
+            event_service
+            .update_participant_attendance(
+                club_id=club_id,
+                event_id=event_id,
+                event_participant_id=(
+                    event_participant_id
+                ),
+                user_id=user_id,
+                request_data=request_data,
+            )
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "참가자 참석 상태 변경 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "참가자 참석 상태 변경 중 "
                 "오류가 발생했습니다."
             ),
         ) from error
@@ -629,7 +942,7 @@ def decide_club_event_guest(
     try:
         return (
             event_service
-            .decide_guest_application(
+            .decide_participant_application(
                 club_id=club_id,
                 event_id=event_id,
                 event_participant_id=(

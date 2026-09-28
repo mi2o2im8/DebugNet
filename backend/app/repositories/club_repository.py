@@ -1,5 +1,13 @@
 from typing import List, Optional
 
+from datetime import (
+    date,
+    datetime,
+    time,
+    timezone,
+)
+from zoneinfo import ZoneInfo
+
 from app.core.supabase import get_supabase_admin_client
 
 
@@ -843,59 +851,113 @@ class ClubRepository:
     # 2. club_join_answers에 추가 질문 답변 저장
     # -----------------------------------------------------
     def create_application(
-            self,
-            club_id: int,
-            user_id: str,
-            application_message: str,
-            answers: list,
-        ):
+        self,
+        club_id: int,
+        user_id: str,
+        application_message: str,
+        answers: list,
+    ):
+        # 1. 가입 신청 생성
+        application_data = {
+            "club_id": club_id,
+            "user_id": user_id,
+            "application_message": application_message,
+            "status": "pending",
+        }
 
-            # 1. 가입 신청 생성
-            application_data = {
-                "club_id": club_id,
-                "user_id": user_id,
-                "application_message": application_message,
-                "status": "pending",
-            }
+        application_response = (
+            self.supabase
+            .table("club_applications")
+            .insert(application_data)
+            .execute()
+        )
 
-            application_response = (
+        if not application_response.data:
+            raise ValueError(
+                "가입 신청 저장에 실패했습니다."
+            )
+
+        application = application_response.data[0]
+
+        application_id = application["application_id"]
+
+        # 2. 추가 질문 답변 저장
+        answer_data = []
+
+        for answer in answers:
+            answer_data.append(
+                {
+                    "application_id": application_id,
+                    "question_id": answer["question_id"],
+                    "answer_text": answer["answer_text"],
+                }
+            )
+
+        # 답변이 있을 때만 INSERT
+        if answer_data:
+            (
                 self.supabase
-                .table("club_applications")
-                .insert(application_data)
+                .table("club_join_answers")
+                .insert(answer_data)
                 .execute()
             )
 
-            if not application_response.data:
-                raise ValueError(
-                    "가입 신청 저장에 실패했습니다."
-                )
+        # ⭐ 3. 동호회장에게 가입 신청 알림 생성
 
-            application = application_response.data[0]
+        # 동호회 이름 조회
+        club_response = (
+            self.supabase
+            .table("clubs")
+            .select("club_name")
+            .eq("club_id", club_id)
+            .limit(1)
+            .execute()
+        )
 
-            application_id = application["application_id"]
+        club_name = "동호회"
 
-            # 2. 추가 질문 답변 저장
-            answer_data = []
+        if club_response.data:
+            club_name = (
+                club_response.data[0].get("club_name")
+                or "동호회"
+            )
 
-            for answer in answers:
-                answer_data.append(
+                # ⭐ 동호회장에게 가입 신청 알림
+        # 알림 저장이 실패해도 가입 신청 자체는 정상 처리
+        try:
+            owner_response = (
+                self.supabase
+                .table("club_members")
+                .select("user_id")
+                .eq("club_id", club_id)
+                .eq("role", "owner")
+                .eq("status", "active")
+                .limit(1)
+                .execute()
+            )
+
+            if owner_response.data:
+                owner_id = owner_response.data[0]["user_id"]
+
+                self.admin_client.table("notifications").insert(
                     {
-                        "application_id": application_id,
-                        "question_id": answer["question_id"],
-                        "answer_text": answer["answer_text"],
+                        "user_id": owner_id,
+                        "notification_type": "club_application",
+                        "title": "새로운 가입 신청",
+                        "content": (
+                            f"{club_name}에 "
+                            "새로운 가입 신청이 있습니다."
+                        ),
+                        "related_type": "club",
+                        "related_id": club_id,
+                        "is_read": False,
                     }
-                )
+                ).execute()
 
-            # 답변이 있을 때만 INSERT
-            if answer_data:
-                (
-                    self.supabase
-                    .table("club_join_answers")
-                    .insert(answer_data)
-                    .execute()
-                )
+        except Exception as e:
+            print("가입 신청 알림 생성 실패:", e)
 
-            return application
+        return application
 
     # -----------------------------------------------------
     # 동호회 정기 일정 조회
@@ -971,15 +1033,110 @@ class ClubRepository:
         return response.data or []
 
     # =========================================================
-    # 게스트 모집 중인 행사 조회
+    # 게스트 모집 중인 일정 조회
     # =========================================================
     def get_guest_recruiting_events(self):
+        current_time = datetime.now(
+            ZoneInfo("Asia/Seoul")
+        )
+
         response = (
-            self.supabase
+            self.admin_client
             .table("club_events")
-            .select("*")
+            .select(
+                (
+                    "event_id, "
+                    "club_id, "
+                    "title, "
+                    "description, "
+                    "event_date, "
+                    "start_time, "
+                    "end_time, "
+                    "location, "
+                    "location_address, "
+                    "latitude, "
+                    "longitude, "
+                    "max_participants, "
+                    "event_image_url, "
+                    "guest_allowed, "
+                    "max_guests, "
+                    "registration_deadline, "
+                    "status"
+                )
+            )
             .eq("guest_allowed", True)
+            .eq("status", "open")
+            .gte(
+                "event_date",
+                current_time.date().isoformat(),
+            )
+            .order(
+                "event_date",
+                desc=False,
+            )
+            .order(
+                "start_time",
+                desc=False,
+            )
             .execute()
         )
 
-        return response.data or []
+        recruiting_events = []
+
+        for event in response.data or []:
+            deadline_value = event.get(
+                "registration_deadline"
+            )
+
+            # 신청 마감 시간이 지난 일정 제외
+            if deadline_value:
+                deadline = datetime.fromisoformat(
+                    str(deadline_value).replace(
+                        "Z",
+                        "+00:00",
+                    )
+                )
+
+                if deadline.tzinfo is None:
+                    deadline = deadline.replace(
+                        tzinfo=timezone.utc
+                    )
+
+                comparison_time = (
+                    current_time.replace(
+                        tzinfo=timezone.utc
+                    )
+                )
+
+                if comparison_time >= deadline:
+                    continue
+
+            event_date_value = event.get(
+                "event_date"
+            )
+
+            start_time_value = event.get(
+                "start_time"
+            )
+
+            # 오늘 일정 중 이미 시작한 일정 제외
+            if (
+                event_date_value
+                and start_time_value
+            ):
+                event_start = datetime.combine(
+                    date.fromisoformat(
+                        str(event_date_value)
+                    ),
+                    time.fromisoformat(
+                        str(start_time_value)
+                    ),
+                    tzinfo=ZoneInfo("Asia/Seoul"),
+                )
+
+                if current_time >= event_start:
+                    continue
+
+            recruiting_events.append(event)
+
+        return recruiting_events

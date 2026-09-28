@@ -1,89 +1,353 @@
-// 챗봇 페이지
+// 챗봇 페이지 (이용 도우미)
+//
+// UX 흐름
+// 1. 처음 화면: 인사 + 자주 묻는 질문
+// 2. 질문 선택 또는 직접 입력
+// 3. 답변 + 진행 단계 + 관련 화면 바로가기
+// 4. 답변 평가 + 이어서 볼 질문 추천
+//
+// 답변 데이터는 chatbotData.js 에서 관리한다.
+// 나중에 AI를 연결할 때는 getBotReply() 만 바꾸면 된다.
 
-import { useState } from "react";
+import {
+    useEffect,
+    useRef,
+    useState,
+} from "react";
+
+import { useNavigate } from "react-router-dom";
+
 import ChatMessage from "../../components/Chatbot/ChatMessage";
+
+import {
+    FAQ_ITEMS,
+    WELCOME_QUESTION_IDS,
+    findFaqByText,
+    getFaqById,
+} from "./chatbotData";
+
 import "./Chatbot.css";
 import chatbotIcon from "../../assets/img/chatbot/chatbot-icon.png";
 
-// ⭐ 자주 묻는 질문
-const quickQuestions = [
-    {
-        question: "🔎 동호회 찾는 방법",
-        answer:
-            "메인 화면에서 관심 있는 종목과 활동 지역을 선택하면 원하는 동호회를 찾아볼 수 있어요."
-    },
-    {
-        question: "🔄 팀 매칭 방법",
-        answer:
-            "동호회 상세 페이지에서 팀 매칭에 참여하거나 원하는 조건에 맞는 팀을 찾아볼 수 있어요."
-    },
-    {
-        question: "🗓 일정 등록 방법",
-        answer:
-            "내 동호회에서 일정을 선택한 후 모임 날짜와 시간을 등록할 수 있어요."
-    },
-    {
-        question: "💬 커뮤니티 이용 방법",
-        answer:
-            "동호회 커뮤니티에서 게시글과 댓글을 통해 다른 회원들과 소통할 수 있어요."
-    },
-    {
-        question: "⚙ 내 정보 / 설정",
-        answer:
-            "내 정보 페이지에서 프로필, 활동 정보, 알림 및 설정을 변경할 수 있어요."
+
+const WELCOME_QUESTIONS = WELCOME_QUESTION_IDS
+    .map(getFaqById)
+    .filter(Boolean);
+
+
+// ⭐ 메시지 고유 id
+let messageSeq = 0;
+const createMessageId = () => {
+    messageSeq += 1;
+    return `msg-${Date.now()}-${messageSeq}`;
+};
+
+
+// =========================================================
+// ⭐ 답변 만들기
+//
+// 지금은 chatbotData.js 에서 찾아서 답한다.
+// AI 연결 시 이 함수 안에서 백엔드 API를 호출하도록 바꾼다.
+// =========================================================
+
+const getBotReply = async ({ faqId, text }) => {
+
+    const faq = faqId
+        ? getFaqById(faqId)
+        : findFaqByText(text);
+
+    if (faq) {
+        return {
+            kind: "answer",
+            text: faq.answer,
+            faq,
+        };
     }
-];
+
+    return {
+        kind: "fallback",
+        text:
+            "아직 그 질문에는 답을 준비하지 못했어요. 아래 질문 중에 궁금한 내용이 있는지 확인해주세요.",
+        faq: null,
+    };
+
+};
+
 
 function Chatbot({ onClose }) {
+
+    const navigate = useNavigate();
 
     const [messages, setMessages] = useState([]);
 
     // ⭐ 직접 입력
     const [input, setInput] = useState("");
 
-    // ⭐ 지정 질문 클릭
-    const handleQuestionClick = (item) => {
+    // ⭐ 답변 준비 중 (AI 연결 후 로딩 표시용)
+    const [isReplying, setIsReplying] = useState(false);
+
+    // ⭐ 자동 스크롤 기준점
+    const bottomRef = useRef(null);
+
+
+    // =========================================================
+    // ⭐ 새 메시지가 오면 맨 아래로 스크롤
+    // =========================================================
+
+    useEffect(() => {
+
+        bottomRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "end",
+        });
+
+    }, [messages, isReplying]);
+
+
+    // =========================================================
+    // ⭐ 질문 보내기 (버튼 선택 / 직접 입력 공통)
+    // =========================================================
+
+    const askQuestion = async ({ faqId = null, text }) => {
+
+        if (isReplying) {
+            return;
+        }
+
         setMessages((prev) => [
             ...prev,
             {
+                id: createMessageId(),
                 type: "user",
-                text: item.question
+                text,
             },
-            {
-                type: "bot",
-                text: item.answer
-            }
         ]);
+
+        setIsReplying(true);
+
+        try {
+
+            const reply = await getBotReply({ faqId, text });
+
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: createMessageId(),
+                    type: "bot",
+                    ...reply,
+                    feedback: null,
+                },
+            ]);
+
+        } catch (error) {
+
+            console.error("챗봇 답변 오류:", error);
+
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: createMessageId(),
+                    type: "bot",
+                    kind: "fallback",
+                    text: "답변을 불러오지 못했어요. 잠시 후 다시 시도해주세요.",
+                    faq: null,
+                    feedback: null,
+                },
+            ]);
+
+        } finally {
+
+            setIsReplying(false);
+
+        }
+
     };
 
-    // ⭐ 메시지 보내기
+
+    const handleQuestionClick = (item) => {
+        askQuestion({ faqId: item.id, text: item.label });
+    };
+
+
     const handleSend = () => {
 
         const trimmedInput = input.trim();
 
         if (!trimmedInput) return;
 
-        setMessages((prev) => [
-            ...prev,
-            {
-                type: "user",
-                text: trimmedInput
-            },
-            {
-                type: "bot",
-                text:
-                    "궁금한 내용을 확인하고 있어요. 현재는 자주 묻는 질문 기능을 먼저 제공하고 있어요."
-            }
-        ]);
-
         setInput("");
+
+        askQuestion({ text: trimmedInput });
+
     };
+
+
+    // ⭐ 답변 평가
+    const handleFeedback = (messageId, value) => {
+
+        setMessages((prev) =>
+            prev.map((message) =>
+                message.id === messageId
+                    ? { ...message, feedback: value }
+                    : message
+            )
+        );
+
+    };
+
+
+    // ⭐ 관련 화면으로 이동
+    const handleActionClick = (path) => {
+        onClose?.();
+        navigate(path);
+    };
+
+
+    // =========================================================
+    // ⭐ 챗봇 답변 (단계 / 바로가기 / 평가 / 추천)
+    // =========================================================
+
+    const renderBotExtras = (message) => {
+
+        const { faq, kind, feedback } = message;
+
+        // 답을 못 찾았을 때: 자주 묻는 질문 추천
+        if (kind === "fallback") {
+            return (
+                <div className="chatbot-suggest">
+                    {WELCOME_QUESTIONS.map((item) => (
+                        <button
+                            key={item.id}
+                            type="button"
+                            className="chatbot-chip"
+                            onClick={() => handleQuestionClick(item)}
+                        >
+                            {item.label}
+                        </button>
+                    ))}
+                </div>
+            );
+        }
+
+        if (!faq) {
+            return null;
+        }
+
+        const relatedItems = faq.related
+            .map(getFaqById)
+            .filter(Boolean);
+
+        return (
+            <div className="chatbot-answer-extra">
+
+                {/* 진행 단계 */}
+                {faq.steps.length > 0 && (
+                    <div className="chatbot-steps">
+
+                        <strong>이렇게 진행해보세요</strong>
+
+                        <ol>
+                            {faq.steps.map((step) => (
+                                <li key={step}>{step}</li>
+                            ))}
+                        </ol>
+
+                    </div>
+                )}
+
+
+                {/* 관련 화면 바로가기 */}
+                {faq.actions.length > 0 && (
+                    <div className="chatbot-actions">
+                        {faq.actions.map((action) => (
+                            <button
+                                key={action.path}
+                                type="button"
+                                className="chatbot-action-button"
+                                onClick={() =>
+                                    handleActionClick(action.path)
+                                }
+                            >
+                                {action.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+
+                {/* 답변 평가 */}
+                {!feedback && (
+                    <div className="chatbot-feedback">
+
+                        <span>답변이 도움이 되었나요?</span>
+
+                        <div className="chatbot-feedback-buttons">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    handleFeedback(message.id, "up")
+                                }
+                            >
+                                👍 도움이 돼요
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    handleFeedback(message.id, "down")
+                                }
+                            >
+                                👎 아쉬워요
+                            </button>
+                        </div>
+
+                    </div>
+                )}
+
+
+                {/* 평가 후: 이어서 볼 질문 */}
+                {feedback && (
+                    <div className="chatbot-followup">
+
+                        <p>
+                            {feedback === "up"
+                                ? "도움이 되었다니 다행이에요! 더 궁금한 점이 있나요?"
+                                : "다른 질문으로 다시 찾아볼까요?"}
+                        </p>
+
+                        <div className="chatbot-suggest">
+                            {relatedItems.map((item) => (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    className="chatbot-chip"
+                                    onClick={() =>
+                                        handleQuestionClick(item)
+                                    }
+                                >
+                                    {item.label}
+                                </button>
+                            ))}
+                        </div>
+
+                    </div>
+                )}
+
+            </div>
+        );
+
+    };
+
 
     return (
         <div className="chatbot-overlay">
 
             {/* ⭐ 챗봇 팝업 */}
-            <div className="chatbot-popup">
+            <div
+                className="chatbot-popup"
+                role="dialog"
+                aria-label="PlayBridge 이용 도우미"
+            >
 
                 {/* ⭐ 상단 헤더 */}
                 <div className="chatbot-header">
@@ -110,92 +374,109 @@ function Chatbot({ onClose }) {
                 </div>
 
 
-                {/* ⭐ 본문 */}
-                <div className="chatbot-body">
+                {/* ⭐ 본문 (처음 화면 + 대화가 한 줄로 이어짐) */}
+                <div
+                    className="chatbot-body"
+                    aria-live="polite"
+                >
 
-                    {/* ⭐ 처음 화면 */}
-                    {messages.length === 0 && (
-                        <>
-                            <div className="chatbot-welcome">
+                    {/* ⭐ 처음 화면: 대화가 시작되면 위로 밀려 올라감 */}
+                    <div className="chatbot-welcome">
 
-                                <div className="chatbot-icon">
+                        <div className="chatbot-icon">
+                            <img
+                                src={chatbotIcon}
+                                alt=""
+                            />
+                        </div>
 
-                                    <img
-                                        src={chatbotIcon}
-                                        alt="PlayBridge 이용 도우미"
-                                    />
+                        <h3>
+                            안녕하세요! PlayBridge 이용 도우미예요.
+                        </h3>
 
-                                </div>
+                        <p>
+                            무엇을 도와드릴까요?
+                        </p>
 
-                                <h3>
-                                    안녕하세요! PlayBridge 이용 도우미예요.
-                                </h3>
+                    </div>
 
-                                <p>
-                                    무엇을 도와드릴까요?
-                                </p>
-
-                            </div>
-
-
-                            {/* ⭐ 지정 질문 */}
-                            <div className="chatbot-questions">
-
-                                {quickQuestions.map((item, index) => (
-                                    <button
-                                        key={index}
-                                        type="button"
-                                        onClick={() =>
-                                            handleQuestionClick(item)
-                                        }
-                                    >
-                                        {item.question}
-                                    </button>
-                                ))}
-
-                            </div>
-                        </>
-                    )}
+                    <div className="chatbot-questions">
+                        {WELCOME_QUESTIONS.map((item) => (
+                            <button
+                                key={item.id}
+                                type="button"
+                                onClick={() =>
+                                    handleQuestionClick(item)
+                                }
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
 
 
                     {/* ⭐ 대화 내용 */}
                     {messages.length > 0 && (
                         <div className="chatbot-messages">
 
-                            {messages.map((message, index) => (
-                                <ChatMessage
-                                    key={index}
-                                    type={message.type}
-                                    text={message.text}
-                                />
+                            {messages.map((message) => (
+
+                                <div
+                                    key={message.id}
+                                    className="chatbot-message-group"
+                                >
+
+                                    <ChatMessage
+                                        type={message.type}
+                                        text={message.text}
+                                    />
+
+                                    {message.type === "bot" &&
+                                        renderBotExtras(message)}
+
+                                </div>
+
                             ))}
-
-
-                            {/* ⭐ 질문 다시 보기 */}
-                            <div className="chatbot-questions chatbot-question-again">
-
-                                <span>
-                                    자주 묻는 질문
-                                </span>
-
-                                {quickQuestions.map((item, index) => (
-                                    <button
-                                        key={index}
-                                        type="button"
-                                        onClick={() =>
-                                            handleQuestionClick(item)
-                                        }
-                                    >
-                                        {item.question}
-                                    </button>
-                                ))}
-
-                            </div>
 
                         </div>
                     )}
 
+
+                    {/* ⭐ 답변 준비 중 */}
+                    {isReplying && (
+                        <div className="chat-message bot">
+                            <div className="chat-message-bubble chatbot-typing">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                    )}
+
+                    <div ref={bottomRef}></div>
+
                 </div>
+
+
+                {/* ⭐ 대화 중: 자주 묻는 질문 한 줄 (옆으로 스크롤) */}
+                {messages.length > 0 && (
+                    <div
+                        className="chatbot-chip-bar"
+                        aria-label="자주 묻는 질문"
+                    >
+                        {FAQ_ITEMS.map((item) => (
+                            <button
+                                key={item.id}
+                                type="button"
+                                className="chatbot-chip"
+                                onClick={() => handleQuestionClick(item)}
+                                disabled={isReplying}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
 
 
                 {/* ⭐ 하단 입력창 */}
@@ -207,16 +488,22 @@ function Chatbot({ onClose }) {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => {
-                            if (e.key === "Enter") {
+                            // 한글 조합 중 Enter 중복 입력 방지
+                            if (
+                                e.key === "Enter" &&
+                                !e.nativeEvent.isComposing
+                            ) {
                                 handleSend();
                             }
                         }}
+                        aria-label="질문 입력"
                     />
 
                     <button
                         type="button"
                         className="chatbot-send"
                         onClick={handleSend}
+                        disabled={isReplying}
                         aria-label="메시지 보내기"
                     >
                         ➤

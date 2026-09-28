@@ -191,7 +191,7 @@ class ClubCreateRequest(BaseModel):
     # 3단계: 활동 조건 및 가입 대상
 
     activity_levels: list[str] = Field(
-        min_length=1,
+        default_factory=lambda: ["수준 무관"],
         validation_alias=AliasChoices(
             "activity_levels",
             "activityLevels",
@@ -234,8 +234,8 @@ class ClubCreateRequest(BaseModel):
         ),
     )
 
-    club_intro: str = Field(
-        min_length=1,
+    club_intro: str | None = Field(
+        default=None,
         max_length=2000,
         validation_alias=AliasChoices(
             "club_intro",
@@ -306,7 +306,6 @@ class ClubCreateRequest(BaseModel):
         "activity_place",
         "activity_frequency",
         "join_target",
-        "club_intro",
         "join_method",
         "visibility",
     )

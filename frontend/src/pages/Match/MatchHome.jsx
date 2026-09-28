@@ -699,7 +699,7 @@ function MatchHome() {
 
                   <button
                     key={
-                      team.availability_Id
+                      team.availability_id
                     }
                     type="button"
                     className="match-team-card"

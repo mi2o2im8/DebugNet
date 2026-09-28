@@ -10,7 +10,7 @@ import {
   FiUser
 } from "react-icons/fi";
 
-import { getMyClub } from "../api/clubApi";
+import { getMyClubShared as getMyClub } from "../api/myClubCache";
 
 
 function BottomNav() {

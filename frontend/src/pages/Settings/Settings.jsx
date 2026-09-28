@@ -12,9 +12,9 @@ function Settings() {
         localStorage.getItem("darkMode") === "true"
     );
 
-    const [chatNotification, setChatNotification] = useState(
-        localStorage.getItem("chatNotification") !== "false"
-    );
+    // const [chatNotification, setChatNotification] = useState(
+    //     localStorage.getItem("chatNotification") !== "false"
+    // );
 
     // ⭐ 로그아웃 모달
     const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -25,10 +25,10 @@ function Settings() {
         localStorage.setItem("darkMode", darkMode);
     }, [darkMode]);
 
-    // ⭐ 채팅 알림 저장
-    useEffect(() => {
-        localStorage.setItem("chatNotification", chatNotification);
-    }, [chatNotification]);
+    // // ⭐ 채팅 알림 저장 --- 추후 채팅 기능이 생긴다면
+    // useEffect(() => {
+    //     localStorage.setItem("chatNotification", chatNotification);
+    // }, [chatNotification]);
 
     // ⭐ 로그아웃 확인
     const handleLogout = () => {
@@ -83,22 +83,7 @@ function Settings() {
                             <span className="row-arrow">›</span>
                         </button>
 
-                        <div className="settings-divider"></div>
-
-                        <div className="settings-row">
-                            <span>채팅 알림</span>
-
-                            <label className="settings-switch">
-                                <input
-                                    type="checkbox"
-                                    checked={chatNotification}
-                                    onChange={(e) =>
-                                        setChatNotification(e.target.checked)
-                                    }
-                                />
-                                <span className="switch-slider"></span>
-                            </label>
-                        </div>
+                        
 
                     </div>
                 </section>
@@ -112,7 +97,7 @@ function Settings() {
                         <button
                             type="button"
                             className="settings-row settings-button"
-                            onClick={() => navigate("/account")}
+                            onClick={() => navigate("/myinfoedit")}
                         >
                             <span>계정 정보</span>
                             <span className="row-arrow">›</span>

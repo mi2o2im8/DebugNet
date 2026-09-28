@@ -86,6 +86,7 @@ class PostRepository:
         offset: int,
         limit: int,
         sport_id: int | None = None,
+        club_id: int | None = None,
         sort: str = "latest",
         search_type: str | None = None,
         keyword: str | None = None,
@@ -116,16 +117,20 @@ class PostRepository:
                 sport_id,
             )
 
+        if club_id is not None:
+            query = query.eq(
+                "club_id",
+                club_id,
+            )
+
         # -------------------------------------------------
         # 차단한 사용자의 게시글 제외
         # -------------------------------------------------
         if blocked_user_ids:
 
-            blocked_ids = ",".join(blocked_user_ids)
-
             query = query.not_.in_(
                 "author_id",
-                f"({blocked_ids})",
+                list(blocked_user_ids),
             )
 
 
@@ -206,6 +211,45 @@ class PostRepository:
 
         return response.data or []
 
+    # -----------------------------------------------------
+    # 내가 작성한 게시글 조회
+    #
+    # 현재 로그인한 사용자의 author_id와
+    # posts.author_id가 같은 게시글만 조회한다.
+    # -----------------------------------------------------
+    def get_my_posts(
+        self,
+        user_id: str,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("posts")
+            .select(
+                "post_id, "
+                "author_id, "
+                "board_type, "
+                "sport_id, "
+                "club_id, "
+                "title, "
+                "content, "
+                "view_count, "
+                "created_at, "
+                "updated_at"
+            )
+            .eq(
+                "author_id",
+                user_id,
+            )
+            .order(
+                "created_at",
+                desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
 
     # -----------------------------------------------------
     # 검색/차단 조건까지 적용한 전체 게시글 개수
@@ -216,6 +260,7 @@ class PostRepository:
         self,
         board_type: str,
         sport_id: int | None = None,
+        club_id: int | None = None,
         search_type: str | None = None,
         keyword: str | None = None,
         blocked_user_ids: list[str] | None = None,
@@ -234,15 +279,25 @@ class PostRepository:
             )
         )
 
+        if sport_id is not None:
+            query = query.eq(
+                "sport_id",
+                sport_id,
+            )
+
+        if club_id is not None:
+            query = query.eq(
+                "club_id",
+                club_id,
+            )
+
 
         # 차단 사용자 제외
         if blocked_user_ids:
 
-            blocked_ids = ",".join(blocked_user_ids)
-
             query = query.not_.in_(
                 "author_id",
-                f"({blocked_ids})",
+                list(blocked_user_ids),
             )
 
 
@@ -345,6 +400,7 @@ class PostRepository:
         self,
         board_type: str,
         sport_id: int | None = None,
+        club_id: int | None = None,
         search_type: str | None = None,
         keyword: str | None = None,
         blocked_user_ids: list[str] | None = None,
@@ -377,14 +433,17 @@ class PostRepository:
                 sport_id,
             )
 
+        if club_id is not None:
+            query = query.eq(
+                "club_id",
+                club_id,
+            )
 
         if blocked_user_ids:
 
-            blocked_ids = ",".join(blocked_user_ids)
-
             query = query.not_.in_(
                 "author_id",
-                f"({blocked_ids})",
+                list(blocked_user_ids),
             )
 
 
@@ -782,11 +841,9 @@ class PostRepository:
 
         if blocked_user_ids:
 
-            blocked_ids = ",".join(blocked_user_ids)
-
             query = query.not_.in_(
                 "author_id",
-                f"({blocked_ids})",
+                list(blocked_user_ids),
             )
 
 
@@ -989,6 +1046,28 @@ class PostRepository:
         )
 
         return response.data or []
+
+    # -----------------------------------------------------
+    # 특정 동호회의 활동 회원 여부 확인
+    # -----------------------------------------------------
+    def is_active_club_member(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> bool:
+
+        response = (
+            self.admin_client
+            .table("club_members")
+            .select("club_member_id")
+            .eq("club_id", club_id)
+            .eq("user_id", user_id)
+            .eq("status", "active")
+            .limit(1)
+            .execute()
+        )
+
+        return bool(response.data)
 
 
     # -----------------------------------------------------

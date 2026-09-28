@@ -8,6 +8,7 @@ from app.schemas.comments import (
     CommentListResponse,
     CommentUpdateRequest,
     CommentUpdateResponse,
+    MyCommentListResponse,
 )
 
 from app.services.comment_service import CommentService
@@ -51,6 +52,35 @@ def get_comments(
 
     return comment_service.get_comment_list(
         post_id=post_id,
+        user_id=user_id,
+    )
+
+# =========================================================
+# 내가 작성한 댓글 조회
+# =========================================================
+
+# ---------------------------------------------------------
+# GET /api/comments/my
+#
+# 처리:
+# - JWT 사용자 확인
+# - 현재 사용자가 작성한 댓글만 조회
+# - 댓글이 작성된 게시글 제목 포함
+# ---------------------------------------------------------
+@router.get(
+    "/api/comments/my",
+    response_model=MyCommentListResponse,
+)
+def get_my_comments(
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    comment_service = CommentService()
+
+    return comment_service.get_my_comments(
         user_id=user_id,
     )
 

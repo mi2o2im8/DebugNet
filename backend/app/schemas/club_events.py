@@ -92,6 +92,27 @@ class ClubEventCreateRequest(BaseModel):
         max_length=200,
     )
 
+    location_address: str | None = Field(
+        default=None,
+        max_length=500,
+        validation_alias=AliasChoices(
+            "location_address",
+            "locationAddress",
+        ),
+    )
+
+    latitude: float | None = Field(
+        default=None,
+        ge=-90,
+        le=90,
+    )
+
+    longitude: float | None = Field(
+        default=None,
+        ge=-180,
+        le=180,
+    )
+
     # 4단계: 참여 및 투표 설정
 
     max_participants: int | None = Field(
@@ -139,19 +160,6 @@ class ClubEventCreateRequest(BaseModel):
         ),
     )
 
-    vote_options: list[str] = Field(
-        default_factory=lambda: [
-            "참석",
-            "불참",
-            "미정",
-        ],
-        min_length=2,
-        max_length=5,
-        validation_alias=AliasChoices(
-            "vote_options",
-            "voteOptions",
-        ),
-    )
 
     # -----------------------------------------------------
     # 문자열 정리
@@ -179,6 +187,7 @@ class ClubEventCreateRequest(BaseModel):
         "description",
         "event_image_url",
         "location",
+        "location_address",
     )
     @classmethod
     def strip_optional_strings(
@@ -229,37 +238,6 @@ class ClubEventCreateRequest(BaseModel):
         return participation_map.get(value, value)
 
     # -----------------------------------------------------
-    # 참석 투표 항목 정리
-    # -----------------------------------------------------
-
-    @field_validator("vote_options")
-    @classmethod
-    def normalize_vote_options(
-        cls,
-        values: list[str],
-    ) -> list[str]:
-        normalized_values = []
-
-        for value in values:
-            stripped_value = value.strip()
-
-            if (
-                stripped_value
-                and stripped_value
-                not in normalized_values
-            ):
-                normalized_values.append(
-                    stripped_value
-                )
-
-        if len(normalized_values) < 2:
-            raise ValueError(
-                "투표 항목은 두 개 이상 필요합니다."
-            )
-
-        return normalized_values
-
-    # -----------------------------------------------------
     # 입력값 간 관계 검증
     # -----------------------------------------------------
 
@@ -302,6 +280,23 @@ class ClubEventCreateRequest(BaseModel):
                 "늦을 수 없습니다."
             )
 
+        if (
+            (self.latitude is None)
+            != (self.longitude is None)
+        ):
+            raise ValueError(
+                "위도와 경도는 함께 입력해야 합니다."
+            )
+
+        if (
+            self.latitude is not None
+            and self.longitude is not None
+            and self.location is None
+        ):
+            raise ValueError(
+                "좌표를 입력하려면 장소명도 필요합니다."
+            )
+
         return self
 
 
@@ -322,6 +317,10 @@ class ClubEventDetailResponse(BaseModel):
     end_time: time | None = None
 
     location: str | None = None
+    location_address: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+
     max_participants: int | None = None
 
     event_type: str
@@ -351,6 +350,10 @@ class ClubEventListItemResponse(BaseModel):
     end_time: time | None = None
 
     location: str | None = None
+    location_address: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+
     max_participants: int | None = None
 
     event_type: str
@@ -407,6 +410,12 @@ class ClubEventParticipantItemResponse(BaseModel):
         "guest",
     ]
 
+    member_role: Literal[
+        "owner",
+        "manager",
+        "member",
+    ] | None = None
+
     participation_status: Literal[
         "pending",
         "joined",
@@ -423,6 +432,7 @@ class ClubEventParticipantItemResponse(BaseModel):
 
 class ClubEventParticipantListResponse(BaseModel):
     event_id: int
+
     participants: list[
         ClubEventParticipantItemResponse
     ]
@@ -430,7 +440,8 @@ class ClubEventParticipantListResponse(BaseModel):
     total: int
     joined_member_count: int
     joined_guest_count: int
-    pending_guest_count: int
+    pending_member_count: int = 0
+    pending_guest_count: int = 0
 
 class ClubEventGuestDecisionRequest(BaseModel):
     decision: Literal[
@@ -451,11 +462,25 @@ class ClubEventGuestDecisionResponse(BaseModel):
     message: str
 
 class ClubEventGuestApplyResponse(BaseModel):
+    event_id: int
+    event_participant_id: int | None = None
+
+    participation_status: Literal[
+        "pending",
+        "joined",
+        "rejected",
+        "cancelled",
+    ] | None = None
+
+    message: str
+
+class ClubEventParticipantCancelResponse(BaseModel):
     event_participant_id: int
     event_id: int
 
     participation_status: Literal[
         "pending",
+        "cancelled",
     ]
 
     message: str
@@ -481,5 +506,12 @@ class ClubEventAttendanceResponse(BaseModel):
         "absent",
         "undecided",
     ]
+
+    participation_status: Literal[
+        "pending",
+        "joined",
+        "rejected",
+        "cancelled",
+    ] | None = None
 
     message: str

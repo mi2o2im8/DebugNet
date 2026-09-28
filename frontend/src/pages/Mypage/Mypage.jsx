@@ -1,12 +1,16 @@
 // 내 정보 메인 페이지
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 import BackButton from "../../components/BackButton/BackButton";
 
-// ⭐ Supabase
-import { supabase } from "../../../supabaseClient";
+// ⭐ API
+import { authenticatedRequest } from "../../api/apiClient";
+import { getMyProfile } from "../../api/userApi";
+
+// ⭐ 신뢰점수 계산 (신뢰점수 페이지와 같은 계산)
+import { calculateTrustScore } from "../../utils/trustScore";
 
 // ⭐ 마이페이지 이미지
 import settingIcon from "../../assets/img/mypage/setting_icon.png";
@@ -17,6 +21,38 @@ import writeCommentIcon from "../../assets/img/mypage/write_comment.png";
 import BottomNav from "../../components/BottomNav";
 
 import "./Mypage.css";
+
+
+// =========================================================
+// ⭐ /api/clubs/my 응답 → 슬라이드용 배열
+//
+// 운영 중인 동호회를 앞에, 가입한 동호회를 뒤에 둔다.
+// 같은 동호회가 양쪽에 있으면 한 번만 보여준다.
+// =========================================================
+const buildClubList = (clubData) => {
+
+    const operatingClubs = (clubData?.operating_clubs ?? []).map((club) => ({
+        ...club,
+        isOperator: true,
+    }));
+
+    const joinedClubs = (clubData?.joined_clubs ?? []).map((club) => ({
+        ...club,
+        isOperator: false,
+    }));
+
+    const seen = new Set();
+
+    return [...operatingClubs, ...joinedClubs].filter((club) => {
+
+        if (!club?.club_id || seen.has(club.club_id)) {
+            return false;
+        }
+
+        seen.add(club.club_id);
+        return true;
+    });
+};
 
 
 function Mypage() {
@@ -31,12 +67,18 @@ function Mypage() {
 
 
     // =========================================================
-    // ⭐ 내가 운영 중인 동호회 + 가입한 동호회
+    // ⭐ 내 동호회 목록 (운영 + 가입을 하나로 합친 배열)
+    //
+    // [{ ...club, isOperator: true | false }, ...]
     // =========================================================
-    const [myClubs, setMyClubs] = useState({
-        operating_club: null,
-        joined_club: null,
-    });
+    const [myClubs, setMyClubs] = useState([]);
+
+    // ⭐ 슬라이드 현재 위치
+    const [clubIndex, setClubIndex] = useState(0);
+    const sliderRef = useRef(null);
+
+    // ⭐ 신뢰점수 (null = 아직 못 불러옴)
+    const [trust, setTrust] = useState(null);
 
     // ⭐ 페이지 전체 데이터 로딩 상태
     const [loading, setLoading] = useState(true);
@@ -51,102 +93,53 @@ function Mypage() {
 
             try {
 
-                // ⭐ 현재 로그인한 Supabase 세션 한 번만 조회
-                const {
-                    data: { session },
-                    error: sessionError,
-                } = await supabase.auth.getSession();
-
-                // ⭐ 세션 조회 오류
-                if (sessionError) {
-                    throw new Error("로그인 세션 조회 실패");
-                }
-
-                // ⭐ 로그인 세션이 없는 경우
-                if (!session?.access_token) {
-                    throw new Error("로그인 세션이 없습니다.");
-                }
-
-                const headers = {
-                    Authorization: `Bearer ${session.access_token}`,
-                };
-
-                // ⭐ 사용자 정보 + 동호회 정보를 동시에 요청
-                const [userResponse, clubResponse] = await Promise.all([
-                    fetch(
-                        "http://127.0.0.1:8000/api/auth/me",
-                        {
-                            method: "GET",
-                            headers,
-                        }
-                    ),
-
-                    fetch(
-                        "http://127.0.0.1:8000/api/clubs/my",
-                        {
-                            method: "GET",
-                            headers,
-                        }
-                    ),
+                // ⭐ 내 정보 + 내 동호회를 동시에 요청
+                // allSettled: 한쪽이 실패해도 다른 쪽은 화면에 표시
+                const [userResult, clubResult, activityResult] = await Promise.allSettled([
+                    getMyProfile(),
+                    authenticatedRequest("/api/clubs/my", {
+                        method: "GET",
+                    }),
+                    // ⭐ 신뢰점수 계산용
+                    authenticatedRequest("/api/users/me/activity", {
+                        method: "GET",
+                    }),
                 ]);
 
-                // ⭐ 사용자 정보 API 오류
-                if (!userResponse.ok) {
-
-                    const errorData = await userResponse
-                        .json()
-                        .catch(() => null);
-
-                    console.error(
-                        "⭐ 사용자 정보 API 오류:",
-                        errorData
-                    );
-
-                    throw new Error(
-                        `내 사용자 정보 조회 실패 (${userResponse.status})`
-                    );
+                if (userResult.status === "fulfilled") {
+                    console.log("⭐ 내 사용자 정보:", userResult.value);
+                    setUserInfo(userResult.value);
+                } else {
+                    console.error("⭐ 사용자 정보 API 오류:", userResult.reason);
+                    setUserInfo(null);
                 }
 
-                // ⭐ 동호회 API 오류
-                if (!clubResponse.ok) {
+                if (clubResult.status === "fulfilled") {
 
-                    const errorData = await clubResponse
-                        .json()
-                        .catch(() => null);
+                    setMyClubs(buildClubList(clubResult.value));
 
-                    console.error(
-                        "⭐ 내 동호회 API 오류:",
-                        errorData
-                    );
+                } else {
 
-                    throw new Error(
-                        `내 동호회 조회 실패 (${clubResponse.status})`
-                    );
+                    console.error("⭐ 내 동호회 API 오류:", clubResult.reason);
+                    setMyClubs([]);
+
                 }
 
-                // ⭐ 두 API 응답을 동시에 처리
-                const [userData, clubData] = await Promise.all([
-                    userResponse.json(),
-                    clubResponse.json(),
-                ]);
+                if (activityResult.status === "fulfilled") {
 
-                console.log(
-                    "⭐ 내 사용자 정보:",
-                    userData
-                );
+                    setTrust(
+                        calculateTrustScore(
+                            activityResult.value.activities,
+                            activityResult.value.warnings
+                        )
+                    );
 
-                console.log(
-                    "⭐ 내가 운영/가입한 동호회:",
-                    clubData
-                );
+                } else {
 
-                // ⭐ 상태 저장
-                setUserInfo(userData);
+                    console.error("⭐ 신뢰점수 API 오류:", activityResult.reason);
+                    setTrust(null);
 
-                setMyClubs({
-                    operating_club: clubData?.operating_club ?? null,
-                    joined_club: clubData?.joined_club ?? null,
-                });
+                }
 
             } catch (error) {
 
@@ -158,10 +151,7 @@ function Mypage() {
                 // ⭐ 오류 시 빈 상태
                 setUserInfo(null);
 
-                setMyClubs({
-                    operating_club: null,
-                    joined_club: null,
-                });
+                setMyClubs([]);
 
             } finally {
 
@@ -194,37 +184,75 @@ function Mypage() {
 
 
     // =========================================================
-    // ⭐ 운영 중인 동호회 이동
+    // ⭐ 프로필 표시용 값
     // =========================================================
-    const handleOperatingClubClick = () => {
+    const sportText =
+        userInfo?.sports?.length > 0
+            ? userInfo.sports
+                .map((sport) => sport.sport_name)
+                .join(" · ")
+            : "운동 종목 없음";
 
-        const clubId =
-            myClubs?.operating_club?.club_id;
+    const regionText =
+        userInfo?.regions?.length > 0
+            ? userInfo.regions.join(" · ")
+            : "활동 지역 없음";
 
 
-        if (clubId) {
-            navigate(`/clubs/${clubId}/manage`);
-        }
+    // =========================================================
+    // ⭐ 동호회 카드 클릭
+    //
+    // 운영자 → 동호회 관리 / 멤버 → 동호회 상세
+    // =========================================================
+    const handleClubClick = (club) => {
 
+        if (!club?.club_id) return;
+
+        navigate(
+            club.isOperator
+                ? `/clubs/${club.club_id}/manage`
+                : `/clubs/${club.club_id}`
+        );
     };
 
 
-    // 한 칸만 만들고 좌우로 이동 시켜서 가입한 동호회 슬라이스?
-    // 그 이후 전체보기에서 운영중인 동호회랑 가입한 동호회 나누어서 볼 수 있게 설정
+    // =========================================================
+    // ⭐ 슬라이드 이동 (화살표 / 점 버튼)
+    // =========================================================
+    const scrollToClub = (index) => {
+
+        const slider = sliderRef.current;
+
+        if (!slider) return;
+
+        const nextIndex = Math.max(
+            0,
+            Math.min(index, myClubs.length - 1)
+        );
+
+        slider.scrollTo({
+            left: slider.clientWidth * nextIndex,
+            behavior: "smooth",
+        });
+    };
+
 
     // =========================================================
-    // ⭐ 가입한 동호회 이동
+    // ⭐ 손가락으로 넘겼을 때 현재 위치 갱신
     // =========================================================
-    const handleJoinedClubClick = () => {
+    const handleSliderScroll = () => {
 
-        const clubId =
-            myClubs?.joined_club?.club_id;
+        const slider = sliderRef.current;
 
+        if (!slider || slider.clientWidth === 0) return;
 
-        if (clubId) {
-            navigate(`/clubs/${clubId}`);
+        const index = Math.round(
+            slider.scrollLeft / slider.clientWidth
+        );
+
+        if (index !== clubIndex) {
+            setClubIndex(index);
         }
-
     };
 
 
@@ -275,17 +303,17 @@ function Mypage() {
                     <div className="profile-image">
 
                         <img
-                            src={profileIcon}
+                            src={userInfo?.profile_image || profileIcon}
                             alt="프로필"
                         />
 
                     </div>
 
 
-                    {/* ⭐ 사용자 이름 */}
+                    {/* ⭐ 닉네임 (없으면 이름) */}
                     <p className="profile-name">
 
-                        {userInfo?.name || "사용자 이름"}
+                        {userInfo?.nickname || userInfo?.name || "사용자 이름"}
 
                     </p>
 
@@ -293,13 +321,7 @@ function Mypage() {
                     {/* ⭐ 운동 종목 */}
                     <p className="profile-sports">
 
-                        {Array.isArray(userInfo?.sports)
-
-                            ? userInfo.sports.join("ㆍ")
-
-                            : userInfo?.sports || "운동 종목 없음"
-
-                        }
+                        {sportText}
 
                     </p>
 
@@ -307,13 +329,7 @@ function Mypage() {
                     {/* ⭐ 활동 지역 */}
                     <p className="profile-region">
 
-                        {Array.isArray(userInfo?.regions)
-
-                            ? userInfo.regions.join("ㆍ")
-
-                            : userInfo?.regions || "활동 지역 없음"
-
-                        }
+                        {regionText}
 
                     </p>
 
@@ -342,7 +358,7 @@ function Mypage() {
                     <button
                         type="button"
                         onClick={() =>
-                            navigate("/myschedule")
+                            navigate("/my-reviews")
                         }
                     >
                         전체보기
@@ -352,129 +368,123 @@ function Mypage() {
 
 
                 {/* =================================================
-                    ⭐ 운영 중인 동호회
+                    ⭐ 내 동호회 슬라이드
                 ================================================= */}
-                <div className="club-subsection">
+                {myClubs.length === 0 ? (
 
-                    <h4 className="club-subsection-title">
-                        운영 중인 동호회
-                    </h4>
+                    <div className="club-empty">
+                        가입한 동호회가 없습니다.
+                    </div>
+
+                ) : (
+
+                    <div className="my-club-slider">
+
+                        {/* ⭐ [‹] [카드] [›] 가로 배치 → 화살표가 자동으로 세로 가운데 */}
+                        <div className="my-club-slider-box">
+
+                            {myClubs.length > 1 && (
+                                <button
+                                    type="button"
+                                    className="my-club-arrow"
+                                    onClick={() => scrollToClub(clubIndex - 1)}
+                                    disabled={clubIndex === 0}
+                                    aria-label="이전 동호회"
+                                >
+                                    ‹
+                                </button>
+                            )}
 
 
-                    <div className="club-card">
-
-
-                        {myClubs?.operating_club ? (
-
-                            <button
-                                type="button"
-                                onClick={handleOperatingClubClick}
+                            {/* ⭐ 카드 목록 (가로 스크롤 + 스냅) */}
+                            <div
+                                className="my-club-track"
+                                ref={sliderRef}
+                                onScroll={handleSliderScroll}
                             >
+                                {myClubs.map((club) => (
 
-                                <img
-                                    src={clubHeartIcon}
-                                    alt="운영 중인 동호회"
-                                />
+                                    <button
+                                        key={club.club_id}
+                                        type="button"
+                                        className="my-club-slide"
+                                        onClick={() => handleClubClick(club)}
+                                    >
 
+                                        <img
+                                            src={
+                                                club.representative_image_url ||
+                                                clubHeartIcon
+                                            }
+                                            alt={club.club_name}
+                                            className={
+                                                club.representative_image_url
+                                                    ? "my-club-thumb cover"
+                                                    : "my-club-thumb"
+                                            }
+                                        />
 
-                                <div className="club-info">
+                                        <div className="my-club-info">
+                                            <p>{club.club_name}</p>
+                                            <span>
+                                                {club.sport_name || "운동 종목 없음"}
+                                            </span>
+                                        </div>
 
-                                    <p>
-                                        {
-                                            myClubs.operating_club
-                                                .club_name
-                                        }
-                                    </p>
+                                        {/* ⭐ 오른쪽 끝 (다음 화살표 바로 옆) */}
+                                        <span
+                                            className={
+                                                club.isOperator
+                                                    ? "my-club-badge operator"
+                                                    : "my-club-badge"
+                                            }
+                                        >
+                                            {club.isOperator ? "운영자" : "멤버"}
+                                        </span>
 
+                                    </button>
 
-                                    <span>
-                                        {
-                                            myClubs.operating_club
-                                                .sport_name ||
-                                            "운동 종목 없음"
-                                        }
-                                    </span>
-
-                                </div>
-
-                            </button>
-
-                        ) : (
-
-                            <div className="club-empty">
-
-                                운영 중인 동호회가 없습니다.
-
+                                ))}
                             </div>
 
+
+                            {myClubs.length > 1 && (
+                                <button
+                                    type="button"
+                                    className="my-club-arrow"
+                                    onClick={() => scrollToClub(clubIndex + 1)}
+                                    disabled={clubIndex === myClubs.length - 1}
+                                    aria-label="다음 동호회"
+                                >
+                                    ›
+                                </button>
+                            )}
+
+                        </div>
+
+
+                        {/* ⭐ 위치 점 */}
+                        {myClubs.length > 1 && (
+                            <div className="my-club-dots">
+                                {myClubs.map((club, index) => (
+                                    <button
+                                        key={club.club_id}
+                                        type="button"
+                                        className={
+                                            index === clubIndex
+                                                ? "my-club-dot active"
+                                                : "my-club-dot"
+                                        }
+                                        onClick={() => scrollToClub(index)}
+                                        aria-label={`${index + 1}번째 동호회`}
+                                    />
+                                ))}
+                            </div>
                         )}
 
                     </div>
 
-                </div>
-
-
-                {/* =================================================
-                    ⭐ 가입한 동호회
-                ================================================= */}
-                <div className="club-subsection">
-
-                    <h4 className="club-subsection-title">
-                        가입한 동호회
-                    </h4>
-
-
-                    <div className="club-card">
-
-
-                        {myClubs?.joined_club ? (
-
-                            <button
-                                type="button"
-                                onClick={handleJoinedClubClick}
-                            >
-
-                                <img
-                                    src={clubHeartIcon}
-                                    alt="가입한 동호회"
-                                />
-
-
-                                <div className="club-info">
-
-                                    <p>
-                                        {
-                                            myClubs.joined_club
-                                                .club_name
-                                        }
-                                    </p>
-
-
-                                    <span>
-                                        {
-                                            myClubs.joined_club
-                                                .sport_name ||
-                                            "운동 종목 없음"
-                                        }
-                                    </span>
-
-                                </div>
-
-                            </button>
-
-                        ) : (
-
-                            <div className="club-empty">
-
-                                가입한 동호회가 없습니다.
-
-                            </div>
-
-                        )}
-
-                    </div>
-
-                </div>
+                )}
 
 
                 {/* =================================================
@@ -589,23 +599,26 @@ function Mypage() {
                     >
 
                         <h2>
-                            92
+                            {trust?.score ?? "-"}
                         </h2>
 
 
                         <p>
-                            참석률과 참여 기록 기반
+                            투표 · 참석 기록 기반
                         </p>
 
 
                         <p>
-                            매우 좋음
+                            {trust?.level.short ?? "측정 중"}
                         </p>
 
 
                         <div className="trust-progress">
 
-                            <div className="trust-progress-bar" />
+                            <div
+                                className="trust-progress-bar"
+                                style={{ width: `${trust?.score ?? 0}%` }}
+                            />
 
                         </div>
 

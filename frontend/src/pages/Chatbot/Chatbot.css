@@ -289,23 +289,6 @@
 
 
 /* =========================
-   ⭐ 질문 다시 보기
-========================= */
-
-.chatbot-question-again {
-    margin-top: 10px;
-}
-
-.chatbot-question-again span {
-    margin-bottom: 2px;
-
-    font-size: 11px;
-
-    color: #8d98a7;
-}
-
-
-/* =========================
    ⭐ 입력창
 ========================= */
 
@@ -406,4 +389,282 @@
     cursor: pointer;
 
     z-index: 9998;
+}
+
+/* =========================================================
+   ⭐ 대화 흐름 개선 (답변 단계 / 바로가기 / 평가 / 추천)
+========================================================= */
+
+/* 처음 화면 질문 목록 아래 간격 */
+
+.chatbot-questions + .chatbot-messages {
+    margin-top: 22px;
+}
+
+.chatbot-message-group {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+
+/* ⭐ 답변 아래 영역 (말풍선 폭에 맞춤) */
+
+.chatbot-answer-extra {
+    max-width: 82%;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+
+/* ⭐ 진행 단계 */
+
+.chatbot-steps {
+    padding: 10px 12px;
+
+    border: 1px solid #e3ebe8;
+    border-radius: 12px;
+
+    background: #ffffff;
+}
+
+.chatbot-steps strong {
+    display: block;
+
+    margin-bottom: 6px;
+
+    font-size: 12px;
+
+    color: #01a17f;
+}
+
+.chatbot-steps ol {
+    margin: 0;
+
+    padding-left: 18px;
+
+    font-size: 12px;
+    line-height: 1.6;
+
+    color: #42516a;
+}
+
+
+/* ⭐ 관련 화면 바로가기 */
+
+.chatbot-actions {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+.chatbot-action-button {
+    min-height: 36px;
+
+    padding: 8px 12px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #01a17f;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 12px;
+
+    color: #ffffff;
+
+    cursor: pointer;
+}
+
+.chatbot-action-button:hover {
+    background: #018f71;
+}
+
+
+/* ⭐ 답변 평가 */
+
+.chatbot-feedback span {
+    display: block;
+
+    margin-bottom: 6px;
+
+    font-size: 11px;
+
+    color: #8d98a7;
+}
+
+.chatbot-feedback-buttons {
+    display: flex;
+
+    gap: 6px;
+}
+
+.chatbot-feedback-buttons button {
+    flex: 1;
+
+    min-height: 32px;
+
+    border: 1px solid #dfe5eb;
+    border-radius: 16px;
+
+    background: #ffffff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 11px;
+
+    color: #536174;
+
+    cursor: pointer;
+}
+
+.chatbot-feedback-buttons button:hover {
+    background: #f4faf8;
+}
+
+
+/* ⭐ 평가 후 이어서 볼 질문 */
+
+.chatbot-followup p {
+    margin: 0 0 6px;
+
+    font-size: 12px;
+
+    color: #42516a;
+}
+
+
+/* ⭐ 추천 질문 칩 */
+
+.chatbot-suggest {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 6px;
+}
+
+.chatbot-chip {
+    flex-shrink: 0;
+
+    min-height: 32px;
+
+    padding: 6px 12px;
+
+    border: 1px solid #cfe9e1;
+    border-radius: 16px;
+
+    background: #f4faf8;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 11px;
+
+    color: #2f6b5b;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+}
+
+.chatbot-chip:hover {
+    background: #e6f5f0;
+}
+
+.chatbot-chip:disabled {
+    opacity: 0.5;
+
+    cursor: not-allowed;
+}
+
+
+/* ⭐ 대화 중 자주 묻는 질문 한 줄 */
+
+.chatbot-chip-bar {
+    display: flex;
+
+    gap: 6px;
+
+    padding: 8px 10px 0;
+
+    overflow-x: auto;
+
+    scrollbar-width: none;
+
+    flex-shrink: 0;
+
+    background: #ffffff;
+}
+
+.chatbot-chip-bar::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* ⭐ 답변 준비 중 점 3개 */
+
+.chatbot-typing {
+    display: flex;
+
+    gap: 4px;
+}
+
+.chatbot-typing span {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: #9aa2ad;
+
+    animation: chatbot-typing 1s infinite ease-in-out;
+}
+
+.chatbot-typing span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.chatbot-typing span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes chatbot-typing {
+    0%, 80%, 100% {
+        opacity: 0.3;
+        transform: translateY(0);
+    }
+
+    40% {
+        opacity: 1;
+        transform: translateY(-3px);
+    }
+}
+
+
+/* ⭐ 키보드 포커스 */
+
+.chatbot-questions button:focus-visible,
+.chatbot-chip:focus-visible,
+.chatbot-action-button:focus-visible,
+.chatbot-feedback-buttons button:focus-visible,
+.chatbot-send:focus-visible {
+    outline: 2px solid #01a17f;
+    outline-offset: 2px;
+}
+
+.chatbot-send:disabled {
+    opacity: 0.6;
+
+    cursor: not-allowed;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+    .chatbot-typing span {
+        animation: none;
+    }
+
 }

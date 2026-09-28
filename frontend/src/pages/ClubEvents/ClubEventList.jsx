@@ -17,6 +17,7 @@ import {
     FiClock,
     FiCopy,
     FiEdit2,
+    FiEye,
     FiList,
     FiMapPin,
     FiMoreVertical,
@@ -363,6 +364,19 @@ function ClubEventCard({
                 </div>
 
                 <div className="club-event-card-actions">
+                    <button
+                        type="button"
+                        className="club-event-detail-button"
+                        onClick={() =>
+                            navigate(
+                                `/clubs/${clubId}/manage/events/`
+                                + event.event_id
+                            )
+                        }
+                    >
+                        <FiEye />
+                        일정 상세
+                    </button>
                     <button
                         type="button"
                         className="club-event-attendance-button"

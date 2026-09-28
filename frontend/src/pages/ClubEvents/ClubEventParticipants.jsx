@@ -19,8 +19,10 @@ import {
 } from "react-icons/fi";
 
 import {
-    decideClubEventGuest,
-    getClubEventParticipants
+    cancelClubEventGuestParticipant,
+    decideClubEventParticipant,
+    getClubEventParticipants,
+    updateClubEventParticipantAttendance
 } from "../../api/clubApi";
 
 import "./ClubEventParticipants.css";
@@ -30,6 +32,12 @@ const ATTENDANCE_LABELS = {
     attending: "참석",
     absent: "불참",
     undecided: "미정"
+};
+
+const MEMBER_ROLE_LABELS = {
+    owner: "동호회장",
+    manager: "운영진",
+    member: "일반 회원"
 };
 
 const STATUS_LABELS = {
@@ -43,7 +51,9 @@ const STATUS_LABELS = {
 function ParticipantItem({
     participant,
     isProcessing,
-    onDecision
+    onDecision,
+    onAttendanceChange,
+    onCancelGuest
 }) {
     const displayName =
         participant.nickname ||
@@ -74,7 +84,11 @@ function ParticipantItem({
                     {" · "}
                     {participant.participant_type === "guest"
                         ? "게스트"
-                        : "회원"}
+                        : (
+                            MEMBER_ROLE_LABELS[
+                                participant.member_role
+                            ] || "회원"
+                        )}
                 </span>
 
                 <div className="event-participant-badges">
@@ -105,6 +119,57 @@ function ParticipantItem({
                     )}
                 </div>
             </div>
+            
+            {participant.participation_status ===
+                "joined" && (
+                <div className="event-participant-controls">
+                    <label className="event-participant-attendance-control">
+                        <span>참석 상태</span>
+
+                        <select
+                            value={
+                                participant.attendance_status
+                                || "undecided"
+                            }
+                            disabled={isProcessing}
+                            onChange={(event) =>
+                                onAttendanceChange(
+                                    participant
+                                        .event_participant_id,
+                                    event.target.value
+                                )
+                            }
+                        >
+                            <option value="attending">
+                                참석
+                            </option>
+
+                            <option value="absent">
+                                불참
+                            </option>
+
+                            <option value="undecided">
+                                미정
+                            </option>
+                        </select>
+                    </label>
+
+                    {participant.participant_type ===
+                        "guest" && (
+                        <button
+                            type="button"
+                            className="event-participant-cancel-guest"
+                            disabled={isProcessing}
+                            onClick={() =>
+                                onCancelGuest(participant)
+                            }
+                        >
+                            <FiX />
+                            게스트 취소
+                        </button>
+                    )}
+                </div>
+            )}
 
             {participant.participation_status ===
                 "pending" && (
@@ -115,8 +180,7 @@ function ParticipantItem({
                         disabled={isProcessing}
                         onClick={() =>
                             onDecision(
-                                participant
-                                    .event_participant_id,
+                                participant,
                                 "approve"
                             )
                         }
@@ -131,8 +195,7 @@ function ParticipantItem({
                         disabled={isProcessing}
                         onClick={() =>
                             onDecision(
-                                participant
-                                    .event_participant_id,
+                                participant,
                                 "reject"
                             )
                         }
@@ -142,6 +205,7 @@ function ParticipantItem({
                     </button>
                 </div>
             )}
+
         </article>
     );
 }
@@ -210,7 +274,7 @@ function ClubEventParticipants() {
     }, [loadParticipants]);
 
     const handleDecision = async (
-        eventParticipantId,
+        participant,
         decision
     ) => {
         const actionLabel =
@@ -218,8 +282,101 @@ function ClubEventParticipants() {
                 ? "승인"
                 : "거절";
 
+        const participantLabel =
+            participant.participant_type === "guest"
+                ? "게스트"
+                : "회원";
+
         const confirmed = window.confirm(
-            `이 게스트 신청을 ${actionLabel}하시겠습니까?`
+            `이 ${participantLabel} 참여 신청을 `
+            + `${actionLabel}하시겠습니까?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        const eventParticipantId =
+            participant.event_participant_id;
+
+        setProcessingId(eventParticipantId);
+        setErrorMessage("");
+        setNoticeMessage("");
+
+        try {
+            const result =
+                await decideClubEventParticipant(
+                    clubId,
+                    eventId,
+                    eventParticipantId,
+                    decision
+                );
+
+            setNoticeMessage(result.message);
+
+            await loadParticipants(false);
+        } catch (error) {
+            console.error(
+                "참가 신청 처리 실패:",
+                error
+            );
+
+            setErrorMessage(
+                error.message ||
+                "참가 신청을 처리하지 못했습니다."
+            );
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const handleAttendanceChange = async (
+        eventParticipantId,
+        attendanceStatus
+    ) => {
+        setProcessingId(eventParticipantId);
+        setErrorMessage("");
+        setNoticeMessage("");
+
+        try {
+            const result =
+                await updateClubEventParticipantAttendance(
+                    clubId,
+                    eventId,
+                    eventParticipantId,
+                    attendanceStatus
+                );
+
+            setNoticeMessage(result.message);
+
+            await loadParticipants(false);
+        } catch (error) {
+            console.error(
+                "참가자 참석 상태 변경 실패:",
+                error
+            );
+
+            setErrorMessage(
+                error.message ||
+                "참석 상태를 변경하지 못했습니다."
+            );
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const handleCancelGuest = async (participant) => {
+        const eventParticipantId =
+            participant.event_participant_id;
+
+        const displayName =
+            participant.nickname ||
+            participant.name ||
+            "게스트";
+
+        const confirmed = window.confirm(
+            `${displayName}님의 게스트 참여 승인을 `
+            + "취소하시겠습니까?"
         );
 
         if (!confirmed) {
@@ -232,11 +389,10 @@ function ClubEventParticipants() {
 
         try {
             const result =
-                await decideClubEventGuest(
+                await cancelClubEventGuestParticipant(
                     clubId,
                     eventId,
-                    eventParticipantId,
-                    decision
+                    eventParticipantId
                 );
 
             setNoticeMessage(result.message);
@@ -244,13 +400,13 @@ function ClubEventParticipants() {
             await loadParticipants(false);
         } catch (error) {
             console.error(
-                "게스트 신청 처리 실패:",
+                "게스트 참여 취소 실패:",
                 error
             );
 
             setErrorMessage(
                 error.message ||
-                "게스트 신청을 처리하지 못했습니다."
+                "게스트 참여를 취소하지 못했습니다."
             );
         } finally {
             setProcessingId(null);
@@ -273,10 +429,9 @@ function ClubEventParticipants() {
         );
     }
 
-    const pendingGuests =
+    const pendingParticipants =
         participantData.participants.filter(
             (participant) =>
-                participant.participant_type === "guest" &&
                 participant.participation_status ===
                     "pending"
         );
@@ -349,8 +504,15 @@ function ClubEventParticipants() {
 
                     <strong>
                         {
-                            participantData
-                                .pending_guest_count
+                            Number(
+                                participantData
+                                    .pending_member_count || 0
+                            )
+                            +
+                            Number(
+                                participantData
+                                    .pending_guest_count || 0
+                            )
                         }
                     </strong>
 
@@ -379,29 +541,39 @@ function ClubEventParticipants() {
             <section className="event-participant-section">
                 <div className="event-participant-section-title">
                     <h2>승인 대기</h2>
-                    <span>{pendingGuests.length}명</span>
+
+                    <span>
+                        {pendingParticipants.length}명
+                    </span>
                 </div>
 
-                {pendingGuests.length === 0 ? (
+                {pendingParticipants.length === 0 ? (
                     <p className="event-participant-empty">
-                        대기 중인 게스트 신청이 없습니다.
+                        대기 중인 참여 신청이 없습니다.
                     </p>
                 ) : (
-                    pendingGuests.map((participant) => (
-                        <ParticipantItem
-                            key={
-                                participant
-                                    .event_participant_id
-                            }
-                            participant={participant}
-                            isProcessing={
-                                processingId ===
-                                participant
-                                    .event_participant_id
-                            }
-                            onDecision={handleDecision}
-                        />
-                    ))
+                    pendingParticipants.map(
+                        (participant) => (
+                            <ParticipantItem
+                                key={
+                                    participant
+                                        .event_participant_id
+                                }
+                                participant={participant}
+                                isProcessing={
+                                    processingId ===
+                                    participant
+                                        .event_participant_id
+                                }
+                                onDecision={
+                                    handleDecision
+                                }
+                                onAttendanceChange={
+                                    handleAttendanceChange
+                                }
+                            />
+                        )
+                    )
                 )}
             </section>
 
@@ -426,10 +598,15 @@ function ClubEventParticipants() {
                                         .event_participant_id
                                 }
                                 participant={participant}
-                                isProcessing={false}
+                                isProcessing={
+                                    processingId ===
+                                    participant.event_participant_id
+                                }
                                 onDecision={
                                     handleDecision
                                 }
+                                onAttendanceChange={handleAttendanceChange}
+                                onCancelGuest={handleCancelGuest}
                             />
                         )
                     )
@@ -457,6 +634,7 @@ function ClubEventParticipants() {
                                 onDecision={
                                     handleDecision
                                 }
+                                onAttendanceChange={handleAttendanceChange}
                             />
                         )
                     )}

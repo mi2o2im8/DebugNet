@@ -80,6 +80,15 @@
 }
 
 
+.profile-image-hint {
+    margin: 8px 0 0;
+
+    font-size: 12px;
+
+    color: #008f75;
+}
+
+
 /* ⭐ 섹션 */
 .edit-section {
     margin-bottom: 25px;
@@ -200,6 +209,195 @@
 }
 
 
+/* ⭐ 섹션 설명 */
+.edit-section-desc {
+    margin: -6px 0 12px;
+
+    font-size: 12px;
+
+    color: #8a9a9a;
+}
+
+
+/* ⭐ 로딩 / 에러 문구 */
+.edit-status-text {
+    margin-top: 60px;
+
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.6;
+
+    color: #777;
+}
+
+
+/* ⭐ 입력 에러 */
+.edit-item input.input-error {
+    border-color: #e5484d;
+}
+
+.edit-error-text {
+    margin: 6px 0 0;
+
+    font-size: 12px;
+
+    color: #e5484d;
+}
+
+
+/* ⭐ 선택 칩 (종목 / 지역) */
+.edit-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.edit-chip {
+    padding: 8px 12px;
+
+    border: 1px solid #dfe5e5;
+    border-radius: 18px;
+
+    background: #fff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 13px;
+
+    color: #555;
+
+    cursor: pointer;
+}
+
+.edit-chip.active {
+    border-color: #01a17f;
+
+    background: #effaf7;
+
+    color: #008f75;
+
+    font-weight: bold;
+}
+
+
+/* ⭐ 종목별 수준 */
+.sport-level-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    margin-top: 12px;
+    padding: 10px 12px;
+
+    border-radius: 8px;
+
+    background: #f6f9f9;
+}
+
+.sport-level-name {
+    flex-shrink: 0;
+
+    font-size: 13px;
+    font-weight: bold;
+
+    color: #173746;
+}
+
+.sport-level-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.sport-level-buttons button {
+    padding: 6px 10px;
+
+    border: 1px solid #dfe5e5;
+    border-radius: 6px;
+
+    background: #fff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 12px;
+
+    color: #555;
+
+    cursor: pointer;
+}
+
+.sport-level-buttons button.active {
+    border-color: #01a17f;
+
+    background: #01a17f;
+
+    color: #fff;
+}
+
+
+/* ⭐ 활동 지역 (시/도 → 구/군) */
+.region-select-row {
+    display: flex;
+    gap: 8px;
+}
+
+.region-select-item {
+    flex: 1;
+    min-width: 0;
+}
+
+.edit-item select:disabled {
+    background: #f4f6f6;
+
+    color: #aaa;
+
+    cursor: not-allowed;
+}
+
+.selected-region-box {
+    padding: 12px;
+
+    border-radius: 8px;
+
+    background: #f6f9f9;
+}
+
+.selected-region-title {
+    margin: 0 0 10px;
+
+    font-size: 13px;
+    font-weight: bold;
+
+    color: #173746;
+}
+
+.selected-region-empty {
+    margin: 0;
+
+    font-size: 12px;
+
+    color: #8a9a9a;
+}
+
+.region-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.region-chip-remove {
+    font-size: 11px;
+
+    opacity: 0.7;
+}
+
+
+/* ⭐ 저장 중 */
+.my-info-save-btn:disabled {
+    background: #9fd6c9;
+
+    cursor: not-allowed;
+}
+
+
 /* ⭐ 모바일 */
 @media (max-width: 400px) {
     .my-info-edit-page {
@@ -214,4 +412,4 @@
         width: 75px;
         height: 75px;
     }
-}
+}

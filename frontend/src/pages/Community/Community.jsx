@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { FiBell } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import {
+    useNavigate,
+    useParams
+} from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
 import { supabase } from "../../../supabaseClient";
@@ -51,8 +54,11 @@ const POSTS_PER_PAGE = 10;
 function Community() {
   const navigate = useNavigate();
 
-  // 기본 게시판 = 자유게시판
-  const [selectedBoard, setSelectedBoard] = useState("free");
+  const { clubId } = useParams();
+  const isClubCommunity = Boolean(clubId);
+
+  // 동호회 커뮤니티는 동호회 게시판, 그 외에는 자유게시판을 기본 선택
+  const [selectedBoard, setSelectedBoard] = useState(isClubCommunity ? "club" : "free");
 
   // 정렬
   const [sortType, setSortType] = useState("latest");
@@ -66,8 +72,8 @@ function Community() {
   const [sports, setSports] =
     useState([]);
 
-  // 검색할 게시판
-  const [searchBoard, setSearchBoard] = useState("free");
+  // 검색할 게시판_기본 게시판과 동호회 게시판 분리
+  const [searchBoard, setSearchBoard] = useState(isClubCommunity ? "club" : "free");
 
   // 검색 범위
   const [searchType, setSearchType] = useState("title");
@@ -98,6 +104,10 @@ function Community() {
   // 종목 목록 불러오기
   // =========================
   useEffect(() => {
+    if (isClubCommunity) {
+      return;
+    }
+
     const fetchSports = async () => {
       try {
         const {
@@ -141,7 +151,7 @@ function Community() {
 
     fetchSports();
 
-  }, []);
+  }, [isClubCommunity]);
 
 
   // =========================
@@ -173,6 +183,11 @@ function Community() {
           size: String(POSTS_PER_PAGE),
           sort: sortType,
         });
+
+        // 동호회 커뮤니티에서는 해당 동호회 게시글만 조회
+        if (isClubCommunity) {
+            params.set("club_id", String(clubId));
+        }
 
         // 종목별게시판에서 특정 종목을 선택했을 때만
         if (
@@ -260,6 +275,8 @@ function Community() {
     searchKeyword,
     searchType,
     navigate,
+    clubId,
+    isClubCommunity,
   ]);
 
   // =========================
@@ -278,11 +295,27 @@ function Community() {
   // 새 게시글
   // =========================
   const handleWritePost = () => {
-    navigate("/community/write", {
-      state: {
-        board: selectedBoard,
-      },
-    });
+      if (isClubCommunity) {
+          navigate(
+              `/clubs/${clubId}/manage/community/write`,
+              {
+                  state: {
+                      board: "club"
+                  }
+              }
+          );
+
+          return;
+      }
+
+      navigate(
+          "/community/write",
+          {
+              state: {
+                  board: selectedBoard
+              }
+          }
+      );
   };
 
 
@@ -343,7 +376,11 @@ function Community() {
     <div className="community-container">
       {/* 상단 */}
       <header className="community-header">
-        <h1>소통하기</h1>
+        <h1>
+          {isClubCommunity
+            ? "동호회 커뮤니티"
+            : "소통하기"}
+        </h1>
 
         <button
           type="button"
@@ -358,28 +395,33 @@ function Community() {
       </header>
 
       <main className="community-main">
-        {/* 게시판 선택 */}
-        <nav className="community-board-tabs">
-          {boards.map((board) => (
-            <button
-              key={board.id}
-              type="button"
-              className={
-                selectedBoard === board.id
-                  ? "community-board-tab active"
-                  : "community-board-tab"
-              }
-              onClick={() => handleBoardChange(board.id)}
-            >
-              {board.name}
-            </button>
-          ))}
-        </nav>
+        {/* 전체 커뮤니티 게시판 선택 */}
+        {!isClubCommunity && (
+          <nav className="community-board-tabs">
+            {boards.map((board) => (
+              <button
+                key={board.id}
+                type="button"
+                className={
+                  selectedBoard === board.id
+                    ? "community-board-tab active"
+                    : "community-board-tab"
+                }
+                onClick={() =>
+                  handleBoardChange(board.id)
+                }
+              >
+                {board.name}
+              </button>
+            ))}
+          </nav>
+        )}
 
           {/* =========================
-                      종목별게시판 종목 탭
-                  ========================= */}
-                  {selectedBoard === "sports" && (
+              종목별게시판 종목 탭
+              ========================= */}
+                  {!isClubCommunity &&
+                    selectedBoard === "sports" && (
 
                     <div className="community-sport-tabs">
 
@@ -472,16 +514,23 @@ function Community() {
 
           {/* 검색 */}
           <div className="community-search">
-            <select
-              value={searchBoard}
-              onChange={(e) => setSearchBoard(e.target.value)}
-            >
-              {boards.map((board) => (
-                <option key={board.id} value={board.id}>
-                  {board.name}
-                </option>
-              ))}
-            </select>
+            {!isClubCommunity && (
+              <select
+                value={searchBoard}
+                onChange={(e) =>
+                  setSearchBoard(e.target.value)
+                }
+              >
+                {boards.map((board) => (
+                  <option
+                    key={board.id}
+                    value={board.id}
+                  >
+                    {board.name}
+                  </option>
+                ))}
+              </select>
+            )}
 
             <select
               value={searchType}
@@ -534,7 +583,9 @@ function Community() {
                   className="community-post-item"
                   onClick={() =>
                     navigate(
-                      `/community/post/${post.id}`
+                      isClubCommunity
+                        ? `/clubs/${clubId}/manage/community/post/${post.id}`
+                        : `/community/post/${post.id}`
                     )
                   }
                 >
@@ -635,7 +686,7 @@ function Community() {
         </section>
       </main>
 
-      <BottomNav />
+      {!isClubCommunity && <BottomNav />}
     </div>
   );
 }

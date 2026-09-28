@@ -1,5 +1,8 @@
 import { useNavigate, useParams } from "react-router-dom";
-
+import {
+  useEffect,
+  useState,
+} from "react";
 import {
   FiChevronRight,
   FiInbox,
@@ -12,6 +15,15 @@ import {
 
 import BottomNav from "../../components/BottomNav";
 
+import {
+  getMatchManagementSummary,
+  getMatchManagementMatches,
+} from "./api/matchApi";
+
+import {
+  getClubDashboard,
+} from "../../api/clubApi";
+
 import "./CSS/MatchManagement.css";
 
 
@@ -22,55 +34,158 @@ function MatchManagement() {
   // 현재 운영 중인 동호회 ID
   const { clubId } = useParams();
 
+  // ========================================
+  // 매칭관리 실제 데이터
+  // ========================================
+
+  // 운영 중인 동호회 이름
+  const [
+    clubName,
+    setClubName,
+  ] = useState("");
+
+
+  // 매칭관리 요약 개수
+  const [
+    summary,
+    setSummary,
+  ] = useState({
+    received: 0,
+    sent: 0,
+    upcoming: 0,
+    history: 0,
+    writtenReviews: 0,
+    receivedReviews: 0,
+  });
+
+
+  // 최근 매칭
+  const [
+    recentMatches,
+    setRecentMatches,
+  ] = useState([]);
 
   // ========================================
-  // 임시 데이터
-  // API 연결 전 화면 확인용
+  // 매칭관리 메인 데이터 조회
   // ========================================
-  const summary = {
-    received: 3,
-    sent: 2,
-    upcoming: 4,
-    history: 7,
-    // TODO: 백엔드 연결 후 실제 후기 개수로 교체
-    writtenReviews: 4,
-    receivedReviews: 3,
-  };
+  useEffect(() => {
+
+    if (!clubId) {
+      return;
+    }
 
 
-  const recentMatches = [
-    {
-      clubMatchId: 1,
+    const loadMatchManagement = async () => {
 
-      type: "received",
+      try {
 
-      opponentClubName: "신림 FC",
+        // ----------------------------------------
+        // 매칭관리 요약 / 받은 신청 / 예정 경기 /
+        // 운영 중인 동호회 정보를 동시에 조회
+        // ----------------------------------------
+        const [
+          summaryData,
+          receivedData,
+          upcomingData,
+          dashboardData,
+        ] = await Promise.all([
 
-      sportName: "축구/풋살",
+          getMatchManagementSummary(
+            clubId
+          ),
 
-      matchDate: "2026-09-27",
+          getMatchManagementMatches(
+            clubId,
+            "received"
+          ),
 
-      startTime: "19:00",
+          getMatchManagementMatches(
+            clubId,
+            "upcoming"
+          ),
 
-      region: "관악구",
-    },
+          getClubDashboard(
+            clubId
+          ),
+        ]);
 
-    {
-      clubMatchId: 2,
 
-      type: "upcoming",
+        // 매칭관리 개수
+        setSummary(
+          summaryData
+        );
 
-      opponentClubName: "봉천 풋살클럽",
 
-      sportName: "축구/풋살",
+        // 운영 중인 동호회 이름
+        setClubName(
+          dashboardData.club_name || ""
+        );
 
-      matchDate: "2026-09-30",
 
-      startTime: "20:00",
+        // ----------------------------------------
+        // 기존 화면의 최근 매칭은
+        // 받은 신청 + 예정 경기로 구성
+        // ----------------------------------------
+        const receivedMatches =
+          receivedData.items.map(
+            (match) => ({
+              ...match,
+              type: "received",
+            })
+          );
 
-      region: "관악구",
-    },
-  ];
+
+        const upcomingMatches =
+          upcomingData.items.map(
+            (match) => ({
+              ...match,
+              type: "upcoming",
+            })
+          );
+
+
+        // 날짜/시간이 가까운 순서
+        const mergedMatches = [
+          ...receivedMatches,
+          ...upcomingMatches,
+        ]
+          .sort((a, b) => {
+
+            const aDate =
+              `${a.matchDate} ${a.startTime || ""}`;
+
+            const bDate =
+              `${b.matchDate} ${b.startTime || ""}`;
+
+            return aDate.localeCompare(
+              bDate
+            );
+
+          })
+          .slice(0, 2);
+
+
+        setRecentMatches(
+          mergedMatches
+        );
+
+      } catch (error) {
+
+        console.error(
+          "매칭관리 메인 조회 실패:",
+          error
+        );
+
+      }
+
+    };
+
+
+    loadMatchManagement();
+
+  }, [clubId]);
+
+
 
 
   // ========================================
@@ -134,7 +249,6 @@ function MatchManagement() {
 
         {/* ========================================
             현재 관리 중인 동호회
-            나중에 API에서 club_name 연결
         ======================================== */}
         <section className="match-management-club">
 
@@ -143,7 +257,7 @@ function MatchManagement() {
           </span>
 
           <strong>
-            사과좋아 풋살클럽
+            {clubName || "동호회"}
           </strong>
 
         </section>

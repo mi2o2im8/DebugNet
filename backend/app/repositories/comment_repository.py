@@ -77,13 +77,9 @@ class CommentRepository:
         # -------------------------------------------------
         if blocked_user_ids:
 
-            blocked_ids = ",".join(
-                blocked_user_ids
-            )
-
             query = query.not_.in_(
                 "author_id",
-                f"({blocked_ids})",
+                list(blocked_user_ids),
             )
 
 
@@ -98,6 +94,42 @@ class CommentRepository:
             .order(
                 "created_at",
                 desc=False,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 내가 작성한 댓글 조회
+    #
+    # 현재 로그인한 사용자의 author_id와
+    # comments.author_id가 같은 댓글만 조회한다.
+    # -----------------------------------------------------
+    def get_my_comments(
+        self,
+        user_id: str,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("comments")
+            .select(
+                "comment_id, "
+                "post_id, "
+                "author_id, "
+                "parent_comment_id, "
+                "content, "
+                "created_at, "
+                "updated_at"
+            )
+            .eq(
+                "author_id",
+                user_id,
+            )
+            .order(
+                "created_at",
+                desc=True,
             )
             .execute()
         )
@@ -262,3 +294,27 @@ class CommentRepository:
             return None
 
         return response.data[0]
+
+
+    # =====================================================
+    # 5. 댓글 알림 생성
+    # =====================================================
+    def create_comment_notification(
+        self,
+        user_id: str,
+        title: str,
+        content: str,
+        post_id: int,
+    ) -> None:
+
+        self.admin_client.table("notifications").insert(
+            {
+                "user_id": user_id,
+                "notification_type": "community_comment",
+                "title": title,
+                "content": content,
+                "related_type": "post",
+                "related_id": post_id,
+                "is_read": False,
+            }
+        ).execute()

@@ -402,3 +402,8 @@
 .match-record-submit-btn:active {
   opacity: 0.88;
 }
+
+.match-record-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

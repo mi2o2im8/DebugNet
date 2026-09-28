@@ -1,5 +1,6 @@
-import { useState } from "react";
+// NotificationContext.jsx를 사용하도록 변경
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 import {
     FiBarChart2,
@@ -11,9 +12,13 @@ import {
     FiHeart,
     FiChevronRight,
 } from "react-icons/fi";
+
 import { GiSoccerBall } from "react-icons/gi";
 
 import BackButton from "../../components/BackButton/BackButton";
+import BottomNav from "../../components/BottomNav";
+
+import { useNotifications } from "../../context/NotificationContext";
 
 import "./Notification.css";
 
@@ -23,196 +28,300 @@ function Notification() {
     const navigate = useNavigate();
 
 
+    // ⭐ 알림 데이터는 Context에서 가져옴 (다른 페이지 벨 아이콘과 데이터 공유)
+    const {
+        notifications,
+        loading,
+        fetchNotifications,
+        markAsRead,
+        markAllAsRead,
+    } = useNotifications();
+
+
+    // ⭐ 이 페이지에 들어올 때마다 최신 알림을 다시 불러옴
+    // - Context가 realtime 구독을 놓치는 경우에도, 이 페이지에서만큼은
+    //   항상 최신 목록을 보장하기 위함
+    useEffect(() => {
+        fetchNotifications();
+    }, [fetchNotifications]);
+
+
     // ⭐ 현재 선택한 알림 카테고리
     const [selectedCategory, setSelectedCategory] = useState("전체");
 
 
-    // ⭐ 알림 목록
-    const [notifications, setNotifications] = useState([
-        {
-            type: "vote",
-            category: "경기",
+    // ⭐ 알림 타입별 아이콘
+    const notificationIcons = {
+        vote: FiBarChart2,
+        schedule: FiCalendar,
+        join: FiUsers,
+        matching: GiSoccerBall,
+        comment: FiMessageCircle,
+        result: FiVolume2,
+        notice: FiFileText,
+        review: FiHeart,
 
-            title: "아직 참여하지 않은 투표가 있어요",
-            content: "2026년 하반기 정기 활동 장소 선정 투표에 아직 참여하지 않았습니다.",
-            time: "10분 전",
-            Icon: FiBarChart2,
-
-            read: false,
-
-            // ⭐ 투표 상세 화면
-            path: "/vote/detail",
-        },
-
-        {
-            type: "schedule",
-            category: "경기",
-
-            title: "내일 활동 일정이 예정되어 있어요",
-            content: "강서 풋살 클럽의 정기 활동이 내일 오후 7시에 시작됩니다.",
-            time: "1시간 전",
-            Icon: FiCalendar,
-
-            read: false,
-
-            // ⭐ 활동 일정
-            path: "/my-schedule",
-        },
-
-        {
-            type: "join",
-            category: "동호회",
-
-            title: "새로운 가입 신청이 있어요",
-            content: "김지훈님이 우리 동호회에 가입을 신청했습니다.",
-            time: "2시간 전",
-            Icon: FiUsers,
-
-            read: false,
-
-            // ⭐ 가입 신청 관리
-            path: "/club/join-requests",
-        },
-
-        {
-            type: "matching",
-            category: "경기",
-
-            title: "팀 매칭 요청이 도착했어요",
-            content: "한강 러닝 크루에서 매칭을 요청했습니다.",
-            time: "3시간 전",
-            Icon: GiSoccerBall,
-
-            read: true,
-
-            // ⭐ 팀 매칭
-            path: "/team-matching",
-        },
-
-        {
-            type: "comment",
-            category: "커뮤니티",
-
-            title: "내 게시글에 새 댓글이 달렸어요",
-            content: "이번 주 게스트 구합니다!",
-            time: "5시간 전",
-            Icon: FiMessageCircle,
-
-            read: true,
-
-            // ⭐ 댓글이 달린 게시글로 이동
-            path: "/community",
-        },
-
-        {
-            type: "result",
-            category: "경기",
-
-            title: "투표 결과가 확정되었어요",
-            content: "8월 정기 활동 종료 장소 투표 결과를 확인해보세요.",
-            time: "어제",
-            Icon: FiVolume2,
-
-            read: true,
-
-            // ⭐ 투표 결과
-            path: "/vote/result",
-        },
-
-        {
-            type: "notice",
-            category: "동호회",
-
-            title: "서비스 점검 안내",
-            content: "9월 12일(금) 오전 2시부터 4시까지 서비스 점검이 진행될 예정입니다.",
-            time: "어제",
-            Icon: FiFileText,
-
-            read: true,
-
-            // ⭐ 공지사항
-            path: "/notice",
-        },
-
-        {
-            type: "review",
-            category: "동호회",
-
-            title: "동호회 활동 후기가 등록되었어요",
-            content: "위너스 농구 모임에 새로운 후기가 등록되었습니다.",
-            time: "9월 8일",
-            Icon: FiHeart,
-
-            read: true,
-
-            // ⭐ 활동 후기
-            path: "/activity-review",
-        },
-    ]);
+        // ⭐ 백엔드에서 사용할 수 있는 타입들
+        vote_created: FiBarChart2,
+        vote_result: FiVolume2,
+        schedule_created: FiCalendar,
+        schedule_reminder: FiCalendar,
+        schedule_updated: FiCalendar,
+        schedule_cancelled: FiCalendar,
+        attendance_response: FiCalendar,
+        club_join: FiUsers,
+        join_request: FiUsers,
+        club_application: FiUsers,
+        join_approved: FiUsers,
+        join_rejected: FiUsers,
+        team_matching: GiSoccerBall,
+        team_matching_approved: GiSoccerBall,
+        team_matching_rejected: GiSoccerBall,
+        community_comment: FiMessageCircle,
+        activity_review: FiHeart,
+        club_notice: FiFileText,
+    };
 
 
-    // ⭐ 선택된 카테고리의 알림만 표시
+    // ⭐ 알림 타입에 따른 카테고리
+    // ⭐ "전체" 탭은 필터링을 거치지 않고 모든 알림(점검 안내 포함)을 그대로 보여줌
+    const getNotificationCategory = (notification) => {
+
+        const type = notification.notification_type || "";
+        const relatedType = notification.related_type || "";
+
+
+        // 경기
+        if (
+            type.includes("vote") ||
+            type.includes("schedule") ||
+            type.includes("matching") ||
+            type.includes("game") ||
+            relatedType === "event" ||
+            relatedType === "vote"
+        ) {
+            return "경기";
+        }
+
+
+        // 커뮤니티
+        if (
+            type.includes("comment") ||
+            type.includes("community") ||
+            relatedType === "post" ||
+            relatedType === "community"
+        ) {
+            return "커뮤니티";
+        }
+
+
+        // 동호회 (서비스 점검 안내 등 공지성 알림도 여기 포함 → 전체 탭에서는 그대로 노출됨)
+        if (
+            type.includes("club") ||
+            type.includes("join") ||
+            type.includes("notice") ||
+            type.includes("review") ||
+            relatedType === "club" ||
+            relatedType === "member"
+        ) {
+            return "동호회";
+        }
+
+
+        // 기본값
+        return "동호회";
+    };
+
+
+    // ⭐ 알림 타입에 따른 아이콘
+    const getNotificationIcon = (notification) => {
+
+        const type = notification.notification_type || "";
+
+        return notificationIcons[type] || FiFileText;
+    };
+
+
+    // ⭐ 알림 클릭 시 이동할 페이지
+    const getNotificationPath = (notification) => {
+
+        const type = notification.notification_type || "";
+        const relatedType = notification.related_type || "";
+        const relatedId = notification.related_id;
+        
+        // ⭐ 백엔드가 이동 경로를 직접 지정한 알림은 그 경로를 우선 사용
+        if (notification.link_path) {
+            return notification.link_path;
+        }
+
+        if (type === "vote" || type === "vote_created") {
+            return "/vote/detail";
+        }
+
+        if (type === "vote_result") {
+            return "/vote/result";
+        }
+
+        if (
+            type === "schedule" ||
+            type === "schedule_created" ||
+            type === "schedule_reminder"
+        ) {
+            return "/myschedule";
+        }
+
+        if (type === "club_application") {
+            return relatedId ? `/clubs/${relatedId}/manage/members` : null;
+        }
+
+        if (
+            type === "join" ||
+            type === "club_join" ||
+            type === "join_request"
+        ) {
+            return relatedId ? `/clubs/${relatedId}/manage/members` : null;
+        }
+
+        if (type === "join_approved") {
+            return relatedId ? `/clubs/${relatedId}` : null;
+        }
+
+        if (type === "join_rejected") {
+            return null;
+        }
+
+        if (type === "matching" || type === "team_matching") {
+            return relatedId
+                ? `/clubs/${relatedId}/matches/list?tab=received`
+                : null;
+        }
+
+        if (type === "team_matching_approved") {
+            return relatedId
+                ? `/clubs/${relatedId}/matches/list?tab=upcoming`
+                : null;
+        }
+
+        if (type === "team_matching_rejected") {
+            return relatedId ? `/clubs/${relatedId}/matches` : null;
+        }
+
+        if (type === "comment" || type === "community_comment") {
+            return relatedId ? `/community/post/${relatedId}` : "/community";
+        }
+
+        if (type === "notice" || type === "club_notice") {
+            return "/notice";
+        }
+
+        if (type === "review" || type === "activity_review") {
+            return "/activity-review";
+        }
+
+        if (relatedType === "event") {
+            return "/myschedule";
+        }
+
+        if (relatedType === "vote") {
+            return "/vote/detail";
+        }
+
+        if (relatedType === "post") {
+            return "/community";
+        }
+
+        if (relatedType === "club") {
+            return "/clubs";
+        }
+
+        return null;
+    };
+
+
+    // ⭐ 알림 시간 표시
+    const formatNotificationTime = (createdAt) => {
+
+        if (!createdAt) {
+            return "";
+        }
+
+        const createdTime = new Date(createdAt);
+        const now = new Date();
+        const diff = now.getTime() - createdTime.getTime();
+
+        const minutes = Math.floor(diff / (1000 * 60));
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+        if (minutes < 1) {
+            return "방금 전";
+        }
+
+        if (minutes < 60) {
+            return `${minutes}분 전`;
+        }
+
+        if (hours < 24) {
+            return `${hours}시간 전`;
+        }
+
+        if (days === 1) {
+            return "어제";
+        }
+
+        if (days < 7) {
+            return `${days}일 전`;
+        }
+
+        return createdTime.toLocaleDateString("ko-KR", {
+            month: "numeric",
+            day: "numeric",
+        });
+    };
+
+
+    // ⭐ 선택된 카테고리만 표시 ("전체"는 필터 없이 전부 다 표시)
     const filteredNotifications =
         selectedCategory === "전체"
             ? notifications
             : notifications.filter(
                 (notification) =>
-                    notification.category === selectedCategory
+                    getNotificationCategory(notification) === selectedCategory
             );
 
 
     // ⭐ 알림 클릭
-    const handleNotificationClick = (notification) => {
+    const handleNotificationClick = async (notification) => {
 
-        // ⭐ 클릭한 알림 읽음 처리
-        setNotifications((prev) =>
-            prev.map((item) =>
-                item === notification
-                    ? {
-                        ...item,
-                        read: true,
-                    }
-                    : item
-            )
-        );
-
-
-        // ⭐ 해당 페이지로 이동
-        if (notification.path) {
-            navigate(notification.path);
+        if (!notification.is_read) {
+            await markAsRead(notification.notification_id);
         }
-    };
 
+        const path = getNotificationPath(notification);
 
-    // ⭐ 모두 읽음
-    const handleReadAll = () => {
+        if (path) {
+            navigate(path);
+        }
 
-        setNotifications((prev) =>
-            prev.map((notification) => ({
-                ...notification,
-                read: true,
-            }))
-        );
     };
 
 
     return (
+
         <div className="notification-page">
+
 
             {/* ⭐ 헤더 */}
             <header className="notification-header">
 
-                {/* ⭐ 뒤로가기 */}
                 <BackButton />
 
-                {/* ⭐ 제목 */}
                 <h2>알림</h2>
 
-                {/* ⭐ 모두 읽음 */}
                 <button
                     type="button"
                     className="notification-read-button"
-                    onClick={handleReadAll}
+                    onClick={markAllAsRead}
                 >
                     모두 읽음
                 </button>
@@ -223,24 +332,22 @@ function Notification() {
             {/* ⭐ 알림 카테고리 */}
             <div className="notification-category">
 
-                {["전체", "경기", "동호회", "커뮤니티"].map(
-                    (category) => (
-                        <button
-                            key={category}
-                            type="button"
-                            className={
-                                selectedCategory === category
-                                    ? "notification-category-button active"
-                                    : "notification-category-button"
-                            }
-                            onClick={() =>
-                                setSelectedCategory(category)
-                            }
-                        >
-                            {category}
-                        </button>
-                    )
-                )}
+                {["전체", "경기", "동호회", "커뮤니티"].map((category) => (
+
+                    <button
+                        key={category}
+                        type="button"
+                        className={
+                            selectedCategory === category
+                                ? "notification-category-button active"
+                                : "notification-category-button"
+                        }
+                        onClick={() => setSelectedCategory(category)}
+                    >
+                        {category}
+                    </button>
+
+                ))}
 
             </div>
 
@@ -248,26 +355,39 @@ function Notification() {
             {/* ⭐ 알림 리스트 */}
             <main className="notification-list">
 
-                {filteredNotifications.map(
-                    (notification, index) => {
+                {loading && (
+                    <div className="notification-empty">
+                        알림을 불러오는 중...
+                    </div>
+                )}
 
-                        const Icon = notification.Icon;
+                {!loading && filteredNotifications.length === 0 && (
+                    <div className="notification-empty">
+                        새로운 알림이 없습니다.
+                    </div>
+                )}
+
+                {!loading &&
+                    filteredNotifications.map((notification) => {
+
+                        const Icon = getNotificationIcon(notification);
 
                         return (
+
                             <button
-                                key={index}
+                                key={notification.notification_id}
                                 type="button"
                                 className={`
                                     notification-item
-                                    notification-${notification.type}
-                                    ${!notification.read
-                                        ? "notification-unread"
-                                        : ""}
+                                    notification-${notification.notification_type}
+                                    ${
+                                        !notification.is_read
+                                            ? "notification-unread"
+                                            : ""
+                                    }
                                 `}
                                 onClick={() =>
-                                    handleNotificationClick(
-                                        notification
-                                    )
+                                    handleNotificationClick(notification)
                                 }
                             >
 
@@ -276,43 +396,52 @@ function Notification() {
                                     <Icon />
                                 </div>
 
-
                                 {/* ⭐ 알림 내용 */}
                                 <div className="notification-content">
-
-                                    <h3>
-                                        {notification.title}
-                                    </h3>
-
-                                    <p>
-                                        {notification.content}
-                                    </p>
-
+                                    <h3>{notification.title}</h3>
+                                    <p>{notification.content}</p>
                                 </div>
 
-
-                                {/* ⭐ 시간 + 화살표 */}
+                                {/* ⭐ 안읽음 점 + 시간 + 화살표 */}
                                 <div className="notification-right">
 
+                                    {!notification.is_read && (
+                                        <span className="notification-dot" />
+                                    )}
+
                                     <span className="notification-time">
-                                        {notification.time}
+                                        {formatNotificationTime(
+                                            notification.created_at
+                                        )}
                                     </span>
 
-                                    <FiChevronRight
-                                        className="notification-arrow"
-                                    />
+                                    <FiChevronRight className="notification-arrow" />
 
                                 </div>
 
                             </button>
+
                         );
-                    }
-                )}
+
+                    })}
+
+                <div className="basic-home-bottom-space" />
 
             </main>
 
+            <BottomNav />
+
         </div>
+
     );
+
 }
 
+
 export default Notification;
+
+
+// TODO: 회원 활동 후기 기능 추가 예정 (후기 필요)
+//  - 알림 타입은 "member_review" 사용 예정
+//    ("activity_review"는 팀매칭 경기 후기 알림이 이미 사용 중)
+//  - 후기 페이지를 만들면 백엔드에서 link_path를 지정해서 보내면 됨

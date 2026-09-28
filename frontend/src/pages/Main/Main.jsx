@@ -29,6 +29,8 @@ import yogaImage from "../../assets/img/playbridge_16_assets/16_yoga.png";
 import soccerImage from "../../assets/img/playbridge_16_assets/soccer.png";
 import basketballImage from "../../assets/img/playbridge_16_assets/basketball.png";
 import badmintonImage from "../../assets/img/playbridge_16_assets/badminton.png";
+import ChatbotButton from "../../components/Chatbot/ChatbotButton";
+import { useNotifications } from "../../context/NotificationContext";
 
 
 function Main() {
@@ -63,53 +65,15 @@ function Main() {
     // =========================================================
     // ⭐ 안 읽은 알림 개수
     // =========================================================
-    const [unreadNotificationCount, setUnreadNotificationCount] =
-        useState(0);
+    // ⭐ NotificationContext 한 곳에서 관리 (실시간 구독도 Context에서만)
+    const { unreadCount: unreadNotificationCount } = useNotifications();
 
 
     // =========================================================
-    // ⭐ 로그인한 사용자 정보 + 안 읽은 알림 + 실시간 알림
+    // ⭐ 로그인한 사용자 정보
     // =========================================================
     useEffect(() => {
-        let notificationChannel = null;
         let isActive = true;
-
-
-        // =====================================================
-        // ⭐ 안 읽은 알림 개수 조회
-        // =====================================================
-        const loadUnreadNotificationCount = async (userId) => {
-            const {
-                count,
-                error,
-            } = await supabase
-                .from("notifications")
-                .select("notification_id", {
-                    count: "exact",
-                    head: true,
-                })
-                .eq("user_id", userId)
-                .eq("is_read", false);
-
-
-            if (error) {
-                console.error(
-                    "안 읽은 알림 개수 조회 오류:",
-                    error
-                );
-                return;
-            }
-
-
-            if (isActive) {
-                setUnreadNotificationCount(count || 0);
-
-                console.log(
-                    "⭐ 안 읽은 알림 개수:",
-                    count || 0
-                );
-            }
-        };
 
 
         // =====================================================
@@ -324,46 +288,6 @@ function Main() {
                 }
 
 
-                // =================================================
-                // ⭐ 8. 닉네임 조회가 끝난 후 알림 조회
-                // =================================================
-                loadUnreadNotificationCount(user.id);
-
-
-                // =================================================
-                // ⭐ 9. 알림 실시간 구독
-                // =================================================
-                if (!isActive) return;
-
-
-                notificationChannel = supabase
-                    .channel(
-                        `notification-badge-${user.id}`
-                    )
-                    .on(
-                        "postgres_changes",
-                        {
-                            event: "*",
-                            schema: "public",
-                            table: "notifications",
-                            filter: `user_id=eq.${user.id}`,
-                        },
-                        async () => {
-
-                            await loadUnreadNotificationCount(
-                                user.id
-                            );
-                        }
-                    )
-                    .subscribe((status) => {
-
-                        console.log(
-                            "⭐ 알림 실시간 연결 상태:",
-                            status
-                        );
-                    });
-
-
             } catch (error) {
 
                 console.error(
@@ -391,14 +315,6 @@ function Main() {
             isActive = false;
 
 
-            if (notificationChannel) {
-
-                supabase.removeChannel(
-                    notificationChannel
-                );
-
-                notificationChannel = null;
-            }
         };
 
     }, []);
@@ -744,97 +660,116 @@ function Main() {
                 ===================================================== */}
                 <section className="guest-section">
 
+                    <div className="section-header">
 
-                    <div className="guest-header">
-
-                        <p>
-                            팝업문구: 게스트 모집/ 게스트
-                        </p>
-
-                    </div>
-
-
-
-                    <div className="guest-title">
-
-
-                        <div className="guest-content">
+                        <div className="section-title">
 
                             <img
                                 src={activityIcon}
-                                alt="게스트 모집 아이콘"
+                                alt="게스트 모집"
                             />
 
                             <h3>
-                                게스트 모집
+                                다른 동호회 게스트 모집
                             </h3>
 
                         </div>
 
-
                         <Link
                             to="/clubs"
-                            className="guest-more"
+                            className="section-more"
                         >
-
-                            <p>
-                                더보기
-                            </p>
+                            더보기
 
                             <img
                                 src={backIcon}
-                                alt="게스트 모집 더보기"
+                                alt="이동"
                             />
-
                         </Link>
 
                     </div>
 
+                    <div
+                        className="guest-list"
+                    >
 
+                        {/* ⭐ 게스트 1 */}
+                        <Link
+                            to="/clubs"
+                            className="guest-item"
+                        >
 
-                    <div className="guest-list">
-
-
-                        {/* ⭐ 축구 */}
-                        <div className="guest-item">
-
-                            <Link
-                                to="/clubs"
+                            <div
                                 className="guest-item-image-link"
                             >
-
-                                <span className="image-popup popup-green">
+                                <span
+                                    className="image-popup popup-green"
+                                >
                                     게스트 모집
                                 </span>
 
                                 <img
                                     src={soccerImage}
-                                    alt="강서 축구회"
+                                    alt="미국 풋살 모임"
                                 />
+                            </div>
 
-                            </Link>
-
-
-                            <Link
-                                to="/clubs"
+                            <h4
                                 className="guest-item-title"
                             >
-                                강서 축구회
-                            </Link>
+                                미국 풋살 모임
+                            </h4>
 
-                        </div>
+                            <p style={{
+                                margin: "3px 5px",
+                                fontSize: "7px",
+                                color: "#888",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                            }}>
+                                수요일 오후 19:00
+                            </p>
 
+                            <p style={{
+                                margin: "3px 5px",
+                                fontSize: "7px",
+                                color: "#888",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                            }}>
+                                마곡 풋살장
+                            </p>
 
+                            <span style={{
+                                display: "block",
+                                margin: "6px 5px 7px",
+                                padding: "4px 0",
+                                border: "1px solid #01A17F",
+                                borderRadius: "5px",
+                                background: "#fff",
+                                color: "#01A17F",
+                                textAlign: "center",
+                                fontSize: "7px",
+                            }}>
+                                자세히 보기
+                            </span>
 
-                        {/* ⭐ 농구 */}
-                        <div className="guest-item">
+                        </Link>
 
-                            <Link
-                                to="/clubs"
+                        {/* ⭐ 게스트 2 */}
+                        <Link
+                            to="/clubs"
+                            className="guest-item"
+                        >
+
+                            <div
                                 className="guest-item-image-link"
                             >
-
-                                <span className="image-popup popup-green">
+                                <span
+                                    className="image-popup popup-green"
+                                >
                                     게스트 모집
                                 </span>
 
@@ -842,61 +777,179 @@ function Main() {
                                     src={basketballImage}
                                     alt="아하 농구 모임"
                                 />
+                            </div>
 
-                            </Link>
-
-
-                            <Link
-                                to="/clubs"
+                            <h4
                                 className="guest-item-title"
                             >
                                 아하 농구 모임
-                            </Link>
+                            </h4>
 
-                        </div>
+                            <p style={{
+                                margin: "3px 5px",
+                                fontSize: "7px",
+                                color: "#888",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                            }}>
+                                토요일 17:00
+                            </p>
 
+                            <p style={{
+                                margin: "3px 5px",
+                                fontSize: "7px",
+                                color: "#888",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                            }}>
+                                한강 농구공원
+                            </p>
 
+                            <span style={{
+                                display: "block",
+                                margin: "6px 5px 7px",
+                                padding: "4px 0",
+                                border: "1px solid #01A17F",
+                                borderRadius: "5px",
+                                background: "#fff",
+                                color: "#01A17F",
+                                textAlign: "center",
+                                fontSize: "7px",
+                            }}>
+                                자세히 보기
+                            </span>
 
-                        {/* ⭐ 배드민턴 */}
-                        <div className="guest-item">
+                        </Link>
 
-                            <Link
-                                to="/clubs"
+                        {/* ⭐ 게스트 3 */}
+                        <Link
+                            to="/clubs"
+                            className="guest-item"
+                        >
+
+                            <div
                                 className="guest-item-image-link"
                             >
-
-                                <span className="image-popup popup-blue">
-                                    신규
+                                <span
+                                    className="image-popup popup-green"
+                                >
+                                    게스트 모집
                                 </span>
 
                                 <img
-                                    src={badmintonImage}
-                                    alt="배드민턴 모임"
+                                    src={runningImage}
+                                    alt="러닝 함께해요"
                                 />
+                            </div>
 
-                            </Link>
-
-
-                            <Link
-                                to="/clubs"
+                            <h4
                                 className="guest-item-title"
                             >
-                                배드민턴 모임
-                            </Link>
+                                러닝 함께해요
+                            </h4>
 
-                        </div>
+                            <p style={{
+                                margin: "3px 5px",
+                                fontSize: "7px",
+                                color: "#888",
+                            }}>
+                                일요일 07:00
+                            </p>
+
+                            <p style={{
+                                margin: "3px 5px",
+                                fontSize: "7px",
+                                color: "#888",
+                            }}>
+                                한강공원
+                            </p>
+
+                            <span style={{
+                                display: "block",
+                                margin: "6px 5px 7px",
+                                padding: "4px 0",
+                                border: "1px solid #01A17F",
+                                borderRadius: "5px",
+                                background: "#fff",
+                                color: "#01A17F",
+                                textAlign: "center",
+                                fontSize: "7px",
+                            }}>
+                                자세히 보기
+                            </span>
+
+                        </Link>
+
+                        {/* ⭐ 게스트 4 */}
+                        <Link
+                            to="/clubs"
+                            className="guest-item"
+                        >
+
+                            <div
+                                className="guest-item-image-link"
+                            >
+                                <span
+                                    className="image-popup popup-green"
+                                >
+                                    게스트 모집
+                                </span>
+
+                                <img
+                                    src={climbingImage}
+                                    alt="클라이밍 입문"
+                                />
+                            </div>
+
+                            <h4
+                                className="guest-item-title"
+                            >
+                                클라이밍 입문
+                            </h4>
+
+                            <p style={{
+                                margin: "3px 5px",
+                                fontSize: "7px",
+                                color: "#888",
+                            }}>
+                                매주 화 19:00
+                            </p>
+
+                            <p style={{
+                                margin: "3px 5px",
+                                fontSize: "7px",
+                                color: "#888",
+                            }}>
+                                강서 클라이밍장
+                            </p>
+
+                            <span style={{
+                                display: "block",
+                                margin: "6px 5px 7px",
+                                padding: "4px 0",
+                                border: "1px solid #01A17F",
+                                borderRadius: "5px",
+                                background: "#fff",
+                                color: "#01A17F",
+                                textAlign: "center",
+                                fontSize: "7px",
+                            }}>
+                                자세히 보기
+                            </span>
+
+                        </Link>
 
                     </div>
 
                 </section>
 
 
-
                 {/* =====================================================
                     ⭐ 동호회 활동 추천
                 ===================================================== */}
                 <section className="activity-recommendation">
-
 
                     <div className="recommendation-header">
 
@@ -911,161 +964,106 @@ function Main() {
 
                     </div>
 
+                    <div
+                        className="recommendation-list"
+                    >
 
-
-                    <div className="recommendation-list">
-
-
-                        {/* ⭐ 클라이밍 */}
-                        <div className="recommendation-item">
-
-                            <p>
-                                팝업 문구
-                            </p>
-
+                        {[
+                            {
+                                image: climbingImage,
+                                title: "클라이밍 입문",
+                                sport: "클라이밍",
+                                region: "강서",
+                                badge: "입문",
+                                badgeClass: "popup-green",
+                            },
+                            {
+                                image: tabletennisImage,
+                                title: "탁구 모임",
+                                sport: "탁구",
+                                region: "서울",
+                                badge: "인기",
+                                badgeClass: "popup-green",
+                            },
+                            {
+                                image: runningImage,
+                                title: "러닝 크루",
+                                sport: "러닝",
+                                region: "한강",
+                                badge: "추천",
+                                badgeClass: "popup-green",
+                            },
+                            {
+                                image: yogaImage,
+                                title: "요가 클래스",
+                                sport: "요가",
+                                region: "서울",
+                                badge: "NEW",
+                                badgeClass: "popup-blue",
+                            },
+                        ].map((activity) => (
 
                             <Link
+                                key={activity.title}
                                 to="/clubs"
-                                className="recommendation-image-link"
+                                className="recommendation-item"
                             >
 
-                                <span className="image-popup popup-green">
-                                    입문
+                                <div
+                                    className="recommendation-image-link"
+                                >
+
+                                    <span
+                                        className={`image-popup ${activity.badgeClass}`}
+                                    >
+                                        {activity.badge}
+                                    </span>
+
+                                    <img
+                                        src={activity.image}
+                                        alt={activity.title}
+                                    />
+
+                                </div>
+
+                                <h4
+                                    className="recommendation-title"
+                                >
+                                    {activity.title}
+                                </h4>
+
+                                <p style={{
+                                    margin: "3px 5px",
+                                    fontSize: "7px",
+                                    color: "#888",
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                }}>
+                                    {activity.sport}
+                                    {" · "}
+                                    {activity.region}
+                                </p>
+
+                                <span
+                                >
                                 </span>
 
-                                <img
-                                    src={climbingImage}
-                                    alt="클라이밍 이미지"
-                                />
-
                             </Link>
 
-
-                            <Link
-                                to="/clubs"
-                                className="recommendation-title"
-                            >
-                                클라이밍 입문
-                            </Link>
-
-                        </div>
-
-
-
-                        {/* ⭐ 탁구 */}
-                        <div className="recommendation-item">
-
-                            <p>
-                                팝업 문구
-                            </p>
-
-
-                            <Link
-                                to="/clubs"
-                                className="recommendation-image-link"
-                            >
-
-                                <span className="image-popup popup-green">
-                                    인기
-                                </span>
-
-                                <img
-                                    src={tabletennisImage}
-                                    alt="탁구 이미지"
-                                />
-
-                            </Link>
-
-
-                            <Link
-                                to="/clubs"
-                                className="recommendation-title"
-                            >
-                                탁구 모임
-                            </Link>
-
-                        </div>
-
-
-
-                        {/* ⭐ 러닝 */}
-                        <div className="recommendation-item">
-
-                            <p>
-                                팝업 문구
-                            </p>
-
-
-                            <Link
-                                to="/clubs"
-                                className="recommendation-image-link"
-                            >
-
-                                <span className="image-popup popup-green">
-                                    추천
-                                </span>
-
-                                <img
-                                    src={runningImage}
-                                    alt="러닝 이미지"
-                                />
-
-                            </Link>
-
-
-                            <Link
-                                to="/clubs"
-                                className="recommendation-title"
-                            >
-                                러닝 크루
-                            </Link>
-
-                        </div>
-
-
-
-                        {/* ⭐ 요가 */}
-                        <div className="recommendation-item">
-
-                            <p>
-                                팝업 문구
-                            </p>
-
-
-                            <Link
-                                to="/clubs"
-                                className="recommendation-image-link"
-                            >
-
-                                <span className="image-popup popup-blue">
-                                    NEW
-                                </span>
-
-                                <img
-                                    src={yogaImage}
-                                    alt="요가 이미지"
-                                />
-
-                            </Link>
-
-
-                            <Link
-                                to="/clubs"
-                                className="recommendation-title"
-                            >
-                                요가 클래스
-                            </Link>
-
-                        </div>
+                        ))}
 
                     </div>
 
                 </section>
+            
+            <div className="basic-home-bottom-space" />
 
             </main>
 
-
             {/* 공통 하단 네비게이션 */}
+            <ChatbotButton />
+            
             <BottomNav />
 
         </div>

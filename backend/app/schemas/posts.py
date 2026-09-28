@@ -23,6 +23,7 @@ BoardType = Literal[
     "sports",
     "recruit",
     "notice",
+    "club",
 ]
 
 
@@ -163,6 +164,20 @@ class PostListResponse(BaseModel):
 
     totalPages: int
 
+# ---------------------------------------------------------
+# 내가 작성한 게시글 목록
+# ---------------------------------------------------------
+
+class MyPostItem(BaseModel):
+    id: int
+    title: str
+    content: str
+    comments: int = 0
+    createdAt: datetime
+
+
+class MyPostListResponse(BaseModel):
+    items: list[MyPostItem]
 
 # =========================================================
 # 게시글 작성
@@ -295,6 +310,23 @@ class PostCreateRequest(BaseModel):
             if self.club_id is not None:
                 raise ValueError(
                     "공지사항에서는 club_id를 사용할 수 없습니다."
+                )
+
+        # ---------------------------------------------
+        # 동호회 내부 커뮤니티
+        # club_id 필수, sport_id 사용 안 함
+        # ---------------------------------------------
+        elif self.board_type == "club":
+
+            if self.club_id is None:
+                raise ValueError(
+                    "동호회 커뮤니티는 club_id가 필요합니다."
+                )
+
+            if self.sport_id is not None:
+                raise ValueError(
+                    "동호회 커뮤니티에서는 "
+                    "sport_id를 사용할 수 없습니다."
                 )
 
         return self

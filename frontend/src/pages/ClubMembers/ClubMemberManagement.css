@@ -499,6 +499,194 @@
     color: #008f35;
 }
 
+/* ---------------------------------------------------------
+   현재 회원 검색·필터·정렬
+--------------------------------------------------------- */
+
+.club-member-tools {
+    display: grid;
+    gap: 10px;
+    margin: 0 20px 14px;
+}
+
+.club-member-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.club-member-search > svg {
+    position: absolute;
+    left: 13px;
+    z-index: 1;
+    color: #829087;
+    font-size: 17px;
+    pointer-events: none;
+}
+
+.club-member-search input {
+    width: 100%;
+    height: 44px;
+    padding: 0 42px 0 40px;
+    border: 1px solid #dce5df;
+    border-radius: 12px;
+    outline: none;
+    background: #ffffff;
+    color: #172019;
+    font: inherit;
+    font-size: 12px;
+}
+
+.club-member-search input::placeholder {
+    color: #9ba69f;
+}
+
+.club-member-search input:focus {
+    border-color: #3db96a;
+    box-shadow: 0 0 0 3px rgba(0, 155, 58, 0.09);
+}
+
+.club-member-search input::-webkit-search-cancel-button {
+    display: none;
+}
+
+.club-member-search-clear {
+    position: absolute;
+    right: 8px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #87928a;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.club-member-search-clear:hover {
+    background: #f0f4f1;
+}
+
+.club-member-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.club-member-filter-control,
+.club-member-sort-control {
+    position: relative;
+    display: block;
+    min-width: 0;
+}
+
+.club-member-filter-control select,
+.club-member-sort-control select {
+    width: 100%;
+    border: 1px solid #dce5df;
+    outline: none;
+    appearance: none;
+    background: #ffffff;
+    color: #566159;
+    font: inherit;
+    cursor: pointer;
+}
+
+.club-member-filter-control select {
+    height: 38px;
+    padding: 0 25px 0 9px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.club-member-filter-control svg,
+.club-member-sort-control svg {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    color: #77837b;
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.club-member-filter-control select:focus,
+.club-member-sort-control select:focus {
+    border-color: #3db96a;
+}
+
+.club-member-result-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 32px;
+}
+
+.club-member-result-bar p {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    color: #748078;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.club-member-result-bar p strong {
+    color: #008f35;
+    font-size: 12px;
+}
+
+.club-member-result-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    min-width: 0;
+}
+
+.club-member-filter-reset {
+    padding: 5px 2px;
+    border: 0;
+    background: transparent;
+    color: #78847c;
+    font-size: 10px;
+    text-decoration: underline;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.club-member-sort-control {
+    width: 102px;
+}
+
+.club-member-sort-control select {
+    height: 32px;
+    padding: 0 24px 0 9px;
+    border-radius: 9px;
+    font-size: 10px;
+}
+
+.club-member-sort-control svg {
+    right: 7px;
+    font-size: 12px;
+}
+
+.club-member-empty-reset {
+    margin-top: 5px;
+    padding: 8px 13px;
+    border: 1px solid #cfe2d5;
+    border-radius: 9px;
+    background: #f1f8f3;
+    color: #008f35;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
 
 /* ---------------------------------------------------------
    현재 회원 카드

@@ -28,6 +28,10 @@ import {
     getClubDashboard
 } from "../../api/clubApi";
 
+import {
+    authenticatedRequest
+} from "../../api/apiClient";
+
 import "./ClubDashboard.css";
 
 
@@ -74,6 +78,20 @@ const WEEK_LABELS = [
     "토"
 ];
 
+function formatRecentPostDate(value) {
+    if (!value) {
+        return "";
+    }
+
+    return new Intl.DateTimeFormat(
+        "ko-KR",
+        {
+            month: "numeric",
+            day: "numeric"
+        }
+    ).format(new Date(value));
+}
+
 
 function getNextScheduleDate(dayOfWeek) {
     const today = new Date();
@@ -107,6 +125,12 @@ function ClubDashboard() {
     const [dashboard, setDashboard] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
+
+    const [recentPosts, setRecentPosts] =
+        useState([]);
+
+    const [recentPostsError, setRecentPostsError] =
+        useState("");
 
     useEffect(() => {
         let cancelled = false;
@@ -142,6 +166,58 @@ function ClubDashboard() {
         };
 
         loadDashboard();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [clubId]);
+
+    // =========================
+    // 동호회 커뮤니티 최근 게시글 조회
+    // =========================
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadRecentPosts = async () => {
+            setRecentPostsError("");
+
+            try {
+                const params = new URLSearchParams({
+                    board_type: "club",
+                    club_id: String(clubId),
+                    page: "1",
+                    size: "3",
+                    sort: "latest"
+                });
+
+                const result =
+                    await authenticatedRequest(
+                        `/api/posts?${params.toString()}`
+                    );
+
+                if (!cancelled) {
+                    setRecentPosts(
+                        result.items || []
+                    );
+                }
+            } catch (error) {
+                console.error(
+                    "동호회 최근 게시글 조회 실패:",
+                    error
+                );
+
+                if (!cancelled) {
+                    setRecentPosts([]);
+
+                    setRecentPostsError(
+                        error.message ||
+                        "최근 게시글을 불러오지 못했습니다."
+                    );
+                }
+            }
+        };
+
+        loadRecentPosts();
 
         return () => {
             cancelled = true;
@@ -737,18 +813,66 @@ function ClubDashboard() {
 
                     <section className="club-dashboard-section">
                         <div className="club-dashboard-section-heading">
-                            <h2>최근 소식</h2>
+                            <h2>커뮤니티</h2>
 
-                            <button type="button">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    navigate(
+                                        `/clubs/${clubId}/manage/community`
+                                    )
+                                }
+                            >
                                 전체 보기
                                 <FiChevronRight />
                             </button>
                         </div>
 
-                        <div className="club-dashboard-empty">
-                            게시글 기능 연결 후 최근 소식이
-                            표시됩니다.
-                        </div>
+                        {recentPostsError ? (
+                            <div className="club-dashboard-empty">
+                                {recentPostsError}
+                            </div>
+                        ) : recentPosts.length === 0 ? (
+                            <div className="club-dashboard-empty">
+                                아직 작성된 게시글이 없습니다.
+                            </div>
+                        ) : (
+                            <div className="club-dashboard-community-list">
+                                {recentPosts.map((post) => (
+                                    <button
+                                        key={post.id}
+                                        type="button"
+                                        onClick={() =>
+                                            navigate(
+                                                `/clubs/${clubId}/manage/community/post/${post.id}`
+                                            )
+                                        }
+                                    >
+                                        <span>
+                                            <strong>
+                                                {post.title}
+                                            </strong>
+
+                                            <small>
+                                                {post.author}
+                                            </small>
+                                        </span>
+
+                                        <span className="club-dashboard-community-meta">
+                                            <small>
+                                                {formatRecentPostDate(
+                                                    post.createdAt
+                                                )}
+                                            </small>
+
+                                            <small>
+                                                댓글 {post.comments}
+                                            </small>
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </section>
                 </div>
             </div>

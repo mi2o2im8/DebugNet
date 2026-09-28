@@ -365,6 +365,231 @@
 }
 
 /* ========================================
+   ⭐ 내 동호회 슬라이드
+
+   ※ Main.css의 .club-card 스타일이 전역으로 섞이지 않도록
+     my-club- 로 시작하는 전용 클래스만 사용
+   ======================================== */
+
+.my-club-slider {
+    width: 100%;
+    margin: 0 0 8px;
+}
+
+/* ⭐ 연한 초록 바깥 박스 + [‹] [카드] [›] 가로 배치 */
+.my-club-slider-box {
+    display: flex;
+    align-items: center;       /* 화살표 세로 가운데 정렬 */
+    gap: 4px;
+
+    width: 100%;
+
+    padding: 10px 6px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #cdebe4;
+    border-radius: 10px;
+
+    background: #f4fbf9;
+}
+
+/* ⭐ 가로 스크롤 + 한 장씩 멈추기 */
+.my-club-track {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+
+    scrollbar-width: none;     /* 스크롤바 숨기기 */
+}
+
+.my-club-track::-webkit-scrollbar {
+    display: none;
+}
+
+/* ⭐ 카드 한 장 */
+.my-club-slide {
+    flex: 0 0 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    height: 72px;
+
+    padding: 10px 12px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e5e9ec;
+    border-radius: 10px;
+
+    background: #fff;
+
+    font-family: "Maplestory", sans-serif;
+    text-align: left;
+
+    scroll-snap-align: start;
+
+    cursor: pointer;
+}
+
+.my-club-thumb {
+    flex-shrink: 0;
+
+    width: 40px;
+    height: 40px;
+
+    border-radius: 7px;
+
+    object-fit: contain;
+}
+
+.my-club-thumb.cover {
+    object-fit: cover;
+}
+
+.my-club-info {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.my-club-info p {
+    margin: 0;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    color: #263b52;
+}
+
+.my-club-info span {
+    font-size: 14px;
+
+    color: #888;
+}
+
+/* ⭐ 운영자 / 멤버 뱃지 (카드 오른쪽 끝) */
+.my-club-badge {
+    flex-shrink: 0;
+
+    padding: 4px 8px;
+
+    border: 1px solid #d9e2e2;
+    border-radius: 12px;
+
+    background: #f6f9f9;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    color: #6b7c7c;
+}
+
+.my-club-badge.operator {
+    border-color: #01a17f;
+
+    background: #effaf7;
+
+    color: #008f75;
+}
+
+/* ⭐ 좌우 화살표 */
+.my-club-arrow {
+    flex-shrink: 0;
+
+    width: 24px;
+    height: 40px;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    background: transparent;
+
+    font-size: 26px;
+    line-height: 1;
+
+    color: #01a17f;
+
+    cursor: pointer;
+}
+
+.my-club-arrow:disabled {
+    color: #d5dcdc;
+
+    cursor: default;
+}
+
+/* ⭐ 위치 점 */
+.my-club-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+
+    margin-top: 8px;
+}
+
+.my-club-dot {
+    width: 6px;
+    height: 6px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 3px;
+
+    background: #d5dcdc;
+
+    cursor: pointer;
+
+    transition: width 0.2s ease;
+}
+
+.my-club-dot.active {
+    width: 16px;
+
+    background: #01a17f;
+}
+
+
+/* ⭐ 좁은 화면 */
+@media (max-width: 500px) {
+
+    .my-club-info p {
+        font-size: 14px;
+    }
+
+    .my-club-info span {
+        font-size: 13px;
+    }
+
+    .my-club-badge {
+        padding: 3px 7px;
+
+        font-size: 11px;
+    }
+}
+
+
+/* ========================================
    ⭐ 내 활동
    ======================================== */
 

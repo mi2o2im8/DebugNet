@@ -47,6 +47,56 @@ class PostService:
 
 
     # =====================================================
+    # 동호회 커뮤니티 회원 권한 확인
+    # =====================================================
+    def validate_club_member(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> None:
+
+        if not self.post_repository.is_active_club_member(
+            club_id=club_id,
+            user_id=user_id,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "해당 동호회의 활동 회원만 "
+                    "커뮤니티를 이용할 수 있습니다."
+                ),
+            )
+
+
+    # =====================================================
+    # 동호회 게시글 접근 권한 확인
+    # =====================================================
+    def validate_club_post_access(
+        self,
+        post: dict,
+        user_id: str,
+    ) -> None:
+
+        # 일반 커뮤니티 게시글에는 영향을 주지 않음
+        if post.get("board_type") != "club":
+            return
+
+        club_id = post.get("club_id")
+
+        if club_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="게시글을 찾을 수 없습니다.",
+            )
+
+        self.validate_club_member(
+            club_id=int(club_id),
+            user_id=user_id,
+        )
+
+
+
+    # =====================================================
     # Community 글쓰기 옵션 조회
     # =====================================================
 
@@ -293,12 +343,45 @@ class PostService:
         user_id: str,
         board_type: str,
         sport_id: int | None = None,
+        club_id: int | None = None,
         page: int = 1,
         size: int = 10,
         sort: str = "latest",
         search_type: str | None = None,
         keyword: str | None = None,
     ) -> PostListResponse:
+
+        # =================================================
+        # 동호회 내부 커뮤니티 권한 확인
+        # =================================================
+        if board_type == "club":
+
+            if club_id is None:
+                raise HTTPException(
+                    status_code=(
+                        status.HTTP_422_UNPROCESSABLE_ENTITY
+                    ),
+                    detail=(
+                        "동호회 커뮤니티는 "
+                        "club_id가 필요합니다."
+                    ),
+                )
+
+            if sport_id is not None:
+                raise HTTPException(
+                    status_code=(
+                        status.HTTP_422_UNPROCESSABLE_ENTITY
+                    ),
+                    detail=(
+                        "동호회 커뮤니티에서는 "
+                        "sport_id를 사용할 수 없습니다."
+                    ),
+                )
+
+            self.validate_club_member(
+                club_id=club_id,
+                user_id=user_id,
+            )
 
         # -------------------------------------------------
         # 검색어 정리
@@ -370,6 +453,7 @@ class PostService:
                 .get_posts_for_comment_sort(
                     board_type=board_type,
                     sport_id=sport_id,
+                    club_id=club_id,
                     search_type=search_type,
                     keyword=keyword,
                     blocked_user_ids=blocked_user_ids,
@@ -460,6 +544,7 @@ class PostService:
                 .get_posts(
                     board_type=board_type,
                     sport_id=sport_id,
+                    club_id=club_id,
                     offset=offset,
                     limit=size,
                     sort=sort,
@@ -480,6 +565,7 @@ class PostService:
                 .count_posts(
                     board_type=board_type,
                     sport_id=sport_id,
+                    club_id=club_id,
                     search_type=search_type,
                     keyword=keyword,
                     blocked_user_ids=blocked_user_ids,
@@ -730,6 +816,81 @@ class PostService:
         )
 
     # =====================================================
+    # 내가 작성한 게시글 조회
+    # =====================================================
+
+    def get_my_posts(
+        self,
+        user_id: str,
+    ):
+        # -------------------------------------------------
+        # 1. 현재 사용자가 작성한 게시글 조회
+        # -------------------------------------------------
+        posts = self.post_repository.get_my_posts(
+            user_id=user_id,
+        )
+
+        # -------------------------------------------------
+        # 2. 게시글이 없으면 빈 목록 반환
+        # -------------------------------------------------
+        if not posts:
+            return {
+                "items": []
+            }
+
+        # -------------------------------------------------
+        # 3. 게시글 ID 모으기
+        # -------------------------------------------------
+        post_ids = [
+            post["post_id"]
+            for post in posts
+        ]
+
+        # -------------------------------------------------
+        # 4. 게시글별 댓글 조회
+        # -------------------------------------------------
+        comment_rows = (
+            self.post_repository.get_comment_post_ids(
+                post_ids=post_ids,
+                blocked_user_ids=[],
+            )
+        )
+
+        # -------------------------------------------------
+        # 5. 게시글별 댓글 수 계산
+        # -------------------------------------------------
+        comment_count_by_post_id = Counter(
+            row["post_id"]
+            for row in comment_rows
+        )
+
+        # -------------------------------------------------
+        # 6. Frontend용 데이터 생성
+        # -------------------------------------------------
+        items = []
+
+        for post in posts:
+            items.append(
+                {
+                    "id": post["post_id"],
+                    "title": post["title"],
+                    "content": post["content"],
+                    "comments": comment_count_by_post_id.get(
+                        post["post_id"],
+                        0,
+                    ),
+                    "createdAt": post["created_at"],
+                }
+            )
+
+        # -------------------------------------------------
+        # 7. 최종 Response
+        # -------------------------------------------------
+        return {
+            "items": items
+        }
+
+    # =====================================================
     # 게시글 상세 조회
     # =====================================================
 
@@ -752,6 +913,10 @@ class PostService:
                 detail="게시글을 찾을 수 없습니다.",
             )
 
+        self.validate_club_post_access(
+            post=post,
+            user_id=user_id,
+        )
 
         # -------------------------------------------------
         # 2. 현재 사용자의 차단 목록 조회
@@ -1003,6 +1168,11 @@ class PostService:
                 detail="게시글을 찾을 수 없습니다.",
             )
 
+        self.validate_club_post_access(
+            post=post,
+            user_id=user_id,
+        )
+
 
         # -----------------------------------------------------
         # 2. 본인 게시글인지 확인
@@ -1194,6 +1364,42 @@ class PostService:
                 detail="공지사항 수정 권한 기능은 현재 준비 중입니다.",
             )
 
+        # 동호회 내부 커뮤니티
+        elif board_type == "club":
+
+            target_club_id = post.get("club_id")
+
+            if target_club_id is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="게시글을 찾을 수 없습니다.",
+                )
+
+            if update_data.get("sport_id") is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=(
+                        "동호회 커뮤니티에는 "
+                        "종목을 지정할 수 없습니다."
+                    ),
+                )
+
+            if (
+                "club_id" in update_data
+                and update_data["club_id"]
+                    != target_club_id
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=(
+                        "게시글의 동호회를 "
+                        "변경할 수 없습니다."
+                    ),
+                )
+
+            # 수정 요청에 기존 club_id가 포함되어도
+            # 실제 소속 동호회는 변경하지 않음
+            update_data.pop("club_id", None)
 
         # -----------------------------------------------------
         # 7. 수정 시간 갱신
@@ -1469,6 +1675,19 @@ class PostService:
                 detail="현재 공지사항 작성 권한을 확인할 관리자 구조가 없습니다.",
             )
 
+        # =================================================
+        # 동호회 내부 커뮤니티
+        # =================================================
+        elif post_data.board_type == "club":
+
+            sport_id = None
+            club_id = post_data.club_id
+
+            self.validate_club_member(
+                club_id=club_id,
+                user_id=user_id,
+            )
+
 
         # =================================================
         # DB 저장 데이터
@@ -1542,6 +1761,11 @@ class PostService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="게시글을 찾을 수 없습니다.",
             )
+
+        self.validate_club_post_access(
+            post=post,
+            user_id=user_id,
+        )
 
 
         # -----------------------------------------------------
