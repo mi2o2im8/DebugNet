@@ -813,7 +813,7 @@ function ClubDashboard() {
 
                     <section className="club-dashboard-section">
                         <div className="club-dashboard-section-heading">
-                            <h2>커뮤니티</h2>
+                            <h2>최근 소식</h2>
 
                             <button
                                 type="button"

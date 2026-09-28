@@ -208,6 +208,20 @@ function PostWrite() {
   const { clubId } = useParams();
   const isClubCommunity = Boolean(clubId);
 
+  const isManageCommunity =
+    location.pathname.includes(
+      "/manage/community"
+    );
+
+  const communityBasePath =
+    isClubCommunity
+      ? (
+          isManageCommunity
+            ? `/clubs/${clubId}/manage/community`
+            : `/clubs/${clubId}/community`
+        )
+      : "/community";
+
   // 수정할 게시글
   const editPost =
     location.state?.editPost || null;
@@ -907,9 +921,7 @@ function PostWrite() {
 
       // 확인 누른 뒤 상세 게시글로 이동
       navigate(
-        isClubCommunity
-          ? `/clubs/${clubId}/manage/community/post/${targetPostId}`
-          : `/community/post/${targetPostId}`,
+        `${communityBasePath}/post/${targetPostId}`,
         {
           replace: true,
         }

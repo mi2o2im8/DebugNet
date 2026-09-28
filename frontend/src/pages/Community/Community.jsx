@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
-import { FiBell } from "react-icons/fi";
-import {
-    useNavigate,
-    useParams
-} from "react-router-dom";
+import { FiBell, FiChevronLeft } from "react-icons/fi";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
 import { supabase } from "../../../supabaseClient";
@@ -53,9 +50,31 @@ const POSTS_PER_PAGE = 10;
 
 function Community() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { clubId } = useParams();
   const isClubCommunity = Boolean(clubId);
+
+  // 운영자용 동호회 커뮤니티 경로인지 확인
+  const isManageCommunity =
+    location.pathname.includes(
+      "/manage/community"
+    );
+
+  // 현재 화면에 맞는 커뮤니티 기본 경로
+  const communityBasePath =
+    isClubCommunity
+      ? (
+          isManageCommunity
+            ? `/clubs/${clubId}/manage/community`
+            : `/clubs/${clubId}/community`
+        )
+      : "/community";
+
+  const clubDashboardPath =
+    isManageCommunity
+      ? `/clubs/${clubId}/manage`
+      : `/clubs/${clubId}/home`;
 
   // 동호회 커뮤니티는 동호회 게시판, 그 외에는 자유게시판을 기본 선택
   const [selectedBoard, setSelectedBoard] = useState(isClubCommunity ? "club" : "free");
@@ -295,27 +314,16 @@ function Community() {
   // 새 게시글
   // =========================
   const handleWritePost = () => {
-      if (isClubCommunity) {
-          navigate(
-              `/clubs/${clubId}/manage/community/write`,
-              {
-                  state: {
-                      board: "club"
-                  }
-              }
-          );
-
-          return;
+    navigate(
+      `${communityBasePath}/write`,
+      {
+        state: {
+          board: isClubCommunity
+            ? "club"
+            : selectedBoard
+        }
       }
-
-      navigate(
-          "/community/write",
-          {
-              state: {
-                  board: selectedBoard
-              }
-          }
-      );
+    );
   };
 
 
@@ -373,25 +381,55 @@ function Community() {
   const visiblePages = getVisiblePages();
 
   return (
-    <div className="community-container">
+    <div
+      className={[
+        "community-container",
+        isClubCommunity
+          ? "club-community-mode"
+          : ""
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       {/* 상단 */}
       <header className="community-header">
-        <h1>
-          {isClubCommunity
-            ? "동호회 커뮤니티"
-            : "소통하기"}
-        </h1>
+        {isClubCommunity ? (
+          <div className="club-community-header-content">
+            <button
+              type="button"
+              className="club-community-back-btn"
+              aria-label="동호회 홈으로 돌아가기"
+              onClick={() =>
+                navigate(clubDashboardPath)
+              }
+            >
+              <FiChevronLeft />
+            </button>
 
-        <button
-          type="button"
-          className="community-notification-btn"
-          aria-label="알림"
-          onClick={() => {
-            alert("알림 기능 연결 예정입니다.");
-          }}
-        >
-          <FiBell />
-        </button>
+            <div className="club-community-header-title">
+              <h1>커뮤니티</h1>
+
+              <p>
+                동호회 회원들과 소식을 나눠보세요.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <h1>소통하기</h1>
+
+            <button
+              type="button"
+              className="community-notification-btn"
+              aria-label="알림"
+              onClick={() => {
+                alert("알림 기능 연결 예정입니다.");
+              }}
+            >
+              <FiBell />
+            </button>
+          </>
+        )}
       </header>
 
       <main className="community-main">
@@ -583,9 +621,7 @@ function Community() {
                   className="community-post-item"
                   onClick={() =>
                     navigate(
-                      isClubCommunity
-                        ? `/clubs/${clubId}/manage/community/post/${post.id}`
-                        : `/community/post/${post.id}`
+                      `${communityBasePath}/post/${post.id}`
                     )
                   }
                 >

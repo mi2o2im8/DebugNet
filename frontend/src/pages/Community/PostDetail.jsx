@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { FiMoreVertical, FiX } from "react-icons/fi";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
 import basicProfileImg from "../../assets/img/basic_profile_img.png";
@@ -73,6 +73,7 @@ const parsePostContent = (content) => {
 
 function PostDetail() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     postId,
@@ -81,6 +82,20 @@ function PostDetail() {
 
   const isClubCommunity =
     Boolean(clubId);
+
+  const isManageCommunity =
+    location.pathname.includes(
+      "/manage/community"
+    );
+
+  const communityBasePath =
+    isClubCommunity
+      ? (
+          isManageCommunity
+            ? `/clubs/${clubId}/manage/community`
+            : `/clubs/${clubId}/community`
+        )
+      : "/community";
 
   // 현재 로그인 사용자 UUID
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -416,9 +431,7 @@ function PostDetail() {
 
       // 삭제 성공 후 해당 커뮤니티 목록으로 이동
       navigate(
-        isClubCommunity
-          ? `/clubs/${clubId}/manage/community`
-          : "/community",
+        communityBasePath,
         {
           replace: true,
         }
@@ -922,11 +935,7 @@ function PostDetail() {
           <button
             type="button"
             onClick={() =>
-              navigate(
-                isClubCommunity
-                  ? `/clubs/${clubId}/manage/community`
-                  : "/community"
-              )
+              navigate(communityBasePath)
             }
           >
             커뮤니티로 돌아가기
@@ -1023,9 +1032,7 @@ function PostDetail() {
                           setShowPostMenu(false);
 
                           navigate(
-                            isClubCommunity
-                              ? `/clubs/${clubId}/manage/community/write`
-                              : "/community/write",
+                            `${communityBasePath}/write`,
                             {
                               state: {
                                 board: post.board,

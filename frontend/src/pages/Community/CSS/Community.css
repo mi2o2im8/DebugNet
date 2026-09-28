@@ -600,3 +600,92 @@
 
   border-radius: 2px;
 }
+
+/* ========================================
+   동호회 커뮤니티 전용 화면
+======================================== */
+
+.club-community-mode {
+  background-color: #f6faf8;
+}
+
+
+.club-community-mode .community-header {
+  min-height: 68px;
+
+  padding: 10px 16px;
+
+  background-color: #ffffff;
+
+  box-sizing: border-box;
+}
+
+
+.club-community-header-content {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  width: 100%;
+}
+
+
+.club-community-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  width: 38px;
+  height: 38px;
+
+  padding: 0;
+
+  border: 1px solid #dde5e1;
+  border-radius: 11px;
+
+  background-color: #ffffff;
+
+  color: #222222;
+
+  font-size: 22px;
+
+  cursor: pointer;
+}
+
+
+.club-community-back-btn:active {
+  background-color: #f2f7f4;
+}
+
+
+.club-community-header-title {
+  min-width: 0;
+}
+
+
+.club-community-header-title h1 {
+  margin: 0 0 4px;
+
+  font-size: 19px;
+  font-weight: 700;
+
+  color: #171717;
+}
+
+
+.club-community-header-title p {
+  margin: 0;
+
+  font-size: 11px;
+  line-height: 1.4;
+
+  color: #888888;
+}
+
+
+.club-community-mode .community-board-section {
+  padding-top: 16px;
+}

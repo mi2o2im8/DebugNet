@@ -399,6 +399,12 @@ function App() {
                 element={<Community />}
               />
 
+              {/* 동호회 이용자용 커뮤니티 게시글 작성 */}
+              <Route
+                path="/clubs/:clubId/community/write"
+                element={<PostWrite />}
+              />
+
               {/* 동호회 이용자용 커뮤니티 게시글 상세 */}
               <Route
                 path="/clubs/:clubId/community/post/:postId"
