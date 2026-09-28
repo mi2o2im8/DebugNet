@@ -8,6 +8,8 @@ import BackButton from "../../components/BackButton/BackButton";
 // ⭐ API
 import { authenticatedRequest } from "../../api/apiClient";
 import { getMyProfile } from "../../api/userApi";
+// ⭐ 내 동호회: 메인/하단 메뉴에서 이미 받아둔 결과가 있으면 재사용
+import { getMyClubShared } from "../../api/myClubCache";
 
 // ⭐ 신뢰점수 계산 (신뢰점수 페이지와 같은 계산)
 import { calculateTrustScore } from "../../utils/trustScore";
@@ -80,8 +82,21 @@ function Mypage() {
     // ⭐ 신뢰점수 (null = 아직 못 불러옴)
     const [trust, setTrust] = useState(null);
 
-    // ⭐ 페이지 전체 데이터 로딩 상태
-    const [loading, setLoading] = useState(true);
+    // =========================================================
+    // ⭐ 영역별 로딩 상태
+    //
+    // 예전: 세 API가 "모두" 끝나야 화면이 떴음
+    //       → 가장 느린 API만큼 빈 화면으로 기다림
+    // 지금: 화면은 바로 띄우고, 각 영역이 준비되는 대로 채움
+    // =========================================================
+    const [profileLoading, setProfileLoading] = useState(true);
+    const [clubsLoading, setClubsLoading] = useState(true);
+
+    // ⭐ 메인에서 저장해둔 닉네임 / 프로필 사진 (먼저 보여주기용)
+    const cachedNickname =
+        localStorage.getItem("playbridge_user_nickname") || "";
+    const cachedProfileImage =
+        localStorage.getItem("playbridge_profile_image") || "";
 
 
     // =========================================================
@@ -89,80 +104,62 @@ function Mypage() {
     // =========================================================
     useEffect(() => {
 
-        const fetchMypageData = async () => {
+        let isActive = true;
 
-            try {
+        // ---------------------------------------------
+        // 1. 내 정보 (닉네임 / 종목 / 지역)
+        // ---------------------------------------------
+        getMyProfile()
+            .then((profile) => {
+                if (isActive) setUserInfo(profile);
+            })
+            .catch((error) => {
+                console.error("⭐ 사용자 정보 API 오류:", error);
+                if (isActive) setUserInfo(null);
+            })
+            .finally(() => {
+                if (isActive) setProfileLoading(false);
+            });
 
-                // ⭐ 내 정보 + 내 동호회를 동시에 요청
-                // allSettled: 한쪽이 실패해도 다른 쪽은 화면에 표시
-                const [userResult, clubResult, activityResult] = await Promise.allSettled([
-                    getMyProfile(),
-                    authenticatedRequest("/api/clubs/my", {
-                        method: "GET",
-                    }),
-                    // ⭐ 신뢰점수 계산용
-                    authenticatedRequest("/api/users/me/activity", {
-                        method: "GET",
-                    }),
-                ]);
+        // ---------------------------------------------
+        // 2. 내 동호회 (가장 느린 API → 따로 불러오기)
+        // ---------------------------------------------
+        getMyClubShared()
+            .then((clubData) => {
+                if (isActive) setMyClubs(buildClubList(clubData));
+            })
+            .catch((error) => {
+                console.error("⭐ 내 동호회 API 오류:", error);
+                if (isActive) setMyClubs([]);
+            })
+            .finally(() => {
+                if (isActive) setClubsLoading(false);
+            });
 
-                if (userResult.status === "fulfilled") {
-                    console.log("⭐ 내 사용자 정보:", userResult.value);
-                    setUserInfo(userResult.value);
-                } else {
-                    console.error("⭐ 사용자 정보 API 오류:", userResult.reason);
-                    setUserInfo(null);
-                }
+        // ---------------------------------------------
+        // 3. 신뢰점수 (준비 전에는 "측정 중"으로 표시됨)
+        // ---------------------------------------------
+        authenticatedRequest("/api/users/me/activity", {
+            method: "GET",
+        })
+            .then((activity) => {
+                if (!isActive) return;
 
-                if (clubResult.status === "fulfilled") {
-
-                    setMyClubs(buildClubList(clubResult.value));
-
-                } else {
-
-                    console.error("⭐ 내 동호회 API 오류:", clubResult.reason);
-                    setMyClubs([]);
-
-                }
-
-                if (activityResult.status === "fulfilled") {
-
-                    setTrust(
-                        calculateTrustScore(
-                            activityResult.value.activities,
-                            activityResult.value.warnings
-                        )
-                    );
-
-                } else {
-
-                    console.error("⭐ 신뢰점수 API 오류:", activityResult.reason);
-                    setTrust(null);
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "마이페이지 정보 조회 오류:",
-                    error
+                setTrust(
+                    calculateTrustScore(
+                        activity.activities,
+                        activity.warnings
+                    )
                 );
+            })
+            .catch((error) => {
+                console.error("⭐ 신뢰점수 API 오류:", error);
+                if (isActive) setTrust(null);
+            });
 
-                // ⭐ 오류 시 빈 상태
-                setUserInfo(null);
-
-                setMyClubs([]);
-
-            } finally {
-
-                // ⭐ 모든 API 요청이 끝난 후 화면 표시
-                setLoading(false);
-
-            }
-
+        return () => {
+            isActive = false;
         };
-
-        fetchMypageData();
 
     }, []);
 
@@ -170,31 +167,25 @@ function Mypage() {
     // =========================================================
     // ⭐ 로딩 중
     // =========================================================
-    if (loading) {
-
-        return (
-            <div className="mypage-container">
-                <div className="mypage-loading">
-                    정보를 불러오는 중...
-                </div>
-            </div>
-        );
-
-    }
+    // ⭐ 전체 로딩 화면은 없앰 (영역별로 채워짐)
 
 
     // =========================================================
     // ⭐ 프로필 표시용 값
     // =========================================================
     const sportText =
-        userInfo?.sports?.length > 0
+        profileLoading
+            ? "불러오는 중..."
+            : userInfo?.sports?.length > 0
             ? userInfo.sports
                 .map((sport) => sport.sport_name)
                 .join(" · ")
             : "운동 종목 없음";
 
     const regionText =
-        userInfo?.regions?.length > 0
+        profileLoading
+            ? ""
+            : userInfo?.regions?.length > 0
             ? userInfo.regions.join(" · ")
             : "활동 지역 없음";
 
@@ -202,7 +193,8 @@ function Mypage() {
     // =========================================================
     // ⭐ 동호회 카드 클릭
     //
-    // 운영자 → 동호회 관리 / 멤버 → 동호회 상세
+    // 운영자 → 동호회 관리 / 멤버 → 동호회 이용자 대시보드
+    // (메인 홈의 내 동호회 카드와 같은 기준)
     // =========================================================
     const handleClubClick = (club) => {
 
@@ -211,7 +203,7 @@ function Mypage() {
         navigate(
             club.isOperator
                 ? `/clubs/${club.club_id}/manage`
-                : `/clubs/${club.club_id}`
+                : `/clubs/${club.club_id}/home`
         );
     };
 
@@ -303,7 +295,11 @@ function Mypage() {
                     <div className="profile-image">
 
                         <img
-                            src={userInfo?.profile_image || profileIcon}
+                            src={
+                                userInfo?.profile_image ||
+                                cachedProfileImage ||
+                                profileIcon
+                            }
                             alt="프로필"
                         />
 
@@ -313,7 +309,10 @@ function Mypage() {
                     {/* ⭐ 닉네임 (없으면 이름) */}
                     <p className="profile-name">
 
-                        {userInfo?.nickname || userInfo?.name || "사용자 이름"}
+                        {userInfo?.nickname ||
+                            userInfo?.name ||
+                            cachedNickname ||
+                            (profileLoading ? "" : "사용자 이름")}
 
                     </p>
 
@@ -370,7 +369,13 @@ function Mypage() {
                 {/* =================================================
                     ⭐ 내 동호회 슬라이드
                 ================================================= */}
-                {myClubs.length === 0 ? (
+                {clubsLoading ? (
+
+                    <div className="club-empty">
+                        동호회를 불러오는 중...
+                    </div>
+
+                ) : myClubs.length === 0 ? (
 
                     <div className="club-empty">
                         가입한 동호회가 없습니다.

@@ -16,6 +16,17 @@
     font-display: swap;
 }
 
+/* 모든 페이지: 들어올 때 부드럽게 나타나기 */
+@keyframes pb-page-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.page-transition {
+    animation: pb-page-fade 0.25s ease-out;
+}
+
+
 * {
     box-sizing: border-box;
 }

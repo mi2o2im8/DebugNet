@@ -912,3 +912,42 @@
 
     color: #7f8b9c;
 }
+
+/* =========================================================
+   ⭐ 내 동호회: 왼쪽 슬라이드 + 오른쪽 만들기 카드 고정
+========================================================= */
+
+.my-club-row {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+}
+
+/* 슬라이드 영역이 남은 공간을 모두 사용 */
+.my-club-row .my-club-list-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* 넘길 때 카드 단위로 딱딱 멈추게 */
+.my-club-list {
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+}
+
+.my-club-card {
+    scroll-snap-align: start;
+}
+
+/* 오른쪽 고정 만들기 카드 */
+.my-club-create-fixed {
+    flex: 0 0 88px !important;
+    min-width: 88px !important;
+    height: auto !important;
+
+    margin: 1px 0 7px;
+}
+
+.my-club-create-fixed p {
+    font-size: 11px;
+}

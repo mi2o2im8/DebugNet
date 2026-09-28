@@ -116,6 +116,9 @@ import NotificationSettings from './pages/Settings/NotificationSettings';
 // 챗봇 페이지
 import Chatbot from './pages/Chatbot/Chatbot';
 
+// 모든 페이지 화면이동시 애니메이션 적용
+import PageTransition from "./components/PageTransition";
+
 import './App.css'
 
 function App() {
@@ -126,452 +129,454 @@ function App() {
       <NotificationProvider>
 
         <SignupProvider>
+          <PageTransition>
+            <Routes>
 
-          <Routes>
+              {/* 시작 페이지 */}
+              <Route path='/' element={<Home />} />
 
-            {/* 시작 페이지 */}
-            <Route path='/' element={<Home />} />
+              {/* 로그인 페이지 */}
+              <Route path='/Login' element={<Login />} />
 
-            {/* 로그인 페이지 */}
-            <Route path='/Login' element={<Login />} />
+              {/* 동호회 가입 전 메인 페이지 */}
+              <Route path="/main" element={<Main />} />
 
-            {/* 동호회 가입 전 메인 페이지 */}
-            <Route path="/main" element={<Main />} />
+              {/* 가입 후 메인 홈 */}
+              <Route path="/mainhome" element={<MainHome />} />
 
-            {/* 가입 후 메인 홈 */}
-            <Route path="/mainhome" element={<MainHome />} />
+              {/* 회원가입 버튼 연동 */}
+              <Route path='/signup' element={<Signup />} />
 
-            {/* 회원가입 버튼 연동 */}
-            <Route path='/signup' element={<Signup />} />
-
-            {/* 기본 정보 입력 페이지 */}
-            <Route
-              path='/signup/basic'
-              element={<SignupProfile />}
-            />
-
-            {/* 운동 종목 선택 페이지 */}
-            <Route
-              path='/signup/basic/sport'
-              element={<SignupSport />}
-            />
-
-            {/* 운동 레벨 페이지 */}
-            <Route
-              path='/signup/basic/SignupSportLevel'
-              element={<SignupSportLevel />}
-            />
-
-            {/* 활동 가능 지역 및 거리 선택 */}
-            <Route
-              path='/signup/basic/SignupLocation'
-              element={<SignupLocation />}
-            />
-
-            {/* 활동 가능 시간 선택 */}
-            <Route
-              path='/signup/basic/SignupTime'
-              element={<SignupTime />}
-            />
-
-            {/* 활동 가능 시간 선택 */}
-            <Route
-              path='/signup/basic/SignupFrequency'
-              element={<SignupFrequency />}
-            />
-
-            {/* 동호회 선호 선택 */}
-            <Route
-              path='/signup/basic/SignupClubPreference'
-              element={<SignupClubPreference />}
-            />
-
-            {/* 월 회비 - 가입완료 마지막 페이지 */}
-            <Route
-              path='/signup/basic/SignupFee'
-              element={<SignupFee />}
-            />
-
-            <Route
-              path='/signup/basic/review'
-              element={<SignupReview />}
-            />
-
-            {/* =====================================================
-                ⭐ 동호회 찾기
-            ===================================================== */}
-
-            {/* 동호회 찾기 홈 화면 페이지 */}
-            <Route path='/clubs' element={<ClubHome />} />
-
-            {/* 전체 동호회 페이지 */}
-            <Route
-              path="/clubs/all"
-              element={<AllClub />}
-            />
-
-            {/* 회원 모집 중 페이지 */}
-            <Route
-              path="/clubs/recruit"
-              element={<ClubRecruit />}
-            />
-
-            {/* 게스트 모집 중 페이지 */}
-            <Route
-              path="/guest-recruit"
-              element={<GuestRecruit />}
-            />
-
-            {/* 게스트 모집 상세 페이지 */}
-            <Route
-              path="/guest-recruit/:eventId"
-              element={<GuestRecruitDetail />}
-            />
-
-            {/* 동호회 상세 페이지 */}
-            <Route
-              path="/clubs/:clubId"
-              element={<ClubDetail />}
-            />
-
-            {/* 동호회 이용자용 대시보드 */}
-            <Route
-              path="/clubs/:clubId/home"
-              element={<ClubUserDashboard />}
-            />
-
-            {/* 동호회 가입 페이지 */}
-            <Route
-              path="/clubs/:clubId/application"
-              element={<ClubApplication />}
-            />
-
-            {/* 동호회 참석 응답 */}
-            <Route
-              path="/clubs/:clubId/events/:eventId/attendance"
-              element={<ClubEventAttendance />}
-            />
-
-            {/* 동호회 만들기 페이지 */}
-            <Route
-              path="/clubs/create"
-              element={<ClubCreate />}
-            />
-
-            {/* =====================================================
-                ⭐ 커뮤니티
-            ===================================================== */}
-
-            {/* 커뮤니티 페이지 */}
-            <Route
-              path="/community"
-              element={<Community />}
-            />
-
-            {/* 커뮤니티 상세보기 */}
-            <Route
-              path="/community/post/:postId"
-              element={<PostDetail />}
-            />
-
-            {/* 커뮤니티 게시글 작성하기 */}
-            <Route
-              path="/community/write"
-              element={<PostWrite />}
-            />
-
-            {/* =====================================================
-                ⭐ 동호회 운영 기능
-            ===================================================== */}
-
-            {/* 동호회 운영 화면에 BottomNav 공통 적용 */}
-            <Route element={<ClubManageLayout />}>
-
-              {/* 동호회 운영 관리 홈 */}
+              {/* 기본 정보 입력 페이지 */}
               <Route
-                path="/clubs/:clubId/manage"
-                element={<ClubDashboard />}
+                path='/signup/basic'
+                element={<SignupProfile />}
               />
 
-              {/* 동호회 회원 관리 */}
+              {/* 운동 종목 선택 페이지 */}
               <Route
-                path="/clubs/:clubId/manage/members"
-                element={<ClubMemberManagement />}
+                path='/signup/basic/sport'
+                element={<SignupSport />}
               />
 
-              {/* 동호회 전체 일정 목록 */}
+              {/* 운동 레벨 페이지 */}
               <Route
-                path="/clubs/:clubId/manage/events"
-                element={<ClubEventList />}
+                path='/signup/basic/SignupSportLevel'
+                element={<SignupSportLevel />}
               />
 
-              {/* 동호회 새 일정 만들기 */}
+              {/* 활동 가능 지역 및 거리 선택 */}
               <Route
-                path="/clubs/:clubId/manage/events/new"
-                element={<ClubEventForm />}
+                path='/signup/basic/SignupLocation'
+                element={<SignupLocation />}
               />
 
-              {/* 동호회 일정 상세 */}
+              {/* 활동 가능 시간 선택 */}
               <Route
-                path="/clubs/:clubId/manage/events/:eventId"
-                element={<ClubEventDetail />}
+                path='/signup/basic/SignupTime'
+                element={<SignupTime />}
               />
 
-              {/* 동호회 일정 수정 */}
+              {/* 활동 가능 시간 선택 */}
               <Route
-                path="/clubs/:clubId/manage/events/:eventId/edit"
-                element={<ClubEventForm />}
+                path='/signup/basic/SignupFrequency'
+                element={<SignupFrequency />}
               />
 
-              {/* 동호회 일정 참가자 관리 */}
+              {/* 동호회 선호 선택 */}
               <Route
-                path="/clubs/:clubId/manage/events/:eventId/participants"
-                element={<ClubEventParticipants />}
+                path='/signup/basic/SignupClubPreference'
+                element={<SignupClubPreference />}
               />
 
-              {/* 동호회 회원 상세 */}
+              {/* 월 회비 - 가입완료 마지막 페이지 */}
               <Route
-                path="/clubs/:clubId/manage/members/:clubMemberId"
-                element={<ClubMemberDetail />}
+                path='/signup/basic/SignupFee'
+                element={<SignupFee />}
               />
 
-              {/* 동호회 팀 매칭 관리 홈 */}
               <Route
-                path="/clubs/:clubId/matches"
-                element={<MatchManagement />}
-              />
-
-              {/* 동호회 팀 매칭 목록 */}
-              <Route
-                path="/clubs/:clubId/matches/list"
-                element={<MatchManagementList />}
-              />
-
-              {/* 동호회 팀 매칭 상세 */}
-              <Route
-                path="/clubs/:clubId/matches/:clubMatchId"
-                element={<MatchManagementDetail />}
-              />
-
-              {/* 동호회 경기 결과 기록 */}
-              <Route
-                path="/clubs/:clubId/matches/:clubMatchId/record"
-                element={<MatchRecordWrite />}
-              />
-
-              {/* 동호회 경기 후기 작성 */}
-              <Route
-                path="/clubs/:clubId/matches/:clubMatchId/review"
-                element={<MatchReviewWrite />}
-              />
-
-              {/* 동호회 경기 후기 상세 */}
-              <Route
-                path="/clubs/:clubId/matches/:clubMatchId/review-detail"
-                element={<MatchReviewDetail />}
-              />
-
-              {/* 동호회 전용 커뮤니티 게시글 목록 */}
-              <Route
-                path="/clubs/:clubId/manage/community"
-                element={<Community />}
-              />
-
-              {/* 동호회 전용 커뮤니티 게시글 작성 */}
-              <Route
-                path="/clubs/:clubId/manage/community/write"
-                element={<PostWrite />}
-              />
-
-              {/* 동호회 전용 커뮤니티 게시글 상세 */}
-              <Route
-                path="/clubs/:clubId/manage/community/post/:postId"
-                element={<PostDetail />}
+                path='/signup/basic/review'
+                element={<SignupReview />}
               />
 
               {/* =====================================================
-                  동호회 이용자용 커뮤니티
+                  ⭐ 동호회 찾기
               ===================================================== */}
 
-              {/* 동호회 이용자용 커뮤니티 게시글 목록 */}
+              {/* 동호회 찾기 홈 화면 페이지 */}
+              <Route path='/clubs' element={<ClubHome />} />
+
+              {/* 전체 동호회 페이지 */}
               <Route
-                path="/clubs/:clubId/community"
+                path="/clubs/all"
+                element={<AllClub />}
+              />
+
+              {/* 회원 모집 중 페이지 */}
+              <Route
+                path="/clubs/recruit"
+                element={<ClubRecruit />}
+              />
+
+              {/* 게스트 모집 중 페이지 */}
+              <Route
+                path="/guest-recruit"
+                element={<GuestRecruit />}
+              />
+
+              {/* 게스트 모집 상세 페이지 */}
+              <Route
+                path="/guest-recruit/:eventId"
+                element={<GuestRecruitDetail />}
+              />
+
+              {/* 동호회 상세 페이지 */}
+              <Route
+                path="/clubs/:clubId"
+                element={<ClubDetail />}
+              />
+
+              {/* 동호회 이용자용 대시보드 */}
+              <Route
+                path="/clubs/:clubId/home"
+                element={<ClubUserDashboard />}
+              />
+
+              {/* 동호회 가입 페이지 */}
+              <Route
+                path="/clubs/:clubId/application"
+                element={<ClubApplication />}
+              />
+
+              {/* 동호회 참석 응답 */}
+              <Route
+                path="/clubs/:clubId/events/:eventId/attendance"
+                element={<ClubEventAttendance />}
+              />
+
+              {/* 동호회 만들기 페이지 */}
+              <Route
+                path="/clubs/create"
+                element={<ClubCreate />}
+              />
+
+              {/* =====================================================
+                  ⭐ 커뮤니티
+              ===================================================== */}
+
+              {/* 커뮤니티 페이지 */}
+              <Route
+                path="/community"
                 element={<Community />}
               />
 
-              {/* 동호회 이용자용 커뮤니티 게시글 작성 */}
+              {/* 커뮤니티 상세보기 */}
               <Route
-                path="/clubs/:clubId/community/write"
-                element={<PostWrite />}
-              />
-
-              {/* 동호회 이용자용 커뮤니티 게시글 상세 */}
-              <Route
-                path="/clubs/:clubId/community/post/:postId"
+                path="/community/post/:postId"
                 element={<PostDetail />}
               />
 
-              {/* =================================================
-                  ⭐ 팀 매칭
-              ================================================= */}
-
-              {/* 팀 매칭 홈 */}
+              {/* 커뮤니티 게시글 작성하기 */}
               <Route
-                path="/matches"
-                element={<MatchHome />}
+                path="/community/write"
+                element={<PostWrite />}
               />
 
-              {/* AI 상대팀 추천 */}
+              {/* =====================================================
+                  ⭐ 동호회 운영 기능
+              ===================================================== */}
+
+              {/* 동호회 운영 화면에 BottomNav 공통 적용 */}
+              <Route element={<ClubManageLayout />}>
+
+                {/* 동호회 운영 관리 홈 */}
+                <Route
+                  path="/clubs/:clubId/manage"
+                  element={<ClubDashboard />}
+                />
+
+                {/* 동호회 회원 관리 */}
+                <Route
+                  path="/clubs/:clubId/manage/members"
+                  element={<ClubMemberManagement />}
+                />
+
+                {/* 동호회 전체 일정 목록 */}
+                <Route
+                  path="/clubs/:clubId/manage/events"
+                  element={<ClubEventList />}
+                />
+
+                {/* 동호회 새 일정 만들기 */}
+                <Route
+                  path="/clubs/:clubId/manage/events/new"
+                  element={<ClubEventForm />}
+                />
+
+                {/* 동호회 일정 상세 */}
+                <Route
+                  path="/clubs/:clubId/manage/events/:eventId"
+                  element={<ClubEventDetail />}
+                />
+
+                {/* 동호회 일정 수정 */}
+                <Route
+                  path="/clubs/:clubId/manage/events/:eventId/edit"
+                  element={<ClubEventForm />}
+                />
+
+                {/* 동호회 일정 참가자 관리 */}
+                <Route
+                  path="/clubs/:clubId/manage/events/:eventId/participants"
+                  element={<ClubEventParticipants />}
+                />
+
+                {/* 동호회 회원 상세 */}
+                <Route
+                  path="/clubs/:clubId/manage/members/:clubMemberId"
+                  element={<ClubMemberDetail />}
+                />
+
+                {/* 동호회 팀 매칭 관리 홈 */}
+                <Route
+                  path="/clubs/:clubId/matches"
+                  element={<MatchManagement />}
+                />
+
+                {/* 동호회 팀 매칭 목록 */}
+                <Route
+                  path="/clubs/:clubId/matches/list"
+                  element={<MatchManagementList />}
+                />
+
+                {/* 동호회 팀 매칭 상세 */}
+                <Route
+                  path="/clubs/:clubId/matches/:clubMatchId"
+                  element={<MatchManagementDetail />}
+                />
+
+                {/* 동호회 경기 결과 기록 */}
+                <Route
+                  path="/clubs/:clubId/matches/:clubMatchId/record"
+                  element={<MatchRecordWrite />}
+                />
+
+                {/* 동호회 경기 후기 작성 */}
+                <Route
+                  path="/clubs/:clubId/matches/:clubMatchId/review"
+                  element={<MatchReviewWrite />}
+                />
+
+                {/* 동호회 경기 후기 상세 */}
+                <Route
+                  path="/clubs/:clubId/matches/:clubMatchId/review-detail"
+                  element={<MatchReviewDetail />}
+                />
+
+                {/* 동호회 전용 커뮤니티 게시글 목록 */}
+                <Route
+                  path="/clubs/:clubId/manage/community"
+                  element={<Community />}
+                />
+
+                {/* 동호회 전용 커뮤니티 게시글 작성 */}
+                <Route
+                  path="/clubs/:clubId/manage/community/write"
+                  element={<PostWrite />}
+                />
+
+                {/* 동호회 전용 커뮤니티 게시글 상세 */}
+                <Route
+                  path="/clubs/:clubId/manage/community/post/:postId"
+                  element={<PostDetail />}
+                />
+
+                {/* =====================================================
+                    동호회 이용자용 커뮤니티
+                ===================================================== */}
+
+                {/* 동호회 이용자용 커뮤니티 게시글 목록 */}
+                <Route
+                  path="/clubs/:clubId/community"
+                  element={<Community />}
+                />
+
+                {/* 동호회 이용자용 커뮤니티 게시글 작성 */}
+                <Route
+                  path="/clubs/:clubId/community/write"
+                  element={<PostWrite />}
+                />
+
+                {/* 동호회 이용자용 커뮤니티 게시글 상세 */}
+                <Route
+                  path="/clubs/:clubId/community/post/:postId"
+                  element={<PostDetail />}
+                />
+
+                {/* =================================================
+                    ⭐ 팀 매칭
+                ================================================= */}
+
+                {/* 팀 매칭 홈 */}
+                <Route
+                  path="/matches"
+                  element={<MatchHome />}
+                />
+
+                {/* AI 상대팀 추천 */}
+                <Route
+                  path="/matches/recommend"
+                  element={<MatchAIRecommend />}
+                />
+
+                {/* 경기 가능일 등록 */}
+                <Route
+                  path="/matches/availability/new"
+                  element={<MatchAvailabilityForm />}
+                />
+
+                {/* 경기 가능일 상세 */}
+                <Route
+                  path="/matches/availability/:availabilityId"
+                  element={<MatchAvailabilityDetail />}
+                />
+
+                {/* 경기 가능일 수정 */}
+                <Route
+                  path="/matches/availability/:availabilityId/edit"
+                  element={<MatchAvailabilityForm />}
+                />
+
+                {/* 해당 조건으로 상대팀 찾기 */}
+                <Route
+                  path="/matches/availability/:availabilityId/teams"
+                  element={<MatchTeamList />}
+                />
+
+                {/* 경기 등록 여부와 관계없이 상대팀 검색 */}
+                <Route
+                  path="/matches/teams"
+                  element={<MatchTeamList />}
+                />
+
+                {/* 상대팀 경기 가능일 상세 */}
+                <Route
+                  path="/matches/team/:availabilityId"
+                  element={<MatchTeamDetail />}
+                />
+
+              </Route>
+
+              {/* 내 정보 */}
+
+              {/* 내 정보 */}
               <Route
-                path="/matches/recommend"
-                element={<MatchAIRecommend />}
+                path="/mypage"
+                element={<Mypage />}
               />
 
-              {/* 경기 가능일 등록 */}
+              {/* 내 정보 수정 */}
               <Route
-                path="/matches/availability/new"
-                element={<MatchAvailabilityForm />}
+                path="/myinfoedit"
+                element={<MyInfoEdit />}
               />
 
-              {/* 경기 가능일 상세 */}
+              {/* 설정 페이지 */}
               <Route
-                path="/matches/availability/:availabilityId"
-                element={<MatchAvailabilityDetail />}
+                path="/mypage/settings"
+                element={<Settings />}
               />
 
-              {/* 경기 가능일 수정 */}
+              {/* 내 동호회 일정 전체보기 */}
+
+              {/* 기존 주소 */}
               <Route
-                path="/matches/availability/:availabilityId/edit"
-                element={<MatchAvailabilityForm />}
+                path="/myschedule"
+                element={<MySchedule />}
               />
 
-              {/* 해당 조건으로 상대팀 찾기 */}
+              {/* ⭐ 경기 후기 모아보기 */}
               <Route
-                path="/matches/availability/:availabilityId/teams"
-                element={<MatchTeamList />}
+                path="/my-reviews"
+                element={<MyReviews />}
               />
 
-              {/* 경기 등록 여부와 관계없이 상대팀 검색 */}
+              {/* ⭐ Main의 '내 동호회 전체 일정 보기' 버튼용 */}
               <Route
-                path="/matches/teams"
-                element={<MatchTeamList />}
+                path="/schedule"
+                element={<MySchedule />}
               />
 
-              {/* 상대팀 경기 가능일 상세 */}
+              {/* 내 활동 */}
               <Route
-                path="/matches/team/:availabilityId"
-                element={<MatchTeamDetail />}
+                path="/myactivity"
+                element={<MyActivity />}
               />
 
-            </Route>
+              {/* 신뢰점수 */}
+              <Route
+                path="/trustscore"
+                element={<TrustScore />}
+              />
 
-            {/* 내 정보 */}
+              {/* 내가 쓴 글/댓글 목록 */}
+              <Route
+                path="/mypostcomment"
+                element={<MyPostComment />}
+              />
 
-            {/* 내 정보 */}
-            <Route
-              path="/mypage"
-              element={<Mypage />}
-            />
+              {/* 찜한 동호회 */}
+              <Route
+                path="/favoriteClub"
+                element={<FavoriteClub />}
+              />
 
-            {/* 내 정보 수정 */}
-            <Route
-              path="/myinfoedit"
-              element={<MyInfoEdit />}
-            />
+              {/* 챗봇 */}
+              <Route
+                path="/chatbot"
+                element={<Chatbot />}
+              />
 
-            {/* 설정 페이지 */}
-            <Route
-              path="/mypage/settings"
-              element={<Settings />}
-            />
+              {/* 알림 */}
+              <Route
+                path="/notification"
+                element={<Notification />}
+              />
 
-            {/* 내 동호회 일정 전체보기 */}
+              {/* 알림 설정 */}
+              <Route
+                path="/notification-settings"
+                element={<NotificationSettings />}
+              />
 
-            {/* 기존 주소 */}
-            <Route
-              path="/myschedule"
-              element={<MySchedule />}
-            />
+              {/* 개인정보 관리 */}
+              <Route
+                path="/privacy"
+                element={<PrivacySettings />}
+              />
 
-            {/* ⭐ 경기 후기 모아보기 */}
-            <Route
-              path="/my-reviews"
-              element={<MyReviews />}
-            />
+              {/* 차단회원 관리 */}
+              <Route
+                path="/blocked-users"
+                element={<BlockedUsers />}
+              />
 
-            {/* ⭐ Main의 '내 동호회 전체 일정 보기' 버튼용 */}
-            <Route
-              path="/schedule"
-              element={<MySchedule />}
-            />
+              {/* 비밀번호 변경 */}
+              <Route
+                path="/change-password"
+                element={<ChangePassword />}
+              />
 
-            {/* 내 활동 */}
-            <Route
-              path="/myactivity"
-              element={<MyActivity />}
-            />
+              {/* FAQ */}
+              <Route
+                path="/faq"
+                element={<Faq />}
+              />
 
-            {/* 신뢰점수 */}
-            <Route
-              path="/trustscore"
-              element={<TrustScore />}
-            />
-
-            {/* 내가 쓴 글/댓글 목록 */}
-            <Route
-              path="/mypostcomment"
-              element={<MyPostComment />}
-            />
-
-            {/* 찜한 동호회 */}
-            <Route
-              path="/favoriteClub"
-              element={<FavoriteClub />}
-            />
-
-            {/* 챗봇 */}
-            <Route
-              path="/chatbot"
-              element={<Chatbot />}
-            />
-
-            {/* 알림 */}
-            <Route
-              path="/notification"
-              element={<Notification />}
-            />
-
-            {/* 알림 설정 */}
-            <Route
-              path="/notification-settings"
-              element={<NotificationSettings />}
-            />
-
-            {/* 개인정보 관리 */}
-            <Route
-              path="/privacy"
-              element={<PrivacySettings />}
-            />
-
-            {/* 차단회원 관리 */}
-            <Route
-              path="/blocked-users"
-              element={<BlockedUsers />}
-            />
-
-            {/* 비밀번호 변경 */}
-            <Route
-              path="/change-password"
-              element={<ChangePassword />}
-            />
-
-            {/* FAQ */}
-            <Route
-              path="/faq"
-              element={<Faq />}
-            />
-
-          </Routes>
+            </Routes>
+            
+          </PageTransition>
 
         </SignupProvider>
 
