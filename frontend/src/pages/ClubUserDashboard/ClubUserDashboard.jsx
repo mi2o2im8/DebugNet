@@ -28,6 +28,8 @@ import {
     useParams,
 } from "react-router-dom";
 
+import { supabase } from "../../../supabaseClient";
+
 import {
     getClubUserDashboard,
     getClubEvents,
@@ -105,6 +107,11 @@ function ClubUserDashboard() {
 
     // 일정 조회 오류
     const [eventError, setEventError] = useState("");
+
+    // 최근 소식 게시글
+    const [clubNews, setClubNews] = useState([]);
+    const [newsLoading, setNewsLoading] = useState(false);
+    const [newsError, setNewsError] = useState("");
 
     // 달력 상태
     const [currentMonth, setCurrentMonth] = useState(() => {
@@ -188,6 +195,91 @@ function ClubUserDashboard() {
             };
 
             loadClubEvents();
+
+            return () => {
+                cancelled = true;
+            };
+        }, [clubId]);
+
+        // -----------------------------------------------------
+        // 최근 소식 게시글 조회
+        // -----------------------------------------------------
+        useEffect(() => {
+            if (!clubId) {
+                return;
+            }
+
+            let cancelled = false;
+
+            const loadClubNews = async () => {
+                setNewsLoading(true);
+                setNewsError("");
+
+                try {
+                    const {
+                        data: { session },
+                    } = await supabase.auth.getSession();
+
+                    if (!session?.access_token) {
+                        return;
+                    }
+
+                    const params = new URLSearchParams({
+                        board_type: "club",
+                        club_id: String(clubId),
+                        page: "1",
+                        size: "3",
+                        sort: "latest",
+                    });
+
+                    const response = await fetch(
+                        `http://127.0.0.1:8000/api/posts?${params.toString()}`,
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${session.access_token}`,
+                            },
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const errorData =
+                            await response
+                                .json()
+                                .catch(() => null);
+
+                        throw new Error(
+                            errorData?.detail ||
+                            "최근 소식을 불러오지 못했습니다."
+                        );
+                    }
+
+                    const data = await response.json();
+
+                    if (!cancelled) {
+                        setClubNews(data.items || []);
+                    }
+                } catch (error) {
+                    console.error(
+                        "최근 소식 조회 실패:",
+                        error
+                    );
+
+                    if (!cancelled) {
+                        setClubNews([]);
+                        setNewsError(
+                            error.message ||
+                            "최근 소식을 불러오지 못했습니다."
+                        );
+                    }
+                } finally {
+                    if (!cancelled) {
+                        setNewsLoading(false);
+                    }
+                }
+            };
+
+            loadClubNews();
 
             return () => {
                 cancelled = true;
@@ -964,21 +1056,68 @@ function ClubUserDashboard() {
 
                         <button
                             type="button"
-                            onClick={() => handleQuickMenu("최근 소식")}
+                            onClick={() =>
+                                navigate(`/clubs/${clubId}/community`)
+                            }
                         >
                             전체 보기
                             <FiChevronRight />
                         </button>
                     </div>
 
-                    <div className="club-user-news-empty">
-                        <FiFileText />
-                        <p>
-                            새로운 공지나 소식이 등록되면
-                            <br />
-                            이곳에서 확인할 수 있습니다.
-                        </p>
-                    </div>
+                    {newsLoading ? (
+                        <div className="club-user-news-empty">
+                            <p>최근 소식을 불러오는 중입니다.</p>
+                        </div>
+                    ) : newsError ? (
+                        <div className="club-user-news-empty">
+                            <FiFileText />
+                            <p>{newsError}</p>
+                        </div>
+                    ) : clubNews.length === 0 ? (
+                        <div className="club-user-news-empty">
+                            <FiFileText />
+                            <p>
+                                새로운 공지나 소식이 등록되면
+                                <br />
+                                이곳에서 확인할 수 있습니다.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="club-user-news-list">
+                            {clubNews.map((post) => (
+                                <button
+                                    key={post.id}
+                                    type="button"
+                                    className="club-user-news-item"
+                                    onClick={() =>
+                                        navigate(
+                                            `/clubs/${clubId}/community/post/${post.id}`
+                                        )
+                                    }
+                                >
+                                    <div className="club-user-news-content">
+                                        <strong>
+                                            {post.title}
+                                        </strong>
+
+                                        <span>
+                                            {post.author} ·{" "}
+                                            {post.createdAt
+                                                ? new Date(
+                                                    post.createdAt
+                                                ).toLocaleDateString(
+                                                    "ko-KR"
+                                                )
+                                                : ""}
+                                        </span>
+                                    </div>
+
+                                    <FiChevronRight />
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </section>
 
             </div>
