@@ -1,0 +1,526 @@
+/* ========================================
+   AI 추천 안내
+======================================== */
+
+.match-ai-recommend-intro {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 12px;
+
+  margin-bottom: 24px;
+  padding: 15px;
+
+  border: 1px solid #d8eee4;
+  border-radius: 12px;
+
+  background: #f4fbf7;
+}
+
+
+.match-ai-recommend-intro-icon {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #20b26b;
+
+  font-size: 18px;
+}
+
+
+.match-ai-recommend-intro strong {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #222222;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+
+.match-ai-recommend-intro p {
+  margin: 0;
+
+  color: #777777;
+
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+
+/* ========================================
+   AI 추천 버튼
+======================================== */
+
+.match-ai-recommend-submit-wrap {
+  margin-top: 8px;
+}
+
+
+.match-ai-recommend-submit {
+  width: 100%;
+  height: 50px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #20b26b;
+
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+.match-ai-recommend-submit:active {
+  background: #1aa361;
+}
+
+
+.match-ai-recommend-submit:disabled {
+  opacity: 0.6;
+
+  cursor: default;
+}
+
+
+/* ========================================
+   추천 결과
+======================================== */
+
+.match-ai-result-section {
+  scroll-margin-top: 12px;
+
+  margin-top: 30px;
+  padding-top: 24px;
+
+  border-top: 1px solid #eeeeee;
+}
+
+
+.match-ai-result-section:empty {
+  display: none;
+}
+
+
+.match-ai-result-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  margin-bottom: 14px;
+}
+
+
+.match-ai-result-head span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #20b26b;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+
+.match-ai-result-head h2 {
+  margin: 0;
+
+  color: #222222;
+
+  font-size: 18px;
+}
+
+
+.match-ai-result-head > strong {
+  color: #888888;
+
+  font-size: 12px;
+}
+
+
+.match-ai-result-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+
+/* ========================================
+   추천 카드
+======================================== */
+
+.match-ai-result-card {
+  padding: 15px;
+
+  border: 1px solid #e6e6e6;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.035);
+}
+
+
+.match-ai-result-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+.match-ai-rank-badge {
+  padding: 5px 9px;
+
+  border-radius: 20px;
+
+  background: #eef9f3;
+
+  color: #16945a;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+
+.match-ai-fit-score {
+  color: #20b26b;
+
+  font-size: 19px;
+  font-weight: 800;
+}
+
+
+/* ========================================
+   동호회 정보
+======================================== */
+
+.match-ai-result-team {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 13px;
+}
+
+
+.match-ai-result-team img,
+.match-ai-profile-fallback {
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+}
+
+
+.match-ai-result-team img {
+  object-fit: cover;
+}
+
+
+.match-ai-profile-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #eef9f3;
+
+  color: #20b26b;
+
+  font-weight: 700;
+}
+
+
+.match-ai-result-team > div:last-child {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  min-width: 0;
+}
+
+
+.match-ai-result-team strong {
+  color: #222222;
+
+  font-size: 15px;
+}
+
+
+.match-ai-result-team span {
+  color: #888888;
+
+  font-size: 11px;
+}
+
+
+/* ========================================
+   경기 기본정보
+======================================== */
+
+.match-ai-result-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+
+  margin-top: 14px;
+  padding: 11px 12px;
+
+  border-radius: 9px;
+
+  background: #fafafa;
+}
+
+
+.match-ai-result-info > div {
+  display: flex;
+  justify-content: space-between;
+
+  gap: 14px;
+}
+
+
+.match-ai-result-info span {
+  color: #999999;
+
+  font-size: 10px;
+}
+
+
+.match-ai-result-info strong {
+  color: #333333;
+
+  font-size: 11px;
+
+  text-align: right;
+}
+
+
+/* ========================================
+   Match Fit 세부 점수
+======================================== */
+
+.match-ai-score-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 7px;
+
+  margin-top: 12px;
+}
+
+
+.match-ai-score-grid span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 30px;
+
+  border: 1px solid #d8eee4;
+  border-radius: 8px;
+
+  background: #f4fbf7;
+
+  color: #16945a;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   추천 이유
+======================================== */
+
+.match-ai-reasons {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  margin: 12px 0 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+
+.match-ai-reasons li {
+  position: relative;
+
+  padding-left: 16px;
+
+  color: #555555;
+
+  font-size: 11px;
+}
+
+
+.match-ai-reasons li::before {
+  content: "✓";
+
+  position: absolute;
+  left: 0;
+
+  color: #20b26b;
+
+  font-weight: 800;
+}
+
+
+/* ========================================
+   상세보기
+======================================== */
+
+.match-ai-detail-button {
+  width: 100%;
+  height: 42px;
+
+  margin-top: 14px;
+
+  border: 1px solid #20b26b;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #20b26b;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+/* ========================================
+   로딩 / 결과 없음
+======================================== */
+
+.match-ai-result-empty {
+  min-height: 130px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding: 22px 16px;
+
+  border: 1px dashed #dddddd;
+  border-radius: 12px;
+
+  background: #fafafa;
+
+  text-align: center;
+}
+
+
+.match-ai-result-empty strong {
+  color: #444444;
+
+  font-size: 13px;
+}
+
+
+.match-ai-result-empty p {
+  margin: 0;
+
+  color: #999999;
+
+  font-size: 11px;
+}
+
+/* ========================================
+   시간 상관없음
+======================================== */
+
+.match-ai-time-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 10px;
+}
+
+
+.match-ai-time-label-row > label {
+  margin-bottom: 0;
+}
+
+
+.match-ai-time-any {
+  padding: 6px 11px;
+
+  border: 1px solid #dddddd;
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  color: #777777;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.match-ai-time-any.active {
+  border-color: #20b26b;
+
+  background: #eef9f3;
+
+  color: #16945a;
+}
+
+
+.match-ai-time-any-guide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 48px;
+
+  border: 1px dashed #cfe8da;
+  border-radius: 10px;
+
+  background: #f7fcf9;
+
+  color: #16945a;
+
+  font-size: 12px;
+}

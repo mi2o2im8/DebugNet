@@ -1219,3 +1219,40 @@
 .my-match-card:active {
   background: #f7faf8;
 }
+
+/* ========================================
+   AI 상대팀 추천 버튼 활성화
+======================================== */
+
+.match-ai-recommend-button {
+  width: 100%;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  opacity: 1;
+}
+
+
+.match-ai-recommend-button:hover,
+.match-ai-recommend-button:active {
+  border-color: #bfe7d2;
+
+  background-color: #f4fbf7;
+}
+
+
+.match-ai-recommend-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+
+.match-ai-recommend-arrow {
+  flex-shrink: 0;
+
+  color: #20b26b;
+
+  font-size: 18px;
+}

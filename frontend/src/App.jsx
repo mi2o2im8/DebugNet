@@ -47,6 +47,7 @@ import MatchAvailabilityForm from "./pages/Match/MatchAvailabilityForm";
 import MatchAvailabilityDetail from "./pages/Match/MatchAvailabilityDetail";
 import MatchTeamList from "./pages/Match/MatchTeamList";
 import MatchTeamDetail from "./pages/Match/MatchTeamDetail";
+import MatchAIRecommend from "./pages/Match/MatchAIRecommend";
 
 import ClubManageLayout from "./layouts/ClubManageLayout";
 
@@ -396,6 +397,12 @@ function App() {
               <Route
                 path="/matches"
                 element={<MatchHome />}
+              />
+
+              {/* AI 상대팀 추천 */}
+              <Route
+                path="/matches/recommend"
+                element={<MatchAIRecommend />}
               />
 
               {/* 경기 가능일 등록 */}

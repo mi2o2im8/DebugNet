@@ -613,29 +613,38 @@ function MatchHome() {
         )}
 
 
-        {/* ML은 추후 연결 */}
-        <section
-          className="match-ai-placeholder"
-          aria-disabled="true"
+        {/* ========================================
+            AI 상대팀 추천
+
+            클릭하면 사용자가 원하는 경기 조건을
+            직접 입력하는 추천 페이지로 이동한다.
+        ======================================== */}
+        <button
+          type="button"
+          className="match-ai-placeholder match-ai-recommend-button"
+          onClick={() =>
+            navigate("/matches/recommend")
+          }
         >
           <div className="match-ai-icon">
             <FiZap />
           </div>
 
-          <div>
+          <div className="match-ai-recommend-copy">
             <strong>
               AI 상대팀 추천
             </strong>
 
             <p>
-              Match Fit 완성 후 연결됩니다.
+              원하는 경기 조건을 입력하면
+              잘 맞는 상대팀을 추천해드려요.
             </p>
           </div>
 
-          <span className="match-coming-soon">
-            준비중
-          </span>
-        </section>
+          <FiChevronRight
+            className="match-ai-recommend-arrow"
+          />
+        </button>
 
 
         {/* 날짜별 상대팀 목록 */}

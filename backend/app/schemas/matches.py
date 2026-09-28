@@ -495,6 +495,224 @@ class MatchAvailabilityListResponse(BaseModel):
     total_count: int
 
 # =========================================================
+# AI 상대팀 추천 Request
+#
+# POST /api/matches/recommendations
+#
+# 경기 모집글을 새로 저장하는 Request가 아니라
+# 사용자가 원하는 경기 조건을 Match Fit에 전달하는 용도다.
+# =========================================================
+
+class MatchRecommendationRequest(BaseModel):
+
+    # 추천 받고 싶은 종목
+    sport_id: int = Field(
+        gt=0,
+    )
+
+    # 원하는 경기 날짜
+    match_date: date
+
+    # 원하는 경기 시간
+    start_time: time
+
+    end_time: time
+
+    # True이면 특정 경기시간을 선호하지 않음
+    time_flexible: bool = False
+
+    # 원하는 경기 인원
+    required_players: int = Field(
+        ge=1,
+        le=100,
+    )
+
+    # 초급 / 중급 / 상급
+    skill_level: MatchSkillLevel
+
+    # 원하는 지역
+    region: str = Field(
+        min_length=1,
+        max_length=30,
+    )
+
+    # -----------------------------------------------------
+    # 경기장
+    #
+    # 장소를 선택해서 위도/경도까지 보내면
+    # Match Fit이 실제 거리를 계산한다.
+    #
+    # 좌표가 없으면 region을 대신 사용한다.
+    # -----------------------------------------------------
+
+    location_name: str | None = Field(
+        default=None,
+        max_length=100,
+    )
+
+    address: str | None = Field(
+        default=None,
+        max_length=300,
+    )
+
+    latitude: float | None = Field(
+        default=None,
+        ge=-90,
+        le=90,
+    )
+
+    longitude: float | None = Field(
+        default=None,
+        ge=-180,
+        le=180,
+    )
+
+    # 추천 개수
+    limit: int = Field(
+        default=5,
+        ge=1,
+        le=10,
+    )
+
+
+    # =====================================================
+    # 지역 문자열 정리
+    # =====================================================
+
+    @field_validator(
+        "region",
+    )
+    @classmethod
+    def strip_recommendation_region(
+        cls,
+        value: str,
+    ) -> str:
+
+        stripped_value = (
+            value.strip()
+        )
+
+        if not stripped_value:
+
+            raise ValueError(
+                "지역은 공백일 수 없습니다."
+            )
+
+        return stripped_value
+
+
+    # =====================================================
+    # 선택 문자열 정리
+    # =====================================================
+
+    @field_validator(
+        "location_name",
+        "address",
+    )
+    @classmethod
+    def strip_recommendation_optional_strings(
+        cls,
+        value: str | None,
+    ) -> str | None:
+
+        if value is None:
+            return None
+
+        stripped_value = (
+            value.strip()
+        )
+
+        return (
+            stripped_value
+            or None
+        )
+
+
+    # =====================================================
+    # 시작 / 종료 시간 검사
+    # =====================================================
+
+    @model_validator(
+        mode="after"
+    )
+    def validate_recommendation_time_range(
+        self,
+    ):
+
+        if (
+            self.end_time
+            <= self.start_time
+        ):
+
+            raise ValueError(
+                "종료 시간은 시작 시간보다 늦어야 합니다."
+            )
+
+        return self
+
+
+# =========================================================
+# Match Fit 세부 점수
+# =========================================================
+
+class MatchRecommendationScoreDetail(
+    BaseModel
+):
+
+    time: float
+
+    distance: float
+
+    skill: float
+
+    players: float
+
+
+# =========================================================
+# AI 상대팀 추천 단건 Response
+#
+# 기존 경기 모집글 정보
+# +
+# Match Fit 결과
+# =========================================================
+
+class MatchRecommendationItemResponse(
+    MatchAvailabilityResponse
+):
+
+    # 최종 Match Fit 점수
+    match_fit_score: float
+
+    # 희망 장소와 상대 경기장 사이 거리
+    distance_km: float | None = None
+
+    # 예상 이동시간
+    estimated_travel_minutes: int | None = None
+
+    # 항목별 점수
+    score_detail: (
+        MatchRecommendationScoreDetail
+    )
+
+    # 추천 이유
+    reasons: list[str]
+
+
+# =========================================================
+# AI 상대팀 추천 목록 Response
+# =========================================================
+
+class MatchRecommendationResponse(
+    BaseModel
+):
+
+    items: list[
+        MatchRecommendationItemResponse
+    ]
+
+    total_count: int
+
+# =========================================================
 # 매칭 신청 가능한 내 동호회
 # =========================================================
 
@@ -1090,21 +1308,3 @@ class MatchReviewDetailResponse(BaseModel):
 
     # 선택 후기 내용
     content: str | None = None
-
-#매칭 추천
-class MatchRecommendationRequest(BaseModel):
-    sport_id: int
-    match_date: date
-    start_time: time
-    end_time: time
-    region: str
-
-    location_name: str | None = None
-    address: str | None = None
-    latitude: float | None = None
-    longitude: float | None = None
-
-    skill_level: MatchSkillLevel
-    required_players: int
-
-    limit: int = 5

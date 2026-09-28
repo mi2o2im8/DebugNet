@@ -34,6 +34,8 @@ from app.schemas.matches import (
     MatchReviewCreateRequest,
     MatchReviewCreateResponse,
     MatchReviewDetailResponse,
+    MatchRecommendationRequest,
+    MatchRecommendationResponse,
 )
 
 from app.services.match_service import (
@@ -375,6 +377,105 @@ def get_available_matches(
             detail=(
                 "경기 가능일 목록 조회 중 오류가 발생했습니다."
             ),
+        ) from error
+
+# =========================================================
+# AI 상대팀 추천
+#
+# POST /api/matches/recommendations
+#
+# 사용자가 입력한 희망 경기 조건을 DB에 저장하지 않고
+# 현재 open 상태의 경기들과 Match Fit으로 비교한다.
+# =========================================================
+
+@router.post(
+    "/recommendations",
+    response_model=MatchRecommendationResponse,
+)
+def recommend_matches(
+
+    request_data:
+        MatchRecommendationRequest,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+
+    match_service = (
+        MatchService()
+    )
+
+    try:
+
+        return (
+            match_service
+            .get_match_recommendations(
+
+                user_id=user_id,
+
+                request_data=(
+                    request_data
+                ),
+            )
+        )
+
+
+    # -----------------------------------------------------
+    # 없는 종목
+    # -----------------------------------------------------
+
+    except LookupError as error:
+
+        raise HTTPException(
+
+            status_code=(
+                status.HTTP_404_NOT_FOUND
+            ),
+
+            detail=str(error),
+
+        ) from error
+
+
+    # -----------------------------------------------------
+    # 지난 날짜 등 잘못된 입력
+    # -----------------------------------------------------
+
+    except ValueError as error:
+
+        raise HTTPException(
+
+            status_code=(
+                status.HTTP_400_BAD_REQUEST
+            ),
+
+            detail=str(error),
+
+        ) from error
+
+
+    # -----------------------------------------------------
+    # 그 외 서버/DB 오류
+    # -----------------------------------------------------
+
+    except Exception as error:
+
+        print(
+            "AI 상대팀 추천 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+
+            detail=(
+                "AI 상대팀 추천 중 오류가 발생했습니다."
+            ),
+
         ) from error
 
 

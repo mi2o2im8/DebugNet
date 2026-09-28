@@ -28,7 +28,6 @@ from app.schemas.club_events import (
     ClubEventGuestDecisionRequest,
     ClubEventGuestDecisionResponse,
     ClubEventGuestApplyResponse,
-    ClubEventGuestApplicationResponse,
     ClubEventParticipantCancelResponse,
 )
 
@@ -2801,7 +2800,7 @@ class ClubEventService:
         club_id: int,
         event_id: int,
         user_id: str,
-    ) -> ClubEventGuestApplicationResponse:
+    ) -> ClubEventGuestApplyResponse:
         event = (
             self.event_repository
             .find_event_by_id(
@@ -2917,7 +2916,7 @@ class ClubEventService:
             )
         )
 
-        return ClubEventGuestApplicationResponse(
+        return ClubEventGuestApplyResponse(
             event_id=event_id,
             event_participant_id=int(
                 participant[
@@ -2939,7 +2938,7 @@ class ClubEventService:
         club_id: int,
         event_id: int,
         user_id: str,
-    ) -> ClubEventGuestApplicationResponse:
+    ) -> ClubEventGuestApplyResponse:
         event = (
             self.event_repository
             .find_event_by_id(
@@ -2962,7 +2961,7 @@ class ClubEventService:
         )
 
         if participant is None:
-            return ClubEventGuestApplicationResponse(
+            return ClubEventGuestApplyResponse(
                 event_id=event_id,
                 event_participant_id=None,
                 participation_status=None,
@@ -2980,7 +2979,7 @@ class ClubEventService:
             "status"
         ]
 
-        return ClubEventGuestApplicationResponse(
+        return ClubEventGuestApplyResponse(
             event_id=event_id,
             event_participant_id=int(
                 participant[
@@ -3004,7 +3003,7 @@ class ClubEventService:
         club_id: int,
         event_id: int,
         user_id: str,
-    ) -> ClubEventGuestApplicationResponse:
+    ) -> ClubEventGuestApplyResponse:
         event = (
             self.event_repository
             .find_event_by_id(
@@ -3044,7 +3043,7 @@ class ClubEventService:
             )
         )
 
-        return ClubEventGuestApplicationResponse(
+        return ClubEventGuestApplyResponse(
             event_id=event_id,
             event_participant_id=int(
                 cancelled_participant[

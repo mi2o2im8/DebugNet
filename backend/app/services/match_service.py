@@ -43,6 +43,14 @@ from app.schemas.matches import (
     MatchReviewCreateRequest,
     MatchReviewCreateResponse,
     MatchReviewDetailResponse,
+    MatchRecommendationRequest,
+    MatchRecommendationResponse,
+    MatchRecommendationItemResponse,
+    MatchRecommendationScoreDetail,
+)
+
+from app.ml.match_fit import (
+    calculate_match_fit,
 )
 
 # =========================================================
@@ -1764,6 +1772,312 @@ class MatchService:
         return MatchAvailabilityListResponse(
             items=items,
             total_count=len(items),
+        )
+
+    # =========================================================
+    # AI 상대팀 추천
+    #
+    # POST /api/matches/recommendations
+    #
+    # 사용자가 입력한 희망 경기 조건을 DB에 저장하지 않고,
+    # 현재 모집 중인 상대 경기와 Match Fit으로 비교한다.
+    #
+    # 기존 get_available_matches()를 재사용하므로
+    # Repository 조회 로직을 새로 만들 필요가 없다.
+    # =========================================================
+
+    def get_match_recommendations(
+        self,
+        user_id: str,
+        request_data: MatchRecommendationRequest,
+    ) -> MatchRecommendationResponse:
+
+
+        # -----------------------------------------------------
+        # 1. 지난 날짜 추천 방지
+        # -----------------------------------------------------
+
+        if (
+            request_data.match_date
+            < date.today()
+        ):
+
+            raise ValueError(
+                "지난 날짜로는 상대팀을 추천받을 수 없습니다."
+            )
+
+
+        # -----------------------------------------------------
+        # 2. 기존 상대팀 조회 기능 재사용
+        #
+        # get_available_matches()가 이미:
+        #
+        # open 상태
+        # +
+        # 같은 날짜
+        # +
+        # 같은 종목
+        # +
+        # 내 동호회 제외
+        #
+        # 를 처리한다.
+        # -----------------------------------------------------
+
+        available_matches = (
+            self.get_available_matches(
+
+                user_id=user_id,
+
+                match_date=(
+                    request_data.match_date
+                ),
+
+                sport_id=(
+                    request_data.sport_id
+                ),
+
+                # 지역은 Hard Filter 하지 않는다.
+                # Match Fit 거리점수에서 비교한다.
+                region=None,
+            )
+        )
+
+
+        # 후보가 없으면 빈 목록
+        if not available_matches.items:
+
+            return (
+                MatchRecommendationResponse(
+                    items=[],
+                    total_count=0,
+                )
+            )
+
+
+        # -----------------------------------------------------
+        # 3. Match Fit에 전달할 희망 조건
+        # -----------------------------------------------------
+
+        request_condition = {
+
+            "start_time":
+                request_data.start_time,
+
+            "end_time":
+                request_data.end_time,
+
+            "time_flexible":
+                request_data.time_flexible,
+
+            "required_players":
+                request_data.required_players,
+
+            "skill_level":
+                request_data.skill_level,
+
+            "region":
+                request_data.region,
+
+            "latitude":
+                request_data.latitude,
+
+            "longitude":
+                request_data.longitude,
+        }
+
+
+        # -----------------------------------------------------
+        # 4. 후보마다 Match Fit 계산
+        # -----------------------------------------------------
+
+        recommendation_items = []
+
+
+        for availability in (
+            available_matches.items
+        ):
+
+            # ---------------------------------------------
+            # Pydantic 객체를 일반 dict로 변환
+            # ---------------------------------------------
+
+            candidate = (
+                availability.model_dump()
+            )
+
+
+            # ---------------------------------------------
+            # 실제 Match Fit 계산
+            # ---------------------------------------------
+
+            fit_result = (
+                calculate_match_fit(
+
+                    request_condition=(
+                        request_condition
+                    ),
+
+                    candidate=(
+                        candidate
+                    ),
+                )
+            )
+
+
+            # ---------------------------------------------
+            # 시간 Hard Filter
+            #
+            # 시간이 전혀 겹치지 않는데
+            # 상대팀도 시간 협의가 불가능하면
+            # 추천하지 않는다.
+            # ---------------------------------------------
+
+            # =============================================
+            # 시간이 상관없는 사용자는
+            # 시간 불일치로 후보를 제거하지 않는다.
+            # =============================================
+
+            if (
+                not request_data.time_flexible
+
+                and fit_result[
+                    "score_detail"
+                ][
+                    "time"
+                ]
+                <= 0
+
+                and not candidate.get(
+                    "time_negotiable",
+                    False,
+                )
+            ):
+
+                continue
+
+
+            score_detail = (
+                fit_result[
+                    "score_detail"
+                ]
+            )
+
+
+            # ---------------------------------------------
+            # 기존 경기 모집글 정보
+            # +
+            # Match Fit 결과
+            # ---------------------------------------------
+
+            recommendation_items.append(
+
+                MatchRecommendationItemResponse(
+
+                    # 기존 경기 모집글 Response 재사용
+                    **availability.model_dump(),
+
+                    # 최종 Match Fit 점수
+                    match_fit_score=(
+                        fit_result[
+                            "score"
+                        ]
+                    ),
+
+                    # 예상 거리
+                    distance_km=(
+                        fit_result[
+                            "distance_km"
+                        ]
+                    ),
+
+                    # 예상 이동시간
+                    estimated_travel_minutes=(
+                        fit_result[
+                            "estimated_travel_minutes"
+                        ]
+                    ),
+
+                    # 항목별 점수
+                    score_detail=(
+
+                        MatchRecommendationScoreDetail(
+
+                            time=(
+                                score_detail[
+                                    "time"
+                                ]
+                            ),
+
+                            distance=(
+                                score_detail[
+                                    "distance"
+                                ]
+                            ),
+
+                            skill=(
+                                score_detail[
+                                    "skill"
+                                ]
+                            ),
+
+                            players=(
+                                score_detail[
+                                    "players"
+                                ]
+                            ),
+                        )
+                    ),
+
+                    # 추천 이유
+                    reasons=(
+                        fit_result[
+                            "reasons"
+                        ]
+                    ),
+                )
+            )
+
+
+        # -----------------------------------------------------
+        # 5. 높은 Match Fit 점수순 정렬
+        # -----------------------------------------------------
+
+        recommendation_items.sort(
+
+            key=lambda item:
+                item.match_fit_score,
+
+            reverse=True,
+        )
+
+
+        # -----------------------------------------------------
+        # 6. Top-N
+        #
+        # 기본값 = 5
+        # 최대 = 10
+        # -----------------------------------------------------
+
+        recommendation_items = (
+            recommendation_items[
+                :request_data.limit
+            ]
+        )
+
+
+        # -----------------------------------------------------
+        # 7. 최종 응답
+        # -----------------------------------------------------
+
+        return MatchRecommendationResponse(
+
+            items=(
+                recommendation_items
+            ),
+
+            total_count=len(
+                recommendation_items
+            ),
         )
 
 

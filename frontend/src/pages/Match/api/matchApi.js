@@ -94,6 +94,25 @@ export const getMatchAvailabilities = ({
   );
 };
 
+// ========================================
+// AI 상대팀 추천
+//
+// 추천 페이지에서 입력한 조건을
+// DB에 경기로 등록하지 않고
+// Match Fit 계산용으로만 백엔드에 전달한다.
+// ========================================
+export const getMatchRecommendations = (
+  requestData
+) => {
+  return authenticatedRequest(
+    "/api/matches/recommendations",
+    {
+      method: "POST",
+      body: requestData,
+    }
+  );
+};
+
 
 // ========================================
 // 경기 가능일 상세 조회
