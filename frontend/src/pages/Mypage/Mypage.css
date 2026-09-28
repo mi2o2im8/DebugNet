@@ -868,3 +868,24 @@
         font-size: 14px;
     }
 }
+
+/* ⭐ 프로필 카드: 글자가 길어져도 카드 밖으로 안 나가게 */
+.profile-card {
+    height: auto;
+    min-height: 82px;
+}
+
+/* 가운데 칸 글자 왼쪽 정렬 + 칸 밖으로 안 넘치게 */
+.profile-name,
+.profile-sports,
+.profile-region {
+    min-width: 0;
+    text-align: left;
+}
+
+/* 지역이 길면 한 줄로 자르고 … 표시 */
+.profile-region {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

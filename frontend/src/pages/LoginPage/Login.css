@@ -326,3 +326,43 @@
 .signup-text a:hover {
     text-decoration: underline;
 }
+
+.remember-id {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #555;
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-id input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* ⭐ 로그인 체크박스: 동호회 선호 페이지와 같은 스타일 */
+.remember-id input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+
+    margin: 0;
+
+    accent-color: #01A17F;
+
+    cursor: pointer;
+}
+
+/* ⭐ 아이디 기억하기 + 자동 로그인 나란히 */
+.login-options {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+}
+
+.login-options .remember-id {
+    width: auto;
+}

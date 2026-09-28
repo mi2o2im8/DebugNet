@@ -249,7 +249,7 @@ body {
 .signup-header {
     width: 320px;
 
-    margin: 120px auto 35px;
+    margin: 100px auto 35px; /* ⭐ 120px → 100px 제목 위로 */
 }
 
 .signup-header h2 {
@@ -289,7 +289,7 @@ body {
     /* ⭐ 상단 고정 헤더(60px) 아래에서 시작 */
     margin: 60px auto 35px;
 
-    padding-top: 30px;
+    padding-top: 10px; /* ⭐ 30px → 10px 제목 위로 */
 
     box-sizing: border-box;
 }
@@ -328,7 +328,7 @@ body {
     /* ⭐ 상단 고정 헤더 아래에서 시작 */
     margin: 60px auto 35px;
 
-    padding-top: 30px;
+    padding-top: 10px; /* ⭐ 30px → 10px 제목 위로 */
 
     box-sizing: border-box;
 }
@@ -367,7 +367,7 @@ body {
     /* ⭐ 상단 고정 헤더 아래에서 시작 */
     margin: 60px auto 35px;
 
-    padding-top: 30px;
+    padding-top: 10px; /* ⭐ 30px → 10px 제목 위로 */
 
     box-sizing: border-box;
 }
@@ -406,7 +406,7 @@ body {
     /* ⭐ 상단 고정 헤더 아래에서 시작 */
     margin: 60px auto 35px;
 
-    padding-top: 30px;
+    padding-top: 10px; /* ⭐ 30px → 10px 제목 위로 */
 
     box-sizing: border-box;
 }
@@ -445,7 +445,7 @@ body {
     /* ⭐ 상단 고정 헤더 아래에서 시작 */
     margin: 60px auto 35px;
 
-    padding-top: 30px;
+    padding-top: 10px; /* ⭐ 30px → 10px 제목 위로 */
 
     box-sizing: border-box;
 }
@@ -460,6 +460,17 @@ body {
     color: #222;
 
     /* ⭐ 큰 제목 왼쪽 정렬 */
+    text-align: left;
+}
+
+.signup-header06 p {
+    margin: 6px 0 0 5px;
+
+    font-size: 15px;
+    color: #777;
+
+    line-height: 1.5;
+
     text-align: left;
 }
 
@@ -484,7 +495,7 @@ body {
 
     /* ⭐ 상단 고정 헤더 아래에서 시작 */
     margin: 60px auto 35px;
-    padding-top: 30px;
+    padding-top: 10px; /* ⭐ 30px → 10px 제목 위로 */
     box-sizing: border-box;
 }
 
@@ -890,23 +901,27 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 12px; /* ⭐ 20px → 12px */
 }
 
 
 /* ⭐ 프로필 이미지 위치 영역 */
 
 .profile-image-wrapper {
-    position: relative;
-    top: -15px;
-    width: 100px;
-    height: 100px;
+    position: relative; /* ⭐ 삭제 버튼(×) 위치 기준 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0 0; /* ⭐ 아래 여백 제거 → 선택 버튼이 사진 가까이 */
 }
 
 
 /* ⭐ 프로필 이미지 */
 
-.profile-image {
+/* ⭐ Mypage.css에도 .profile-image(45px)가 있어서 덮어써지므로
+      wrapper 안의 이미지로 범위를 좁혀 우선순위를 높임 */
+.profile-image-wrapper .profile-image {
     width: 120px;
     height: 120px;
 
@@ -914,6 +929,9 @@ body {
     object-fit: cover;
 
     display: block;
+    flex-shrink: 0;
+
+    background: none;
 }
 
 
@@ -1014,8 +1032,8 @@ body {
 .profile-image-remove {
     position: absolute;
 
-    top: -5px;
-    right: -40px;
+    top: 0;
+    right: 0;
 
     width: 28px;
     height: 28px;
@@ -1130,6 +1148,8 @@ body {
 .birth-box p {
     margin: 18px 0 8px;
 
+    text-align: left;
+
     font-size: 14px;
     font-weight: 600;
 
@@ -1201,6 +1221,8 @@ body {
 
     margin: 18px auto 8px;
 
+    text-align: left;
+
     font-size: 14px;
     font-weight: 600;
 
@@ -1241,6 +1263,13 @@ body {
     font-size: 15px;
 
     cursor: pointer;
+}
+
+
+/* ⭐ 성별 아래 다음 버튼 여백 (다른 단계 페이지는 그대로 80px) */
+
+.gender-box ~ .Next-btn {
+    margin-top: 36px;
 }
 
 
@@ -1376,7 +1405,7 @@ body {
 
     margin: 12px auto 0;
 
-    text-align: left;
+    text-align: right; /* ⭐ 오른쪽 정렬 */
 
     font-family: "Maplestory", sans-serif;
 
@@ -3181,4 +3210,387 @@ body {
 
     }
 
+}
+
+/* ==================================================
+   ⭐ 활동 지역 페이지 정리
+   - 소제목(선택된 지역 / 이동 가능 범위)을 '시도 선택'과 같은 모양으로 왼쪽 정렬
+   - 섹션 사이 간격을 28px로 통일
+   - 다음 버튼 여백 줄이기
+   위쪽 기존 규칙을 덮어쓰기 위해 파일 맨 아래에 둠
+   ================================================== */
+
+/* 시/도 선택 줄 아래 여백 */
+.regions-select-row {
+    margin-bottom: 0;
+}
+
+/* 소제목 통일: 시도 선택과 같은 크기, 왼쪽 정렬 */
+.selected-regions h4,
+.distance-select h4 {
+    margin: 0 0 10px 5px;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    color: #222;
+    text-align: left;
+}
+
+/* 선택된 지역 */
+.selected-regions {
+    margin: 28px auto 0;
+}
+
+/* 지역 태그도 왼쪽부터 */
+.selected-regions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    justify-content: flex-start;
+}
+
+.selected-regions-item {
+    height: 28px;
+    margin: 0;
+    padding: 0 10px;
+
+    border-radius: 14px;
+}
+
+/* 안내 문구: 태그 바로 아래 한 줄 카드로 */
+.regions-guide {
+    width: 320px;
+    box-sizing: border-box;
+
+    margin: 12px auto 0;
+    padding: 10px 12px;
+
+    justify-content: flex-start;
+
+    border: 1px solid #CDEBE4;
+    border-radius: 10px;
+    background-color: #F4FBF9;
+}
+
+.regions-guide p {
+    text-align: left;
+}
+
+/* 이동 가능 범위 */
+.distance-select {
+    margin: 28px auto 0;
+}
+
+/* 다음 버튼 여백 */
+.distance-select ~ .Next-btn {
+    margin-top: 36px;
+}
+
+@media (max-width: 500px) {
+    .regions-guide {
+        width: calc(100% - 40px);
+    }
+}
+
+/* ==================================================
+   ⭐ 활동 가능 시간 - 요일 / 시간대 칩 선택
+   (SignupTime.jsx 새 버전용)
+   ================================================== */
+
+.time-pick-section {
+    width: 320px;
+    margin: 0 auto 28px;
+}
+
+/* 소제목 + 평일/주말 빠른 선택 */
+.time-pick-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 10px;
+}
+
+.time-pick-title-row h4 {
+    margin: 0 0 0 5px;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    color: #222;
+    text-align: left;
+}
+
+.time-pick-quick {
+    display: flex;
+    gap: 6px;
+}
+
+.time-pick-quick button {
+    height: 28px;
+    padding: 0 12px;
+
+    border: 1.5px solid #CDEBE4;
+    border-radius: 14px;
+
+    background-color: #fff;
+    color: #01A17F;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.time-pick-quick button.selected {
+    border-color: #01A17F;
+    background-color: #01A17F;
+    color: #fff;
+}
+
+/* 요일 7칸 */
+.time-pick-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.time-pick-days button {
+    height: 44px;
+    padding: 0;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    background-color: #fff;
+    color: #555;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 15px;
+
+    cursor: pointer;
+}
+
+/* 시간대 2 × 2 */
+.time-pick-bands {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.time-pick-bands button {
+    height: 64px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    background-color: #fff;
+    color: #555;
+
+    font-family: "Maplestory", sans-serif;
+
+    cursor: pointer;
+}
+
+.time-pick-bands strong {
+    font-size: 15px;
+    color: #333;
+}
+
+.time-pick-bands span {
+    font-size: 12px;
+    color: #888;
+}
+
+/* 선택된 요일 / 시간대 (다른 페이지 선택 스타일과 동일) */
+.time-pick-days button.selected,
+.time-pick-bands button.selected {
+    border: 2px solid #01A17F;
+    background-color: #E8F6F2;
+    color: #01A17F;
+    font-weight: 600;
+}
+
+.time-pick-bands button.selected strong,
+.time-pick-bands button.selected span {
+    color: #01A17F;
+}
+
+.time-pick-days button:active,
+.time-pick-bands button:active,
+.time-pick-quick button:active {
+    transform: scale(0.97);
+}
+
+/* 선택 요약 */
+.time-pick-summary {
+    width: 320px;
+    box-sizing: border-box;
+
+    margin: 0 auto;
+    padding: 12px 14px;
+
+    border: 1px solid #CDEBE4;
+    border-radius: 10px;
+    background-color: #F4FBF9;
+
+    text-align: left;
+}
+
+.time-pick-summary p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.time-pick-summary-days {
+    font-size: 14px;
+    font-weight: 700;
+    color: #01A17F;
+}
+
+.time-pick-summary-bands {
+    font-size: 13px;
+    color: #555;
+}
+
+.time-pick-summary-empty {
+    font-size: 13px;
+    color: #999;
+    text-align: center;
+}
+
+/* 다음 버튼 여백 */
+.time-pick-summary ~ .Next-btn {
+    margin-top: 36px;
+}
+
+@media (max-width: 500px) {
+    .time-pick-section,
+    .time-pick-summary {
+        width: calc(100% - 40px);
+    }
+
+    .time-pick-days {
+        gap: 4px;
+    }
+
+    .time-pick-days button {
+        height: 42px;
+        font-size: 14px;
+    }
+}
+
+/* ==================================================
+   ⭐ 활동 가능 시간 - 기타(직접 입력)
+   ================================================== */
+
+/* 접혀 있을 때: "원하는 시간이 없나요? + 직접 입력" */
+.time-custom-open {
+    width: 100%;
+    height: 44px;
+
+    border: 1px dashed #CDEBE4;
+    border-radius: 10px;
+
+    background-color: #fff;
+    color: #888;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 13px;
+
+    cursor: pointer;
+}
+
+.time-custom-open span {
+    margin-left: 4px;
+
+    color: #01A17F;
+    font-weight: 700;
+}
+
+/* 요일 / 시작 ~ 종료 */
+.time-custom-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.time-custom-row select {
+    flex: 1;
+    width: 0;
+    height: 46px;
+
+    padding: 0 8px;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    background-color: #fff;
+    color: #555;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 14px;
+
+    outline: none;
+    cursor: pointer;
+
+    box-sizing: border-box;
+}
+
+.time-custom-row select:focus,
+.time-custom-row select:hover {
+    border-color: #01A17F;
+}
+
+.time-custom-tilde {
+    color: #888;
+    flex-shrink: 0;
+}
+
+/* 추가 버튼 (다음 버튼과 헷갈리지 않게 테두리 버튼으로) */
+.time-custom-add {
+    width: 100%;
+    height: 42px;
+
+    margin-top: 8px;
+
+    border: 1.5px solid #01A17F;
+    border-radius: 10px;
+
+    background-color: #fff;
+    color: #01A17F;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.time-custom-add:active {
+    background-color: #E8F6F2;
+    transform: scale(0.98);
+}
+
+/* 추가한 시간 태그 목록 */
+.time-custom-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    margin-top: 10px;
+}
+
+/* 입력 정보 확인 페이지: 회원가입 완료 버튼 여백 */
+.review-grid ~ .Next-btn {
+    margin-top: 36px;
 }

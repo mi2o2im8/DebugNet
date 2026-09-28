@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 
 import BackButton from "../../components/BackButton/BackButton";
 
+import { supabase } from "../../../supabaseClient";
+import { clearMyClubCache } from "../../api/myClubCache";
+
 import "./Settings.css";
 
 function Settings() {
@@ -31,8 +34,18 @@ function Settings() {
     // }, [chatNotification]);
 
     // ⭐ 로그아웃 확인
-    const handleLogout = () => {
-        navigate("/login");
+    const handleLogout = async () => {
+        try {
+            // Supabase 로그인 정보 삭제 (진짜 로그아웃)
+            await supabase.auth.signOut();
+        } catch (error) {
+            console.error("로그아웃 오류:", error);
+        }
+
+        // 이전 계정의 동호회 정보가 남지 않게 비우기
+        clearMyClubCache();
+
+        navigate("/login", { replace: true });
     };
 
     return (

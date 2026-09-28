@@ -1,7 +1,7 @@
 import "./Login.css";
 import logo from "../../assets/img/logo.png";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // 눈 아이콘
 // 설치: npm install react-icons
@@ -13,11 +13,95 @@ import { supabase } from "../../../supabaseClient";
 import { getMyClubShared, clearMyClubCache } from "../../api/myClubCache";
 
 
+// -------------------------------------------------
+// 동호회 여부에 따라 이동할 홈 경로 정하기
+//
+// 운영 중이거나 가입된 동호회가 있으면 → 가입 후 홈
+// 없으면 → 가입 전 홈
+// (BottomNav의 '활동' 버튼과 같은 기준)
+// 로그인 버튼 / 자동 로그인 둘 다 이 함수를 사용
+// -------------------------------------------------
+async function getHomePath() {
+  try {
+    // 다른 계정의 이전 결과가 남아 있지 않게 비우고 새로 조회
+    clearMyClubCache();
+
+    const myClub = await getMyClubShared();
+
+    const hasClub =
+      Boolean(myClub?.operating_club) ||
+      Boolean(myClub?.joined_club);
+
+    return hasClub ? "/mainhome" : "/main";
+
+  } catch (clubError) {
+    // 동호회 조회가 실패해도 로그인은 된 상태라
+    // 가입 전 홈으로 보낸다.
+    console.error("동호회 조회 오류:", clubError);
+    return "/main";
+  }
+}
+
+
+// 아이디 기억하기용 localStorage 키
+const SAVED_EMAIL_KEY = "savedEmail";
+
+// 자동 로그인 여부 localStorage 키
+// (supabaseClient.js에서도 같은 이름을 사용)
+const AUTO_LOGIN_KEY = "autoLogin";
+
+// 자동 로그인 설정 읽기
+function getAutoLogin() {
+  try {
+    return localStorage.getItem(AUTO_LOGIN_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+// localStorage 읽기 (오류가 나도 로그인 화면은 정상 동작하도록)
+function getSavedEmail() {
+  try {
+    return localStorage.getItem(SAVED_EMAIL_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+
 function Login() {
-  const [email, setEmail] = useState("");
+  // 저장된 이메일이 있으면 처음부터 채워둔다
+  const [email, setEmail] = useState(() => getSavedEmail());
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  // 저장된 이메일이 있으면 체크박스도 켜둔다
+  const [rememberId, setRememberId] = useState(
+    () => Boolean(getSavedEmail())
+  );
+  // 자동 로그인 체크 여부 (지난번 선택 기억)
+  const [autoLogin, setAutoLogin] = useState(() => getAutoLogin());
   const navigate = useNavigate();
+
+
+  // -------------------------------------------------
+  // 자동 로그인
+  // 로그아웃하지 않은 사람이 로그인 페이지에 들어오면
+  // 로그인 화면을 건너뛰고 바로 홈으로 보낸다
+  // -------------------------------------------------
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      // 로그인 안 된 상태면 그대로 로그인 화면
+      if (!data.session) return;
+
+      const nextPath = await getHomePath();
+      navigate(nextPath, { replace: true });
+    };
+
+    checkSession();
+  }, [navigate]);
+
 
   // 로그인
   const handleLogin = async (e) => {
@@ -62,33 +146,33 @@ function Login() {
       console.log("로그인 세션:", data.session);
 
       // -------------------------------------------------
-      // 동호회 여부에 따라 홈 화면 분기
-      //
-      // 운영 중이거나 가입된 동호회가 있으면 → 가입 후 홈
-      // 없으면 → 가입 전 홈
-      // (BottomNav의 '활동' 버튼과 같은 기준)
+      // 아이디 기억하기
+      // 체크되어 있으면 이메일 저장, 아니면 삭제
+      // (로그인 성공했을 때만 저장)
       // -------------------------------------------------
-      let nextPath = "/main";
-
       try {
-        // 다른 계정의 이전 결과가 남아 있지 않게 비우고 새로 조회
-        clearMyClubCache();
-
-        const myClub = await getMyClubShared();
-
-        const hasClub =
-          Boolean(myClub?.operating_club) ||
-          Boolean(myClub?.joined_club);
-
-        if (hasClub) {
-          nextPath = "/mainhome";
+        if (rememberId) {
+          localStorage.setItem(SAVED_EMAIL_KEY, email.trim());
+        } else {
+          localStorage.removeItem(SAVED_EMAIL_KEY);
         }
-
-      } catch (clubError) {
-        // 동호회 조회가 실패해도 로그인은 된 상태라
-        // 가입 전 홈으로 보낸다.
-        console.error("로그인 후 동호회 조회 오류:", clubError);
+      } catch (storageError) {
+        console.error("아이디 저장 오류:", storageError);
       }
+
+      // -------------------------------------------------
+      // 자동 로그인
+      // 체크 O → 브라우저를 닫아도 로그인 유지
+      // 체크 X → 브라우저를 닫으면 로그아웃 (supabaseClient.js에서 처리)
+      // -------------------------------------------------
+      try {
+        localStorage.setItem(AUTO_LOGIN_KEY, String(autoLogin));
+      } catch (storageError) {
+        console.error("자동 로그인 설정 저장 오류:", storageError);
+      }
+
+      // 동호회 여부에 따라 홈 화면 분기
+      const nextPath = await getHomePath();
 
       navigate(nextPath, {
         replace: true,
@@ -168,13 +252,6 @@ function Login() {
                 비밀번호
               </label>
 
-              <a
-                href="#"
-                className="pw-find-link"
-              >
-                비밀번호 찾기
-              </a>
-
             </div>
 
 
@@ -217,6 +294,34 @@ function Login() {
               </button>
 
             </div>
+
+          </div>
+
+
+          {/* 아이디 기억하기 / 자동 로그인 */}
+          <div className="login-options">
+
+            <label className="remember-id">
+              <input
+                type="checkbox"
+                checked={rememberId}
+                onChange={(e) =>
+                  setRememberId(e.target.checked)
+                }
+              />
+              아이디 기억하기
+            </label>
+
+            <label className="remember-id">
+              <input
+                type="checkbox"
+                checked={autoLogin}
+                onChange={(e) =>
+                  setAutoLogin(e.target.checked)
+                }
+              />
+              자동 로그인
+            </label>
 
           </div>
 
