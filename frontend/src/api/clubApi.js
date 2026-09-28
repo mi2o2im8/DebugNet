@@ -343,7 +343,38 @@ export async function updateClubEventAttendance(
         }
     );
 }
+// =========================================================
+// 동호회 일정 출석 조회 및 출석 상태 변경
+// =========================================================    
+export async function getClubScheduleAttendance(
+    clubId,
+    scheduleId,
+    date
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/schedules/${scheduleId}/attendance?date=${date}`,
+        {
+            method: "GET",
+        }
+    );
+}
 
+export async function updateClubScheduleAttendance(
+    clubId,
+    scheduleId,
+    date,
+    attendanceStatus
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/schedules/${scheduleId}/attendance?date=${date}`,
+        {
+            method: "PUT",
+            body: {
+                attendanceStatus,
+            },
+        }
+    );
+}
 // ---------------------------------------------------------
 // 현재 동호회 회원 목록 조회
 // ---------------------------------------------------------

@@ -34,6 +34,7 @@ import ClubCreate from './pages/ClubCreate/ClubCreate';
 import AllClub from "./pages/AllClub/AllClub";
 import ClubRecruit from "./pages/ClubRecruit/ClubRecruit";
 import GuestRecruit from "./pages/GuestRecruit/GuestRecruit";
+import GuestRecruitDetail from "./pages/GuestRecruitDetail/GuestRecruitDetail";
 import ClubUserDashboard from "./pages/ClubUserDashboard/ClubUserDashboard";
 
 import Community from "./pages/Community/Community";
@@ -176,6 +177,8 @@ function App() {
           <Route path="/clubs/recruit" element={<ClubRecruit />} />
           {/* 게스트 모집 중 페이지 */}
           <Route path="/guest-recruit" element={<GuestRecruit />} />
+          {/* 게스트 모집 상세 페이지 */}
+          <Route path="/guest-recruit/:eventId" element={<GuestRecruitDetail />}/>
           {/* 동호회 상세 페이지 */}
           <Route path="/clubs/:clubId" element={<ClubDetail />} />
           {/* 동호회 이용자용 대시보드 */}

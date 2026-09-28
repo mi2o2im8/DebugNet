@@ -1,57 +1,47 @@
 import {
-    FiActivity,
     FiArrowLeft,
     FiBell,
-    FiCalendar,
+    FiMoreHorizontal,
     FiCheckCircle,
+    FiChevronLeft,
     FiChevronRight,
+    FiCalendar,
     FiClock,
     FiMapPin,
-    FiMoreHorizontal,
-    FiSend,
-    FiSettings,
-    FiUsers
+    FiUsers,
+    FiRepeat,
+    FiMessageCircle,
+    FiFileText,
+    FiCheck,
+    FiX,
+    FiActivity,
 } from "react-icons/fi";
 
 import {
     useEffect,
     useMemo,
-    useState
+    useState,
 } from "react";
 
 import {
     useNavigate,
-    useParams
+    useParams,
 } from "react-router-dom";
 
 import {
-    getClubUserDashboard
+    getClubUserDashboard,
+    getClubEvents,
+    getClubEventAttendance,
+    updateClubEventAttendance,
+    getClubScheduleAttendance,
+    updateClubScheduleAttendance,
 } from "../../api/clubApi";
 
 import "./ClubUserDashboard.css";
 
 
-const MANAGEMENT_MENUS = [
-    {
-        id: "notice",
-        label: "공지 작성",
-        icon: FiBell
-    },
-    {
-        id: "members",
-        label: "회원 관리",
-        icon: FiUsers
-    },
-    {
-        id: "schedules",
-        label: "일정 관리",
-        icon: FiCalendar
-    },
-    {
-        id: "matches",
-        label: "매칭 관리",
-        icon: FiActivity
-    }
+const WEEK_LABELS = [
+    "일", "월", "화", "수", "목", "금", "토",
 ];
 
 const DAY_INDEX = {
@@ -61,42 +51,38 @@ const DAY_INDEX = {
     수요일: 3,
     목요일: 4,
     금요일: 5,
-    토요일: 6
+    토요일: 6,
 };
 
-const WEEK_LABELS = [
-    "일",
-    "월",
-    "화",
-    "수",
-    "목",
-    "금",
-    "토"
-];
+
+// 날짜를 YYYY-MM-DD 형식으로 변환
+function formatDateKey(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
 
 
-function getNextScheduleDate(dayOfWeek) {
-    const today = new Date();
+// 해당 요일의 다음 활동 날짜 계산
+function getNextDate(dayOfWeek, baseDate = new Date()) {
     const targetDay = DAY_INDEX[dayOfWeek];
 
-    if (targetDay === undefined) {
-        return today;
+    if (targetDay === undefined) return null;
+
+    const date = new Date(baseDate);
+    date.setHours(0, 0, 0, 0);
+
+    let diff = targetDay - date.getDay();
+
+    if (diff < 0) {
+        diff += 7;
     }
 
-    let difference =
-        targetDay - today.getDay();
+    date.setDate(date.getDate() + diff);
 
-    if (difference < 0) {
-        difference += 7;
-    }
-
-    const nextDate = new Date(today);
-
-    nextDate.setDate(
-        today.getDate() + difference
-    );
-
-    return nextDate;
+    return date;
 }
 
 
@@ -108,157 +94,372 @@ function ClubUserDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
 
-    useEffect(() => {
-        let cancelled = false;
+    // 운영자가 등록한 일정
+    const [clubEvents, setClubEvents] = useState([]);
 
-        const loadDashboard = async () => {
-            setIsLoading(true);
-            setErrorMessage("");
+    // 일정별 내 출석 투표 상태
+    const [eventAttendance, setEventAttendance] = useState({});
 
-            try {
-                const result =
-                    await getClubUserDashboard(clubId);
+    // 출석 투표 처리 중인 일정
+    const [votingEventId, setVotingEventId] = useState(null);
 
-                if (!cancelled) {
-                    setDashboard(result);
-                }
-            } catch (error) {
-                console.error(
-                    "동호회 허브 조회 실패:",
-                    error
-                );
+    // 일정 조회 오류
+    const [eventError, setEventError] = useState("");
 
-                if (!cancelled) {
-                    setErrorMessage(
-                        error.message ||
-                        "동호회 정보를 불러오지 못했습니다."
-                    );
-                }
-            } finally {
-                if (!cancelled) {
-                    setIsLoading(false);
-                }
-            }
-        };
-
-        loadDashboard();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [clubId]);
-
-    const calendarData = useMemo(() => {
+    // 달력 상태
+    const [currentMonth, setCurrentMonth] = useState(() => {
         const today = new Date();
 
-        const year = today.getFullYear();
-        const month = today.getMonth();
-
-        const firstDay = new Date(
-            year,
-            month,
+        return new Date(
+            today.getFullYear(),
+            today.getMonth(),
             1
-        ).getDay();
+        );
+    });
 
-        const lastDate = new Date(
-            year,
-            month + 1,
-            0
-        ).getDate();
+    const [selectedDate, setSelectedDate] = useState(new Date());
 
-        const cells = [
+    // 참석 여부 (현재 화면에서만 유지되는 임시 상태)
+    const [attendanceVotes, setAttendanceVotes] = useState({});
+
+
+        // 대시보드 API 조회
+        useEffect(() => {
+            let cancelled = false;
+
+            const loadDashboard = async () => {
+                setIsLoading(true);
+                setErrorMessage("");
+
+                try {
+                    const result = await getClubUserDashboard(clubId);
+
+                    if (!cancelled) {
+                        setDashboard(result);
+                    }
+                } catch (error) {
+                    console.error("이용자 대시보드 조회 실패:", error);
+
+                    if (!cancelled) {
+                        setErrorMessage(
+                            error.message ||
+                            "동호회 정보를 불러오지 못했습니다."
+                        );
+                    }
+                } finally {
+                    if (!cancelled) {
+                        setIsLoading(false);
+                    }
+                }
+            };
+
+            loadDashboard();
+
+            return () => {
+                cancelled = true;
+            };
+        }, [clubId]);
+
+
+        // 운영자가 등록한 일정 조회
+        useEffect(() => {
+            if (!clubId) return;
+
+            let cancelled = false;
+
+            const loadClubEvents = async () => {
+                setEventError("");
+
+                try {
+                    const result = await getClubEvents(clubId);
+
+                    if (!cancelled) {
+                        setClubEvents(result.events || []);
+                    }
+                } catch (error) {
+                    console.error("동호회 일정 조회 실패:", error);
+
+                    if (!cancelled) {
+                        setEventError(
+                            error.message || "일정을 불러오지 못했습니다."
+                        );
+                    }
+                }
+            };
+
+            loadClubEvents();
+
+            return () => {
+                cancelled = true;
+            };
+        }, [clubId]);
+
+
+        // 일정별 내 출석 투표 상태 조회
+        useEffect(() => {
+            if (!clubId || clubEvents.length === 0) return;
+
+            let cancelled = false;
+
+            const loadEventAttendance = async () => {
+                try {
+                    const attendanceResults = await Promise.all(
+                        clubEvents.map(async (event) => {
+                            try {
+                                const result = await getClubEventAttendance(
+                                    clubId,
+                                    event.event_id
+                                );
+
+                                return {
+                                    eventId: event.event_id,
+                                    attendanceStatus: result.attendance_status,
+                                };
+                            } catch (error) {
+                                console.error(
+                                    `일정 ${event.event_id} 출석 상태 조회 실패:`,
+                                    error
+                                );
+
+                                return {
+                                    eventId: event.event_id,
+                                    attendanceStatus: null,
+                                };
+                            }
+                        })
+                    );
+
+                    if (!cancelled) {
+                        const attendanceMap = {};
+
+                        attendanceResults.forEach((item) => {
+                            if (item.attendanceStatus) {
+                                attendanceMap[item.eventId] =
+                                    item.attendanceStatus;
+                            }
+                        });
+
+                        setEventAttendance(attendanceMap);
+                    }
+                } catch (error) {
+                    console.error("출석 상태 조회 실패:", error);
+                }
+            };
+
+            loadEventAttendance();
+
+            return () => {
+                cancelled = true;
+            };
+        }, [clubId, clubEvents]);
+
+
+    // 달력 날짜 데이터
+    const calendarData = useMemo(() => {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+
+        return [
             ...Array(firstDay).fill(null),
             ...Array.from(
                 { length: lastDate },
                 (_, index) => index + 1
-            )
+            ),
         ];
+    }, [currentMonth]);
 
-        return {
-            year,
-            month: month + 1,
-            today: today.getDate(),
-            cells
-        };
-    }, []);
 
+    // 정기 활동이 있는 요일
     const scheduledWeekdays = useMemo(() => {
-        if (!dashboard) {
-            return new Set();
-        }
-
         return new Set(
-            dashboard.schedules.map(
-                (schedule) =>
-                    DAY_INDEX[schedule.day_of_week]
+            (dashboard?.schedules || []).map(
+                (schedule) => DAY_INDEX[schedule.day_of_week]
             )
         );
     }, [dashboard]);
 
+
+    // 선택한 날짜의 정기 활동
+    const selectedSchedules = useMemo(() => {
+        if (!dashboard) return [];
+
+        return (dashboard.schedules || []).filter(
+            (schedule) =>
+                DAY_INDEX[schedule.day_of_week] ===
+                selectedDate.getDay()
+        );
+    }, [dashboard, selectedDate]);
+
+
+    // 다가오는 일정 3개
     const upcomingSchedules = useMemo(() => {
-        if (!dashboard) {
-            return [];
+        if (!dashboard) return [];
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const schedules = [];
+
+        // 향후 30일 내 정기 활동 날짜 계산
+        for (let i = 0; i < 30; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() + i);
+
+            (dashboard.schedules || []).forEach((schedule) => {
+                if (
+                    DAY_INDEX[schedule.day_of_week] === date.getDay()
+                ) {
+                    schedules.push({
+                        ...schedule,
+                        date: new Date(date),
+                    });
+                }
+            });
         }
 
-        return dashboard.schedules
-            .map((schedule) => ({
-                ...schedule,
-                nextDate: getNextScheduleDate(
-                    schedule.day_of_week
-                )
-            }))
-            .sort(
-                (first, second) =>
-                    first.nextDate - second.nextDate
-            )
+        return schedules
+            .sort((a, b) => a.date - b.date)
             .slice(0, 3);
     }, [dashboard]);
 
-    const handleManagementMenu = (menuId) => {
-        if (menuId === "schedules") {
-            navigate(
-                `/clubs/${clubId}/manage/events`
-            );
+    // 다가오는 정기 일정의 내 투표 상태 조회
+    useEffect(() => {
+        if (!clubId || upcomingSchedules.length === 0) {
             return;
         }
 
-        if (menuId === "notice") {
-            alert(
-                "공지 기능은 팀원 작업과 연결할 예정입니다."
-            );
-            return;
-        }
+        let cancelled = false;
 
-        alert(
-            "해당 관리 기능은 이후 단계에서 연결합니다."
-        );
+        const loadUpcomingAttendance = async () => {
+            try {
+                const results = await Promise.all(
+                    upcomingSchedules.map(async (schedule) => {
+                        const date = formatDateKey(schedule.date);
+                        const dateKey =
+                            `${date}-${schedule.club_schedule_id}`;
+
+                        try {
+                            const result =
+                                await getClubScheduleAttendance(
+                                    clubId,
+                                    schedule.club_schedule_id,
+                                    date
+                                );
+
+                            return {
+                                dateKey,
+                                attendanceStatus:
+                                    result.attendance_status,
+                            };
+                        } catch (error) {
+                            console.error(
+                                "다가오는 일정 투표 상태 조회 실패:",
+                                error
+                            );
+
+                            return {
+                                dateKey,
+                                attendanceStatus: "undecided",
+                            };
+                        }
+                    })
+                );
+
+                if (cancelled) return;
+
+                const attendanceMap = {};
+
+                results.forEach((item) => {
+                    attendanceMap[item.dateKey] =
+                        item.attendanceStatus;
+                });
+
+                setAttendanceVotes(attendanceMap);
+            } catch (error) {
+                console.error(
+                    "다가오는 일정 투표 상태 조회 실패:",
+                    error
+                );
+            }
+        };
+
+        loadUpcomingAttendance();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [clubId, upcomingSchedules]);
+
+
+    // 이전 달 / 다음 달
+    const moveMonth = (amount) => {
+        setCurrentMonth((prev) => {
+            return new Date(
+                prev.getFullYear(),
+                prev.getMonth() + amount,
+                1
+            );
+        });
+    };
+    // 운영자 등록 일정 참석 / 불참 투표
+    const handleEventAttendanceVote = async (eventId, attendanceStatus) => {
+        try {
+            setVotingEventId(eventId);
+            setEventError("");
+
+            // 백엔드 API를 통해 참석 / 불참 저장
+            await updateClubEventAttendance(
+                clubId,
+                eventId,
+                attendanceStatus
+            );
+
+            // 저장 성공 후 화면 상태 갱신
+            setEventAttendance((prev) => ({
+                ...prev,
+                [eventId]: attendanceStatus,
+            }));
+
+        } catch (error) {
+            console.error("참석 투표 저장 실패:", error);
+            setEventError("참석 투표 저장에 실패했습니다.");
+        } finally {
+            setVotingEventId(null);
+        }
     };
 
+    // 바로가기 메뉴
+    const handleQuickMenu = (menuName) => {
+        alert(`${menuName} 기능은 화면 연결 예정입니다.`);
+    };
+
+
+    // 로딩
     if (isLoading) {
         return (
-            <main className="club-dashboard-page">
-                <div className="club-dashboard-state">
+            <main className="club-user-page">
+                <div className="club-user-state">
                     동호회 정보를 불러오는 중입니다.
                 </div>
             </main>
         );
     }
 
+
+    // 오류
     if (errorMessage || !dashboard) {
         return (
-            <main className="club-dashboard-page">
-                <div className="club-dashboard-state error">
-                    <strong>
-                        동호회 정보를 불러오지 못했습니다.
-                    </strong>
-
+            <main className="club-user-page">
+                <div className="club-user-state error">
+                    <h2>동호회 정보를 불러오지 못했습니다.</h2>
                     <p>{errorMessage}</p>
 
                     <button
                         type="button"
-                        onClick={() =>
-                            window.location.reload()
-                        }
+                        onClick={() => window.location.reload()}
                     >
                         다시 시도
                     </button>
@@ -267,38 +468,39 @@ function ClubUserDashboard() {
         );
     }
 
-    const coverImage =
-        dashboard.activity_image_urls?.[0] ||
-        dashboard.representative_image_url;
-
-    const profileImage =
-        dashboard.representative_image_url ||
-        coverImage;
 
     const roleLabel =
         dashboard.user_role === "owner"
             ? "운영자"
-            : "운영진";
+            : dashboard.user_role === "manager"
+            ? "운영진"
+            : dashboard.user_role === "member"
+            ? "회원"
+            : "알 수 없음";
 
-    const selectedSchedule =
-        upcomingSchedules[0];
+
+    const profileImage = dashboard.representative_image_url;
+
 
     return (
-        <main className="club-dashboard-page">
-            <div className="club-dashboard-container">
-                <header className="club-dashboard-header">
+        <main className="club-user-page">
+            <div className="club-user-container">
+
+                {/* 상단 헤더 */}
+                <header className="club-user-header">
                     <button
                         type="button"
-                        aria-label="이전 화면"
-                        onClick={() => navigate("/main")}
+                        aria-label="뒤로가기"
+                        onClick={() => navigate(-1)}
                     >
                         <FiArrowLeft />
                     </button>
 
-                    <div className="club-dashboard-header-actions">
+                    <div className="club-user-header-actions">
                         <button
                             type="button"
                             aria-label="알림"
+                            onClick={() => handleQuickMenu("알림")}
                         >
                             <FiBell />
                         </button>
@@ -306,437 +508,479 @@ function ClubUserDashboard() {
                         <button
                             type="button"
                             aria-label="더보기"
+                            onClick={() => handleQuickMenu("더보기")}
                         >
                             <FiMoreHorizontal />
                         </button>
                     </div>
                 </header>
 
-                <div className="club-dashboard-scroll">
-                    <section className="club-dashboard-hero">
-                        <div className="club-dashboard-cover">
-                            {coverImage ? (
+
+                {/* 동호회 프로필 */}
+                <section className="club-user-profile">
+
+                    <div className="club-user-cover">
+                        {profileImage ? (
+                            <img src={profileImage} alt="" />
+                        ) : (
+                            <div className="club-user-cover-empty">
+                                <FiUsers />
+                            </div>
+                        )}
+
+                        <div className="club-user-cover-overlay" />
+                    </div>
+
+                    <div className="club-user-profile-card">
+
+                        <div className="club-user-profile-image">
+                            {profileImage ? (
                                 <img
-                                    src={coverImage}
-                                    alt=""
+                                    src={profileImage}
+                                    alt={`${dashboard.club_name} 대표 이미지`}
                                 />
                             ) : (
-                                <div className="club-dashboard-cover-empty">
-                                    <FiUsers />
-                                </div>
+                                <FiUsers />
                             )}
-
-                            <div className="club-dashboard-cover-filter" />
                         </div>
 
-                        <div className="club-dashboard-profile-card">
-                            <div className="club-dashboard-profile-image">
-                                {profileImage ? (
-                                    <img
-                                        src={profileImage}
-                                        alt={`${dashboard.club_name} 대표 이미지`}
-                                    />
-                                ) : (
-                                    <FiUsers />
-                                )}
-                            </div>
+                        <div className="club-user-title-row">
+                            <div className="club-user-title-info">
+                                <div className="club-user-name-line">
+                                    <h1>{dashboard.club_name}</h1>
 
-                            <div className="club-dashboard-title-row">
-                                <div>
-                                    <div className="club-dashboard-name-row">
-                                        <h1>
-                                            {dashboard.club_name}
-                                        </h1>
-
-                                        <span className="club-dashboard-role">
-                                            <FiCheckCircle />
-                                            {roleLabel}
-                                        </span>
-                                    </div>
-
-                                    <p className="club-dashboard-summary">
-                                        {[
-                                            dashboard.sport_name,
-                                            dashboard.region,
-                                            `회원 ${dashboard.current_members}명`
-                                        ]
-                                            .filter(Boolean)
-                                            .join(" · ")}
-                                    </p>
+                                    <span className="club-user-joined">
+                                        <FiCheckCircle />
+                                        가입 완료
+                                    </span>
                                 </div>
+
+                                <p className="club-user-meta">
+                                    {[
+                                        dashboard.sport_name,
+                                        dashboard.region,
+                                        `회원 ${dashboard.current_members}명`,
+                                    ]
+                                        .filter(Boolean)
+                                        .join(" · ")}
+                                </p>
+                            </div>
+                        </div>
+
+                        <p className="club-user-intro">
+                            {dashboard.club_intro ||
+                                "동호회 소개가 아직 없습니다."}
+                        </p>
+
+                        <div className="club-user-role">
+                            <FiCheckCircle />
+                            내 역할: {roleLabel}
+                        </div>
+
+                    </div>
+                </section>
+
+
+                {/* 바로가기 */}
+                <section className="club-user-quick-section">
+                    <div className="club-user-quick-menu">
+
+                        <button
+                            type="button"
+                            onClick={() => handleQuickMenu("공지사항")}
+                        >
+                            <FiBell />
+                            <span>공지사항</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => handleQuickMenu("활동 일정")}
+                        >
+                            <FiCalendar />
+                            <span>일정 보기</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => handleQuickMenu("교류전")}
+                        >
+                            <FiRepeat />
+                            <span>교류전</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => handleQuickMenu("소통하기")}
+                        >
+                            <FiMessageCircle />
+                            <span>소통하기</span>
+                        </button>
+
+                    </div>
+                </section>
+
+
+                {/* 활동 일정 달력 */}
+                <section className="club-user-section">
+
+                    <div className="club-user-section-heading">
+                        <h2>활동 일정</h2>
+                        <span>정기 활동</span>
+                    </div>
+
+                    <div className="club-user-calendar-layout">
+
+                        {/* 달력 */}
+                        <div className="club-user-calendar">
+
+                            <div className="club-user-calendar-title">
+                                <button
+                                    type="button"
+                                    onClick={() => moveMonth(-1)}
+                                    aria-label="이전 달"
+                                >
+                                    <FiChevronLeft />
+                                </button>
+
+                                <strong>
+                                    {currentMonth.getFullYear()}년{" "}
+                                    {currentMonth.getMonth() + 1}월
+                                </strong>
 
                                 <button
                                     type="button"
-                                    className="club-dashboard-setting-button"
-                                    onClick={() =>
-                                        alert(
-                                            "동호회 설정은 이후 연결합니다."
-                                        )
-                                    }
+                                    onClick={() => moveMonth(1)}
+                                    aria-label="다음 달"
                                 >
-                                    <FiSettings />
-                                    설정
+                                    <FiChevronRight />
                                 </button>
                             </div>
 
-                            <p className="club-dashboard-intro">
-                                {dashboard.club_intro ||
-                                    "동호회 소개가 아직 없습니다."}
-                            </p>
-                        </div>
-                    </section>
+                            <div className="club-user-calendar-week">
+                                {WEEK_LABELS.map((day) => (
+                                    <span key={day}>{day}</span>
+                                ))}
+                            </div>
 
-                    <section className="club-dashboard-quick-section">
-                        <div className="club-dashboard-quick-menu">
-                            {MANAGEMENT_MENUS.map(
-                                (menu) => {
-                                    const Icon = menu.icon;
+                            <div className="club-user-calendar-days">
+                                {calendarData.map((day, index) => {
+                                    if (!day) {
+                                        return (
+                                            <span
+                                                key={`empty-${index}`}
+                                                className="empty"
+                                            />
+                                        );
+                                    }
+
+                                    const date = new Date(
+                                        currentMonth.getFullYear(),
+                                        currentMonth.getMonth(),
+                                        day
+                                    );
+
+                                    const dateKey = formatDateKey(date);
+
+                                    const isSelected =
+                                        formatDateKey(selectedDate) === dateKey;
+
+                                    const isToday =
+                                        formatDateKey(new Date()) === dateKey;
+
+                                    const hasSchedule =
+                                        scheduledWeekdays.has(date.getDay());
 
                                     return (
                                         <button
-                                            key={menu.id}
+                                            key={dateKey}
                                             type="button"
-                                            onClick={() =>
-                                                handleManagementMenu(
-                                                    menu.id
-                                                )
-                                            }
+                                            className={[
+                                                isSelected ? "selected" : "",
+                                                isToday ? "today" : "",
+                                                hasSchedule ? "has-schedule" : "",
+                                            ].join(" ")}
+                                            onClick={() => setSelectedDate(date)}
                                         >
-                                            <span>
-                                                <Icon />
-                                            </span>
-
-                                            <strong>
-                                                {menu.label}
-                                            </strong>
+                                            {day}
+                                            {hasSchedule && (
+                                                <i className="club-user-calendar-dot" />
+                                            )}
                                         </button>
                                     );
-                                }
-                            )}
-                        </div>
-                    </section>
-
-                    <section className="club-dashboard-section">
-                        <div className="club-dashboard-section-heading">
-                            <h2>활동 일정</h2>
-
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    handleManagementMenu(
-                                        "schedules"
-                                    )
-                                }
-                            >
-                                일정 관리
-                                <FiChevronRight />
-                            </button>
-                        </div>
-
-                        <div className="club-dashboard-calendar-layout">
-                            <div className="club-dashboard-calendar">
-                                <div className="club-dashboard-calendar-title">
-                                    <FiCalendar />
-
-                                    <strong>
-                                        {calendarData.year}년{" "}
-                                        {calendarData.month}월
-                                    </strong>
-
-                                    <button type="button">
-                                        오늘
-                                    </button>
-                                </div>
-
-                                <div className="club-dashboard-calendar-week">
-                                    {WEEK_LABELS.map(
-                                        (label) => (
-                                            <span key={label}>
-                                                {label}
-                                            </span>
-                                        )
-                                    )}
-                                </div>
-
-                                <div className="club-dashboard-calendar-days">
-                                    {calendarData.cells.map(
-                                        (day, index) => {
-                                            if (!day) {
-                                                return (
-                                                    <span
-                                                        key={`empty-${index}`}
-                                                    />
-                                                );
-                                            }
-
-                                            const date = new Date(
-                                                calendarData.year,
-                                                calendarData.month - 1,
-                                                day
-                                            );
-
-                                            const hasSchedule =
-                                                scheduledWeekdays.has(
-                                                    date.getDay()
-                                                );
-
-                                            const isToday =
-                                                day ===
-                                                calendarData.today;
-
-                                            return (
-                                                <span
-                                                    key={day}
-                                                    className={[
-                                                        hasSchedule
-                                                            ? "scheduled"
-                                                            : "",
-                                                        isToday
-                                                            ? "today"
-                                                            : ""
-                                                    ]
-                                                        .filter(Boolean)
-                                                        .join(" ")}
-                                                >
-                                                    {day}
-                                                </span>
-                                            );
-                                        }
-                                    )}
-                                </div>
+                                })}
                             </div>
 
-                            <div className="club-dashboard-selected-schedule">
-                                {selectedSchedule ? (
-                                    <>
-                                        <div className="club-dashboard-selected-date">
-                                            {selectedSchedule.nextDate.getMonth() +
-                                                1}
-                                            월{" "}
-                                            {selectedSchedule.nextDate.getDate()}
-                                            일 일정
-                                        </div>
+                            <div className="club-user-calendar-legend">
+                                <i />
+                                정기 활동
+                            </div>
+                        </div>
 
-                                        <div className="club-dashboard-selected-image">
-                                            {dashboard.activity_image_urls?.[1] ||
-                                            coverImage ? (
-                                                <img
-                                                    src={
-                                                        dashboard
-                                                            .activity_image_urls?.[1] ||
-                                                        coverImage
-                                                    }
-                                                    alt=""
-                                                />
-                                            ) : (
-                                                <FiCalendar />
-                                            )}
-                                        </div>
 
-                                        <strong>
-                                            {
-                                                selectedSchedule.day_of_week
-                                            } 정기 활동
-                                        </strong>
+                        {/* 선택한 날짜 일정 */}
+                        <div className="club-user-selected-schedule">
 
-                                        <span>
-                                            <FiClock />
-                                            {selectedSchedule.start_time.slice(
-                                                0,
-                                                5
-                                            )}
-                                            {" - "}
-                                            {selectedSchedule.end_time.slice(
-                                                0,
-                                                5
-                                            )}
-                                        </span>
+                            <div className="club-user-selected-date">
+                                {selectedDate.getMonth() + 1}월{" "}
+                                {selectedDate.getDate()}일 (
+                                {WEEK_LABELS[selectedDate.getDay()]})
+                            </div>
 
-                                        <span>
-                                            <FiMapPin />
-                                            {dashboard.venue_name ||
-                                                "장소 미정"}
-                                        </span>
+                            {selectedSchedules.length > 0 ? (
+                                selectedSchedules.map((schedule, index) => {
+                                    const dateKey =
+                                        `${formatDateKey(selectedDate)}-${schedule.club_schedule_id}`;
 
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                handleManagementMenu(
-                                                    "schedules"
-                                                )
-                                            }
+                                    const vote = attendanceVotes[dateKey];
+
+                                    return (
+                                        <article
+                                            key={`${schedule.club_schedule_id}-${index}`}
+                                            className="club-user-selected-card"
                                         >
-                                            일정 관리
-                                        </button>
-                                    </>
-                                ) : (
-                                    <div className="club-dashboard-small-empty">
-                                        등록된 일정이 없습니다.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="club-dashboard-section">
-                        <div className="club-dashboard-section-heading">
-                            <h2>다가오는 일정</h2>
-
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    handleManagementMenu(
-                                        "schedules"
-                                    )
-                                }
-                            >
-                                전체 일정 보기
-                                <FiChevronRight />
-                            </button>
-                        </div>
-
-                        <div className="club-dashboard-upcoming-list">
-                            {upcomingSchedules.map(
-                                (schedule, index) => (
-                                    <article
-                                        key={
-                                            schedule.club_schedule_id
-                                        }
-                                        className="club-dashboard-upcoming-item"
-                                    >
-                                        <div className="club-dashboard-upcoming-date">
-                                            <strong>
-                                                {schedule.nextDate.getMonth() +
-                                                    1}
-                                                .
-                                                {schedule.nextDate.getDate()}
-                                            </strong>
-
-                                            <span>
-                                                {
-                                                    WEEK_LABELS[
-                                                        schedule.nextDate.getDay()
-                                                    ]
-                                                }
-                                            </span>
-                                        </div>
-
-                                        <div className="club-dashboard-upcoming-thumbnail">
-                                            {dashboard
-                                                .activity_image_urls?.[
-                                                index
-                                            ] || coverImage ? (
-                                                <img
-                                                    src={
-                                                        dashboard
-                                                            .activity_image_urls?.[
-                                                            index
-                                                        ] ||
-                                                        coverImage
-                                                    }
-                                                    alt=""
-                                                />
-                                            ) : (
+                                            <div className="club-user-selected-icon">
                                                 <FiCalendar />
-                                            )}
-                                        </div>
+                                            </div>
 
-                                        <div className="club-dashboard-upcoming-info">
                                             <strong>
-                                                {
-                                                    schedule.day_of_week
-                                                } 정기 활동
+                                                {schedule.day_of_week} 정기 활동
                                             </strong>
 
                                             <span>
                                                 <FiClock />
-                                                {schedule.start_time.slice(
-                                                    0,
-                                                    5
-                                                )}
+                                                {schedule.start_time?.slice(0, 5)}
                                                 {" - "}
-                                                {schedule.end_time.slice(
-                                                    0,
-                                                    5
-                                                )}
+                                                {schedule.end_time?.slice(0, 5)}
                                             </span>
 
                                             <span>
                                                 <FiMapPin />
-                                                {dashboard.venue_name ||
-                                                    "장소 미정"}
+                                                {dashboard.venue_name || "장소 미정"}
+                                            </span>
+
+                                            <button
+                                                type="button"
+                                                className="club-user-event-detail-button"
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/clubs/${clubId}/events/regular-${schedule.club_schedule_id}/attendance`,
+                                                        {
+                                                            state: {
+                                                                event: {
+                                                                    event_id: `regular-${schedule.club_schedule_id}`,
+                                                                    title: `${schedule.day_of_week} 정기 활동`,
+                                                                    event_type: "정기 활동",
+                                                                    event_date: formatDateKey(
+                                                                        selectedDate
+                                                                    ),
+                                                                    start_time: schedule.start_time,
+                                                                    end_time: schedule.end_time,
+                                                                    location:
+                                                                        dashboard.venue_name,
+                                                                    description:
+                                                                        "동호회 정기 활동 일정입니다.",
+                                                                    club_schedule_id:
+                                                                        schedule.club_schedule_id,
+                                                                },
+                                                            },
+                                                        }
+                                                    )
+                                                }
+                                            >
+                                                일정 상세보기
+                                                <FiChevronRight />
+                                            </button>
+                                        </article>
+                                    );
+                                })
+                            ) : (
+                                <div className="club-user-no-schedule">
+                                    선택한 날짜에는
+                                    <br />
+                                    정기 활동이 없습니다.
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+                </section>
+
+
+                {/* 다가오는 일정 */}
+                <section className="club-user-section">
+
+                    <div className="club-user-section-heading">
+                        <h2>다가오는 일정</h2>
+
+                        <button
+                            type="button"
+                            onClick={() => handleQuickMenu("전체 일정")}
+                        >
+                            전체 일정 보기
+                            <FiChevronRight />
+                        </button>
+                    </div>
+
+                    <div className="club-user-upcoming-list">
+
+                        {upcomingSchedules.length > 0 ? (
+                            upcomingSchedules.map((schedule, index) => {
+                                const dateKey =
+                                    `${formatDateKey(schedule.date)}-${schedule.club_schedule_id}`;
+
+                                const vote = attendanceVotes[dateKey];
+
+                                return (
+                                    <article
+                                        key={`${schedule.club_schedule_id}-${index}`}
+                                        className="club-user-upcoming-item"
+                                        onClick={() =>
+                                            navigate(
+                                                `/clubs/${clubId}/events/regular-${schedule.club_schedule_id}/attendance`,
+                                                {
+                                                    state: {
+                                                        event: {
+                                                            event_id: `regular-${schedule.club_schedule_id}`,
+                                                            title: `${schedule.day_of_week} 정기 활동`,
+                                                            event_type: "정기 활동",
+                                                            event_date: formatDateKey(schedule.date),
+                                                            start_time: schedule.start_time,
+                                                            end_time: schedule.end_time,
+                                                            location: dashboard.venue_name,
+                                                            description: "동호회 정기 활동 일정입니다.",
+                                                            club_schedule_id:
+                                                                schedule.club_schedule_id,
+                                                        },
+                                                    },
+                                                }
+                                            )
+                                        }
+                                    >
+                                        <div className="club-user-upcoming-date">
+                                            <strong>
+                                                {schedule.date.getMonth() + 1}.
+                                                {schedule.date.getDate()}
+                                            </strong>
+
+                                            <span>
+                                                {WEEK_LABELS[schedule.date.getDay()]}
                                             </span>
                                         </div>
 
-                                        <span className="club-dashboard-schedule-status">
-                                            예정
-                                        </span>
+                                        <div className="club-user-upcoming-info">
+                                            <strong>
+                                                {schedule.day_of_week} 정기 활동
+                                            </strong>
 
-                                        <button
-                                            type="button"
-                                            className="club-dashboard-item-more"
-                                        >
-                                            <FiMoreHorizontal />
-                                        </button>
+                                            <span>
+                                                <FiClock />
+                                                {schedule.start_time?.slice(0, 5)}
+                                                {" - "}
+                                                {schedule.end_time?.slice(0, 5)}
+                                            </span>
+
+                                            <span>
+                                                <FiMapPin />
+                                                {dashboard.venue_name || "장소 미정"}
+                                            </span>
+                                        </div>
+
+                                        <div className="club-user-upcoming-vote">
+                                            {vote && vote !== "undecided" ? (
+                                                <span className="completed">
+                                                    투표완료
+                                                </span>
+                                            ) : (
+                                                <span className="undecided">
+                                                    미투표
+                                                </span>
+                                            )}
+                                        </div>
                                     </article>
-                                )
-                            )}
-                        </div>
-                    </section>
+                                );
+                            })
+                        ) : (
+                            <div className="club-user-empty">
+                                등록된 정기 활동이 없습니다.
+                            </div>
+                        )}
 
-                    <section className="club-dashboard-section">
-                        <div className="club-dashboard-section-heading">
+                    </div>
+                </section>
+
+
+                {/* 매칭 현황 - 운영자만 표시 */}
+                {dashboard.user_role === "owner" && (
+                    <section className="club-user-section">
+
+                        <div className="club-user-section-heading">
                             <h2>매칭 현황</h2>
 
-                            <button type="button">
+                            <button
+                                type="button"
+                                onClick={() => handleQuickMenu("매칭 현황")}
+                            >
                                 더 보기
                                 <FiChevronRight />
                             </button>
                         </div>
 
-                        <div className="club-dashboard-match-stats">
-                            <button type="button">
+                        <div className="club-user-match-stats">
+
+                            <div className="club-user-match-card">
                                 <span className="received">
                                     <FiActivity />
                                 </span>
-                                받은 매칭
+                                <p>받은 매칭</p>
                                 <strong>0</strong>
-                            </button>
+                            </div>
 
-                            <button type="button">
+                            <div className="club-user-match-card">
                                 <span className="sent">
-                                    <FiSend />
+                                    <FiRepeat />
                                 </span>
-                                보낸 매칭
+                                <p>보낸 매칭</p>
                                 <strong>0</strong>
-                            </button>
+                            </div>
 
-                            <button type="button">
+                            <div className="club-user-match-card">
                                 <span className="confirmed">
                                     <FiCheckCircle />
                                 </span>
-                                확정된 경기
+                                <p>확정된 경기</p>
                                 <strong>0</strong>
-                            </button>
+                            </div>
+
                         </div>
                     </section>
+                )}
 
-                    <section className="club-dashboard-section">
-                        <div className="club-dashboard-section-heading">
-                            <h2>최근 소식</h2>
+                {/* 최근 소식 */}
+                <section className="club-user-section">
 
-                            <button type="button">
-                                전체 보기
-                                <FiChevronRight />
-                            </button>
-                        </div>
+                    <div className="club-user-section-heading">
+                        <h2>최근 소식</h2>
 
-                        <div className="club-dashboard-empty">
-                            게시글 기능 연결 후 최근 소식이
-                            표시됩니다.
-                        </div>
-                    </section>
-                </div>
+                        <button
+                            type="button"
+                            onClick={() => handleQuickMenu("최근 소식")}
+                        >
+                            전체 보기
+                            <FiChevronRight />
+                        </button>
+                    </div>
+
+                    <div className="club-user-news-empty">
+                        <FiFileText />
+                        <p>
+                            새로운 공지나 소식이 등록되면
+                            <br />
+                            이곳에서 확인할 수 있습니다.
+                        </p>
+                    </div>
+                </section>
+
             </div>
         </main>
     );

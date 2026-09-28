@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+
 import BottomNav from "../../components/BottomNav";
 import ClubSearchFilter from "../../components/common/ClubSearchFilter";
 
+import { getMyClub } from "../../api/clubApi";
 import "./AllClub.css";
 
 // =====================================================
@@ -54,6 +56,8 @@ function ClubCard({ club, onClick }) {
 // 전체 동호회 페이지
 // =====================================================
 function AllClubs() {
+  console.log("🔥🔥🔥 AllClubs 실행됨");
+
   const navigate = useNavigate();
 
   // -----------------------------------------------------
@@ -62,6 +66,8 @@ function AllClubs() {
   const [clubs, setClubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [myClubIds, setMyClubIds] = useState([]);
 
   // -----------------------------------------------------
   // 검색 상태
@@ -165,6 +171,45 @@ function AllClubs() {
   }, [selectedFilters]);
 
   // =====================================================
+  // 내가 가입한 동호회 조회
+  // =====================================================
+  useEffect(() => {
+    const fetchMyClub = async () => {
+      try {
+        const myClub = await getMyClub();
+
+        console.log("⭐ AllClubs 내 동호회:", myClub);
+
+        const operatingClubs = myClub?.operating_clubs || [];
+        const joinedClubs = myClub?.joined_clubs || [];
+
+        const allMyClubs = [
+          ...operatingClubs,
+          ...joinedClubs,
+        ];
+
+        const clubIds = [
+          ...new Set(
+            allMyClubs
+              .map((club) => Number(club.club_id))
+              .filter(Boolean)
+          ),
+        ];
+
+        console.log("⭐ AllClubs 내 동호회 ID:", clubIds);
+
+        setMyClubIds(clubIds);
+      } catch (error) {
+        console.error("⭐ AllClubs 내 동호회 조회 오류:", error);
+        setMyClubIds([]);
+      }
+    };
+
+    fetchMyClub();
+  }, []);
+
+
+  // =====================================================
   // 검색어 필터링
   // =====================================================
   const filteredClubs = clubs.filter((club) => {
@@ -255,7 +300,22 @@ function AllClubs() {
                 key={club.club_id ?? index}
                 club={club}
                 onClick={() => {
-                  if (club.club_id) {
+                  console.log("⭐ 클릭한 동호회:", club);
+                  console.log("⭐ 내 동호회 ID:", myClubIds);
+                  console.log(
+                    "⭐ 가입 여부:",
+                    myClubIds.includes(Number(club.club_id))
+                  );
+
+                  if (!club.club_id) return;
+
+                  const isMyClub = myClubIds.includes(
+                    Number(club.club_id)
+                  );
+
+                  if (isMyClub) {
+                    navigate(`/clubs/${club.club_id}/home`);
+                  } else {
                     navigate(`/clubs/${club.club_id}`);
                   }
                 }}

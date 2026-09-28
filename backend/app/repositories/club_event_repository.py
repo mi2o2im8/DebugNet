@@ -543,6 +543,36 @@ class ClubEventRepository:
         return response.data[0]
 
     # -----------------------------------------------------
+    # 게스트 신청 생성
+    # -----------------------------------------------------
+    def create_guest_event_participant(
+        self,
+        event_id: int,
+        user_id: str,
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .insert(
+                {
+                    "event_id": event_id,
+                    "user_id": user_id,
+                    "participant_type": "guest",
+                    "status": "pending",
+                    "attendance_status": "undecided",
+                }
+            )
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError(
+                "게스트 신청 정보 생성에 실패했습니다."
+            )
+
+        return response.data[0]
+
+    # -----------------------------------------------------
     # 사용자의 기존 참석 응답 조회
     # -----------------------------------------------------
     def find_user_vote_response(
@@ -668,6 +698,95 @@ class ClubEventRepository:
             raise ValueError(
                 "이미 처리되었거나 처리할 수 없는 "
                 "게스트 신청입니다."
+            )
+
+        return response.data[0]
+    # -----------------------------------------------------
+    # 일정 반복 발생일 단건 조회
+    # -----------------------------------------------------
+    def find_schedule_occurrence(
+        self,
+        schedule_id: int,
+        occurrence_date: str,
+    ) -> dict | None:
+        response = (
+            self.admin_client
+            .table("club_event_occurrences")
+            .select("*")
+            .eq("club_schedule_id", schedule_id)
+            .eq("occurrence_date", occurrence_date)
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+#-----------------------------------------------------
+# 일정 반복 발생일에 해당하는 정기 일정 조회
+#-----------------------------------------------------
+    def find_regular_event_for_schedule(
+        self,
+        club_id: int,
+        schedule_id: int,
+        occurrence_date: str,
+    ) -> dict | None:
+
+        schedule = (
+            self.admin_client
+            .table("club_schedules")
+            .select(
+                "club_schedule_id, start_time, end_time"
+            )
+            .eq("club_schedule_id", schedule_id)
+            .eq("club_id", club_id)
+            .maybe_single()
+            .execute()
+        )
+
+        if not schedule.data:
+            return None
+
+        schedule_data = schedule.data
+
+        response = (
+            self.admin_client
+            .table("club_events")
+            .select(
+                "event_id, club_id, title, event_date, "
+                "start_time, end_time, event_type"
+            )
+            .eq("club_id", club_id)
+            .eq("event_date", occurrence_date)
+            .eq("event_type", "regular")
+            .eq("start_time", schedule_data["start_time"])
+            .eq("end_time", schedule_data["end_time"])
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+#-----------------------------------------------------
+# 일정 반복 발생일 생성
+#-----------------------------------------------------   
+    def create_schedule_occurrence(
+        self,
+        occurrence_data: dict,
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("club_event_occurrences")
+            .insert(occurrence_data)
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError(
+                "정기 일정 회차 생성에 실패했습니다."
             )
 
         return response.data[0]

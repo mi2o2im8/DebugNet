@@ -450,6 +450,16 @@ class ClubEventGuestDecisionResponse(BaseModel):
 
     message: str
 
+class ClubEventGuestApplyResponse(BaseModel):
+    event_participant_id: int
+    event_id: int
+
+    participation_status: Literal[
+        "pending",
+    ]
+
+    message: str
+
 class ClubEventAttendanceRequest(BaseModel):
     attendance_status: Literal[
         "attending",

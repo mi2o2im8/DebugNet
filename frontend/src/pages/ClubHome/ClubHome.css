@@ -1,13 +1,17 @@
 /* ========================================
    동호회 홈 전체 화면
    ======================================== */
-.ClubHome-container{
+.ClubHome-container {
     width: 100%;
     min-height: 100dvh;
     box-sizing: border-box;
+
+    padding-bottom: 90px;
+
     display: flex;
     flex-direction: column;
     align-items: center;
+
     background-color: #fff;
     font-family: "Maplestory", sans-serif;
 }
@@ -996,12 +1000,13 @@
     width: 100%;
 
     display: flex;
+    align-items: flex-start;
     gap: 8px;
 
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: visible;
 
-    padding-bottom: 4px;
+    padding-bottom: 8px;
 
     box-sizing: border-box;
 
@@ -1021,22 +1026,75 @@
 
     min-width: 0;
 
-    overflow: hidden;
+    overflow: visible;
+
+    box-sizing: border-box;
 }
 
+/* ========================================
+   게스트 모집중
+   ======================================== */
+
+.ClubHome-guest {
+    width: 100%;
+    padding: 0 12px 20px;
+    box-sizing: border-box;
+}
+
+/* 게스트 카드 목록 */
+.Guest-list {
+    width: 100%;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+
+    overflow-x: auto;
+    overflow-y: visible;
+
+    height: auto;
+    min-height: 150px;
+
+    padding-bottom: 10px;
+
+    box-sizing: border-box;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.Guest-list::-webkit-scrollbar {
+    display: none;
+}
+
+/* 게스트 카드 */
+.Guest-card {
+    flex: 0 0 calc((100% - 16px) / 3);
+
+    min-width: 0;
+
+    height: auto;
+    min-height: 130px;
+
+    overflow: visible;
+
+    box-sizing: border-box;
+
+    cursor: pointer;
+}
 
 /* 게스트 이미지 */
-
 .Guest-card-image {
     width: 100%;
     aspect-ratio: 1 / 0.75;
+
+    overflow: hidden;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
     border-radius: 7px;
-
     background-color: #eee;
 
     font-family: "Maplestory", sans-serif;
@@ -1044,6 +1102,85 @@
     color: #999;
 }
 
+/* ★ 게스트 이미지 실제 크기 */
+.Guest-card-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+/* 게스트 모집 제목 */
+.Guest-card-title {
+    margin: 6px 0 0;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+
+    color: #222;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* .Guest-card-title {
+    display: block;
+
+    margin: 6px 0 0;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+
+    color: #222;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+} */
+
+/* 게스트 활동 정보 */
+.Guest-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    margin: 5px 2px 0;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: 11px;
+    line-height: 1.3;
+
+    color: #888;
+}
+
+.Guest-card-time {
+    font-weight: 600;
+    color: #555;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Guest-card-location {
+    padding-left: 8px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 게스트 이미지 */
+.Guest-card-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
 
 /* 게스트 모집 제목 */
 

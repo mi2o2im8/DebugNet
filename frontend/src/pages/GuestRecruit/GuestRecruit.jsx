@@ -303,6 +303,7 @@ function GuestRecruit() {
               <article
                 key={event.event_id ?? index}
                 className="ClubList-card"
+                onClick={() => navigate(`/guest-recruit/${event.event_id}`)}
               >
                 {/* 이벤트 이미지 */}
                 <div className="ClubList-card-image">
@@ -328,6 +329,17 @@ function GuestRecruit() {
                     {event.description || "이벤트 설명이 없습니다."}
                   </p>
                 </div>
+
+                {/* 테스트용 */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/guest-recruit/${event.event_id}`);
+                  }}
+                >
+                  상세보기 테스트
+                </button>
               </article>
             ))}
           </div>

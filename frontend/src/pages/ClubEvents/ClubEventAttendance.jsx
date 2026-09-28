@@ -19,7 +19,9 @@ import {
 
 import {
     getClubEventAttendance,
-    updateClubEventAttendance
+    updateClubEventAttendance,
+    getClubScheduleAttendance,
+    updateClubScheduleAttendance
 } from "../../api/clubApi";
 
 import "./ClubEventAttendance.css";
@@ -59,10 +61,15 @@ function ClubEventAttendance() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const eventTitle = (
-        location.state?.eventTitle
-        || `일정 #${eventId}`
-    );
+    const event = location.state?.event;
+
+    const isRegularSchedule =
+        eventId?.startsWith("regular-");
+
+    const eventTitle =
+        event?.title
+        || location.state?.eventTitle
+        || `일정 #${eventId}`;
 
     const [attendanceStatus, setAttendanceStatus] =
         useState("undecided");
@@ -80,44 +87,52 @@ function ClubEventAttendance() {
     // 현재 로그인 사용자의 참석 응답 조회
     // -----------------------------------------------------
     useEffect(() => {
-        let cancelled = false;
+        const loadAttendance = async () => {
+            setIsLoading(true);
+            setErrorMessage("");
 
-        getClubEventAttendance(
-            clubId,
-            eventId
-        )
-            .then((result) => {
-                if (cancelled) {
+            try {
+                if (isRegularSchedule) {
+                    const result =
+                        await getClubScheduleAttendance(
+                            clubId,
+                            event.club_schedule_id,
+                            event.event_date
+                        );
+
+                    setAttendanceStatus(
+                        result.attendance_status
+                    );
+
+                    setIsLoading(false);
                     return;
                 }
+
+                const result =
+                    await getClubEventAttendance(
+                        clubId,
+                        eventId
+                    );
 
                 setAttendanceStatus(
                     result.attendance_status
-                    || "undecided"
                 );
-            })
-            .catch((error) => {
-                if (cancelled) {
-                    return;
-                }
-
+            } catch (error) {
                 setErrorMessage(
                     error.message ||
-                    "참석 응답을 불러오지 못했습니다."
+                    "참석 여부를 불러오지 못했습니다."
                 );
-            })
-            .finally(() => {
-                if (!cancelled) {
-                    setIsLoading(false);
-                }
-            });
-
-        return () => {
-            cancelled = true;
+            } finally {
+                setIsLoading(false);
+            }
         };
+
+        loadAttendance();
     }, [
         clubId,
-        eventId
+        eventId,
+        isRegularSchedule,
+        event
     ]);
 
     // -----------------------------------------------------
@@ -137,12 +152,24 @@ function ClubEventAttendance() {
         setErrorMessage("");
 
         try {
-            const result =
-                await updateClubEventAttendance(
-                    clubId,
-                    eventId,
-                    nextStatus
-                );
+            let result;
+
+            if (isRegularSchedule) {
+                result =
+                    await updateClubScheduleAttendance(
+                        clubId,
+                        event.club_schedule_id,
+                        event.event_date,
+                        nextStatus
+                    );
+            } else {
+                result =
+                    await updateClubEventAttendance(
+                        clubId,
+                        eventId,
+                        nextStatus
+                    );
+            }
 
             setAttendanceStatus(
                 result.attendance_status
@@ -150,6 +177,11 @@ function ClubEventAttendance() {
 
             alert(result.message);
         } catch (error) {
+            console.error(
+                "참석 응답 저장 실패:",
+                error
+            );
+
             setErrorMessage(
                 error.message ||
                 "참석 응답을 저장하지 못했습니다."
