@@ -40,6 +40,14 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
+    supabase_secret_key: str
+
+    # 이용 도우미(챗봇) LLM 설정
+    # 절대 React 프론트엔드에 전달하면 안 된다.
+    llm_provider: str = "openai"
+    llm_api_key: str = ""
+    llm_model: str = ""
+
 
 # 다른 파일에서 사용할 설정 객체
 settings = Settings()

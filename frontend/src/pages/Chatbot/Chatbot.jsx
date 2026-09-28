@@ -6,8 +6,9 @@
 // 3. 답변 + 진행 단계 + 관련 화면 바로가기
 // 4. 답변 평가 + 이어서 볼 질문 추천
 //
-// 답변 데이터는 chatbotData.js 에서 관리한다.
-// 나중에 AI를 연결할 때는 getBotReply() 만 바꾸면 된다.
+// - 자주 묻는 질문 버튼: chatbotData.js 에서 바로 답변 (무료, 즉시)
+// - 직접 입력한 질문: 백엔드 /api/chatbot → LLM 답변
+//   LLM이 실패하면 chatbotData.js 키워드 검색으로 대신 답한다.
 
 import {
     useEffect,
@@ -18,6 +19,8 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import ChatMessage from "../../components/Chatbot/ChatMessage";
+
+import { askChatbot } from "../../api/chatbotApi";
 
 import {
     FAQ_ITEMS,
@@ -46,30 +49,103 @@ const createMessageId = () => {
 // =========================================================
 // ⭐ 답변 만들기
 //
-// 지금은 chatbotData.js 에서 찾아서 답한다.
-// AI 연결 시 이 함수 안에서 백엔드 API를 호출하도록 바꾼다.
+// 모든 답변은 같은 모양으로 맞춘다.
+// { kind, text, steps, actions, related }
+//   kind: "answer" (답 찾음) / "fallback" (답 못 찾음)
 // =========================================================
 
-const getBotReply = async ({ faqId, text }) => {
+const FALLBACK_TEXT =
+    "아직 그 질문에는 답을 준비하지 못했어요. 아래 질문 중에 궁금한 내용이 있는지 확인해주세요.";
 
-    const faq = faqId
-        ? getFaqById(faqId)
-        : findFaqByText(text);
+// ⭐ chatbotData.js 항목 → 답변
+const replyFromFaq = (faq) => ({
+    kind: "answer",
+    text: faq.answer,
+    steps: faq.steps,
+    actions: faq.actions,
+    related: faq.related,
+});
+
+// ⭐ 로컬 키워드 검색 (LLM 실패 시 대체)
+const replyFromLocal = (text, prefix = "") => {
+
+    const faq = findFaqByText(text);
 
     if (faq) {
+        const reply = replyFromFaq(faq);
+
         return {
-            kind: "answer",
-            text: faq.answer,
-            faq,
+            ...reply,
+            text: prefix ? `${prefix} ${reply.text}` : reply.text,
         };
     }
 
     return {
         kind: "fallback",
-        text:
-            "아직 그 질문에는 답을 준비하지 못했어요. 아래 질문 중에 궁금한 내용이 있는지 확인해주세요.",
-        faq: null,
+        text: prefix ? `${prefix} ${FALLBACK_TEXT}` : FALLBACK_TEXT,
+        steps: [],
+        actions: [],
+        related: [],
     };
+};
+
+
+const getBotReply = async ({ faqId, text }) => {
+
+    // 1. 자주 묻는 질문 버튼 → 바로 답변
+    if (faqId) {
+        const faq = getFaqById(faqId);
+
+        if (faq) {
+            return replyFromFaq(faq);
+        }
+    }
+
+    // 2. 직접 입력 → LLM
+    try {
+
+        const data = await askChatbot(text);
+
+        if (!data?.found) {
+            return {
+                kind: "fallback",
+                text: data?.answer || FALLBACK_TEXT,
+                steps: [],
+                actions: [],
+                related: [],
+            };
+        }
+
+        return {
+            kind: "answer",
+            text: data.answer,
+            steps: data.steps || [],
+            actions: data.actions || [],
+            related: [],
+        };
+
+    } catch (error) {
+
+        console.error("챗봇 API 오류:", error);
+
+        // 질문 횟수 제한: 서버 안내 문구를 그대로 보여준다.
+        if (error.status === 429) {
+            return {
+                kind: "fallback",
+                text: error.message,
+                steps: [],
+                actions: [],
+                related: [],
+            };
+        }
+
+        // 3. LLM을 못 쓰면 키워드 검색으로 대신 답변
+        return replyFromLocal(
+            text,
+            "지금은 AI 답변이 어려워서 자주 묻는 질문에서 찾아봤어요."
+        );
+
+    }
 
 };
 
@@ -150,7 +226,9 @@ function Chatbot({ onClose }) {
                     type: "bot",
                     kind: "fallback",
                     text: "답변을 불러오지 못했어요. 잠시 후 다시 시도해주세요.",
-                    faq: null,
+                    steps: [],
+                    actions: [],
+                    related: [],
                     feedback: null,
                 },
             ]);
@@ -209,7 +287,13 @@ function Chatbot({ onClose }) {
 
     const renderBotExtras = (message) => {
 
-        const { faq, kind, feedback } = message;
+        const {
+            kind,
+            feedback,
+            steps = [],
+            actions = [],
+            related = [],
+        } = message;
 
         // 답을 못 찾았을 때: 자주 묻는 질문 추천
         if (kind === "fallback") {
@@ -229,25 +313,24 @@ function Chatbot({ onClose }) {
             );
         }
 
-        if (!faq) {
-            return null;
-        }
-
-        const relatedItems = faq.related
-            .map(getFaqById)
-            .filter(Boolean);
+        // 이어서 볼 질문: 정해진 추천이 없으면(LLM 답변) 자주 묻는 질문 중 3개
+        const relatedItems = (
+            related.length > 0
+                ? related.map(getFaqById).filter(Boolean)
+                : WELCOME_QUESTIONS.slice(0, 3)
+        );
 
         return (
             <div className="chatbot-answer-extra">
 
                 {/* 진행 단계 */}
-                {faq.steps.length > 0 && (
+                {steps.length > 0 && (
                     <div className="chatbot-steps">
 
                         <strong>이렇게 진행해보세요</strong>
 
                         <ol>
-                            {faq.steps.map((step) => (
+                            {steps.map((step) => (
                                 <li key={step}>{step}</li>
                             ))}
                         </ol>
@@ -257,9 +340,9 @@ function Chatbot({ onClose }) {
 
 
                 {/* 관련 화면 바로가기 */}
-                {faq.actions.length > 0 && (
+                {actions.length > 0 && (
                     <div className="chatbot-actions">
-                        {faq.actions.map((action) => (
+                        {actions.map((action) => (
                             <button
                                 key={action.path}
                                 type="button"

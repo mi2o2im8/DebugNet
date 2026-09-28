@@ -25,6 +25,8 @@ from app.routers.club_events import (
     router as club_events_router,
 )
 
+# 챗봇
+from app.routers.chatbot import router as chatbot_router
 
 # 동호회 가입 신청 및 회원 관리 API Router
 from app.routers.club_members import (
@@ -99,7 +101,7 @@ app.include_router(club_events_router)
 app.include_router(club_members_router)
 
 app.include_router(matches_router)
-
+app.include_router(chatbot_router)
 
 # ---------------------------------------------------------
 # 서버 실행 확인용 기본 API
