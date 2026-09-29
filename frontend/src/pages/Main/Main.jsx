@@ -9,7 +9,7 @@ import { supabase } from "../../../supabaseClient";
 
 import { attachClubInfoToEvents } from "../../utils/attachClubInfo";
 import { authenticatedRequest } from "../../api/apiClient";
-import { buildRecommendedClubs } from "../../utils/recommendClubs";
+import { buildRecommendedClubs, safeImageUrl } from "../../utils/recommendClubs";
 
 import "./Main.css";
 
@@ -159,9 +159,10 @@ const cardButtonStyle = {
 
 function GuestEventImage({ event }) {
 
+    // ⭐ 깨진 주소(더미 데이터)는 미리 빼서 요청 자체를 안 보냄
     const candidates = [
-        event.event_image_url,
-        event.club_image_url,
+        safeImageUrl(event.event_image_url),
+        safeImageUrl(event.club_image_url),
         SPORT_IMAGES[event.club_sport],
     ].filter(Boolean);
 

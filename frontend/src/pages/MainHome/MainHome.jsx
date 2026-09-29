@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
 import { attachClubInfoToEvents } from "../../utils/attachClubInfo";
-import { buildRecommendedClubs } from "../../utils/recommendClubs";
+import { buildRecommendedClubs, safeImageUrl } from "../../utils/recommendClubs";
 import "./MainHome.css";
 
 import { supabase } from "../../../supabaseClient";
@@ -95,9 +95,10 @@ const GUEST_STATUS_LABEL = {
 
 function GuestEventImage({ event }) {
 
+    // ⭐ 깨진 주소(더미 데이터)는 미리 빼서 요청 자체를 안 보냄
     const candidates = [
-        event.event_image_url,
-        event.club_image_url,
+        safeImageUrl(event.event_image_url),
+        safeImageUrl(event.club_image_url),
         sportImages[event.club_sport],
     ].filter(Boolean);
 
@@ -422,7 +423,7 @@ function MainHome() {
                             // ⭐ 일정 관리 페이지에서 내려오는
                             // event_image_url이 있으면 사용
                             image:
-                                event?.event_image_url ||
+                                safeImageUrl(event?.event_image_url) ||
                                 badmintonImage,
 
                             alt:
@@ -471,7 +472,7 @@ function MainHome() {
                                 : "",
 
                         image:
-                            event?.event_image_url ||
+                            safeImageUrl(event?.event_image_url) ||
                             badmintonImage,
 
                         alt:
@@ -1612,8 +1613,8 @@ function MainHome() {
                             // ⭐ DB 대표 이미지 우선
                             // ⭐ 이미지가 없을 때만 종목 기본 이미지 사용
                             const image =
-                                club?.representative_image_url ||
-                                club?.club_image ||
+                                safeImageUrl(club?.representative_image_url) ||
+                                safeImageUrl(club?.club_image) ||
                                 sportImages[sportName] ||
                                 badmintonImage;
 

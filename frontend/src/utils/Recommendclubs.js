@@ -39,6 +39,34 @@ const EXCLUDE_NO_IMAGE_CLUBS = true;
 const DUMMY_CLUB_IDS = [1, 2, 3, 4, 5, 6, 7];
 
 
+// =========================================================
+// ⭐ 깨진 이미지 주소 거르기
+//
+// 더미 데이터에 지금은 없는 Supabase 프로젝트 주소가 들어 있어서
+// 그 주소로 이미지를 요청하면 콘솔에 ERR_NAME_NOT_RESOLVED가 뜬다.
+// → 화면에 그리기 전에 미리 빼서, 요청 자체를 보내지 않게 한다.
+// =========================================================
+const BROKEN_IMAGE_HOSTS = [
+    "kzzznqcmvkclhaxyognx.supabase.co",
+];
+
+export const safeImageUrl = (url) => {
+    if (!url) return null;
+
+    try {
+        const { host } = new URL(url);
+
+        if (BROKEN_IMAGE_HOSTS.includes(host)) {
+            return null;
+        }
+    } catch {
+        // 상대 경로(프로젝트 안 이미지 등)는 그대로 사용
+    }
+
+    return url;
+};
+
+
 // ⭐ 뱃지 종류 / 색상
 export const CLUB_BADGES = {
     recommend: { label: "추천", color: "#01A17F" },
@@ -260,9 +288,9 @@ export const buildRecommendedClubs = async ({
 
         // ⭐ 이미지 없는 동호회(더미) 제외
         const hasImage = Boolean(
-            club.image_url ||
-            club.representative_image_url ||
-            club.club_image
+            safeImageUrl(club.image_url) ||
+            safeImageUrl(club.representative_image_url) ||
+            safeImageUrl(club.club_image)
         );
 
         if (EXCLUDE_NO_IMAGE_CLUBS && !hasImage) return false;
@@ -303,12 +331,15 @@ export const buildRecommendedClubs = async ({
             ) || images[0];
 
         const image =
-            mainImage?.image_url ||
-            detail.representative_image_url ||
-            club.representative_image_url ||
-            club.image_url ||
-            club.club_image ||
-            null;
+            [
+                mainImage?.image_url,
+                detail.representative_image_url,
+                club.representative_image_url,
+                club.image_url,
+                club.club_image,
+            ]
+                .map(safeImageUrl)
+                .find(Boolean) || null;
 
         const normalized = {
             id: getClubId(club),
