@@ -2,10 +2,24 @@ import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
+import CustomSelect from "../../components/common/CustomSelect";
 import { supabase } from "../../../supabaseClient";
 import "./CSS/PostWrite.css";
 import { buildApiUrl } from "../../api/apiClient";
 
+
+const createClientId = () => {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2)}`;
+};
 
 // ========================================
 // DB content → 글쓰기 화면용 content/images
@@ -23,7 +37,7 @@ const buildEditorContent = (storedContent = "") => {
         `[이미지 ${imageNumber}]`;
 
       images.push({
-        id: crypto.randomUUID(),
+        id: createClientId(),
         marker,
         file: null,
 
@@ -479,7 +493,7 @@ function PostWrite() {
       const previewUrl = URL.createObjectURL(resizedFile);
 
       const newImage = {
-        id: crypto.randomUUID(),
+        id: createClientId(),
         marker,
         file: resizedFile,
         imageUrl: null,
@@ -657,9 +671,7 @@ function PostWrite() {
   // =========================
   // 게시판 변경
   // =========================
-  const handleBoardTypeChange = (e) => {
-    const newBoardType = e.target.value;
-
+  const handleBoardTypeChange = (newBoardType) => {
     setBoardType(newBoardType);
     setSelectedSportId(null);
     setSelectedClubId(null);
@@ -966,6 +978,42 @@ function PostWrite() {
     }
   };
 
+  const boardSelectOptions = isClubCommunity
+    ? [
+        {
+          value: "club",
+          label: isClubNoticeMode
+            ? "동호회 공지"
+            : "동호회 게시판",
+        },
+      ]
+    : [
+        { value: "free", label: "자유게시판" },
+        { value: "sports", label: "종목별게시판" },
+        ...(canWriteRecruit || boardType === "recruit"
+          ? [
+              {
+                value: "recruit",
+                label: "홍보·회원구인",
+              },
+            ]
+          : []),
+        ...(canWriteNotice || boardType === "notice"
+          ? [
+              {
+                value: "notice",
+                label: "공지사항",
+              },
+            ]
+          : []),
+      ];
+
+  const managedClubSelectOptions = managedClubs.map((club) => ({
+    value: Number(club.club_id),
+    label: club.club_name,
+  }));
+
+
   return (
     <div className="post-write-container">
       {/* 상단 */}
@@ -996,50 +1044,20 @@ function PostWrite() {
       <main className="post-write-main">
         {/* 게시판 선택 */}
         <div className="post-write-field">
-          <label htmlFor="board">게시판</label>
+          <label>게시판</label>
 
-          {isClubCommunity ? (
-            <select
-              id="board"
-              value="club"
-              disabled
-            >
-              <option value="club">
-                {isClubNoticeMode
-                  ? "동호회 공지"
-                  : "동호회 게시판"}
-              </option>
-            </select>
-          ) : (
-            <select
-              id="board"
+          <div className="post-write-custom-select">
+            <CustomSelect
               value={boardType}
+              options={boardSelectOptions}
               onChange={handleBoardTypeChange}
-              disabled={isEditMode}
-            >
-              <option value="free">
-                자유게시판
-              </option>
-
-              <option value="sports">
-                종목별게시판
-              </option>
-
-              <option
-                value="recruit"
-                disabled={!canWriteRecruit}
-              >
-                홍보·회원구인 (운영진만)
-              </option>
-
-              <option
-                value="notice"
-                disabled={!canWriteNotice}
-              >
-                공지사항 (관리자만)
-              </option>
-            </select>
-          )}
+              ariaLabel="게시판 선택"
+              disabled={
+                isClubCommunity ||
+                isEditMode
+              }
+            />
+          </div>
         </div>
 
         {/* 종목별게시판일 때만 종목 선택 */}
@@ -1080,36 +1098,29 @@ function PostWrite() {
         {/* 홍보·회원구인 게시판일 때만 동호회 선택 */}
         {boardType === "recruit" && (
           <div className="post-write-field">
-            <label htmlFor="club">동호회</label>
+            <label>동호회</label>
 
-            <select
-              id="club"
-              value={selectedClubId || ""}
-              onChange={(e) =>
-                setSelectedClubId(
-                  Number(e.target.value)
-                )
-              }
-              disabled={
-                isLoadingOptions ||
-                !canWriteRecruit
-              }
-            >
-              <option value="">
-                {canWriteRecruit
-                  ? "동호회를 선택해주세요."
-                  : "운영 가능한 동호회가 없습니다."}
-              </option>
-
-              {managedClubs.map((club) => (
-                <option
-                  key={club.club_id}
-                  value={club.club_id}
-                >
-                  {club.club_name}
-                </option>
-              ))}
-            </select>
+            <div className="post-write-custom-select">
+              <CustomSelect
+                value={selectedClubId ?? ""}
+                options={managedClubSelectOptions}
+                onChange={(value) =>
+                  setSelectedClubId(
+                    Number(value)
+                  )
+                }
+                placeholder={
+                  canWriteRecruit
+                    ? "동호회를 선택해주세요."
+                    : "운영 가능한 동호회가 없습니다."
+                }
+                ariaLabel="동호회 선택"
+                disabled={
+                  isLoadingOptions ||
+                  !canWriteRecruit
+                }
+              />
+            </div>
           </div>
         )}
 

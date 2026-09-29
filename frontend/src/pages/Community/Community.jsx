@@ -3,6 +3,7 @@ import { FiBell, FiChevronLeft } from "react-icons/fi";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
+import CustomSelect from "../../components/common/CustomSelect";
 import { useNotifications } from "../../context/NotificationContext";
 import { supabase } from "../../../supabaseClient";
 import "./CSS/Community.css";
@@ -13,6 +14,17 @@ const boards = [
   { id: "sports", name: "종목별게시판" },
   { id: "recruit", name: "홍보·회원구인" },
   { id: "notice", name: "공지사항" },
+];
+
+const BOARD_SELECT_OPTIONS = boards.map((board) => ({
+  value: board.id,
+  label: board.name,
+}));
+
+const SEARCH_TYPE_OPTIONS = [
+  { value: "title", label: "제목" },
+  { value: "content", label: "내용" },
+  { value: "titleContent", label: "제목+내용" },
 ];
 
 const formatDateTime = (dateString) => {
@@ -591,31 +603,24 @@ function Community() {
           {/* 검색 */}
           <div className="community-search">
             {!isClubCommunity && (
-              <select
-                value={searchBoard}
-                onChange={(e) =>
-                  setSearchBoard(e.target.value)
-                }
-              >
-                {boards.map((board) => (
-                  <option
-                    key={board.id}
-                    value={board.id}
-                  >
-                    {board.name}
-                  </option>
-                ))}
-              </select>
+              <div className="community-search-board-select">
+                <CustomSelect
+                  value={searchBoard}
+                  options={BOARD_SELECT_OPTIONS}
+                  onChange={setSearchBoard}
+                  ariaLabel="검색할 게시판 선택"
+                />
+              </div>
             )}
 
-            <select
-              value={searchType}
-              onChange={(e) => setSearchType(e.target.value)}
-            >
-              <option value="title">제목</option>
-              <option value="content">내용</option>
-              <option value="titleContent">제목+내용</option>
-            </select>
+            <div className="community-search-type-select">
+              <CustomSelect
+                value={searchType}
+                options={SEARCH_TYPE_OPTIONS}
+                onChange={setSearchType}
+                ariaLabel="검색 범위 선택"
+              />
+            </div>
 
             <input
               type="text"
@@ -625,7 +630,11 @@ function Community() {
               onKeyDown={handleSearchKeyDown}
             />
 
-            <button type="button" onClick={handleSearch}>
+            <button
+              type="button"
+              className="community-search-submit"
+              onClick={handleSearch}
+            >
               검색
             </button>
           </div>

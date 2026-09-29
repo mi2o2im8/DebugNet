@@ -316,21 +316,75 @@
 }
 
 
-.community-search select {
+.community-search-board-select {
+  flex: 0 0 112px;
+
+  min-width: 0;
+}
+
+
+.community-search-type-select {
+  flex: 0 0 88px;
+
+  min-width: 0;
+}
+
+
+/* 팀매칭의 구 선택과 같은 공용 CustomSelect 스타일 */
+.community-search .custom-select-trigger {
   height: 36px;
 
-  padding: 0 7px;
+  padding: 0 9px 0 10px;
 
-  border: 1px solid #dddddd;
-  border-radius: 7px;
-
-  background-color: #ffffff;
-
-  font-size: 11px;
+  border-color: #dce6e1;
+  border-radius: 18px;
 
   color: #555555;
 
-  outline: none;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+
+.community-search .custom-select.open .custom-select-trigger {
+  border-color: #20b26b;
+
+  box-shadow: 0 0 0 1px rgba(32, 178, 107, 0.08);
+}
+
+
+.community-search .custom-select-arrow {
+  width: 14px;
+  height: 14px;
+
+  color: #777777;
+}
+
+
+.community-search .custom-select-menu {
+  top: calc(100% + 5px);
+
+  max-height: 220px;
+
+  border-color: #eeeeee;
+  border-radius: 12px;
+
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.1);
+}
+
+
+.community-search .custom-select-option {
+  min-height: 34px;
+
+  padding: 0 10px;
+
+  font-size: 11px;
+}
+
+
+.community-search .custom-select-option.selected {
+  color: #20b26b;
+  background: #eef9f3;
 }
 
 
@@ -354,13 +408,12 @@
 }
 
 
-.community-search input:focus,
-.community-search select:focus {
+.community-search input:focus {
   border-color: #20b26b;
 }
 
 
-.community-search button {
+.community-search-submit {
   flex-shrink: 0;
 
   height: 36px;
@@ -503,10 +556,19 @@
   }
 
 
-  .community-search select {
-    max-width: 95px;
+  .community-search-board-select {
+    flex-basis: 108px;
+  }
 
-    padding: 0 5px;
+
+  .community-search-type-select {
+    flex-basis: 82px;
+  }
+
+
+  .community-search .custom-select-trigger {
+    padding-left: 8px;
+    padding-right: 7px;
   }
 
 }

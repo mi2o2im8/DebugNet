@@ -810,3 +810,77 @@
   }
 
 }
+
+/* ========================================
+   게시글 작성 - 공용 CustomSelect
+   팀매칭 지역 선택과 같은 드롭다운 스타일
+======================================== */
+
+.post-write-custom-select {
+  width: 100%;
+}
+
+
+.post-write-custom-select .custom-select-trigger {
+  height: 44px;
+
+  padding: 0 12px;
+
+  border-color: #dce6e1;
+  border-radius: 10px;
+
+  color: #333333;
+
+  font-size: 14px;
+}
+
+
+.post-write-custom-select .custom-select.open .custom-select-trigger {
+  border-color: #20b26b;
+
+  box-shadow: 0 0 0 1px rgba(32, 178, 107, 0.08);
+}
+
+
+.post-write-custom-select .custom-select-arrow {
+  width: 15px;
+  height: 15px;
+
+  color: #777777;
+}
+
+
+.post-write-custom-select .custom-select-menu {
+  top: calc(100% + 6px);
+
+  max-height: 240px;
+
+  border-color: #eeeeee;
+  border-radius: 12px;
+
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.1);
+}
+
+
+.post-write-custom-select .custom-select-option {
+  min-height: 40px;
+
+  padding: 0 11px;
+
+  font-size: 13px;
+}
+
+
+.post-write-custom-select .custom-select-option.selected {
+  color: #20b26b;
+  background: #eef9f3;
+}
+
+
+.post-write-custom-select .custom-select-trigger:disabled {
+  border-color: #e4e4e4;
+
+  background-color: #f7f7f7;
+  color: #999999;
+}
+
