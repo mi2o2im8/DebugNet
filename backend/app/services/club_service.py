@@ -8,6 +8,8 @@ from app.schemas.clubs import (
     ClubSettingsResponse,
     ClubSettingsUpdateRequest,
     ClubSettingsUpdateResponse,
+    ClubDeleteRequest,
+    ClubDeleteResponse,
 )
 
 
@@ -650,6 +652,72 @@ class ClubService:
         return ClubSettingsUpdateResponse(
             club_id=club_id,
             message="동호회 설정이 수정되었습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 동호회 삭제 처리
+    #
+    # 회장만 실행할 수 있으며 실제 행은 보존한다.
+    # -----------------------------------------------------
+    def deactivate_club(
+        self,
+        club_id: int,
+        user_id: str,
+        request_data: ClubDeleteRequest,
+    ) -> ClubDeleteResponse:
+
+        club = self.club_repository.find_club_by_id(
+            club_id
+        )
+
+        if club is None:
+            raise LookupError(
+                "존재하지 않거나 이미 삭제된 동호회입니다."
+            )
+
+        membership = (
+            self.club_repository.find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is None:
+            raise PermissionError(
+                "이 동호회의 운영 권한이 없습니다."
+            )
+
+        user_role = str(
+            membership.get("role") or ""
+        )
+
+        if user_role != "owner":
+            raise PermissionError(
+                "동호회장만 동호회를 삭제할 수 있습니다."
+            )
+
+        if (
+            request_data.confirmation_text
+            != club["club_name"]
+        ):
+            raise ValueError(
+                "입력한 동호회 이름이 일치하지 않습니다."
+            )
+
+        deactivated_club = (
+            self.club_repository.deactivate_club(
+                club_id
+            )
+        )
+
+        if deactivated_club is None:
+            raise LookupError(
+                "동호회 삭제 처리에 실패했습니다."
+            )
+
+        return ClubDeleteResponse(
+            club_id=club_id,
+            message="동호회가 삭제되었습니다.",
         )
 
     # -----------------------------------------------------

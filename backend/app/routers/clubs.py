@@ -18,6 +18,8 @@ from app.schemas.clubs import (
     ClubSettingsResponse,
     ClubSettingsUpdateRequest,
     ClubSettingsUpdateResponse,
+    ClubDeleteRequest,
+    ClubDeleteResponse,
 )
 
 from app.services.club_service import ClubService
@@ -264,6 +266,56 @@ def update_club_settings(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="동호회 설정 수정 중 오류가 발생했습니다.",
+        ) from error
+
+# =========================================================
+# 동호회 삭제
+#
+# DELETE /api/clubs/{club_id}
+#
+# 실제 데이터는 삭제하지 않고 비활성화한다.
+# =========================================================
+
+@router.delete(
+    "/{club_id}",
+    response_model=ClubDeleteResponse,
+)
+def delete_club(
+    club_id: int,
+    request_data: ClubDeleteRequest,
+    user_id: str = Depends(get_current_user_id),
+):
+    club_service = ClubService()
+
+    try:
+        return club_service.deactivate_club(
+            club_id=club_id,
+            user_id=user_id,
+            request_data=request_data,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="동호회 삭제 중 오류가 발생했습니다.",
         ) from error
 
 # =========================================================

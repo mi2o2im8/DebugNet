@@ -18,6 +18,9 @@ import SignupReview from './pages/Signup/SignupReview'
 
 import ClubDashboard from "./pages/ClubDashboard/ClubDashboard";
 import ClubSettingsHome from "./pages/ClubSettings/ClubSettingsHome";
+import ClubBasicSettings from "./pages/ClubSettings/ClubBasicSettings";
+import ClubJoinSettings from "./pages/ClubSettings/ClubJoinSettings";
+import ClubDeleteSettings from "./pages/ClubSettings/ClubDeleteSettings";
 
 import ClubHome from './pages/ClubHome/ClubHome';
 import ClubDetail from "./pages/ClubDetail/ClubDetail";
@@ -264,6 +267,12 @@ function App() {
                 element={<ClubCreate />}
               />
 
+              {/* 동호회 삭제 */}
+              <Route
+                path="/clubs/:clubId/manage/settings/delete"
+                element={<ClubDeleteSettings />}
+              />
+
               {/* =====================================================
                   ⭐ 커뮤니티
               ===================================================== */}
@@ -303,6 +312,18 @@ function App() {
                 <Route
                   path="/clubs/:clubId/manage/settings"
                   element={<ClubSettingsHome />}
+                />
+
+                {/* 동호회 기본 정보 수정 */}
+                <Route
+                  path="/clubs/:clubId/manage/settings/basic"
+                  element={<ClubBasicSettings />}
+                />
+
+                {/* 동호회 가입 방식 설정 */}
+                <Route
+                  path="/clubs/:clubId/manage/settings/join"
+                  element={<ClubJoinSettings />}
                 />
 
                 {/* 동호회 회원 관리 */}

@@ -491,6 +491,36 @@ class ClubSettingsUpdateResponse(BaseModel):
     club_id: int
     message: str
 
+class ClubDeleteRequest(BaseModel):
+    confirmation_text: str = Field(
+        min_length=1,
+        max_length=50,
+        validation_alias=AliasChoices(
+            "confirmation_text",
+            "confirmationText",
+        ),
+    )
+
+    @field_validator("confirmation_text")
+    @classmethod
+    def strip_confirmation_text(
+        cls,
+        value: str,
+    ) -> str:
+        stripped_value = value.strip()
+
+        if not stripped_value:
+            raise ValueError(
+                "동호회 이름을 입력해주세요."
+            )
+
+        return stripped_value
+
+
+class ClubDeleteResponse(BaseModel):
+    club_id: int
+    message: str
+
 # React 에 응답 전달하기
 class ClubCreateResponse(BaseModel):
     club_id: int

@@ -203,7 +203,10 @@ class ClubRepository:
 
             club = club_response.data
 
-            if not club:
+            if (
+                not club
+                or club.get("status") is not True
+            ):
                 continue
 
             # ⭐ 종목명 조회
@@ -716,6 +719,32 @@ class ClubRepository:
             self.admin_client
             .table("clubs")
             .update(settings_data)
+            .eq("club_id", club_id)
+            .eq("status", True)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 동호회 비활성화
+    #
+    # 실제 데이터를 삭제하지 않고 앱에서 숨긴다.
+    # -----------------------------------------------------
+    def deactivate_club(
+        self,
+        club_id: int,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("clubs")
+            .update({
+                "status": False,
+            })
             .eq("club_id", club_id)
             .eq("status", True)
             .execute()

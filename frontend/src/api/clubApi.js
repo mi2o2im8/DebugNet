@@ -196,6 +196,55 @@ export async function getClubDashboard(clubId) {
     );
 }
 
+// ---------------------------------------------------------
+// 동호회 설정 조회
+// ---------------------------------------------------------
+export async function getClubSettings(clubId) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/settings`,
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// 동호회 기본 설정 수정
+// ---------------------------------------------------------
+export async function updateClubSettings(
+    clubId,
+    requestData
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/settings`,
+        {
+            method: "PATCH",
+            body: requestData
+        }
+    );
+}
+
+// ---------------------------------------------------------
+// 동호회 삭제
+//
+// 실제 DB 행은 삭제하지 않고 비활성화한다.
+// ---------------------------------------------------------
+export async function deleteClub(
+    clubId,
+    confirmationText
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}`,
+        {
+            method: "DELETE",
+            body: {
+                confirmationText
+            }
+        }
+    );
+}
+
 // 이용자용 동호회 대시보드 조회
 export async function getClubUserDashboard(clubId) {
     return authenticatedRequest(
