@@ -1,0 +1,63 @@
+{
+  "verified_sports": [
+    "축구·풋살",
+    "농구",
+    "배구",
+    "탁구",
+    "테니스"
+  ],
+  "sport_alias": {
+    "축구": "축구·풋살",
+    "풋살": "축구·풋살",
+    "축구, 풋살": "축구·풋살",
+    "축구·풋살": "축구·풋살",
+    "농구": "농구",
+    "배구": "배구",
+    "탁구": "탁구",
+    "테니스": "테니스"
+  },
+  "service_to_official_sport": {
+    "축구·풋살": "축구, 풋살",
+    "농구": "농구",
+    "배구": "배구",
+    "탁구": "탁구",
+    "테니스": "테니스"
+  },
+  "policy": {
+    "default_verified": {
+      "prior_type": "context_plus_sport",
+      "prior_strength": "normal",
+      "usage": "supplemental_prior",
+      "use_region": true,
+      "use_activity_frequency": true,
+      "use_sport": true,
+      "fallback": "global",
+      "note": "기존 H3 검증 정책. 회원 실제 가능시간보다 우선하지 않음."
+    },
+    "overrides": {
+      "테니스": {
+        "prior_type": "sport_only",
+        "prior_strength": "weak",
+        "usage": "tie_break",
+        "use_region": false,
+        "use_activity_frequency": false,
+        "use_sport": true,
+        "fallback": "global",
+        "rolling_top3": 52.5,
+        "global_top3": 51.25,
+        "incremental_gain_pp": 1.25,
+        "note": "테니스 Rolling Validation 결과 Sport Prior는 Global 대비 +1.25pp로 약한 양의 효과. Region+Frequency 및 Context+Sport는 성능 저하로 제외."
+      }
+    },
+    "unverified": {
+      "prior_type": "global",
+      "prior_strength": "weak",
+      "usage": "fallback_only",
+      "use_region": false,
+      "use_activity_frequency": false,
+      "use_sport": false,
+      "fallback": "global",
+      "note": "아직 종목별 시간순 검증을 하지 않은 종목. 종목 전용 Prior를 사용하지 않음."
+    }
+  }
+}

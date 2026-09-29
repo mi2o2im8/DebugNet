@@ -258,6 +258,359 @@ class ClubMemberRepository:
         return response.data or []
 
     # -----------------------------------------------------
+    # H2 가입 신청자 적합도 평가용 데이터 일괄 조회
+    #
+    # 동호회 조건은 한 번만 조회하고,
+    # 신청자 정보는 user_id 목록으로 묶어서 조회한다.
+    # -----------------------------------------------------
+    def find_h2_application_contexts(
+        self,
+        club_id: int,
+        user_ids: list[str],
+    ) -> dict[str, dict]:
+
+        normalized_user_ids = list(
+            dict.fromkeys(
+                str(user_id)
+                for user_id in user_ids
+                if user_id
+            )
+        )
+
+        if not normalized_user_ids:
+            return {}
+
+        club_response = (
+            self.admin_client
+            .table("clubs")
+            .select(
+                "club_id, activity_frequency, "
+                "gender_rule"
+            )
+            .eq("club_id", club_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not club_response.data:
+            raise LookupError(
+                "동호회 정보를 찾을 수 없습니다."
+            )
+
+        club = club_response.data[0]
+
+        club_sport_response = (
+            self.admin_client
+            .table("club_sports")
+            .select("sport_id")
+            .eq("club_id", club_id)
+            .limit(1)
+            .execute()
+        )
+
+        club_sport_id = None
+        club_sport_name = None
+
+        if club_sport_response.data:
+            club_sport_id = int(
+                club_sport_response.data[0][
+                    "sport_id"
+                ]
+            )
+
+            sport_response = (
+                self.admin_client
+                .table("sports")
+                .select("sport_name")
+                .eq("sport_id", club_sport_id)
+                .limit(1)
+                .execute()
+            )
+
+            if sport_response.data:
+                club_sport_name = (
+                    sport_response.data[0].get(
+                        "sport_name"
+                    )
+                )
+
+        schedule_rows = (
+            self.admin_client
+            .table("club_schedules")
+            .select(
+                "day_of_week, start_time, end_time"
+            )
+            .eq("club_id", club_id)
+            .execute()
+            .data
+            or []
+        )
+
+        club_level_rows = (
+            self.admin_client
+            .table("club_sport_levels")
+            .select("sport_level")
+            .eq("club_id", club_id)
+            .execute()
+            .data
+            or []
+        )
+
+        club_region_rows = (
+            self.admin_client
+            .table("club_regions")
+            .select("region")
+            .eq("club_id", club_id)
+            .execute()
+            .data
+            or []
+        )
+
+        club_atmosphere_rows = (
+            self.admin_client
+            .table("club_atmospheres")
+            .select("atmosphere")
+            .eq("club_id", club_id)
+            .execute()
+            .data
+            or []
+        )
+
+        club_keyword_rows = (
+            self.admin_client
+            .table("club_intro_keywords")
+            .select("keyword")
+            .eq("club_id", club_id)
+            .order("display_order")
+            .execute()
+            .data
+            or []
+        )
+
+        club_age_group_rows = (
+            self.admin_client
+            .table("club_age_groups")
+            .select("age_group")
+            .eq("club_id", club_id)
+            .execute()
+            .data
+            or []
+        )
+
+        club_context = {
+            "club_id": club_id,
+            "sport_id": club_sport_id,
+            "sport_name": club_sport_name,
+            "activity_frequency": club.get(
+                "activity_frequency"
+            ),
+            "gender_rule": (
+                club.get("gender_rule") or "all"
+            ),
+            "schedules": schedule_rows,
+            "sport_levels": [
+                row["sport_level"]
+                for row in club_level_rows
+                if row.get("sport_level")
+            ],
+            "region": (
+                club_region_rows[0].get("region")
+                if club_region_rows
+                else None
+            ),
+            "atmospheres": [
+                row["atmosphere"]
+                for row in club_atmosphere_rows
+                if row.get("atmosphere")
+            ],
+            "intro_keywords": [
+                row["keyword"]
+                for row in club_keyword_rows
+                if row.get("keyword")
+            ],
+            "age_groups": [
+                row["age_group"]
+                for row in club_age_group_rows
+                if row.get("age_group")
+            ],
+        }
+
+        user_rows = (
+            self.admin_client
+            .table("users")
+            .select(
+                "user_id, gender, birth_date, "
+                "travel_distance_km, max_monthly_fee, "
+                "activity_frequency"
+            )
+            .in_("user_id", normalized_user_ids)
+            .execute()
+            .data
+            or []
+        )
+
+        user_sport_rows = (
+            self.admin_client
+            .table("user_sports")
+            .select("user_id, sport_id")
+            .in_("user_id", normalized_user_ids)
+            .execute()
+            .data
+            or []
+        )
+
+        user_level_rows = (
+            self.admin_client
+            .table("user_sport_levels")
+            .select(
+                "user_id, sport_id, sport_level"
+            )
+            .in_("user_id", normalized_user_ids)
+            .execute()
+            .data
+            or []
+        )
+
+        user_region_rows = (
+            self.admin_client
+            .table("user_regions")
+            .select("user_id, region")
+            .in_("user_id", normalized_user_ids)
+            .execute()
+            .data
+            or []
+        )
+
+        user_time_rows = (
+            self.admin_client
+            .table("user_available_times")
+            .select(
+                "user_id, day_of_week, "
+                "start_time, end_time"
+            )
+            .in_("user_id", normalized_user_ids)
+            .execute()
+            .data
+            or []
+        )
+
+        user_atmosphere_rows = (
+            self.admin_client
+            .table("user_club_atmospheres")
+            .select("user_id, atmosphere")
+            .in_("user_id", normalized_user_ids)
+            .execute()
+            .data
+            or []
+        )
+
+        applicants = {
+            user_id: {
+                "user_id": user_id,
+                "gender": None,
+                "birth_date": None,
+                "travel_distance_km": None,
+                "max_monthly_fee": None,
+                "activity_frequency": None,
+                "sport_ids": [],
+                "sport_levels": {},
+                "regions": [],
+                "available_times": [],
+                "atmospheres": [],
+            }
+            for user_id in normalized_user_ids
+        }
+
+        for row in user_rows:
+            user_id = str(row["user_id"])
+            applicant = applicants.get(user_id)
+
+            if applicant is None:
+                continue
+
+            applicant.update(
+                {
+                    "gender": row.get("gender"),
+                    "birth_date": row.get(
+                        "birth_date"
+                    ),
+                    "travel_distance_km": row.get(
+                        "travel_distance_km"
+                    ),
+                    "max_monthly_fee": row.get(
+                        "max_monthly_fee"
+                    ),
+                    "activity_frequency": row.get(
+                        "activity_frequency"
+                    ),
+                }
+            )
+
+        for row in user_sport_rows:
+            user_id = str(row["user_id"])
+            if user_id in applicants:
+                applicants[user_id][
+                    "sport_ids"
+                ].append(int(row["sport_id"]))
+
+        for row in user_level_rows:
+            user_id = str(row["user_id"])
+            if user_id in applicants:
+                applicants[user_id][
+                    "sport_levels"
+                ][str(row["sport_id"])] = (
+                    row.get("sport_level")
+                )
+
+        for row in user_region_rows:
+            user_id = str(row["user_id"])
+            if (
+                user_id in applicants
+                and row.get("region")
+            ):
+                applicants[user_id][
+                    "regions"
+                ].append(row["region"])
+
+        for row in user_time_rows:
+            user_id = str(row["user_id"])
+            if user_id in applicants:
+                applicants[user_id][
+                    "available_times"
+                ].append(
+                    {
+                        "day_of_week": row.get(
+                            "day_of_week"
+                        ),
+                        "start_time": row.get(
+                            "start_time"
+                        ),
+                        "end_time": row.get(
+                            "end_time"
+                        ),
+                    }
+                )
+
+        for row in user_atmosphere_rows:
+            user_id = str(row["user_id"])
+            if (
+                user_id in applicants
+                and row.get("atmosphere")
+            ):
+                applicants[user_id][
+                    "atmospheres"
+                ].append(row["atmosphere"])
+
+        return {
+            user_id: {
+                "club": club_context,
+                "applicant": applicant,
+            }
+            for user_id, applicant
+            in applicants.items()
+        }
+
+    # -----------------------------------------------------
     # 특정 사용자의 동호회 회원 정보 조회
     # -----------------------------------------------------
     def find_membership(

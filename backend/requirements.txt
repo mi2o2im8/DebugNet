@@ -7,3 +7,7 @@ email-validator
 python-dotenv
 python-multipart
 apscheduler
+numpy==2.4.6
+pandas==3.0.6
+joblib==1.6.0
+scikit-learn==1.6.1

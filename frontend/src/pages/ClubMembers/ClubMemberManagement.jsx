@@ -58,6 +58,30 @@ const APPLICATION_STATUS_LABELS = {
     rejected: "승인 거절"
 };
 
+const FIT_CLASS_NAMES = {
+    "적합": "fit",
+    "조건부 적합": "conditional",
+    "확인 필요": "review",
+    "부적합": "unfit"
+};
+
+
+function formatFitScore(value) {
+    if (
+        value === null
+        || value === undefined
+        || value === ""
+    ) {
+        return null;
+    }
+
+    const score = Number(value);
+
+    return Number.isFinite(score)
+        ? Math.round(score)
+        : null;
+}
+
 
 const MEMBER_ROLE_LABELS = {
     owner: "동호회장",
@@ -715,6 +739,31 @@ function ClubMemberManagement() {
                                             === application
                                                 .application_id;
 
+                                        const fitAnalysis =
+                                            application.fit_analysis;
+
+                                        const directFitScore =
+                                            formatFitScore(
+                                                fitAnalysis
+                                                    ?.direct_fit_score
+                                            );
+
+                                        const officialPriorScore =
+                                            formatFitScore(
+                                                fitAnalysis
+                                                    ?.official_prior_score
+                                            );
+
+                                        const displayedFitScore =
+                                            directFitScore
+                                            ?? officialPriorScore;
+
+                                        const fitClassName =
+                                            FIT_CLASS_NAMES[
+                                                fitAnalysis
+                                                    ?.classification
+                                            ] || "review";
+
                                         return (
                                             <article
                                                 key={
@@ -793,6 +842,76 @@ function ClubMemberManagement() {
                                                         }
                                                     </span>
                                                 </div>
+
+                                                {fitAnalysis && (
+                                                    <section
+                                                        className={
+                                                            "club-member-fit-summary "
+                                                            + fitClassName
+                                                        }
+                                                    >
+                                                        <div className="club-member-fit-heading">
+                                                            <span className="club-member-fit-title">
+                                                                <FiShield />
+                                                                AI 가입 적합도
+                                                            </span>
+
+                                                            <strong className="club-member-fit-badge">
+                                                                {fitAnalysis.classification}
+                                                            </strong>
+                                                        </div>
+
+                                                        <div className="club-member-fit-metrics">
+                                                            <div>
+                                                                <span>
+                                                                    {
+                                                                        directFitScore !== null
+                                                                            ? "직접 적합도"
+                                                                            : "사전 적합도"
+                                                                    }
+                                                                </span>
+
+                                                                <strong>
+                                                                    {
+                                                                        displayedFitScore
+                                                                        ?? "-"
+                                                                    }
+                                                                    {
+                                                                        displayedFitScore !== null
+                                                                            ? "점"
+                                                                            : ""
+                                                                    }
+                                                                </strong>
+                                                            </div>
+
+                                                            <div>
+                                                                <span>
+                                                                    데이터 충족률
+                                                                </span>
+
+                                                                <strong>
+                                                                    {fitAnalysis.data_coverage}%
+                                                                </strong>
+                                                            </div>
+                                                        </div>
+
+                                                        <p className="club-member-fit-action">
+                                                            {fitAnalysis.operator_action}
+                                                        </p>
+
+                                                        {
+                                                            !fitAnalysis.hard_constraint_passed
+                                                            && (
+                                                                <p className="club-member-fit-warning">
+                                                                    {
+                                                                        fitAnalysis
+                                                                            .hard_constraint_reason
+                                                                    }
+                                                                </p>
+                                                            )
+                                                        }
+                                                    </section>
+                                                )}
 
                                                 <button
                                                     type="button"
@@ -894,6 +1013,71 @@ function ClubMemberManagement() {
                                                                 </p>
                                                             )
                                                         }
+
+                                                        {fitAnalysis && (
+                                                            <section className="club-member-fit-detail">
+                                                                <h2>
+                                                                    AI 분석 상세
+                                                                </h2>
+
+                                                                <div className="club-member-fit-detail-list">
+                                                                    <div>
+                                                                        <strong>
+                                                                            심한 불일치
+                                                                        </strong>
+
+                                                                        <p>
+                                                                            {
+                                                                                (
+                                                                                    fitAnalysis
+                                                                                        .severe_mismatch_axes
+                                                                                    || []
+                                                                                ).join(", ")
+                                                                                || "없음"
+                                                                            }
+                                                                        </p>
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <strong>
+                                                                            부분 불일치
+                                                                        </strong>
+
+                                                                        <p>
+                                                                            {
+                                                                                (
+                                                                                    fitAnalysis
+                                                                                        .partial_mismatch_axes
+                                                                                    || []
+                                                                                ).join(", ")
+                                                                                || "없음"
+                                                                            }
+                                                                        </p>
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <strong>
+                                                                            미확인 정보
+                                                                        </strong>
+
+                                                                        <p>
+                                                                            {
+                                                                                (
+                                                                                    fitAnalysis
+                                                                                        .missing_axes
+                                                                                    || []
+                                                                                ).join(", ")
+                                                                                || "없음"
+                                                                            }
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+
+                                                                <p className="club-member-fit-note">
+                                                                    AI 분석은 운영자 판단을 돕는 참고 정보입니다.
+                                                                </p>
+                                                            </section>
+                                                        )}
                                                     </div>
                                                 )}
 

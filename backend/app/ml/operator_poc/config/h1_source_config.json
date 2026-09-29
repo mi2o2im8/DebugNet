@@ -1,0 +1,141 @@
+{
+  "engine_name": "H1_Recruitment_Target_Recommendation",
+  "version": "1.0.0",
+  "engine_type": "rule_based_candidate_retrieval_and_ranking",
+  "target_use": "아직 가입 신청하지 않은 전체 회원 중 특정 동호회가 우선 모집할 후보를 탐색하고 정렬",
+  "official_prior": {
+    "use_in_personal_ranking": false,
+    "reason": "핵심 서비스 종목 사용자군에서 RecentSport+CurrentFreq Rolling ROC-AUC=0.5815로 개인 모집 우선순위에 사용하기에는 효용 부족",
+    "role": "research_and_market_context_only"
+  },
+  "eligibility": {
+    "recruitment_contact_consent": true
+  },
+  "hard_filters": {
+    "sport_match": "exact",
+    "schedule_overlap": "at_least_one_slot",
+    "travel": "estimated_travel_minutes <= user_allowed_travel_minutes",
+    "optional_age": "apply_only_if_club_sets_age_constraint",
+    "optional_gender": "apply_only_if_club_sets_gender_constraint"
+  },
+  "ranking_axes": {
+    "schedule": {
+      "weight": 1.0,
+      "formula": "overlap_club_slots / total_club_regular_slots"
+    },
+    "skill": {
+      "weight": 1.0,
+      "levels": {
+        "초보": 0,
+        "중급": 1,
+        "숙련": 2
+      },
+      "formula": "1 - 0.5 * minimum_level_distance"
+    },
+    "purpose": {
+      "weight": 1.0,
+      "levels": {
+        "친목": 0,
+        "운동": 1,
+        "경쟁": 2
+      },
+      "formula": "1 - 0.5 * purpose_distance"
+    },
+    "atmosphere": {
+      "weight": 1.0,
+      "scale": "1_to_5",
+      "formula": "1 - abs(user-club)/4"
+    },
+    "activity_frequency": {
+      "weight": 1.0,
+      "formula": "min(user_desired, club_actual) / max(user_desired, club_actual)"
+    },
+    "cost": {
+      "weight": 0.5,
+      "role": "supplemental",
+      "formula": "min(1, user_budget / club_monthly_cost)"
+    }
+  },
+  "travel_score": {
+    "included_in_ranking": false,
+    "reason": "사용자 이동 허용범위로 Hard Filter한 뒤 다시 거리 비율로 감점하면 이중 패널티 발생"
+  },
+  "bottleneck": {
+    "core_axes": [
+      "schedule",
+      "skill",
+      "purpose",
+      "atmosphere",
+      "activity_frequency"
+    ],
+    "severe_threshold": 0.5,
+    "partial_range": [
+      0.5,
+      0.75
+    ],
+    "cost_is_core_bottleneck": false
+  },
+  "action_rules": {
+    "priority_high": {
+      "condition": "no_core_severe AND score >= 90",
+      "action": "최우선 모집"
+    },
+    "priority_normal": {
+      "condition": "no_core_severe AND score >= 80",
+      "action": "우선 모집"
+    },
+    "general": {
+      "condition": "no_core_severe AND score < 80",
+      "action": "일반 후보"
+    },
+    "trial": {
+      "condition": "core_severe AND score >= 70 AND club_trial_available",
+      "action": "체험 제안"
+    },
+    "low_priority": {
+      "condition": "core_severe AND (score < 70 OR trial_not_available)",
+      "action": "후순위"
+    }
+  },
+  "mvp_thresholds_are_learned": false,
+  "threshold_note": "80/90/70 기준은 실제 모집 성공 로그가 없는 현재 MVP 단계의 운영 Rule이며 향후 서비스 로그로 재검증",
+  "required_user_fields": [
+    "모집제안수신동의",
+    "희망종목",
+    "주활동지역",
+    "이동가능시간",
+    "가능요일",
+    "가능시간대",
+    "실력",
+    "목적",
+    "분위기",
+    "희망활동빈도",
+    "월지출가능금액",
+    "나이",
+    "성별"
+  ],
+  "required_club_fields": [
+    "운영종목",
+    "활동장소",
+    "정기활동요일",
+    "정기활동시간",
+    "모집희망실력",
+    "운영목적",
+    "분위기",
+    "월활동횟수",
+    "월예상비용",
+    "모집연령조건",
+    "모집성별조건",
+    "체험가능여부"
+  ],
+  "future_learning_targets": [
+    "추천노출",
+    "사용자클릭",
+    "모집제안발송",
+    "제안응답",
+    "체험신청",
+    "체험참여",
+    "정식가입",
+    "가입후지속참여"
+  ]
+}

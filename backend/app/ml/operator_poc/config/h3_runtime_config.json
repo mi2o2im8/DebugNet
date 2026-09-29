@@ -1,0 +1,171 @@
+{
+  "engine": {
+    "hypothesis": "H3",
+    "name": "Schedule Activity Optimization Engine",
+    "version": "2.0",
+    "status": "final_mvp"
+  },
+  "supported_sports": {
+    "verified": [
+      "축구·풋살",
+      "농구",
+      "배구",
+      "탁구",
+      "테니스"
+    ],
+    "aliases": {
+      "축구": "축구·풋살",
+      "풋살": "축구·풋살",
+      "축구, 풋살": "축구·풋살",
+      "축구·풋살": "축구·풋살",
+      "농구": "농구",
+      "배구": "배구",
+      "탁구": "탁구",
+      "테니스": "테니스"
+    },
+    "unverified_sport_policy": "engine_allowed_global_prior_fallback"
+  },
+  "official_prior": {
+    "role": "cold_start_supplemental_prior",
+    "is_attendance_probability": false,
+    "default_verified_policy": {
+      "applies_to": [
+        "축구·풋살",
+        "농구",
+        "배구",
+        "탁구"
+      ],
+      "prior_type": "context_plus_sport_model",
+      "model_features": [
+        "응답자_지역_광역",
+        "주운동_참여빈도",
+        "현재동호회_주종목"
+      ],
+      "strength": "normal",
+      "usage": "supplemental_prior",
+      "fallback": "global_prior"
+    },
+    "sport_overrides": {
+      "테니스": {
+        "prior_type": "sport_only_empirical",
+        "features": [
+          "현재동호회_주종목"
+        ],
+        "strength": "weak",
+        "usage": "tie_break",
+        "use_region": false,
+        "use_activity_frequency": false,
+        "rolling_validation": {
+          "valid_schedule_n": 321,
+          "evaluation_n": 240,
+          "global_top3_pct": 51.25,
+          "tennis_sport_top3_pct": 52.5,
+          "incremental_gain_pp": 1.25,
+          "better_years": 2,
+          "same_years": 4,
+          "worse_years": 0
+        },
+        "excluded_context_results": {
+          "region_frequency_top3_pct": 46.25,
+          "region_frequency_vs_global_pp": -5.0,
+          "context_sport_top3_pct": 45.83,
+          "context_sport_vs_global_pp": -5.42
+        },
+        "reason": "테니스에서는 Sport-only Prior가 Global 대비 약한 양의 개선을 보였으나, 지역/참여빈도 세분화는 성능을 저하시켰으므로 Sport Prior를 Tie-break 보조정보로만 사용"
+      }
+    },
+    "unverified_policy": {
+      "prior_type": "global",
+      "strength": "weak",
+      "usage": "fallback_only",
+      "sport_specific_claim_allowed": false
+    }
+  },
+  "schedule_slot": {
+    "canonical_format": "요일 | 시간대",
+    "examples": [
+      "평일 | 저녁(18~22시)",
+      "휴일 | 오전(8~12시)"
+    ],
+    "accepted_legacy_separators": [
+      "+",
+      "|"
+    ],
+    "canonical_separator": "|"
+  },
+  "service_inputs": {
+    "club": [
+      "sport",
+      "region",
+      "activity_frequency",
+      "minimum_participants",
+      "guest_allowed"
+    ],
+    "member": [
+      "member_id",
+      "available_slots",
+      "max_travel_minutes",
+      "travel_minutes_by_venue"
+    ],
+    "venue": [
+      "venue_id",
+      "available_slots"
+    ]
+  },
+  "constraints": {
+    "member_schedule": "hard",
+    "venue_availability": "hard",
+    "travel_range": "hard",
+    "minimum_participants": "operational",
+    "guest_fallback": "conditional"
+  },
+  "ranking_priority": [
+    "minimum_participants_satisfied",
+    "guest_needed_ascending",
+    "reachable_member_count_descending",
+    "availability_ratio_descending",
+    "official_prior_rank",
+    "official_prior_score",
+    "schedule_stable_sort"
+  ],
+  "production_flow": [
+    "normalize_sport",
+    "normalize_schedule_slots",
+    "member_exact_availability",
+    "venue_availability",
+    "travel_constraint",
+    "reachable_member_count",
+    "minimum_participants_check",
+    "official_prior_routing",
+    "guest_fallback",
+    "unique_schedule_top3"
+  ],
+  "output": {
+    "top_k": 3,
+    "per_recommendation": [
+      "rank",
+      "schedule",
+      "venue_id",
+      "reachable_count",
+      "total_members",
+      "availability_ratio",
+      "guest_needed",
+      "operation_status",
+      "prior_rank",
+      "prior_score"
+    ],
+    "prior_metadata": [
+      "source",
+      "strength",
+      "usage"
+    ]
+  },
+  "interpretation": {
+    "official_prior_is_probability": false,
+    "official_prior_can_override_real_availability": false,
+    "real_service_inputs_priority": true,
+    "unverified_sports_can_use_engine": true,
+    "unverified_sports_use_sport_prior": false,
+    "future_primary_target": "실제 서비스 schedule_vote / attendance 로그 기반 일정별 참여율"
+  }
+}

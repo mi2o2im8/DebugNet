@@ -314,6 +314,148 @@
     color: #cb4444;
 }
 
+/* ---------------------------------------------------------
+   AI 가입 적합도
+--------------------------------------------------------- */
+
+.club-member-fit-summary {
+    display: grid;
+    gap: 10px;
+    margin: 0 16px 12px;
+    padding: 12px;
+    border: 1px solid #dce7e0;
+    border-radius: 11px;
+    background: #f7faf8;
+}
+
+.club-member-fit-heading,
+.club-member-fit-title,
+.club-member-fit-metrics {
+    display: flex;
+    align-items: center;
+}
+
+.club-member-fit-heading {
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.club-member-fit-title {
+    gap: 5px;
+    color: #506158;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.club-member-fit-title svg {
+    font-size: 14px;
+}
+
+.club-member-fit-badge {
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: #e8eef8;
+    color: #43628c;
+    font-size: 10px;
+}
+
+.club-member-fit-summary.fit .club-member-fit-badge {
+    background: #dff5e6;
+    color: #008c35;
+}
+
+.club-member-fit-summary.conditional .club-member-fit-badge {
+    background: #fff1cf;
+    color: #9a6700;
+}
+
+.club-member-fit-summary.unfit .club-member-fit-badge {
+    background: #ffe4e4;
+    color: #c43e3e;
+}
+
+.club-member-fit-metrics {
+    overflow: hidden;
+    border: 1px solid #e2e9e4;
+    border-radius: 9px;
+    background: #ffffff;
+}
+
+.club-member-fit-metrics > div {
+    display: grid;
+    flex: 1;
+    gap: 3px;
+    padding: 9px;
+    text-align: center;
+}
+
+.club-member-fit-metrics > div + div {
+    border-left: 1px solid #e5ebe7;
+}
+
+.club-member-fit-metrics span {
+    color: #7a877f;
+    font-size: 9px;
+}
+
+.club-member-fit-metrics strong {
+    color: #253129;
+    font-size: 14px;
+}
+
+.club-member-fit-action,
+.club-member-fit-warning {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.club-member-fit-action {
+    color: #35433a;
+    font-weight: 700;
+}
+
+.club-member-fit-warning {
+    padding-top: 8px;
+    border-top: 1px solid #e6ebe8;
+    color: #b44747;
+}
+
+.club-member-fit-detail-list {
+    display: grid;
+    gap: 8px;
+}
+
+.club-member-fit-detail-list > div {
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    gap: 8px;
+    padding: 9px 10px;
+    border: 1px solid #e1e8e3;
+    border-radius: 9px;
+    background: #ffffff;
+}
+
+.club-member-fit-detail-list strong,
+.club-member-fit-detail-list p,
+.club-member-fit-note {
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.club-member-fit-detail-list strong {
+    color: #66736b;
+}
+
+.club-member-fit-detail-list p {
+    color: #28332c;
+    overflow-wrap: anywhere;
+}
+
+.club-member-fit-note {
+    color: #8a958e;
+}
 
 /* ---------------------------------------------------------
    신청서 상세
