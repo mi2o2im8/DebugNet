@@ -572,6 +572,39 @@ function MatchHome() {
           </span>
         </button>
 
+        {/* ========================================
+            AI 상대팀 추천
+
+            클릭하면 사용자가 원하는 경기 조건을
+            직접 입력하는 추천 페이지로 이동한다.
+        ======================================== */}
+        <button
+          type="button"
+          className="match-ai-placeholder match-ai-recommend-button"
+          onClick={() =>
+            navigate("/matches/recommend")
+          }
+        >
+          <div className="match-ai-icon">
+            <FiZap />
+          </div>
+
+          <div className="match-ai-recommend-copy">
+            <strong>
+              AI 상대팀 추천
+            </strong>
+
+            <p>
+              원하는 경기 조건을 입력하면
+              잘 맞는 상대팀을 추천해드려요.
+            </p>
+          </div>
+
+          <FiChevronRight
+            className="match-ai-recommend-arrow"
+          />
+        </button>
+
 
         {/* ========================================
             선택한 날짜에 내가 등록한 경기
@@ -667,40 +700,6 @@ function MatchHome() {
           </section>
 
         )}
-
-
-        {/* ========================================
-            AI 상대팀 추천
-
-            클릭하면 사용자가 원하는 경기 조건을
-            직접 입력하는 추천 페이지로 이동한다.
-        ======================================== */}
-        <button
-          type="button"
-          className="match-ai-placeholder match-ai-recommend-button"
-          onClick={() =>
-            navigate("/matches/recommend")
-          }
-        >
-          <div className="match-ai-icon">
-            <FiZap />
-          </div>
-
-          <div className="match-ai-recommend-copy">
-            <strong>
-              AI 상대팀 추천
-            </strong>
-
-            <p>
-              원하는 경기 조건을 입력하면
-              잘 맞는 상대팀을 추천해드려요.
-            </p>
-          </div>
-
-          <FiChevronRight
-            className="match-ai-recommend-arrow"
-          />
-        </button>
 
 
         {/* 날짜별 상대팀 목록 */}

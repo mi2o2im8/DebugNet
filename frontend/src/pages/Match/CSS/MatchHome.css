@@ -512,17 +512,23 @@
   display: flex;
   align-items: center;
 
-  gap: 11px;
+  gap: 12px;
 
-  margin-top: 16px;
-  padding: 13px 14px;
+  margin-top: 12px;
+  padding: 16px;
 
-  border: 1px dashed #dddddd;
-  border-radius: 10px;
+  border: 1px solid #bfe7d2;
+  border-radius: 12px;
 
-  background-color: #fafafa;
+  background:
+    linear-gradient(
+      135deg,
+      #f0fbf5 0%,
+      #ffffff 100%
+    );
 
-  opacity: 0.8;
+  box-shadow:
+    0 3px 12px rgba(32, 178, 107, 0.08);
 }
 
 
@@ -549,18 +555,23 @@
 .match-ai-placeholder strong {
   display: block;
 
-  margin-bottom: 2px;
+  margin-top: 3px;
+  margin-bottom: 3px;
 
-  font-size: 12px;
+  font-size: 15px;
+  font-weight: 700;
 
-  color: #444444;
+  color: #222222;
 }
 
 
 .match-ai-placeholder p {
-  font-size: 10px;
+  margin: 0;
 
-  color: #999999;
+  font-size: 11px;
+  line-height: 1.45;
+
+  color: #666666;
 }
 
 
@@ -578,6 +589,24 @@
   font-size: 9px;
 }
 
+.match-ai-badge {
+  display: inline-flex;
+  align-items: center;
+
+  height: 18px;
+
+  padding: 0 6px;
+
+  border-radius: 999px;
+
+  background-color: #dcf7e8;
+
+  color: #16945a;
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
 
 /* ========================================
    상대팀 목록
@@ -1275,9 +1304,14 @@
 
 .match-ai-recommend-button:hover,
 .match-ai-recommend-button:active {
-  border-color: #bfe7d2;
+  border-color: #82d6ab;
 
-  background-color: #f4fbf7;
+  background:
+    linear-gradient(
+      135deg,
+      #e9f9f1 0%,
+      #f8fffb 100%
+    );
 }
 
 
@@ -1292,5 +1326,5 @@
 
   color: #20b26b;
 
-  font-size: 18px;
+  font-size: 20px;
 }
