@@ -1,0 +1,189 @@
+/* =========================================================
+   ⭐ 메인 커뮤니티 미리보기 (CommunityPreview.jsx)
+   다른 페이지와 겹치지 않게 cp- 로 시작하는 클래스만 사용
+========================================================= */
+
+.cp-section {
+    width: 100%;
+    margin: 18px 0;
+    padding: 12px 12px 6px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e6eeec;
+    border-radius: 14px;
+    background: #fff;
+}
+
+
+/* ---------- 제목 + 더보기 ---------- */
+
+.cp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cp-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cp-title img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+.cp-title h3 {
+    margin: 0;
+
+    font-size: 16px;
+    font-weight: 700;
+    color: #222;
+}
+
+.cp-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+
+    font-size: 12px;
+    color: #888;
+    text-decoration: none;
+}
+
+
+/* ---------- 탭 ---------- */
+
+.cp-tabs {
+    display: flex;
+    gap: 4px;
+
+    margin: 10px 0 4px;
+
+    border-bottom: 1px solid #eee;
+}
+
+.cp-tab {
+    padding: 8px 10px;
+
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+
+    background: none;
+    color: #888;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    cursor: pointer;
+}
+
+.cp-tab.active {
+    border-bottom-color: #01A17F;
+
+    color: #01A17F;
+    font-weight: 700;
+}
+
+
+/* ---------- 목록 ---------- */
+
+.cp-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.cp-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 10px 0;
+
+    border-bottom: 1px solid #f2f2f2;
+
+    color: #222;
+    text-decoration: none;
+}
+
+.cp-item:last-child {
+    border-bottom: none;
+}
+
+.cp-item:active {
+    background: #f8fbfa;
+}
+
+/* 왼쪽 아이콘 */
+.cp-item-icon {
+    flex-shrink: 0;
+
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+    background: #F4FBF9;
+
+    font-size: 15px;
+}
+
+/* 제목 + 정보 */
+.cp-item-body {
+    flex: 1;
+    min-width: 0;
+
+    text-align: left;
+}
+
+.cp-item-title {
+    margin: 0 0 3px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cp-item-meta {
+    margin: 0;
+
+    font-size: 11px;
+    color: #999;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cp-item-meta span {
+    margin: 0 4px;
+}
+
+/* 오른쪽 사진 */
+.cp-item-thumb {
+    flex-shrink: 0;
+
+    width: 48px;
+    height: 48px;
+
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.cp-empty {
+    margin: 14px 0;
+
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+}

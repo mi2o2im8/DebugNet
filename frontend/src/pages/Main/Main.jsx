@@ -10,6 +10,7 @@ import { supabase } from "../../../supabaseClient";
 import { attachClubInfoToEvents } from "../../utils/attachClubInfo";
 import { authenticatedRequest } from "../../api/apiClient";
 import { buildRecommendedClubs, safeImageUrl } from "../../utils/recommendClubs";
+import CommunityPreview from "../../components/CommunityPreview/CommunityPreview";
 
 import "./Main.css";
 
@@ -1225,6 +1226,14 @@ function Main() {
                     </div>
 
                 </section>
+
+
+                {/* =====================================================
+                    ⭐ 커뮤니티 (인기글 / 자유게시판 / 동호회 이야기)
+                    가입한 동호회가 없으므로 동호회 이야기 = 홍보·회원구인
+                ===================================================== */}
+
+                <CommunityPreview icon={activityIcon} />
 
 
                 {/* =====================================================
