@@ -134,6 +134,13 @@ class OperatorMlService:
             if club_start is None or club_end is None:
                 continue
 
+            # PostgreSQL TIME에는 24:00을 저장할 수 없어
+            # 회원가입 단계에서 하루 끝을 00:00으로 저장한다.
+            # 종료 시간이 시작 시간보다 작거나 같다면
+            # 다음 날 자정 또는 익일 시간으로 해석한다.
+            if club_end <= club_start:
+                club_end += 24 * 60
+
             has_overlap = False
 
             for user_time in user_times:
@@ -151,6 +158,9 @@ class OperatorMlService:
 
                 if user_start is None or user_end is None:
                     continue
+
+                if user_end <= user_start:
+                    user_end += 24 * 60
 
                 if max(club_start, user_start) < min(
                     club_end,
