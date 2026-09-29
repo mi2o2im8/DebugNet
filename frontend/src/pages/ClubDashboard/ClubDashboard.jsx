@@ -30,6 +30,10 @@ import {
 } from "../../api/clubApi";
 
 import {
+    getMatchManagementSummary
+} from "../Match/api/matchApi";
+
+import {
     authenticatedRequest
 } from "../../api/apiClient";
 
@@ -207,6 +211,19 @@ function ClubDashboard() {
     const [recentPostsError, setRecentPostsError] =
         useState("");
 
+    const [matchSummary, setMatchSummary] =
+        useState({
+            received: 0,
+            sent: 0,
+            upcoming: 0
+        });
+
+    const [matchSummaryLoading, setMatchSummaryLoading] =
+        useState(true);
+
+    const [matchSummaryError, setMatchSummaryError] =
+        useState("");
+
     useEffect(() => {
         let cancelled = false;
 
@@ -293,6 +310,57 @@ function ClubDashboard() {
         };
 
         loadRecentPosts();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [clubId]);
+
+    // =========================
+    // 실제 매칭 관리 요약 조회
+    // =========================
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadMatchSummary = async () => {
+            setMatchSummaryLoading(true);
+            setMatchSummaryError("");
+
+            try {
+                const result =
+                    await getMatchManagementSummary(
+                        clubId
+                    );
+
+                if (!cancelled) {
+                    setMatchSummary({
+                        received: result.received || 0,
+                        sent: result.sent || 0,
+                        upcoming: result.upcoming || 0
+                    });
+                }
+            } catch (error) {
+                console.error(
+                    "운영진 대시보드 매칭 현황 조회 실패:",
+                    error
+                );
+
+                if (!cancelled) {
+                    setMatchSummaryError(
+                        error.message ||
+                        "매칭 현황을 불러오지 못했습니다."
+                    );
+                }
+            } finally {
+                if (!cancelled) {
+                    setMatchSummaryLoading(false);
+                }
+            }
+        };
+
+        if (clubId) {
+            loadMatchSummary();
+        }
 
         return () => {
             cancelled = true;
@@ -470,6 +538,18 @@ function ClubDashboard() {
         selectedEventDateKey,
         upcomingEvents
     ]);
+
+    // 매칭 현황 숫자 표시
+    const getMatchSummaryValue = (key) => {
+        if (
+            matchSummaryLoading
+            || matchSummaryError
+        ) {
+            return "-";
+        }
+
+        return matchSummary[key] ?? 0;
+    };
 
     const handleManagementMenu = (menuId) => {
         if (menuId === "members") {
@@ -1039,35 +1119,61 @@ function ClubDashboard() {
                         <div className="club-dashboard-section-heading">
                             <h2>매칭 현황</h2>
 
-                            <button type="button">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    navigate(`/clubs/${clubId}/matches`)
+                                }
+                            >
                                 더 보기
                                 <FiChevronRight />
                             </button>
                         </div>
 
                         <div className="club-dashboard-match-stats">
-                            <button type="button">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    navigate(
+                                        `/clubs/${clubId}/matches/list?tab=received`
+                                    )
+                                }
+                            >
                                 <span className="received">
                                     <FiActivity />
                                 </span>
                                 받은 매칭
-                                <strong>0</strong>
+                                <strong>{getMatchSummaryValue("received")}</strong>
                             </button>
 
-                            <button type="button">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    navigate(
+                                        `/clubs/${clubId}/matches/list?tab=sent`
+                                    )
+                                }
+                            >
                                 <span className="sent">
                                     <FiSend />
                                 </span>
                                 보낸 매칭
-                                <strong>0</strong>
+                                <strong>{getMatchSummaryValue("sent")}</strong>
                             </button>
 
-                            <button type="button">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    navigate(
+                                        `/clubs/${clubId}/matches/list?tab=upcoming`
+                                    )
+                                }
+                            >
                                 <span className="confirmed">
                                     <FiCheckCircle />
                                 </span>
                                 확정된 경기
-                                <strong>0</strong>
+                                <strong>{getMatchSummaryValue("upcoming")}</strong>
                             </button>
                         </div>
                     </section>
