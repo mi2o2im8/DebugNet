@@ -16,7 +16,7 @@
 import { supabase } from "../../supabaseClient";
 import { buildApiUrl } from "../api/apiClient";
 
-
+ 
 
 
 // ⭐ 기준값 (필요하면 숫자만 바꾸면 됨)
