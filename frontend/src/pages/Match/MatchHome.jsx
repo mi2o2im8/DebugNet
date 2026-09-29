@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 
 import BottomNav from "../../components/BottomNav";
+import { useNotifications } from "../../context/NotificationContext";
 import CustomSelect from "../../components/common/CustomSelect";
 import MatchCalendar from "./components/MatchCalendar";
 import {
@@ -110,6 +111,9 @@ const formatSelectedDate = (dateString) => {
 
 function MatchHome() {
   const navigate = useNavigate();
+
+  // 공통 알림 Context의 안 읽은 알림 개수
+  const { unreadCount: unreadNotificationCount } = useNotifications();
 
   const [
     selectedDate,
@@ -475,12 +479,18 @@ function MatchHome() {
           className="match-header-icon-btn"
           aria-label="알림"
           onClick={() =>
-            alert(
-              "알림 기능은 공통 알림 페이지와 연결 예정입니다."
-            )
+            navigate("/notification")
           }
         >
           <FiBell />
+
+          {unreadNotificationCount > 0 && (
+            <span className="match-notification-badge">
+              {unreadNotificationCount >= 10
+                ? "10+"
+                : unreadNotificationCount}
+            </span>
+          )}
         </button>
 
       </header>
