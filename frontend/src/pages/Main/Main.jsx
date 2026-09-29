@@ -8,7 +8,7 @@ import BottomNav from "../../components/BottomNav";
 import { supabase } from "../../../supabaseClient";
 
 import { attachClubInfoToEvents } from "../../utils/attachClubInfo";
-import { authenticatedRequest } from "../../api/apiClient";
+import { authenticatedRequest, buildApiUrl } from "../../api/apiClient";
 import { buildRecommendedClubs, safeImageUrl } from "../../utils/recommendClubs";
 import CommunityPreview from "../../components/CommunityPreview/CommunityPreview";
 
@@ -43,9 +43,7 @@ import { useNotifications } from "../../context/NotificationContext";
 // ⭐ 백엔드 주소 (apiClient.js 와 같은 방식)
 // =========================================================
 
-const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ||
-    "http://127.0.0.1:8000";
+
 
 
 // =========================================================
@@ -253,7 +251,7 @@ function Main() {
                 // ⭐ 로그인 안 한 사용자도 볼 수 있도록
                 //    인증 없이 호출 (백엔드도 인증 필요 없는 API)
                 const response = await fetch(
-                    `${API_BASE_URL}/api/clubs/guest-recruiting`
+                    buildApiUrl(`/api/clubs/guest-recruiting`)
                 );
 
                 if (!response.ok) {
@@ -396,7 +394,7 @@ function Main() {
             try {
 
                 const response = await fetch(
-                    `${API_BASE_URL}/api/clubs/search`
+                    buildApiUrl(`/api/clubs/search`)
                 );
 
                 if (!response.ok) {

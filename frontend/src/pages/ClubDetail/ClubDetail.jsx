@@ -1,3 +1,4 @@
+import { buildApiUrl } from "../../api/apiClient";
 import { supabase } from "../../../supabaseClient";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -39,8 +40,7 @@ function ClubDetail() {
           return;
         }
 
-        const response = await fetch(
-          `http://localhost:8000/api/clubs/${clubId}/member-status?user_id=${user.id}`
+        const response = await fetch(buildApiUrl(`/api/clubs/${clubId}/member-status?user_id=${user.id}`)
         );
 
         if (!response.ok) {
@@ -50,11 +50,6 @@ function ClubDetail() {
         const data = await response.json();
 
         setMemberStatus(data.status);
-
-        if (data.status === "active") {
-          navigate(`/clubs/${clubId}/home`);
-          return;
-        }
       } catch (error) {
         console.error("가입 상태 조회 오류:", error);
       }
@@ -76,8 +71,7 @@ function ClubDetail() {
   useEffect(() => {
     const fetchClub = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:8000/api/clubs/${clubId}`
+        const response = await fetch(buildApiUrl(`/api/clubs/${clubId}`)
         );
 
         if (!response.ok) {

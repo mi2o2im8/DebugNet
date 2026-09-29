@@ -1,3 +1,4 @@
+import { buildApiUrl } from "../../api/apiClient";
 // 9. 입력 정보 확인 페이지
 
 import "./Signup.css";
@@ -9,57 +10,6 @@ import basicProfileImg from "../../assets/img/basic_profile_img.png";
 import { supabase } from "../../../supabaseClient";
 import backIcon from "../../assets/img/back.png";
 
-// -------------------------------------------------
-// 활동 가능 시간: 같은 시간대끼리 묶어서 보여주기
-// -------------------------------------------------
-const DAY_ORDER = ["월", "화", "수", "목", "금", "토", "일"];
-
-// 요일 목록 → "평일", "주말", "월~수", "월, 수" 같은 문구로
-const formatDays = (days) => {
-    const sorted = DAY_ORDER.filter((day) => days.includes(day));
-    const joined = sorted.join("");
-
-    if (joined === "월화수목금토일") return "매일";
-    if (joined === "월화수목금") return "평일";
-    if (joined === "토일") return "주말";
-
-    // 연달아 있는 요일 묶기 (3일 이상이면 "월~수")
-    const groups = [];
-    sorted.forEach((day) => {
-        const index = DAY_ORDER.indexOf(day);
-        const last = groups[groups.length - 1];
-
-        if (last && DAY_ORDER.indexOf(last[last.length - 1]) === index - 1) {
-            last.push(day);
-        } else {
-            groups.push([day]);
-        }
-    });
-
-    return groups
-        .map((group) =>
-            group.length >= 3
-                ? `${group[0]}~${group[group.length - 1]}`
-                : group.join(", ")
-        )
-        .join(", ");
-};
-
-// 같은 시간대끼리 요일 모으기
-const groupTimesByRange = (times = []) => {
-    const map = new Map();
-
-    times.forEach((time) => {
-        const key = `${time.startTime} ~ ${time.endTime}`;
-        if (!map.has(key)) map.set(key, []);
-        if (!map.get(key).includes(time.day)) map.get(key).push(time.day);
-    });
-
-    return [...map.entries()].map(([range, days]) => ({
-        days: formatDays(days),
-        range,
-    }));
-};
 
 function SignupReview() {
 
@@ -311,8 +261,7 @@ function SignupReview() {
             // ⭐ 회원가입 API 요청
             // ========================================
 
-            const response = await fetch(
-                "http://127.0.0.1:8000/api/auth/signup",
+            const response = await fetch(buildApiUrl("/api/auth/signup"),
                 {
                     method: "POST",
 
@@ -439,8 +388,7 @@ function SignupReview() {
 
                 // users.profile_image에 URL 저장
                 const profileResponse =
-                    await fetch(
-                        "http://127.0.0.1:8000/api/users/me/profile-image",
+                    await fetch(buildApiUrl("/api/users/me/profile-image"),
                         {
                             method: "PATCH",
 
@@ -736,6 +684,7 @@ function SignupReview() {
                 {/* ========================================
                     ⭐ 활동 가능 시간
                 ======================================== */}
+
                 <div className="review-card">
 
                     {/* 카테고리 */}
@@ -743,14 +692,23 @@ function SignupReview() {
                         활동 가능 시간
                     </div>
 
+
                     {/* 내용 */}
                     <div className="review-content">
-                        {groupTimesByRange(signupData.availableTimes).map(
-                            (group) => (
-                                <p key={group.range + group.days}>
-                                    <span className="review-time-days">{group.days}</span>
-                                    {group.range}
+
+                        {signupData.availableTimes?.map(
+                            (time, index) => (
+
+                                <p key={index}>
+
+                                    {time.day}요일{" "}
+
+                                    {time.startTime}
+                                    {" ~ "}
+                                    {time.endTime}
+
                                 </p>
+
                             )
                         )}
 

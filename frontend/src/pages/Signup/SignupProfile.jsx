@@ -1,3 +1,4 @@
+import { buildApiUrl } from "../../api/apiClient";
 // 2. 기본정보 입력 페이지
 
 // npm install react-datepicker 설치
@@ -166,8 +167,7 @@ function Signup() {
         }
 
         try {
-            const response = await fetch(
-                `http://127.0.0.1:8000/api/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`
+            const response = await fetch(buildApiUrl(`/api/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`)
             );
 
             if (!response.ok) {

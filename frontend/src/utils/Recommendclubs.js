@@ -1,3 +1,4 @@
+import { buildApiUrl } from "../api/apiClient";
 // =========================================================
 // ⭐ "이런 활동도 있어요" 추천 동호회 만들기
 //
@@ -15,9 +16,7 @@
 
 import { supabase } from "../../supabaseClient";
 
-const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ||
-    "http://127.0.0.1:8000";
+
 
 
 // ⭐ 기준값 (필요하면 숫자만 바꾸면 됨)
@@ -174,7 +173,7 @@ const getUserPreferences = async () => {
 const getClubDetail = async (clubId) => {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/clubs/${clubId}`
+            buildApiUrl(`/api/clubs/${clubId}`)
         );
 
         if (!response.ok) {

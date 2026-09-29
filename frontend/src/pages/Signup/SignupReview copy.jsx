@@ -1,3 +1,4 @@
+import { buildApiUrl } from "../../api/apiClient";
 import "./Signup.css";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -185,8 +186,7 @@ function SignupReview() {
             );
 
             // 회원가입 API 요청
-            const response = await fetch(
-                "http://127.0.0.1:8000/api/auth/signup",
+            const response = await fetch(buildApiUrl("/api/auth/signup"),
                 {
                     method: "POST",
                     headers: {
@@ -278,8 +278,7 @@ function SignupReview() {
                 );
 
                 // users.profile_image에 URL 저장
-                const profileResponse = await fetch(
-                    "http://127.0.0.1:8000/api/users/me/profile-image",
+                const profileResponse = await fetch(buildApiUrl("/api/users/me/profile-image"),
                     {
                         method: "PATCH",
                         headers: {

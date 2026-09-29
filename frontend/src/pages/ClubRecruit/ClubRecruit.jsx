@@ -1,3 +1,4 @@
+import { buildApiUrl } from "../../api/apiClient";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -93,9 +94,7 @@ function ClubRecruit() {
         setError("");
 
         // 모집 중인 동호회 조회 API
-        const url = new URL(
-          "http://localhost:8000/api/clubs/recruiting"
-        );
+        const url = new URL(buildApiUrl("/api/clubs/recruiting"), window.location.origin);
 
         // -------------------------------------------------
         // 종목 필터

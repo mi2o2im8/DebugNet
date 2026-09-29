@@ -1,3 +1,4 @@
+import { buildApiUrl } from "../../api/apiClient";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
@@ -106,8 +107,7 @@ function GuestRecruitDetail() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(
-          "http://localhost:8000/api/clubs/guest-recruiting",
+        const response = await fetch(buildApiUrl("/api/clubs/guest-recruiting"),
           {
             signal: controller.signal,
           }
@@ -198,8 +198,7 @@ function GuestRecruitDetail() {
         return;
       }
 
-      const response = await fetch(
-        `http://localhost:8000/api/clubs/${event.club_id}/events/${event.event_id}/guest-application`,
+      const response = await fetch(buildApiUrl(`/api/clubs/${event.club_id}/events/${event.event_id}/guest-application`),
         {
           method: "POST",
           headers: {

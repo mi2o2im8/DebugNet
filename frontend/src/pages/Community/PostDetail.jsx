@@ -1,6 +1,7 @@
+import { buildApiUrl } from "../../api/apiClient";
 import { useEffect, useRef, useState } from "react";
 import { FiMoreVertical, FiX } from "react-icons/fi";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
 import basicProfileImg from "../../assets/img/basic_profile_img.png";
@@ -73,29 +74,7 @@ const parsePostContent = (content) => {
 
 function PostDetail() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const {
-    postId,
-    clubId
-  } = useParams();
-
-  const isClubCommunity =
-    Boolean(clubId);
-
-  const isManageCommunity =
-    location.pathname.includes(
-      "/manage/community"
-    );
-
-  const communityBasePath =
-    isClubCommunity
-      ? (
-          isManageCommunity
-            ? `/clubs/${clubId}/manage/community`
-            : `/clubs/${clubId}/community`
-        )
-      : "/community";
+  const { postId } = useParams();
 
   // 현재 로그인 사용자 UUID
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -216,8 +195,7 @@ function PostDetail() {
         }
 
         // 게시글 상세 요청
-        const response = await fetch(
-          `http://127.0.0.1:8000/api/posts/${postId}`,
+        const response = await fetch(buildApiUrl(`/api/posts/${postId}`),
           {
             headers: {
               Authorization:
@@ -241,20 +219,6 @@ function PostDetail() {
         const data =
           await response.json();
 
-        // 현재 주소의 동호회 게시글인지 확인
-        if (
-          isClubCommunity &&
-          (
-            data.board !== "club" ||
-            Number(data.clubId) !==
-              Number(clubId)
-          )
-        ) {
-          throw new Error(
-            "해당 동호회의 게시글이 아닙니다."
-          );
-        }
-
         setPost(data);
 
       } catch (error) {
@@ -277,12 +241,7 @@ function PostDetail() {
 
     fetchPostDetail();
 
-  }, [
-    postId,
-    clubId,
-    isClubCommunity,
-    navigate
-  ]);
+  }, [postId, navigate]);
 
 
   // =========================
@@ -320,8 +279,7 @@ function PostDetail() {
         }
 
 
-        const response = await fetch(
-          `http://127.0.0.1:8000/api/posts/${postId}/comments`,
+        const response = await fetch(buildApiUrl(`/api/posts/${postId}/comments`),
           {
             headers: {
               Authorization:
@@ -403,8 +361,7 @@ function PostDetail() {
         return;
       }
 
-      const response = await fetch(
-        `http://127.0.0.1:8000/api/posts/${post.id}`,
+      const response = await fetch(buildApiUrl(`/api/posts/${post.id}`),
         {
           method: "DELETE",
 
@@ -429,13 +386,10 @@ function PostDetail() {
 
       setShowPostMenu(false);
 
-      // 삭제 성공 후 해당 커뮤니티 목록으로 이동
-      navigate(
-        communityBasePath,
-        {
-          replace: true,
-        }
-      );
+      // 삭제 성공 후 커뮤니티 목록으로 이동
+      navigate("/community", {
+        replace: true,
+      });
 
     } catch (error) {
       console.error(
@@ -505,8 +459,7 @@ function PostDetail() {
         return;
       }
 
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/blocks",
+      const response = await fetch(buildApiUrl("/api/blocks"),
         {
           method: "POST",
 
@@ -597,8 +550,7 @@ function PostDetail() {
         }
 
 
-        const response = await fetch(
-          `http://127.0.0.1:8000/api/posts/${postId}/comments`,
+        const response = await fetch(buildApiUrl(`/api/posts/${postId}/comments`),
           {
             method: "POST",
 
@@ -708,8 +660,7 @@ function PostDetail() {
         }
 
 
-        const response = await fetch(
-          `http://127.0.0.1:8000/api/comments/${commentId}`,
+        const response = await fetch(buildApiUrl(`/api/comments/${commentId}`),
           {
             method: "PATCH",
 
@@ -837,8 +788,7 @@ function PostDetail() {
         return;
       }
 
-      const response = await fetch(
-        `http://127.0.0.1:8000/api/comments/${commentId}`,
+      const response = await fetch(buildApiUrl(`/api/comments/${commentId}`),
         {
           method: "DELETE",
 
@@ -908,7 +858,7 @@ function PostDetail() {
           </p>
         </main>
 
-        {!isClubCommunity && <BottomNav />}
+        <BottomNav />
 
       </div>
     );
@@ -935,7 +885,7 @@ function PostDetail() {
           <button
             type="button"
             onClick={() =>
-              navigate(communityBasePath)
+              navigate("/community")
             }
           >
             커뮤니티로 돌아가기
@@ -943,7 +893,7 @@ function PostDetail() {
 
         </main>
 
-        {!isClubCommunity && <BottomNav />}
+        <BottomNav />
 
       </div>
     );
@@ -961,15 +911,7 @@ function PostDetail() {
           ←
         </button>
 
-        <h1>
-          {isClubCommunity
-            ? (
-                post?.isClubNotice
-                  ? "동호회 공지"
-                  : "동호회 게시글"
-              )
-            : "게시글"}
-        </h1>
+        <h1>게시글</h1>
       </header>
 
       <main className="post-detail-main">
@@ -1035,15 +977,12 @@ function PostDetail() {
                         onClick={() => {
                           setShowPostMenu(false);
 
-                          navigate(
-                            `${communityBasePath}/write`,
-                            {
-                              state: {
-                                board: post.board,
-                                editPost: post,
-                              },
-                            }
-                          );
+                          navigate("/community/write", {
+                            state: {
+                              board: post.board,
+                              editPost: post,
+                            },
+                          });
                         }}
                       >
                         수정하기
@@ -1395,7 +1334,7 @@ function PostDetail() {
         </div>
       )}
 
-      {!isClubCommunity && <BottomNav />}
+      <BottomNav />
     </div>
   );
 }

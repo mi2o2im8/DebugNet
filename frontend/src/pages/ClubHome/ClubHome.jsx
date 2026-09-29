@@ -1,3 +1,4 @@
+import { buildApiUrl } from "../../api/apiClient";
 import BottomNav from "../../components/BottomNav";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -13,14 +14,6 @@ function ClubHome() {
   const [clubs, setClubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  // =========================================
-  // 게스트 모집중 목록 및 상태
-  // =========================================  
-  const [guestEvents, setGuestEvents] = useState([]);
-  const [guestLoading, setGuestLoading] = useState(true);
-  const [guestError, setGuestError] = useState("");
-
   
   // 검색 결과 화면 표시 여부
   const [isSearchResult, setIsSearchResult] = useState(false);
@@ -68,9 +61,7 @@ function ClubHome() {
         setLoading(true);
         setError("");
 
-        const url = new URL(
-          "http://localhost:8000/api/clubs/search"
-        );
+        const url = new URL(buildApiUrl("/api/clubs/search"), window.location.origin);
 
         // 선택한 종목 다중 전달
         selectedSports.forEach((sport) => {
@@ -117,74 +108,7 @@ function ClubHome() {
 
     fetchClubs();
   }, [selectedSports, selectedRegions, selectedDays, selectedTimeSlots,]);
-  // =========================================
-  // 게스트 모집 이벤트 조회
-  // =========================================
-  useEffect(() => {
-    const controller = new AbortController();
 
-    const fetchGuestEvents = async () => {
-      try {
-        setGuestLoading(true);
-        setGuestError("");
-
-        const response = await fetch(
-          "http://localhost:8000/api/clubs/guest-recruiting",
-          {
-            signal: controller.signal,
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `게스트 모집 조회 실패 (HTTP ${response.status})`
-          );
-        }
-
-        const data = await response.json();
-
-        let eventList = [];
-
-        if (Array.isArray(data)) {
-          eventList = data;
-        } else if (Array.isArray(data.events)) {
-          eventList = data.events;
-        } else if (Array.isArray(data.data)) {
-          eventList = data.data;
-        } else {
-          throw new Error(
-            "게스트 모집 데이터 형식이 올바르지 않습니다."
-          );
-        }
-
-        console.log("게스트 모집 이벤트:", eventList);
-
-        console.log(
-          "게스트 첫 번째 데이터:",
-          eventList[0]
-        );
-
-        setGuestEvents(eventList);
-      } catch (err) {
-        if (err.name === "AbortError") return;
-
-        console.error("게스트 모집 조회 오류:", err);
-
-        setGuestError(err.message);
-        setGuestEvents([]);
-      } finally {
-        if (!controller.signal.aborted) {
-          setGuestLoading(false);
-        }
-      }
-    };
-
-    fetchGuestEvents();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
   // =========================================
   // 검색어 + 적용된 필터를 기준으로 동호회 검색
   // =========================================
@@ -198,6 +122,46 @@ function ClubHome() {
       club.club_intro?.toLowerCase().includes(keyword);
     return matchesKeyword;
   });
+
+
+  // 게스트 모집중 데이터 (임시)
+  const guestList = [
+    {
+      id: 1,
+      title: "주말 풋살 게스트",
+      info: "토요일 14:00 · 강서구",
+    },
+    {
+      id: 2,
+      title: "배드민턴 게스트 모집",
+      info: "일요일 10:00 · 마포구",
+    },
+    {
+      id: 3,
+      title: "테니스 게스트 모집",
+      info: "토요일 13:00 · 영등포구",
+    },
+    {
+      id: 4,
+      title: "평일 저녁 풋살 게스트",
+      info: "수요일 19:00 · 양천구",
+    },
+    {
+      id: 5,
+      title: "주말 배드민턴 게스트",
+      info: "토요일 10:00 · 강서구",
+    },
+    {
+      id: 6,
+      title: "초보자 테니스 게스트",
+      info: "일요일 15:00 · 마포구",
+    },
+    {
+      id: 7,
+      title: "금요일 풋살 게스트",
+      info: "금요일 20:00 · 영등포구",
+    },
+  ];
   
   // =========================================
   // 홈 화면 회원 모집중 목록
@@ -412,15 +376,7 @@ function ClubHome() {
 
         <div className="ClubHome-section-header">
 
-          <h2
-            onClick={() => {
-              if (!isSearchResult) {
-                navigate("/clubs/recruit");
-              }
-            }}
-            style={{ cursor: isSearchResult ? "default" : "pointer" }}
-          >
-
+          <h2>
             {isSearchResult ? "검색 결과" : "회원 모집중"}
           </h2>
 
@@ -511,82 +467,38 @@ function ClubHome() {
         <section className="ClubHome-guest">
 
           <div className="ClubHome-section-header">
-
-            <h2
-              onClick={() => navigate("/guest-recruit")}
-              style={{ cursor: "pointer" }}
-            >
-              게스트 모집중
-            </h2>
+            <h2>게스트 모집중</h2>
           </div>
 
           <div className="Guest-list">
 
-            {guestLoading ? (
-              <p className="ClubHome-message">
-                게스트 모집 정보를 불러오는 중...
-              </p>
-            ) : guestError ? (
-              <p className="ClubHome-message">
-                {guestError}
-              </p>
-            ) : guestEvents.length === 0 ? (
-              <p className="ClubHome-message">
-                현재 모집 중인 게스트가 없습니다.
-              </p>
-            ) : (
-              <>
-                {guestEvents.slice(0, 6).map((event) => (
-                  <div
-                    className="Guest-card"
-                    key={event.event_id}
-                    onClick={() =>
-                      navigate(`/guest-recruit/${event.event_id}`, {
-                        state: {
-                          event: event,
-                        },
-                      })
-                    }
-                  >
-                    <div className="Guest-card-image">
-                      {event.event_image_url ? (
-                        <img
-                          src={event.event_image_url}
-                          alt={event.title}
-                        />
-                      ) : (
-                        "이미지"
-                      )}
-                    </div>
+            {/* 게스트 카드 최대 6개 */}
+            {guestList.slice(0, 6).map((guest) => (
+              <div className="Guest-card" key={guest.id}>
 
-                    <h3 className="Guest-card-title">
-                      {event.title}
-                    </h3>
+                <div className="Guest-card-image">
+                  이미지
+                </div>
 
-                    <div className="Guest-card-info">
-                        <span className="Guest-card-time">
-                            {event.start_time?.slice(0, 5)}
-                            {" - "}
-                            {event.end_time?.slice(0, 5)}
-                        </span>
+                <h3 className="Guest-card-title">
+                  {guest.title}
+                </h3>
 
-                        <span className="Guest-card-location">
-                            └ {event.location || "장소 미정"}
-                        </span>
-                    </div>
-                  </div>
-                ))}
+                <p className="Guest-card-info">
+                  {guest.info}
+                </p>
 
-                {guestEvents.length > 6 && (
-                  <button
-                    type="button"
-                    className="ClubHome-guest-more"
-                    onClick={() => navigate("/guest-recruit")}
-                  >
-                    더보기 →
-                  </button>
-                )}
-              </>
+              </div>
+            ))}
+
+            {/* 6개 이후 더보기 버튼 */}
+            {guestList.length > 6 && (
+              <button
+                className="ClubHome-guest-more"
+                onClick={() => navigate("/clubs/guest-recruit")}
+              >
+                더보기 →
+              </button>
             )}
 
           </div>

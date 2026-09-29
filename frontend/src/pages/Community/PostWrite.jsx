@@ -1,5 +1,6 @@
+import { buildApiUrl } from "../../api/apiClient";
 import { useEffect, useState, useRef } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
 import { supabase } from "../../../supabaseClient";
@@ -205,23 +206,6 @@ function PostWrite() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { clubId } = useParams();
-  const isClubCommunity = Boolean(clubId);
-
-  const isManageCommunity =
-    location.pathname.includes(
-      "/manage/community"
-    );
-
-  const communityBasePath =
-    isClubCommunity
-      ? (
-          isManageCommunity
-            ? `/clubs/${clubId}/manage/community`
-            : `/clubs/${clubId}/community`
-        )
-      : "/community";
-
   // 수정할 게시글
   const editPost =
     location.state?.editPost || null;
@@ -230,19 +214,9 @@ function PostWrite() {
   const isEditMode =
     Boolean(editPost);
 
-  // 동호회 공지 작성/수정 여부
-  const isClubNoticeMode =
-    isClubCommunity &&
-    Boolean(
-      location.state?.isClubNotice ||
-      editPost?.isClubNotice
-    );
 
-  // 동호회 커뮤니티는 동호회 게시판으로 고정
-  // 일반 커뮤니티는 이전 화면에서 선택한 게시판 사용
-  const receivedBoard = isClubCommunity
-    ? "club"
-    : (location.state?.board || "free");
+  // 커뮤니티 화면에서 선택했던 게시판
+  const receivedBoard = location.state?.board || "free";
 
   // 권한이 필요한 게시판을 직접 열었을 경우 안전하게 자유게시판으로 시작
   const initialBoard = receivedBoard;
@@ -296,13 +270,10 @@ function PostWrite() {
       editPost?.sportId || null
     );
 
-  // 게시글과 연결할 동호회의 club_id 저장
+  // 홍보·회원구인 게시판에서 선택한 동호회의 club_id 저장
   const [selectedClubId, setSelectedClubId] =
     useState(
-      editPost?.clubId ||
-      (isClubCommunity
-        ? Number(clubId)
-        : null)
+      editPost?.clubId || null
     );
 
   // 백엔드에서 받아온 종목 목록
@@ -347,8 +318,7 @@ function PostWrite() {
           return;
         }
 
-        const response = await fetch(
-          "http://127.0.0.1:8000/api/posts/write-options",
+        const response = await fetch(buildApiUrl("/api/posts/write-options"),
           {
             headers: {
               Authorization:
@@ -553,8 +523,7 @@ function PostWrite() {
     );
 
 
-    const response = await fetch(
-      "http://127.0.0.1:8000/api/posts/images",
+    const response = await fetch(buildApiUrl("/api/posts/images"),
       {
         method: "POST",
 
@@ -735,15 +704,6 @@ function PostWrite() {
       return;
     }
 
-    // 동호회 게시판의 동호회 정보 확인
-    if (
-      boardType === "club" &&
-      !selectedClubId
-    ) {
-      alert("동호회 정보를 확인할 수 없습니다.");
-      return;
-    }
-
     // 공지사항 권한
     if (
       boardType === "notice" &&
@@ -838,12 +798,9 @@ function PostWrite() {
             : null,
 
         club_id:
-          boardType === "recruit" ||
-          boardType === "club"
+          boardType === "recruit"
             ? selectedClubId
             : null,
-
-        is_club_notice: isClubNoticeMode,
 
         title: title.trim(),
         content: serializedContent,
@@ -865,17 +822,11 @@ function PostWrite() {
               club_id: selectedClubId,
             }
           : {}),
-
-        ...(isClubNoticeMode
-          ? {
-              is_club_notice: true,
-            }
-          : {}),
       };
 
       const apiUrl = isEditMode
-        ? `http://127.0.0.1:8000/api/posts/${editPost.id}`
-        : "http://127.0.0.1:8000/api/posts";
+        ? buildApiUrl(`/api/posts/${editPost.id}`)
+        : buildApiUrl("/api/posts");
 
 
       const response = await fetch(
@@ -936,7 +887,7 @@ function PostWrite() {
 
       // 확인 누른 뒤 상세 게시글로 이동
       navigate(
-        `${communityBasePath}/post/${targetPostId}`,
+        `/community/post/${targetPostId}`,
         {
           replace: true,
         }
@@ -979,16 +930,8 @@ function PostWrite() {
 
         <h1>
           {isEditMode
-            ? (
-                isClubNoticeMode
-                  ? "공지 수정"
-                  : "게시글 수정"
-              )
-            : (
-                isClubNoticeMode
-                  ? "공지 작성"
-                  : "새 게시글"
-              )}
+            ? "게시글 수정"
+            : "새 게시글"}
         </h1>
       </header>
 
@@ -997,48 +940,21 @@ function PostWrite() {
         <div className="post-write-field">
           <label htmlFor="board">게시판</label>
 
-          {isClubCommunity ? (
-            <select
-              id="board"
-              value="club"
-              disabled
-            >
-              <option value="club">
-                {isClubNoticeMode
-                  ? "동호회 공지"
-                  : "동호회 게시판"}
-              </option>
-            </select>
-          ) : (
-            <select
-              id="board"
-              value={boardType}
-              onChange={handleBoardTypeChange}
-              disabled={isEditMode}
-            >
-              <option value="free">
-                자유게시판
-              </option>
-
-              <option value="sports">
-                종목별게시판
-              </option>
-
-              <option
-                value="recruit"
-                disabled={!canWriteRecruit}
-              >
-                홍보·회원구인 (운영진만)
-              </option>
-
-              <option
-                value="notice"
-                disabled={!canWriteNotice}
-              >
-                공지사항 (관리자만)
-              </option>
-            </select>
-          )}
+          <select
+            id="board"
+            value={boardType}
+            onChange={handleBoardTypeChange}
+            disabled={isEditMode}
+          >
+            <option value="free">자유게시판</option>
+            <option value="sports">종목별게시판</option>
+            <option value="recruit" disabled={!canWriteRecruit}>
+              홍보·회원구인 (운영진만)
+            </option>
+            <option value="notice" disabled={!canWriteNotice}>
+              공지사항 (관리자만)
+            </option>
+          </select>
         </div>
 
         {/* 종목별게시판일 때만 종목 선택 */}
@@ -1250,13 +1166,7 @@ function PostWrite() {
 
             <div className="post-preview-modal-body">
               <div className="post-preview-board">
-                {boardType === "club"
-                    ? (
-                        isClubNoticeMode
-                          ? "동호회 공지"
-                          : "동호회 게시판"
-                      )
-                  : boardType === "free"
+                {boardType === "free"
                   ? "자유게시판"
                   : boardType === "sports"
                   ? "종목별게시판"
@@ -1327,7 +1237,7 @@ function PostWrite() {
         </div>
       )}
 
-      {!isClubCommunity && <BottomNav />}
+      <BottomNav />
     </div>
   );
 }
