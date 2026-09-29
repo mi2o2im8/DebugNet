@@ -24,6 +24,10 @@ from app.routers.blocks import router as blocks_router
 from app.routers.club_events import (
     router as club_events_router,
 )
+# 동호회 활동 리뷰 API Router 가져오기
+from app.routers.event_reviews import (
+    router as event_reviews_router,
+)
 
 # 챗봇
 from app.routers.chatbot import router as chatbot_router
@@ -97,6 +101,7 @@ app.include_router(posts_router)
 app.include_router(comments_router)
 app.include_router(blocks_router)
 app.include_router(club_events_router)
+app.include_router(event_reviews_router)
 
 app.include_router(club_members_router)
 

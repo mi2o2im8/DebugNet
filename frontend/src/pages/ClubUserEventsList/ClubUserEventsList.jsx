@@ -23,16 +23,20 @@ import {
     FiMoreVertical,
     FiPlus,
     FiTrash2,
-    FiUsers
+    FiUsers,
+    FiX
 } from "react-icons/fi";
 
 import {
     copyClubEvent,
     deleteClubEvent,
-    getClubEvents
+    getClubEvents,
+    getClubEventAttendance,
+    getMyEventReview,
+    createEventReview,
 } from "../../api/clubApi";
 
-import "./ClubEventList.css";
+import "./ClubUserEventsList.css";
 
 
 const WEEK_LABELS = [
@@ -125,14 +129,10 @@ function formatEventDate(dateString) {
 
 function ClubEventCard({
     event,
-    isPast = false,
-    onChanged
+    eventAttendance = {},
+    onChanged,
+    onReview
 }) {
-    console.log("리뷰 조건 확인:", {
-        eventId: event.event_id,
-        endTime: event.end_time,
-        isPast: isPast,
-    });
 
     const navigate = useNavigate();
     const { clubId } = useParams();
@@ -142,6 +142,12 @@ function ClubEventCard({
 
     const [isProcessing, setIsProcessing] =
         useState(false);
+    
+    const eventEndDate = getEventEndDate(event);
+
+    const isPast =
+        eventEndDate !== null &&
+        eventEndDate < new Date();
 
     const handleCopy = async () => {
         setIsMenuOpen(false);
@@ -255,63 +261,6 @@ function ClubEventCard({
             <div className="club-event-card-content">
                 <div className="club-event-card-title-row">
                     <h3>{event.title}</h3>
-
-                    <div className="club-event-more-menu">
-                        <button
-                            type="button"
-                            className="club-event-more-button"
-                            aria-label="일정 메뉴 열기"
-                            aria-expanded={isMenuOpen}
-                            disabled={isProcessing}
-                            onClick={() =>
-                                setIsMenuOpen(
-                                    (current) => !current
-                                )
-                            }
-                        >
-                            <FiMoreVertical />
-                        </button>
-
-                        {isMenuOpen && (
-                            <div
-                                className="club-event-menu-popup"
-                                role="menu"
-                            >
-                                <button
-                                    type="button"
-                                    role="menuitem"
-                                    onClick={() =>
-                                        navigate(
-                                            `/clubs/${clubId}/manage/events/`
-                                            + `${event.event_id}/edit`
-                                        )
-                                    }
-                                >
-                                    <FiEdit2 />
-                                    일정 수정
-                                </button>
-
-                                <button
-                                    type="button"
-                                    role="menuitem"
-                                    onClick={handleCopy}
-                                >
-                                    <FiCopy />
-                                    일정 복사
-                                </button>
-
-                                <button
-                                    type="button"
-                                    role="menuitem"
-                                    className="danger"
-                                    onClick={handleDelete}
-                                >
-                                    <FiTrash2 />
-                                    일정 삭제
-                                </button>
-                            </div>
-                        )}
-                    </div>
                 </div>
 
                 <p className="club-event-card-information">
@@ -393,19 +342,6 @@ function ClubEventCard({
                 <div className="club-event-card-actions">
                     <button
                         type="button"
-                        className="club-event-detail-button"
-                        onClick={() =>
-                            navigate(
-                                `/clubs/${clubId}/manage/events/`
-                                + event.event_id
-                            )
-                        }
-                    >
-                        <FiEye />
-                        일정 상세
-                    </button>
-                    <button
-                        type="button"
                         className="club-event-attendance-button"
                         onClick={() =>
                             navigate(
@@ -422,20 +358,16 @@ function ClubEventCard({
                         <FiCheckCircle />
                         내 참석 응답
                     </button>
-
-                    <button
-                        type="button"
-                        className="club-event-participants-button"
-                        onClick={() =>
-                            navigate(
-                                `/clubs/${clubId}/manage/events/`
-                                + `${event.event_id}/participants`
-                            )
-                        }
-                    >
-                        <FiUsers />
-                        참가자 관리
-                    </button>
+                    {isPast &&
+                        eventAttendance[event.event_id] === "attending" && (
+                            <button
+                                type="button"
+                                className="club-event-review-button"
+                                onClick={() => onReview(event)}
+                            >
+                                후기 작성
+                            </button>
+                        )}
                 </div>
             </div>
         </article>
@@ -451,10 +383,19 @@ function ClubEventList() {
     const [errorMessage, setErrorMessage] = useState("");
     const [viewMode, setViewMode] = useState("calendar");
 
+    const [eventAttendance, setEventAttendance] = useState({});
+
+    // 활동 후기
+    const [reviewEvent, setReviewEvent] = useState(null);
+    const [reviewRating, setReviewRating] = useState(5);
+    const [reviewText, setReviewText] = useState("");
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
     const [reloadKey, setReloadKey] = useState(0);
 
     const [currentTime, setCurrentTime] =
-        useState(() => new Date());
+    useState(() => new Date());
 
     const [calendarDate, setCalendarDate] =
         useState(() => new Date());
@@ -509,10 +450,152 @@ function ClubEventList() {
         };
     }, []);
 
+    // 일정별 내 출석 투표 상태 조회
+    useEffect(() => {
+        if (!clubId || events.length === 0) {
+            return;
+        }
+
+        let cancelled = false;
+
+        const loadEventAttendance = async () => {
+            try {
+                const results = await Promise.all(
+                    events.map(async (event) => {
+                        try {
+                            const result =
+                                await getClubEventAttendance(
+                                    clubId,
+                                    event.event_id
+                                );
+
+                            return {
+                                eventId: event.event_id,
+                                attendanceStatus:
+                                    result.attendance_status,
+                            };
+                        } catch (error) {
+                            console.error(
+                                `일정 ${event.event_id} 출석 상태 조회 실패:`,
+                                error
+                            );
+
+                            return {
+                                eventId: event.event_id,
+                                attendanceStatus: null,
+                            };
+                        }
+                    })
+                );
+
+                if (cancelled) {
+                    return;
+                }
+
+                const attendanceMap = {};
+
+                results.forEach((item) => {
+                    attendanceMap[item.eventId] =
+                        item.attendanceStatus;
+                });
+
+                setEventAttendance(attendanceMap);
+            } catch (error) {
+                console.error(
+                    "출석 상태 조회 실패:",
+                    error
+                );
+            }
+        };
+
+        loadEventAttendance();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [clubId, events]);
+
     const handleEventsChanged = () => {
         setReloadKey(
             (current) => current + 1
         );
+    };
+
+    // ---------------------------------------------------------
+    // 활동 후기 작성 팝업 열기
+    // ---------------------------------------------------------
+    const handleOpenReview = async (event) => {
+        try {
+            const existingReview = await getMyEventReview(
+                clubId,
+                event.event_id
+            );
+
+            if (existingReview) {
+                alert(
+                    "이미 해당 활동에 대한 후기를 작성했습니다."
+                );
+                return;
+            }
+
+            setReviewEvent(event);
+            setReviewRating(5);
+            setReviewText("");
+            setReviewModalOpen(true);
+        } catch (error) {
+            console.error(
+                "기존 후기 조회 실패:",
+                error
+            );
+
+            alert(
+                "후기 정보를 확인할 수 없습니다."
+            );
+        }
+    };
+
+    // ---------------------------------------------------------
+    // 활동 후기 저장
+    // ---------------------------------------------------------
+    const handleSubmitReview = async () => {
+        if (!reviewEvent) {
+            return;
+        }
+
+        if (!reviewRating) {
+            alert("별점을 선택해주세요.");
+            return;
+        }
+
+        setReviewSubmitting(true);
+
+        try {
+            await createEventReview(
+                clubId,
+                reviewEvent.event_id,
+                reviewRating,
+                reviewText.trim()
+            );
+
+            alert("후기가 등록되었습니다.");
+
+            setReviewModalOpen(false);
+            setReviewEvent(null);
+            setReviewRating(5);
+            setReviewText("");
+        } catch (error) {
+            console.error(
+                "활동 후기 등록 실패:",
+                error
+            );
+
+            alert(
+                error?.message ||
+                "후기 등록에 실패했습니다."
+            );
+        } finally {
+            setReviewSubmitting(false);
+        }
     };
 
     const calendarData = useMemo(() => {
@@ -588,8 +671,17 @@ function ClubEventList() {
             const eventEndDate =
                 getEventEndDate(event);
 
-            // 종료 시간이 없는 일정은
-            // 기존처럼 날짜 기준으로 처리
+            console.log("리뷰 날짜 판정:", {
+                eventId: event.event_id,
+                eventDate: event.event_date,
+                endTime: event.end_time,
+                eventEndDate: eventEndDate,
+                currentTime: currentTime,
+                isPast: eventEndDate
+                    ? eventEndDate < currentTime
+                    : null,
+            });
+
             if (!eventEndDate) {
                 const todayKey = getTodayKey();
 
@@ -602,9 +694,19 @@ function ClubEventList() {
                 return;
             }
 
-            // 일정 종료 시간이 현재 시간보다 이전이면
-            // 지난 일정
-            if (eventEndDate < currentTime) {
+            const eventEndTimestamp = eventEndDate.getTime();
+            const currentTimestamp = currentTime.getTime();
+
+            console.log("리뷰 시간 비교:", {
+                eventId: event.event_id,
+                eventEndDate,
+                currentTime,
+                eventEndTimestamp,
+                currentTimestamp,
+                isPast: eventEndTimestamp < currentTimestamp,
+            });
+
+            if (eventEndTimestamp < currentTimestamp) {
                 past.push(event);
             } else {
                 upcoming.push(event);
@@ -636,6 +738,13 @@ function ClubEventList() {
             pastEvents: past
         };
     }, [events, currentTime]);
+
+    console.log("===== 지난 일정 확인 =====");
+    console.log("pastEvents:", pastEvents);
+    console.log(
+        "pastEventIds:",
+        pastEvents.map((event) => event.event_id)
+    );
 
     const moveMonth = (difference) => {
         setCalendarDate(
@@ -674,14 +783,130 @@ function ClubEventList() {
 
     return (
         <main className="club-events-page">
+
+            {/* -------------------------------------------------
+                활동 후기 작성 팝업
+            ------------------------------------------------- */}
+            {reviewModalOpen && reviewEvent && (
+                <div
+                    className="club-user-review-overlay"
+                    onClick={() => {
+                        if (!reviewSubmitting) {
+                            setReviewModalOpen(false);
+                        }
+                    }}
+                >
+                    <div
+                        className="club-user-review-modal"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="club-user-review-header">
+                            <h3>활동 후기 작성</h3>
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!reviewSubmitting) {
+                                        setReviewModalOpen(false);
+                                    }
+                                }}
+                            >
+                                <FiX />
+                            </button>
+                        </div>
+
+                        <div className="club-user-review-event">
+                            <strong>
+                                {reviewEvent.title ||
+                                    "동호회 활동"}
+                            </strong>
+
+                            <span>
+                                {reviewEvent.event_date}
+                            </span>
+                        </div>
+
+                        <div className="club-user-review-rating">
+                            <p>
+                                이번 활동은 어땠나요?
+                            </p>
+
+                            <div className="club-user-review-stars">
+                                {[1, 2, 3, 4, 5].map(
+                                    (star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            className={
+                                                star <= reviewRating
+                                                    ? "active"
+                                                    : ""
+                                            }
+                                            onClick={() =>
+                                                setReviewRating(
+                                                    star
+                                                )
+                                            }
+                                        >
+                                            ★
+                                        </button>
+                                    )
+                                )}
+                            </div>
+
+                            <span>
+                                {reviewRating}점
+                            </span>
+                        </div>
+
+                        <div className="club-user-review-text">
+                            <textarea
+                                value={reviewText}
+                                onChange={(e) =>
+                                    setReviewText(
+                                        e.target.value
+                                    )
+                                }
+                                placeholder="활동에 대한 후기를 작성해주세요."
+                                maxLength={500}
+                            />
+
+                            <small>
+                                {reviewText.length}/500
+                            </small>
+                        </div>
+
+                        <div className="club-user-review-actions">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!reviewSubmitting) {
+                                        setReviewModalOpen(false);
+                                    }
+                                }}
+                                disabled={reviewSubmitting}
+                            >
+                                취소
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleSubmitReview}
+                                disabled={reviewSubmitting}
+                            >
+                                {reviewSubmitting
+                                    ? "등록 중..."
+                                    : "후기 등록"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <header>
                 <button
                     type="button"
-                    onClick={() =>
-                        navigate(
-                            `/clubs/${clubId}/manage`
-                        )
-                    }
+                    onClick={() => navigate(`/clubs/${clubId}/home`)}
                 >
                     이전
                 </button>
@@ -724,19 +949,6 @@ function ClubEventList() {
                         목록 보기
                     </button>
                 </div>
-
-                <button
-                    type="button"
-                    className="club-events-create-button"
-                    onClick={() =>
-                        navigate(
-                            `/clubs/${clubId}/manage/events/new`
-                        )
-                    }
-                >
-                    <FiPlus />
-                    일정 만들기
-                </button>
             </section>
 
             {viewMode === "calendar" ? (
@@ -830,7 +1042,9 @@ function ClubEventList() {
                                 <ClubEventCard
                                     key={event.event_id}
                                     event={event}
+                                    eventAttendance={eventAttendance}
                                     onChanged={handleEventsChanged}
+                                    onReview={handleOpenReview}
                                 />
                             ))
                         )}
@@ -866,13 +1080,18 @@ function ClubEventList() {
                                         <ClubEventCard
                                             key={event.event_id}
                                             event={event}
+                                            eventAttendance={eventAttendance}
                                             onChanged={handleEventsChanged}
+                                            onReview={handleOpenReview}
                                         />
                                     ))
                                 )}
                             </section>
 
                             <section className="club-events-group">
+
+                                {console.log("지난 일정 목록:", pastEvents)}
+
                                 <div className="club-events-group-header">
                                     <h2>지난 일정</h2>
 
@@ -890,8 +1109,9 @@ function ClubEventList() {
                                         <ClubEventCard
                                             key={event.event_id}
                                             event={event}
-                                            isPast
+                                            eventAttendance={eventAttendance}
                                             onChanged={handleEventsChanged}
+                                            onReview={handleOpenReview}
                                         />
                                     ))
                                 )}

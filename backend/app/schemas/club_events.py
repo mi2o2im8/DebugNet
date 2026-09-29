@@ -515,3 +515,20 @@ class ClubEventAttendanceResponse(BaseModel):
     ] | None = None
 
     message: str
+
+# ---------------------------------------------------------
+# 동호회 활동 후기
+# ---------------------------------------------------------
+
+class ClubEventReviewCreateRequest(BaseModel):
+    rating: int
+    review_text: str | None = None
+
+
+class ClubEventReviewResponse(BaseModel):
+    review_id: int
+    event_id: int
+    user_id: str
+    rating: int | None = None
+    review_text: str | None = None
+    created_at: datetime | None = None

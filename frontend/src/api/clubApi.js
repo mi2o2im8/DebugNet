@@ -484,6 +484,61 @@ export async function updateClubScheduleAttendance(
         }
     );
 }
+
+// =========================================================
+// 동호회 활동 후기
+// =========================================================
+
+// ---------------------------------------------------------
+// 활동 후기 작성
+// ---------------------------------------------------------
+export async function createEventReview(
+    clubId,
+    eventId,
+    rating,
+    reviewText
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/${eventId}/reviews`,
+        {
+            method: "POST",
+            body: {
+                rating,
+                review_text: reviewText,
+            },
+        }
+    );
+}
+
+// ---------------------------------------------------------
+// 내가 작성한 활동 후기 조회
+// ---------------------------------------------------------
+export async function getMyEventReview(
+    clubId,
+    eventId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/${eventId}/reviews/me`,
+        {
+            method: "GET",
+        }
+    );
+}
+
+// ---------------------------------------------------------
+// 특정 활동의 후기 목록 조회
+// ---------------------------------------------------------
+export async function getEventReviews(
+    clubId,
+    eventId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/${eventId}/reviews`,
+        {
+            method: "GET",
+        }
+    );
+}
 // ---------------------------------------------------------
 // 현재 동호회 회원 목록 조회
 // ---------------------------------------------------------

@@ -3,6 +3,7 @@ from uuid import uuid4
 from datetime import (
     datetime,
     timezone,
+    time
 )
 from zoneinfo import ZoneInfo
 
@@ -137,30 +138,51 @@ class ClubEventService:
         next_status: str,
         previous_status: str | None,
     ) -> None:
-        deadline_value = event.get(
-            "registration_deadline"
-        )
+        deadline = None
 
-        if deadline_value:
-            deadline = datetime.fromisoformat(
-                str(deadline_value).replace(
-                    "Z",
-                    "+00:00",
-                )
+        # 정기 활동은 활동 시작 시간이 참석 응답 마감 시간
+        if event.get("event_type") == "regular":
+            event_date = event.get("event_date")
+            start_time = event.get("start_time")
+
+            if event_date and start_time:
+                if isinstance(event_date, str):
+                    event_date = datetime.fromisoformat(
+                        event_date
+                    ).date()
+
+                if isinstance(start_time, str):
+                    start_time = time.fromisoformat(
+                        start_time
+                    )
+
+                deadline = datetime.combine(
+                    event_date,
+                    start_time,
+                ).replace(tzinfo=KST)
+
+        # 일반/특별 일정은 기존에 설정한 마감 시간 사용
+        else:
+            deadline_value = event.get(
+                "registration_deadline"
             )
 
-            if deadline.tzinfo is None:
-                deadline = deadline.replace(
-                    tzinfo=timezone.utc
+            if deadline_value:
+                deadline = datetime.fromisoformat(
+                    str(deadline_value).replace(
+                        "Z",
+                        "+00:00",
+                    )
                 )
 
-            # 현재 프로젝트는 datetime-local로 입력한
-            # 한국 시각이 +00 형태로 저장되므로
-            # 기존 알림 스케줄러와 같은 기준으로 비교
-            current_time = (
-                datetime.now(KST)
-                .replace(tzinfo=timezone.utc)
-            )
+                if deadline.tzinfo is None:
+                    deadline = deadline.replace(
+                        tzinfo=timezone.utc)
+
+                deadline = deadline.astimezone(KST)
+
+        if deadline:
+            current_time = datetime.now(KST)
 
             if current_time >= deadline:
                 raise ValueError(
@@ -3357,4 +3379,164 @@ class ClubEventService:
             event_id=event_id,
             participation_status=new_status,
             message=message,
+        )
+
+        # -----------------------------------------------------
+    # 활동 후기 작성
+    # -----------------------------------------------------
+    def create_event_review(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+        rating: int,
+        review_text: str | None,
+    ) -> dict:
+        # 별점 확인
+        if rating < 1 or rating > 5:
+            raise ValueError(
+                "별점은 1점부터 5점까지 입력할 수 있습니다."
+            )
+
+        # 일정 조회
+        event = (
+            self.event_repository.find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            raise LookupError(
+                "존재하지 않는 일정입니다."
+            )
+
+        if event.get("status") == "cancelled":
+            raise ValueError(
+                "취소된 일정에는 후기를 작성할 수 없습니다."
+            )
+
+        # 일정 종료 여부 확인
+        event_date = event.get("event_date")
+        end_time = event.get("end_time")
+
+        if not event_date or not end_time:
+            raise ValueError(
+                "일정 종료 시간을 확인할 수 없습니다."
+            )
+
+        try:
+            event_end = datetime.fromisoformat(
+                f"{event_date}T{end_time}"
+            )
+
+            if event_end.tzinfo is None:
+                event_end = event_end.replace(
+                    tzinfo=KST
+                )
+
+        except (TypeError, ValueError) as error:
+            raise ValueError(
+                "일정 종료 시간 형식이 올바르지 않습니다."
+            ) from error
+
+        now = datetime.now(KST)
+
+        if event_end >= now:
+            raise ValueError(
+                "활동이 종료된 후에만 후기를 작성할 수 있습니다."
+            )
+
+        # 참석 여부 확인
+        attendance_by_user = (
+            self.build_attendance_status_by_user(
+                event_id
+            )
+        )
+
+        attendance_status = (
+            attendance_by_user.get(
+                str(user_id)
+            )
+        )
+
+        if attendance_status != "attending":
+            raise PermissionError(
+                "활동에 참석한 이용자만 후기를 작성할 수 있습니다."
+            )
+
+        # 기존 후기 확인
+        existing_review = (
+            self.event_repository.find_event_review_by_user(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        if existing_review is not None:
+            raise ValueError(
+                "이미 해당 활동에 대한 후기를 작성했습니다."
+            )
+
+        return (
+            self.event_repository.create_event_review(
+                event_id=event_id,
+                user_id=user_id,
+                rating=rating,
+                review_text=review_text,
+            )
+        )
+
+    # -----------------------------------------------------
+    # 내가 작성한 활동 후기 조회
+    # -----------------------------------------------------
+    def get_my_event_review(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> dict | None:
+        event = (
+            self.event_repository.find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            raise LookupError(
+                "존재하지 않는 일정입니다."
+            )
+
+        return (
+            self.event_repository.find_event_review_by_user(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+    # -----------------------------------------------------
+    # 특정 활동의 후기 목록 조회
+    # -----------------------------------------------------
+    def get_event_reviews(
+        self,
+        club_id: int,
+        event_id: int,
+    ) -> list[dict]:
+        event = (
+            self.event_repository.find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            raise LookupError(
+                "존재하지 않는 일정입니다."
+            )
+
+        return (
+            self.event_repository.find_event_reviews(
+                event_id=event_id
+            )
         )

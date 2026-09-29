@@ -22,6 +22,7 @@ import ClubHome from './pages/ClubHome/ClubHome';
 import ClubDetail from "./pages/ClubDetail/ClubDetail";
 import ClubApplication from "./pages/ClubApplication/ClubApplication";
 import ClubEventList from "./pages/ClubEvents/ClubEventList";
+import ClubUserEventsList from "./pages/ClubUserEventsList/ClubUserEventsList";
 import ClubEventForm from "./pages/ClubEvents/ClubEventForm";
 import ClubEventAttendance from "./pages/ClubEvents/ClubEventAttendance";
 
@@ -306,6 +307,12 @@ function App() {
                 <Route
                   path="/clubs/:clubId/manage/events"
                   element={<ClubEventList />}
+                />
+
+                {/* 이용자용 동호회 전체 일정 목록 */}
+                <Route
+                    path="/clubs/:clubId/events"
+                    element={<ClubUserEventsList />}
                 />
 
                 {/* 동호회 새 일정 만들기 */}

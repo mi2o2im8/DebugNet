@@ -37,6 +37,8 @@ import {
     updateClubEventAttendance,
     getClubScheduleAttendance,
     updateClubScheduleAttendance,
+    createEventReview,
+    getMyEventReview,
 } from "../../api/clubApi";
 
 import "./ClubUserDashboard.css";
@@ -107,6 +109,22 @@ function ClubUserDashboard() {
 
     // 일정 조회 오류
     const [eventError, setEventError] = useState("");
+
+        // 활동 후기 팝업 상태
+    const [reviewModalOpen, setReviewModalOpen] =
+        useState(false);
+
+    const [reviewEvent, setReviewEvent] =
+        useState(null);
+
+    const [reviewRating, setReviewRating] =
+        useState(5);
+
+    const [reviewText, setReviewText] =
+        useState("");
+
+    const [reviewSubmitting, setReviewSubmitting] =
+        useState(false);
 
     // 최근 소식 게시글
     const [clubNews, setClubNews] = useState([]);
@@ -345,7 +363,71 @@ function ClubUserDashboard() {
             };
         }, [clubId, clubEvents]);
 
+    // ---------------------------------------------------------
+    // 활동 후기 팝업 열기
+    // ---------------------------------------------------------
+    const handleOpenReview = async (event) => {
+        try {
+            const existingReview = await getMyEventReview(
+                clubId,
+                event.event_id
+            );
 
+            if (existingReview) {
+                alert("이미 해당 활동에 대한 후기를 작성했습니다.");
+                return;
+            }
+
+            setReviewEvent(event);
+            setReviewRating(5);
+            setReviewText("");
+            setReviewModalOpen(true);
+        } catch (error) {
+            console.error("기존 후기 조회 실패:", error);
+            alert("후기 정보를 확인할 수 없습니다.");
+        }
+    };
+
+    // ---------------------------------------------------------
+    // 활동 후기 저장
+    // ---------------------------------------------------------
+    const handleSubmitReview = async () => {
+        if (!reviewEvent) return;
+
+        if (!reviewRating) {
+            alert("별점을 선택해주세요.");
+            return;
+        }
+
+        setReviewSubmitting(true);
+
+        try {
+            await createEventReview(
+                clubId,
+                reviewEvent.event_id,
+                reviewRating,
+                reviewText.trim()
+            );
+
+            alert("후기가 등록되었습니다.");
+
+            setReviewModalOpen(false);
+            setReviewEvent(null);
+            setReviewRating(5);
+            setReviewText("");
+        } catch (error) {
+            console.error("활동 후기 등록 실패:", error);
+
+            alert(
+                error?.message ||
+                "후기 등록에 실패했습니다."
+            );
+        } finally {
+            setReviewSubmitting(false);
+        }
+    };
+
+    
     // 달력 날짜 데이터
     const calendarData = useMemo(() => {
         const year = currentMonth.getFullYear();
@@ -374,16 +456,100 @@ function ClubUserDashboard() {
     }, [dashboard]);
 
 
-    // 선택한 날짜의 정기 활동
+    // 선택한 날짜의 활동 일정
     const selectedSchedules = useMemo(() => {
         if (!dashboard) return [];
 
-        return (dashboard.schedules || []).filter(
-            (schedule) =>
-                DAY_INDEX[schedule.day_of_week] ===
-                selectedDate.getDay()
-        );
-    }, [dashboard, selectedDate]);
+        const selectedDateKey =
+            formatDateKey(selectedDate);
+
+        // ---------------------------------------------------------
+        // 1. 해당 날짜에 실제 등록된 일정 조회
+        // ---------------------------------------------------------
+        const selectedEvents = (clubEvents || [])
+            .filter((event) => {
+                if (!event.event_date) return false;
+
+                return (
+                    event.event_date === selectedDateKey
+                );
+            })
+            .map((event) => ({
+                type: "event",
+
+                event_id: event.event_id,
+
+                title: event.title,
+
+                event_type: event.event_type,
+
+                event_date: event.event_date,
+
+                start_time: event.start_time,
+
+                end_time: event.end_time,
+
+                location: event.location,
+
+                description: event.description,
+
+                club_schedule_id:
+                    event.club_schedule_id ?? null,
+            }));
+
+        // ---------------------------------------------------------
+        // 2. 실제 등록된 일정이 있으면 그것을 사용
+        // ---------------------------------------------------------
+        if (selectedEvents.length > 0) {
+            return selectedEvents.sort((a, b) =>
+                (a.start_time || "").localeCompare(
+                    b.start_time || ""
+                )
+            );
+        }
+
+        // ---------------------------------------------------------
+        // 3. 실제 일정이 없다면 기존 정기 일정 사용
+        // ---------------------------------------------------------
+        return (dashboard.schedules || [])
+            .filter(
+                (schedule) =>
+                    DAY_INDEX[schedule.day_of_week] ===
+                    selectedDate.getDay()
+            )
+            .map((schedule) => ({
+                type: "schedule",
+
+                event_id: `regular-${schedule.club_schedule_id}`,
+
+                title: `${schedule.day_of_week} 정기 활동`,
+
+                event_type: "정기 활동",
+
+                event_date: selectedDateKey,
+
+                start_time: schedule.start_time,
+
+                end_time: schedule.end_time,
+
+                location: dashboard.venue_name,
+
+                description:
+                    "동호회 정기 활동 일정입니다.",
+
+                club_schedule_id:
+                    schedule.club_schedule_id,
+            }))
+            .sort((a, b) =>
+                (a.start_time || "").localeCompare(
+                    b.start_time || ""
+                )
+            );
+    }, [
+        dashboard,
+        clubEvents,
+        selectedDate,
+    ]);
 
 
     // 다가오는 일정 3개
@@ -395,28 +561,77 @@ function ClubUserDashboard() {
 
         const schedules = [];
 
-        // 향후 30일 내 정기 활동 날짜 계산
+        // ---------------------------------------------------------
+        // 1. 등록된 일반 / 특별 일정
+        // ---------------------------------------------------------
+        (clubEvents || []).forEach((event) => {
+            if (!event.event_date) return;
+
+            const eventDate = new Date(
+                `${event.event_date}T00:00:00`
+            );
+
+            if (eventDate < today) return;
+
+            schedules.push({
+                type: "event",
+                event_id: event.event_id,
+                title: event.title,
+                date: eventDate,
+                start_time: event.start_time,
+                end_time: event.end_time,
+                location: event.location,
+                event_type: event.event_type,
+                club_schedule_id: event.club_schedule_id,
+            });
+        });
+
+        // ---------------------------------------------------------
+        // 2. 정기 일정
+        // ---------------------------------------------------------
         for (let i = 0; i < 30; i++) {
             const date = new Date(today);
             date.setDate(today.getDate() + i);
 
             (dashboard.schedules || []).forEach((schedule) => {
                 if (
-                    DAY_INDEX[schedule.day_of_week] === date.getDay()
+                    DAY_INDEX[schedule.day_of_week] ===
+                    date.getDay()
                 ) {
                     schedules.push({
-                        ...schedule,
+                        type: "schedule",
+                        club_schedule_id:
+                            schedule.club_schedule_id,
+                        title: `${schedule.day_of_week} 정기 활동`,
+                        day_of_week: schedule.day_of_week,
                         date: new Date(date),
+                        start_time: schedule.start_time,
+                        end_time: schedule.end_time,
+                        location: dashboard.venue_name,
                     });
                 }
             });
         }
 
+        // ---------------------------------------------------------
+        // 날짜 + 시간순 정렬
+        // ---------------------------------------------------------
         return schedules
-            .sort((a, b) => a.date - b.date)
-            .slice(0, 3);
-    }, [dashboard]);
+            .sort((a, b) => {
+                const dateDiff = a.date - b.date;
 
+                if (dateDiff !== 0) {
+                    return dateDiff;
+                }
+
+                return (
+                    (a.start_time || "").localeCompare(
+                        b.start_time || ""
+                    )
+                );
+            })
+            .slice(0, 3);
+    }, [dashboard, clubEvents]);
     // 다가오는 정기 일정의 내 투표 상태 조회
     useEffect(() => {
         if (!clubId || upcomingSchedules.length === 0) {
@@ -484,6 +699,36 @@ function ClubUserDashboard() {
             cancelled = true;
         };
     }, [clubId, upcomingSchedules]);
+
+    // ---------------------------------------------------------
+    // 내가 참석한 종료된 활동 목록
+    // ---------------------------------------------------------
+    const finishedEvents = useMemo(() => {
+        if (!clubEvents || clubEvents.length === 0) {
+            return [];
+        }
+
+        const now = new Date();
+
+        return clubEvents.filter((event) => {
+            if (!event.event_date || !event.end_time) {
+                return false;
+            }
+
+            const eventEnd = new Date(
+                `${event.event_date}T${event.end_time}`
+            );
+
+            // 활동 종료 여부
+            const isFinished = eventEnd < now;
+
+            // 내가 참석으로 투표했는지 확인
+            const isAttending =
+                eventAttendance[event.event_id] === "attending";
+
+            return isFinished && isAttending;
+        });
+    }, [clubEvents, eventAttendance]);
 
 
     // 이전 달 / 다음 달
@@ -556,6 +801,15 @@ function ClubUserDashboard() {
             navigate(
                 `/clubs/${clubId}/community`
             );
+
+            return;
+        }
+
+        if (
+            menuName === "활동 일정" ||
+            menuName === "전체 일정"
+        ) {
+            navigate(`/clubs/${clubId}/events`);
 
             return;
         }
@@ -865,7 +1119,7 @@ function ClubUserDashboard() {
 
                                     return (
                                         <article
-                                            key={`${schedule.club_schedule_id}-${index}`}
+                                            key={`${schedule.type}-${schedule.event_id}-${index}`}
                                             className="club-user-selected-card"
                                         >
                                             <div className="club-user-selected-icon">
@@ -873,7 +1127,7 @@ function ClubUserDashboard() {
                                             </div>
 
                                             <strong>
-                                                {schedule.day_of_week} 정기 활동
+                                                {schedule.title}
                                             </strong>
 
                                             <span>
@@ -885,37 +1139,76 @@ function ClubUserDashboard() {
 
                                             <span>
                                                 <FiMapPin />
-                                                {dashboard.venue_name || "장소 미정"}
+                                                {schedule.location || "장소 미정"}
                                             </span>
 
                                             <button
                                                 type="button"
                                                 className="club-user-event-detail-button"
-                                                onClick={() =>
+                                                onClick={() => {
+                                                    if (schedule.type === "event") {
+                                                        // 일반 / 특별 일정
+                                                        navigate(
+                                                            `/clubs/${clubId}/events/`
+                                                            + `${schedule.event_id}/attendance`,
+                                                            {
+                                                                state: {
+                                                                    event: {
+                                                                        event_id: schedule.event_id,
+                                                                        title: schedule.title,
+                                                                        event_type:
+                                                                            schedule.event_type,
+                                                                        event_date:
+                                                                            schedule.event_date,
+                                                                        start_time:
+                                                                            schedule.start_time,
+                                                                        end_time:
+                                                                            schedule.end_time,
+                                                                        location:
+                                                                            schedule.location,
+                                                                        description:
+                                                                            schedule.description,
+                                                                        club_schedule_id:
+                                                                            schedule.club_schedule_id,
+                                                                    },
+                                                                },
+                                                            }
+                                                        );
+
+                                                        return;
+                                                    }
+
+                                                    // 정기 일정
                                                     navigate(
-                                                        `/clubs/${clubId}/events/regular-${schedule.club_schedule_id}/attendance`,
+                                                        `/clubs/${clubId}/events/`
+                                                        + `regular-${schedule.club_schedule_id}`
+                                                        + `/attendance`,
                                                         {
                                                             state: {
                                                                 event: {
-                                                                    event_id: `regular-${schedule.club_schedule_id}`,
-                                                                    title: `${schedule.day_of_week} 정기 활동`,
-                                                                    event_type: "정기 활동",
-                                                                    event_date: formatDateKey(
-                                                                        selectedDate
-                                                                    ),
-                                                                    start_time: schedule.start_time,
-                                                                    end_time: schedule.end_time,
+                                                                    event_id:
+                                                                        `regular-${schedule.club_schedule_id}`,
+                                                                    title:
+                                                                        schedule.title,
+                                                                    event_type:
+                                                                        "정기 활동",
+                                                                    event_date:
+                                                                        schedule.event_date,
+                                                                    start_time:
+                                                                        schedule.start_time,
+                                                                    end_time:
+                                                                        schedule.end_time,
                                                                     location:
-                                                                        dashboard.venue_name,
+                                                                        schedule.location,
                                                                     description:
-                                                                        "동호회 정기 활동 일정입니다.",
+                                                                        schedule.description,
                                                                     club_schedule_id:
                                                                         schedule.club_schedule_id,
                                                                 },
                                                             },
                                                         }
-                                                    )
-                                                }
+                                                    );
+                                                }}
                                             >
                                                 일정 상세보기
                                                 <FiChevronRight />
@@ -952,7 +1245,6 @@ function ClubUserDashboard() {
                     </div>
 
                     <div className="club-user-upcoming-list">
-
                         {upcomingSchedules.length > 0 ? (
                             upcomingSchedules.map((schedule, index) => {
                                 const dateKey =
@@ -960,31 +1252,82 @@ function ClubUserDashboard() {
 
                                 const vote = attendanceVotes[dateKey];
 
+                                const isRegularSchedule =
+                                    schedule.type === "schedule";
+
+                                const eventTitle = isRegularSchedule
+                                    ? `${schedule.day_of_week} 정기 활동`
+                                    : schedule.title;
+
+                                const eventLocation =
+                                    schedule.location ||
+                                    dashboard.venue_name ||
+                                    "장소 미정";
+
                                 return (
                                     <article
-                                        key={`${schedule.club_schedule_id}-${index}`}
+                                        key={`${schedule.event_id || schedule.club_schedule_id}-${index}`}
                                         className="club-user-upcoming-item"
-                                        onClick={() =>
-                                            navigate(
-                                                `/clubs/${clubId}/events/regular-${schedule.club_schedule_id}/attendance`,
-                                                {
-                                                    state: {
-                                                        event: {
-                                                            event_id: `regular-${schedule.club_schedule_id}`,
-                                                            title: `${schedule.day_of_week} 정기 활동`,
-                                                            event_type: "정기 활동",
-                                                            event_date: formatDateKey(schedule.date),
-                                                            start_time: schedule.start_time,
-                                                            end_time: schedule.end_time,
-                                                            location: dashboard.venue_name,
-                                                            description: "동호회 정기 활동 일정입니다.",
-                                                            club_schedule_id:
-                                                                schedule.club_schedule_id,
+                                        onClick={() => {
+                                            if (isRegularSchedule) {
+                                                navigate(
+                                                    `/clubs/${clubId}/events/regular-${schedule.club_schedule_id}/attendance`,
+                                                    {
+                                                        state: {
+                                                            event: {
+                                                                event_id:
+                                                                    `regular-${schedule.club_schedule_id}`,
+                                                                title: eventTitle,
+                                                                event_type: "정기 활동",
+                                                                event_date:
+                                                                    formatDateKey(
+                                                                        schedule.date
+                                                                    ),
+                                                                start_time:
+                                                                    schedule.start_time,
+                                                                end_time:
+                                                                    schedule.end_time,
+                                                                location:
+                                                                    eventLocation,
+                                                                description:
+                                                                    "동호회 정기 활동 일정입니다.",
+                                                                club_schedule_id:
+                                                                    schedule.club_schedule_id,
+                                                            },
                                                         },
-                                                    },
-                                                }
-                                            )
-                                        }
+                                                    }
+                                                );
+                                            } else {
+                                                navigate(
+                                                    `/clubs/${clubId}/events/${schedule.event_id}/attendance`,
+                                                    {
+                                                        state: {
+                                                            event: {
+                                                                event_id:
+                                                                    schedule.event_id,
+                                                                title: schedule.title,
+                                                                event_type:
+                                                                    schedule.event_type,
+                                                                event_date:
+                                                                    formatDateKey(
+                                                                        schedule.date
+                                                                    ),
+                                                                start_time:
+                                                                    schedule.start_time,
+                                                                end_time:
+                                                                    schedule.end_time,
+                                                                location:
+                                                                    eventLocation,
+                                                                description:
+                                                                    schedule.description || "",
+                                                                club_schedule_id:
+                                                                    schedule.club_schedule_id,
+                                                            },
+                                                        },
+                                                    }
+                                                );
+                                            }
+                                        }}
                                     >
                                         <div className="club-user-upcoming-date">
                                             <strong>
@@ -993,13 +1336,17 @@ function ClubUserDashboard() {
                                             </strong>
 
                                             <span>
-                                                {WEEK_LABELS[schedule.date.getDay()]}
+                                                {
+                                                    WEEK_LABELS[
+                                                        schedule.date.getDay()
+                                                    ]
+                                                }
                                             </span>
                                         </div>
 
                                         <div className="club-user-upcoming-info">
                                             <strong>
-                                                {schedule.day_of_week} 정기 활동
+                                                {eventTitle}
                                             </strong>
 
                                             <span>
@@ -1011,12 +1358,13 @@ function ClubUserDashboard() {
 
                                             <span>
                                                 <FiMapPin />
-                                                {dashboard.venue_name || "장소 미정"}
+                                                {eventLocation}
                                             </span>
                                         </div>
 
                                         <div className="club-user-upcoming-vote">
-                                            {vote && vote !== "undecided" ? (
+                                            {vote &&
+                                            vote !== "undecided" ? (
                                                 <span className="completed">
                                                     투표완료
                                                 </span>
@@ -1031,12 +1379,165 @@ function ClubUserDashboard() {
                             })
                         ) : (
                             <div className="club-user-empty">
-                                등록된 정기 활동이 없습니다.
+                                등록된 일정이 없습니다.
                             </div>
                         )}
-
                     </div>
+                    {/* -------------------------------------------------
+                        종료된 활동 후기
+                    ------------------------------------------------- */}
+                    {finishedEvents.length > 0 && (
+                        <div className="club-user-finished-events">
+                            <h3>활동 후기</h3>
+
+                            {finishedEvents.map((event) => (
+                                <article
+                                    key={event.event_id}
+                                    className="club-user-finished-item"
+                                >
+                                    <div className="club-user-finished-info">
+                                        <strong>
+                                            {event.title || "동호회 활동"}
+                                        </strong>
+
+                                        <span>
+                                            {event.event_date}
+                                        </span>
+
+                                        <span>
+                                            {event.start_time?.slice(0, 5)}
+                                            {" - "}
+                                            {event.end_time?.slice(0, 5)}
+                                        </span>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        className="club-user-review-button"
+                                        onClick={() =>
+                                            handleOpenReview(event)
+                                        }
+                                    >
+                                        후기 작성
+                                    </button>
+                                </article>
+                            ))}
+                        </div>
+                    )}
                 </section>
+
+                {/* -------------------------------------------------
+                활동 후기 작성 팝업
+                ------------------------------------------------- */}
+                {reviewModalOpen && reviewEvent && (
+                    <div
+                        className="club-user-review-overlay"
+                        onClick={() => {
+                            if (!reviewSubmitting) {
+                                setReviewModalOpen(false);
+                            }
+                        }}
+                    >
+                        <div
+                            className="club-user-review-modal"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="club-user-review-header">
+                                <h3>활동 후기 작성</h3>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!reviewSubmitting) {
+                                            setReviewModalOpen(false);
+                                        }
+                                    }}
+                                >
+                                    <FiX />
+                                </button>
+                            </div>
+
+                            <div className="club-user-review-event">
+                                <strong>
+                                    {reviewEvent.title ||
+                                        "동호회 활동"}
+                                </strong>
+
+                                <span>
+                                    {reviewEvent.event_date}
+                                </span>
+                            </div>
+
+                            <div className="club-user-review-rating">
+                                <p>이번 활동은 어땠나요?</p>
+
+                                <div className="club-user-review-stars">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            className={
+                                                star <= reviewRating
+                                                    ? "active"
+                                                    : ""
+                                            }
+                                            onClick={() =>
+                                                setReviewRating(star)
+                                            }
+                                        >
+                                            ★
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <span>
+                                    {reviewRating}점
+                                </span>
+                            </div>
+
+                            <div className="club-user-review-text">
+                                <textarea
+                                    value={reviewText}
+                                    onChange={(e) =>
+                                        setReviewText(
+                                            e.target.value
+                                        )
+                                    }
+                                    placeholder="활동에 대한 후기를 작성해주세요."
+                                    maxLength={500}
+                                />
+
+                                <small>
+                                    {reviewText.length}/500
+                                </small>
+                            </div>
+
+                            <div className="club-user-review-actions">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!reviewSubmitting) {
+                                            setReviewModalOpen(false);
+                                        }
+                                    }}
+                                    disabled={reviewSubmitting}
+                                >
+                                    취소
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={handleSubmitReview}
+                                    disabled={reviewSubmitting}
+                                >
+                                    {reviewSubmitting
+                                        ? "등록 중..."
+                                        : "후기 등록"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
 
                 {/* 매칭 현황 - 운영자만 표시 */}
