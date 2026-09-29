@@ -48,6 +48,7 @@ import MatchAvailabilityDetail from "./pages/Match/MatchAvailabilityDetail";
 import MatchTeamList from "./pages/Match/MatchTeamList";
 import MatchTeamDetail from "./pages/Match/MatchTeamDetail";
 import MatchAIRecommend from "./pages/Match/MatchAIRecommend";
+import MatchAIRecommendResult from "./pages/Match/MatchAIRecommendResult";
 
 import ClubManageLayout from "./layouts/ClubManageLayout";
 
@@ -424,10 +425,16 @@ function App() {
                   element={<MatchHome />}
                 />
 
-                {/* AI 상대팀 추천 */}
+                {/* AI 상대팀 추천 조건 입력 */}
                 <Route
                   path="/matches/recommend"
                   element={<MatchAIRecommend />}
+                />
+
+                {/* AI 상대팀 추천 결과 */}
+                <Route
+                  path="/matches/recommend/result"
+                  element={<MatchAIRecommendResult />}
                 />
 
                 {/* 경기 가능일 등록 */}

@@ -372,6 +372,52 @@ function MatchHome() {
     });
 
 
+  // ========================================
+  // 팀매칭 홈에서는 최근 등록된 경기 가능팀
+  // 최대 5개까지만 보여준다.
+  //
+  // 전체 목록은 "경기 가능한 팀 더보기"에서 확인한다.
+  // ========================================
+  const visibleTeams =
+    [...filteredTeams]
+      .sort((a, b) => {
+
+        const createdAtCompare =
+          String(
+            b.created_at || ""
+          ).localeCompare(
+            String(
+              a.created_at || ""
+            )
+          );
+
+        if (createdAtCompare !== 0) {
+          return createdAtCompare;
+        }
+
+        return (
+          Number(
+            b.availability_id || 0
+          ) -
+          Number(
+            a.availability_id || 0
+          )
+        );
+      })
+      .slice(0, 5);
+
+
+  // "더보기"에서도 현재 날짜 / 종목 조건을 유지한다.
+  const selectedSportId =
+    selectedSport === "전체"
+      ? null
+      : teams.find(
+          (team) =>
+            team.sport_name ===
+            selectedSport
+        )?.sport_id || null;
+
+
   const handleDateSelect = (
     dateString
   ) => {
@@ -713,7 +759,7 @@ function MatchHome() {
 
             {filteredTeams.length > 0 ? (
 
-              filteredTeams.map(
+              visibleTeams.map(
                 (team) => (
 
                   <button
@@ -825,17 +871,36 @@ function MatchHome() {
 
 
           {/* 경기 등록 여부와 관계없이 상대팀 목록으로 이동 */}
-          {filteredTeams.length > 0 && (
+          {filteredTeams.length > 5 && (
             <button
               type="button"
               className="match-team-more-btn"
-              onClick={() =>
+              onClick={() => {
+
+                const params =
+                  new URLSearchParams({
+                    district:
+                      selectedDistrict,
+
+                    date:
+                      selectedDate,
+                  });
+
+
+                if (selectedSportId) {
+                  params.set(
+                    "sportId",
+                    String(
+                      selectedSportId
+                    )
+                  );
+                }
+
+
                 navigate(
-                  `/matches/teams?district=${encodeURIComponent(
-                    selectedDistrict
-                  )}`
-                )
-              }
+                  `/matches/teams?${params.toString()}`
+                );
+              }}
             >
               경기 가능한 팀 더보기
               <FiChevronRight />

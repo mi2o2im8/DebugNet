@@ -524,3 +524,193 @@
 
   font-size: 12px;
 }
+
+/* ========================================
+   AI 추천 날짜 다중 선택
+======================================== */
+
+.match-ai-selected-dates {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  margin-top: 10px;
+}
+
+
+.match-ai-selected-dates p {
+  margin: 0;
+
+  color: #999999;
+
+  font-size: 11px;
+}
+
+
+.match-ai-selected-dates button {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  min-height: 30px;
+
+  padding: 0 9px;
+
+  border: 1px solid #cfe9dc;
+  border-radius: 16px;
+
+  background: #eef9f3;
+
+  color: #16945a;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+.match-ai-selected-dates button span {
+  font-size: 13px;
+  line-height: 1;
+}
+
+
+/* ========================================
+   AI 추천 결과 전용 페이지
+======================================== */
+
+.match-ai-result-condition {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 8px;
+
+  margin-bottom: 20px;
+  padding: 13px;
+
+  border: 1px solid #e6eee9;
+  border-radius: 12px;
+
+  background: #f8fbf9;
+}
+
+
+.match-ai-result-condition > div {
+  min-width: 0;
+
+  padding: 8px;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+}
+
+
+.match-ai-result-condition span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #999999;
+
+  font-size: 9px;
+}
+
+
+.match-ai-result-condition strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #333333;
+
+  font-size: 11px;
+  line-height: 1.45;
+
+  word-break: keep-all;
+  text-overflow: ellipsis;
+}
+
+
+.match-ai-result-page-section {
+  padding-bottom: 16px;
+}
+
+
+.match-ai-retry-button {
+  width: 100%;
+  height: 44px;
+
+  margin-top: 14px;
+
+  border: 1px solid #dcefe5;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #16945a;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+/* ========================================
+   AI 추천 결과 - 최상단 이동 버튼
+======================================== */
+
+.match-ai-scroll-top-button {
+  position: fixed;
+
+  left: 50%;
+
+  bottom: calc(
+    68px
+    + 12px
+    + env(safe-area-inset-bottom)
+  );
+
+  transform: translateX(-50%);
+
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid #e4e4e4;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  color: #444444;
+
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+
+  box-shadow:
+    0 3px 12px rgba(0, 0, 0, 0.12);
+
+  cursor: pointer;
+
+  z-index: 1100;
+
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+
+.match-ai-scroll-top-button:active {
+  transform:
+    translateX(-50%)
+    scale(0.94);
+}

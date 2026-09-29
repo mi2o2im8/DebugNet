@@ -140,9 +140,9 @@ function MatchAIRecommend() {
   // ========================================
 
   const [
-    date,
-    setDate,
-  ] = useState("");
+    selectedDates,
+    setSelectedDates,
+  ] = useState([]);
 
 
   const [
@@ -547,6 +547,55 @@ function MatchAIRecommend() {
 
 
   // ========================================
+  // 추천 날짜 다중 선택
+  //
+  // 같은 날짜를 다시 누르면 선택 해제한다.
+  // 과거 날짜는 선택할 수 없다.
+  // ========================================
+
+  const handleDateSelect = (
+    dateString
+  ) => {
+
+    if (
+      dateString <
+      getTodayDateString()
+    ) {
+
+      alert(
+        "지난 날짜는 선택할 수 없습니다."
+      );
+
+      return;
+    }
+
+
+    setSelectedDates(
+      (currentDates) => {
+
+        if (
+          currentDates.includes(
+            dateString
+          )
+        ) {
+
+          return currentDates.filter(
+            (item) =>
+              item !== dateString
+          );
+        }
+
+
+        return [
+          ...currentDates,
+          dateString,
+        ].sort();
+      }
+    );
+  };
+
+
+  // ========================================
   // AI 추천 실행
   // ========================================
 
@@ -558,10 +607,12 @@ function MatchAIRecommend() {
       // 날짜 검사
       // -----------------------------
 
-      if (!date) {
+      if (
+        selectedDates.length === 0
+      ) {
 
         alert(
-          "날짜를 선택해주세요."
+          "날짜를 하나 이상 선택해주세요."
         );
 
         return;
@@ -569,8 +620,11 @@ function MatchAIRecommend() {
 
 
       if (
-        date <
-        getTodayDateString()
+        selectedDates.some(
+          (selectedDate) =>
+            selectedDate <
+            getTodayDateString()
+        )
       ) {
 
         alert(
@@ -690,15 +744,12 @@ function MatchAIRecommend() {
       // Match Fit 계산에만 사용된다.
       // ========================================
 
-      const requestData = {
+      const commonRequestData = {
 
         sport_id:
           Number(
             sportId
           ),
-
-        match_date:
-          date,
 
         // 시간 상관없음이면
         // API 형식을 유지하기 위해 전체 시간대를 전달한다.
@@ -744,7 +795,7 @@ function MatchAIRecommend() {
         longitude:
           selectedPlace.longitude,
 
-        // 상위 5개
+        // 날짜별 상위 5개를 받아온다.
         limit:
           5,
       };
@@ -761,14 +812,56 @@ function MatchAIRecommend() {
 
       try {
 
-        const response =
-          await getMatchRecommendations(
-            requestData
+        // 현재 Backend는 match_date 한 개만 받는다.
+        // Frontend에서 선택한 날짜별로 추천 API를 호출한 뒤
+        // 하나의 결과 목록으로 합친다.
+        const responses =
+          await Promise.all(
+
+            selectedDates.map(
+              (selectedDate) =>
+                getMatchRecommendations({
+
+                  ...commonRequestData,
+
+                  match_date:
+                    selectedDate,
+                })
+            )
           );
 
 
+        const mergedRecommendations =
+          responses
+            .flatMap(
+              (response) =>
+                response.items || []
+            )
+            .filter(
+              (
+                item,
+                index,
+                items
+              ) =>
+                items.findIndex(
+                  (candidate) =>
+                    candidate.availability_id ===
+                    item.availability_id
+                ) === index
+            )
+            .sort(
+              (a, b) =>
+                Number(
+                  b.match_fit_score || 0
+                ) -
+                Number(
+                  a.match_fit_score || 0
+                )
+            );
+
+
         setRecommendations(
-          response.items || []
+          mergedRecommendations
         );
 
 
@@ -777,21 +870,55 @@ function MatchAIRecommend() {
         );
 
 
-        // 추천 결과 위치로 자동 이동
-        window.setTimeout(
-          () => {
+        // 입력 페이지와 결과 페이지를 분리한다.
+        navigate(
+          "/matches/recommend/result",
+          {
+            state: {
+              recommendations:
+                mergedRecommendations,
 
-            resultRef.current
-              ?.scrollIntoView({
-                behavior:
-                  "smooth",
+              selectedDates,
 
-                block:
-                  "start",
-              });
+              searchCondition: {
+                sportId:
+                  Number(
+                    sportId
+                  ),
 
-          },
-          0
+                sportName:
+                  sports.find(
+                    (sport) =>
+                      sport.sport_id ===
+                      Number(
+                        sportId
+                      )
+                  )?.sport_name || "",
+
+                startTime:
+                  timeFlexible
+                    ? ""
+                    : startTime,
+
+                endTime:
+                  timeFlexible
+                    ? ""
+                    : endTime,
+
+                timeFlexible,
+
+                requiredPlayers:
+                  Number(
+                    requiredPlayers
+                  ),
+
+                level,
+
+                startLocation:
+                  selectedPlace,
+              },
+            },
+          }
         );
 
 
@@ -910,12 +1037,16 @@ function MatchAIRecommend() {
 
           <MatchCalendar
 
-            selectedDate={
-              date
+            selectedDates={
+              selectedDates
+            }
+
+            multiple={
+              true
             }
 
             onSelectDate={
-              setDate
+              handleDateSelect
             }
 
             myAvailabilityDates={
@@ -931,6 +1062,43 @@ function MatchAIRecommend() {
             }
 
           />
+
+
+          <div className="match-ai-selected-dates">
+
+            {selectedDates.length > 0 ? (
+
+              selectedDates.map(
+                (selectedDate) => (
+
+                  <button
+                    key={
+                      selectedDate
+                    }
+                    type="button"
+                    onClick={() =>
+                      handleDateSelect(
+                        selectedDate
+                      )
+                    }
+                  >
+                    {selectedDate}
+                    <span>
+                      ×
+                    </span>
+                  </button>
+                )
+              )
+
+            ) : (
+
+              <p>
+                원하는 날짜를 여러 개 선택할 수 있습니다.
+              </p>
+
+            )}
+
+          </div>
 
         </section>
 
@@ -1124,7 +1292,7 @@ function MatchAIRecommend() {
         <section className="match-form-field">
 
           <label htmlFor="recommendPlaceKeyword">
-            희망 경기 장소
+            내 출발 위치
           </label>
 
 
