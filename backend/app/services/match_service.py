@@ -1587,13 +1587,24 @@ class MatchService:
 
         # -----------------------------------------------------
         # 7. 내 동호회의 모집글 제외
+        #    + 이미 종료된 경기 제외
         # -----------------------------------------------------
         opponent_availabilities = [
             availability
             for availability in availabilities
-            if int(
-                availability["club_id"]
-            ) not in my_club_ids
+            if (
+                int(
+                    availability["club_id"]
+                ) not in my_club_ids
+                and not self.is_match_finished(
+                    match_date=availability[
+                        "match_date"
+                    ],
+                    end_time=availability.get(
+                        "end_time"
+                    ),
+                )
+            )
         ]
 
 
@@ -2322,9 +2333,15 @@ class MatchService:
                 match_date
             )
 
-        if match_date < date.today():
+        if self.is_match_finished(
+            match_date=match_date,
+            end_time=availability.get(
+                "end_time"
+            ),
+        ):
             raise ValueError(
-                "이미 지난 경기에는 매칭 신청을 할 수 없습니다."
+                "이미 종료된 경기에는 "
+                "매칭 신청을 할 수 없습니다."
             )
 
 
