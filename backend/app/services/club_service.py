@@ -5,6 +5,9 @@ from app.schemas.clubs import (
     ClubCreateRequest,
     ClubCreateResponse,
     ClubDashboardResponse,
+    ClubSettingsResponse,
+    ClubSettingsUpdateRequest,
+    ClubSettingsUpdateResponse,
 )
 
 
@@ -175,6 +178,7 @@ class ClubService:
                 "club_intro": request_data.club_intro,
                 "owner_id": owner_id,
                 "max_members": request_data.max_members,
+                "monthly_fee": request_data.monthly_fee,
                 "current_members": 1,
                 "activity_frequency": (
                     request_data.activity_frequency
@@ -461,6 +465,191 @@ class ClubService:
             club_id=club_id,
             owner_id=owner_id,
             message="동호회가 생성되었습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 동호회 설정 조회
+    # -----------------------------------------------------
+    def get_settings(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> ClubSettingsResponse:
+
+        club = self.club_repository.find_club_by_id(
+            club_id
+        )
+
+        if club is None:
+            raise LookupError(
+                "존재하지 않거나 비활성화된 동호회입니다."
+            )
+
+        membership = (
+            self.club_repository.find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is None:
+            raise PermissionError(
+                "이 동호회의 운영 권한이 없습니다."
+            )
+
+        user_role = str(
+            membership.get("role") or ""
+        )
+
+        if user_role not in {
+            "owner",
+            "manager",
+        }:
+            raise PermissionError(
+                "동호회장 또는 운영진만 설정을 조회할 수 있습니다."
+            )
+
+        return ClubSettingsResponse(
+            club_id=club["club_id"],
+            club_name=club["club_name"],
+            club_intro=club.get("club_intro"),
+            sport_name=(
+                self.club_repository
+                .find_club_sport_name(club_id)
+            ),
+            activity_frequency=club.get(
+                "activity_frequency"
+            ),
+            max_members=club.get("max_members"),
+            monthly_fee=(
+                club.get("monthly_fee")
+                if club.get("monthly_fee") is not None
+                else 30000
+            ),
+            join_method=(
+                club.get("join_method")
+                or "approval"
+            ),
+            visibility=(
+                club.get("visibility")
+                or "public"
+            ),
+            user_role=user_role,
+        )
+
+    # -----------------------------------------------------
+    # 동호회 기본 설정 수정
+    # -----------------------------------------------------
+    def update_settings(
+        self,
+        club_id: int,
+        user_id: str,
+        request_data: ClubSettingsUpdateRequest,
+    ) -> ClubSettingsUpdateResponse:
+
+        club = self.club_repository.find_club_by_id(
+            club_id
+        )
+
+        if club is None:
+            raise LookupError(
+                "존재하지 않거나 비활성화된 동호회입니다."
+            )
+
+        membership = (
+            self.club_repository.find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is None:
+            raise PermissionError(
+                "이 동호회의 운영 권한이 없습니다."
+            )
+
+        user_role = str(
+            membership.get("role") or ""
+        )
+
+        if user_role not in {
+            "owner",
+            "manager",
+        }:
+            raise PermissionError(
+                "동호회장 또는 운영진만 설정을 수정할 수 있습니다."
+            )
+
+        settings_data = request_data.model_dump(
+            exclude_unset=True
+        )
+
+        if not settings_data:
+            raise ValueError(
+                "수정할 설정값이 없습니다."
+            )
+
+        join_method = settings_data.get(
+            "join_method"
+        )
+
+        if (
+            join_method is not None
+            and join_method not in {
+                "instant",
+                "approval",
+            }
+        ):
+            raise ValueError(
+                "지원하지 않는 가입 방식입니다."
+            )
+
+        visibility = settings_data.get(
+            "visibility"
+        )
+
+        if (
+            visibility is not None
+            and visibility not in {
+                "public",
+                "private",
+            }
+        ):
+            raise ValueError(
+                "지원하지 않는 공개 범위입니다."
+            )
+
+        max_members = settings_data.get(
+            "max_members"
+        )
+
+        if max_members is not None:
+            current_members = (
+                self.club_repository
+                .count_active_members(club_id)
+            )
+
+            if max_members < current_members:
+                raise ValueError(
+                    "최대 회원 수를 현재 회원 수보다 "
+                    "적게 설정할 수 없습니다."
+                )
+
+        updated_club = (
+            self.club_repository.update_club_settings(
+                club_id=club_id,
+                settings_data=settings_data,
+            )
+        )
+
+        if updated_club is None:
+            raise LookupError(
+                "동호회 설정 수정에 실패했습니다."
+            )
+
+        return ClubSettingsUpdateResponse(
+            club_id=club_id,
+            message="동호회 설정이 수정되었습니다.",
         )
 
     # -----------------------------------------------------

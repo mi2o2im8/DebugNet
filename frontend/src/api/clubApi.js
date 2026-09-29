@@ -162,6 +162,7 @@ export const createClub = async (formData) => {
 
             joinMethod: formData.joinMethod,
             maxMembers: formData.maxMembers,
+            monthlyFee: Number(formData.monthlyFee),
 
             joinQuestions:
                 formData.joinQuestions.map(

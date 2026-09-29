@@ -15,6 +15,9 @@ from app.schemas.clubs import (
     ClubCreateRequest,
     ClubCreateResponse,
     ClubDashboardResponse,
+    ClubSettingsResponse,
+    ClubSettingsUpdateRequest,
+    ClubSettingsUpdateResponse,
 )
 
 from app.services.club_service import ClubService
@@ -173,6 +176,94 @@ def create_club(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="동호회 생성 중 오류가 발생했습니다.",
+        ) from error
+
+# =========================================================
+# 동호회 설정 조회
+#
+# GET /api/clubs/{club_id}/settings
+# =========================================================
+
+@router.get(
+    "/{club_id}/settings",
+    response_model=ClubSettingsResponse,
+)
+def get_club_settings(
+    club_id: int,
+    user_id: str = Depends(get_current_user_id),
+):
+    club_service = ClubService()
+
+    try:
+        return club_service.get_settings(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="동호회 설정 조회 중 오류가 발생했습니다.",
+        ) from error
+
+# =========================================================
+# 동호회 기본 설정 수정
+#
+# PATCH /api/clubs/{club_id}/settings
+# =========================================================
+
+@router.patch(
+    "/{club_id}/settings",
+    response_model=ClubSettingsUpdateResponse,
+)
+def update_club_settings(
+    club_id: int,
+    request_data: ClubSettingsUpdateRequest,
+    user_id: str = Depends(get_current_user_id),
+):
+    club_service = ClubService()
+
+    try:
+        return club_service.update_settings(
+            club_id=club_id,
+            user_id=user_id,
+            request_data=request_data,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="동호회 설정 수정 중 오류가 발생했습니다.",
         ) from error
 
 # =========================================================

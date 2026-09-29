@@ -683,11 +683,41 @@ class ClubRepository:
             .table("clubs")
             .select(
                 "club_id, club_name, club_intro, "
-                "max_members, activity_frequency, status"
+                "max_members, monthly_fee, "
+                "activity_frequency, gender_rule, "
+                "join_method, visibility, status"
             )
             .eq("club_id", club_id)
             .eq("status", True)
             .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 동호회 기본 설정 수정
+    # -----------------------------------------------------
+    def update_club_settings(
+        self,
+        club_id: int,
+        settings_data: dict,
+    ) -> dict | None:
+
+        if not settings_data:
+            return self.find_club_by_id(
+                club_id
+            )
+
+        response = (
+            self.admin_client
+            .table("clubs")
+            .update(settings_data)
+            .eq("club_id", club_id)
+            .eq("status", True)
             .execute()
         )
 

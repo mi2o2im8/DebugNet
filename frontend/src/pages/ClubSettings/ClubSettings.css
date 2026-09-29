@@ -1,0 +1,116 @@
+.club-settings-page {
+    min-height: 100%;
+    padding-bottom: 92px;
+    background: #f5faf7;
+    color: #1f2937;
+}
+
+.club-settings-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: 42px 1fr 42px;
+    align-items: center;
+    min-height: 64px;
+    padding: 0 18px;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.club-settings-header h1 {
+    margin: 0;
+    text-align: center;
+    font-size: 18px;
+    color: #111827;
+}
+
+.club-settings-back-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid #dfe7e2;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #1f2937;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.club-settings-header-space {
+    width: 38px;
+}
+
+.club-settings-content {
+    padding: 22px 20px;
+}
+
+.club-settings-menu-card {
+    overflow: hidden;
+    border: 1px solid #dce8e1;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(20, 83, 45, 0.06);
+}
+
+.club-settings-menu-button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 58px;
+    padding: 0 16px;
+    border: 0;
+    background: transparent;
+    color: #344054;
+    text-align: left;
+    cursor: pointer;
+}
+
+.club-settings-menu-button:hover {
+    background: #f4fbf7;
+}
+
+.club-settings-menu-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    color: #087d46;
+    font-size: 18px;
+}
+
+.club-settings-menu-label {
+    flex: 1;
+    margin-left: 8px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.club-settings-menu-arrow {
+    color: #98a2b3;
+    font-size: 18px;
+}
+
+.club-settings-menu-button.danger {
+    color: #d92d20;
+}
+
+.club-settings-menu-button.danger .club-settings-menu-icon {
+    color: #d92d20;
+}
+
+.club-settings-divider {
+    height: 1px;
+    margin: 0 16px;
+    background: #edf1ef;
+}
+
+.club-settings-description {
+    margin: 18px 4px 0;
+    color: #667085;
+    font-size: 13px;
+    line-height: 1.6;
+}

@@ -154,6 +154,42 @@ function OperationStep({ formData, onChange }) {
                 />
             </div>
 
+            {/* 월 회비 */}
+            <div className="club-create-field">
+                <label htmlFor="club-monthly-fee">
+                    월 회비 <em>*</em>
+                </label>
+
+                <div className="club-monthly-fee-input-wrapper">
+                    <input
+                        id="club-monthly-fee"
+                        type="number"
+                        className="club-create-input"
+                        min="0"
+                        step="1000"
+                        inputMode="numeric"
+                        value={formData.monthlyFee ?? ""}
+                        placeholder="예) 30000"
+                        onChange={(event) => {
+                            const value = event.target.value;
+
+                            onChange(
+                                "monthlyFee",
+                                value === ""
+                                    ? ""
+                                    : Number(value)
+                            );
+                        }}
+                    />
+
+                    <span>원</span>
+                </div>
+
+                <p className="club-monthly-fee-guide">
+                    회비가 없다면 0원을 입력해주세요.
+                </p>
+            </div>
+
             {/* 가입 질문 */}
             <div className="club-create-field">
                 <div className="club-question-heading">

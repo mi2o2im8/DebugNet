@@ -108,6 +108,7 @@ function ClubCreate() {
         // 5단계
         joinMethod: "approval",
         maxMembers: "50",
+        monthlyFee: 30000,
         joinQuestions: [],
 
     });
@@ -223,6 +224,14 @@ function ClubCreate() {
             window.scrollTo(0, 0);
             return;
         }
+
+        if (
+            clubForm.monthlyFee === ""
+            || Number(clubForm.monthlyFee) < 0
+        ) {
+            alert("월 회비를 0원 이상으로 입력해주세요.");
+            return;
+        }        
 
         setIsSubmitting(true);
 

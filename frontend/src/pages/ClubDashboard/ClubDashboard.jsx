@@ -733,8 +733,8 @@ function ClubDashboard() {
                                     type="button"
                                     className="club-dashboard-setting-button"
                                     onClick={() =>
-                                        alert(
-                                            "동호회 설정은 이후 연결합니다."
+                                        navigate(
+                                            `/clubs/${clubId}/manage/settings`
                                         )
                                     }
                                 >

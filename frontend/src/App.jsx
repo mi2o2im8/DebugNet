@@ -17,6 +17,7 @@ import SignupFee from './pages/Signup/SignupFee'
 import SignupReview from './pages/Signup/SignupReview'
 
 import ClubDashboard from "./pages/ClubDashboard/ClubDashboard";
+import ClubSettingsHome from "./pages/ClubSettings/ClubSettingsHome";
 
 import ClubHome from './pages/ClubHome/ClubHome';
 import ClubDetail from "./pages/ClubDetail/ClubDetail";
@@ -296,6 +297,12 @@ function App() {
                 <Route
                   path="/clubs/:clubId/manage"
                   element={<ClubDashboard />}
+                />
+
+                {/* 동호회 설정 홈 */}
+                <Route
+                  path="/clubs/:clubId/manage/settings"
+                  element={<ClubSettingsHome />}
                 />
 
                 {/* 동호회 회원 관리 */}

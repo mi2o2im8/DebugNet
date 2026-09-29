@@ -272,6 +272,15 @@ class ClubCreateRequest(BaseModel):
         ),
     )
 
+    monthly_fee: int = Field(
+        default=30000,
+        ge=0,
+        validation_alias=AliasChoices(
+            "monthly_fee",
+            "monthlyFee",
+        ),
+    )
+
     join_questions: list[ClubJoinQuestionCreate] = Field(
         default_factory=list,
         max_length=5,
@@ -376,6 +385,111 @@ class ClubCreateRequest(BaseModel):
 
         return self
 
+
+class ClubSettingsResponse(BaseModel):
+    club_id: int
+    club_name: str
+    club_intro: str | None = None
+    sport_name: str | None = None
+
+    activity_frequency: str | None = None
+    max_members: int | None = None
+    monthly_fee: int = 30000
+
+    join_method: str
+    visibility: str
+    user_role: str
+
+
+class ClubSettingsUpdateRequest(BaseModel):
+    club_name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=50,
+        validation_alias=AliasChoices(
+            "club_name",
+            "clubName",
+        ),
+    )
+
+    club_intro: str | None = Field(
+        default=None,
+        max_length=2000,
+        validation_alias=AliasChoices(
+            "club_intro",
+            "clubIntro",
+        ),
+    )
+
+    activity_frequency: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=50,
+        validation_alias=AliasChoices(
+            "activity_frequency",
+            "activityFrequency",
+        ),
+    )
+
+    max_members: int | None = Field(
+        default=None,
+        ge=1,
+        validation_alias=AliasChoices(
+            "max_members",
+            "maxMembers",
+        ),
+    )
+
+    monthly_fee: int | None = Field(
+        default=None,
+        ge=0,
+        validation_alias=AliasChoices(
+            "monthly_fee",
+            "monthlyFee",
+        ),
+    )
+
+    join_method: str | None = Field(
+        default=None,
+        max_length=30,
+        validation_alias=AliasChoices(
+            "join_method",
+            "joinMethod",
+        ),
+    )
+
+    visibility: str | None = Field(
+        default=None,
+        max_length=30,
+    )
+
+    @field_validator(
+        "club_name",
+        "activity_frequency",
+        "join_method",
+        "visibility",
+    )
+    @classmethod
+    def strip_setting_strings(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        if value is None:
+            return None
+
+        stripped_value = value.strip()
+
+        if not stripped_value:
+            raise ValueError(
+                "설정값은 공백일 수 없습니다."
+            )
+
+        return stripped_value
+
+
+class ClubSettingsUpdateResponse(BaseModel):
+    club_id: int
+    message: str
 
 # React 에 응답 전달하기
 class ClubCreateResponse(BaseModel):
