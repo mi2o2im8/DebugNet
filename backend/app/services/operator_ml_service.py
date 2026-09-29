@@ -68,6 +68,32 @@ class OperatorMlService:
     def _normalize_text(value) -> str:
         return str(value or "").strip()
 
+    @classmethod
+    def _normalize_day(cls, value) -> str:
+        normalized = cls._normalize_text(value)
+
+        day_aliases = {
+            "월": "월",
+            "월요일": "월",
+            "화": "화",
+            "화요일": "화",
+            "수": "수",
+            "수요일": "수",
+            "목": "목",
+            "목요일": "목",
+            "금": "금",
+            "금요일": "금",
+            "토": "토",
+            "토요일": "토",
+            "일": "일",
+            "일요일": "일",
+        }
+
+        return day_aliases.get(
+            normalized,
+            normalized,
+        )
+
     @staticmethod
     def _to_minutes(value) -> int | None:
         if value is None:
@@ -95,7 +121,7 @@ class OperatorMlService:
         matched_count = 0
 
         for club_schedule in club_schedules:
-            club_day = cls._normalize_text(
+            club_day = cls._normalize_day(
                 club_schedule.get("day_of_week")
             )
             club_start = cls._to_minutes(
@@ -111,7 +137,7 @@ class OperatorMlService:
             has_overlap = False
 
             for user_time in user_times:
-                if cls._normalize_text(
+                if cls._normalize_day(
                     user_time.get("day_of_week")
                 ) != club_day:
                     continue

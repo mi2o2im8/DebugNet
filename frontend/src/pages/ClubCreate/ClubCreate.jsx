@@ -1,4 +1,7 @@
-import { useState } from "react";
+import {
+    useEffect,
+    useState
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { FiChevronLeft } from "react-icons/fi";
 import BasicInfoStep from "./BasicInfoStep";
@@ -8,7 +11,7 @@ import IntroductionStep from "./IntroductionStep";
 import OperationStep from "./OperationStep";
 import CompletionStep from "./CompletionStep";
 import { createClub } from "../../api/clubApi";
-import { getMyGender } from "../../api/userApi";
+import { getMyGender, getMyProfile } from "../../api/userApi";
 
 import "./ClubCreate.css";
 
@@ -34,6 +37,12 @@ function ClubCreate() {
     // 생성된 동호회 API 응답 저장
     const [createResult, setCreateResult] =
         useState(null);
+
+    const [operatorProfile, setOperatorProfile] =
+        useState(null);
+
+    const [isOperatorLoading, setIsOperatorLoading] =
+        useState(true);
 
     const [clubForm, setClubForm] = useState({
     // 1단계
@@ -103,7 +112,35 @@ function ClubCreate() {
 
     });
 
-    
+    useEffect(() => {
+        let isActive = true;
+
+        getMyProfile()
+            .then((profile) => {
+                if (isActive) {
+                    setOperatorProfile(profile);
+                }
+            })
+            .catch((error) => {
+                console.error(
+                    "운영자 정보 조회 오류:",
+                    error
+                );
+
+                if (isActive) {
+                    setOperatorProfile(null);
+                }
+            })
+            .finally(() => {
+                if (isActive) {
+                    setIsOperatorLoading(false);
+                }
+            });
+
+        return () => {
+            isActive = false;
+        };
+    }, []);
 
     const handleFormChange = (field, value) => {
     setClubForm((previous) => ({
@@ -268,6 +305,8 @@ function ClubCreate() {
                         <BasicInfoStep
                             formData={clubForm}
                             onChange={handleFormChange}
+                            operatorProfile={operatorProfile}
+                            isOperatorLoading={isOperatorLoading}
                         />
                     )}
 
