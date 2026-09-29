@@ -6,6 +6,7 @@ import ClubSearchFilter from "../../components/common/ClubSearchFilter";
 
 // 전체 동호회 페이지의 기존 CSS 재사용
 import "../AllClub/AllClub.css";
+import { buildApiUrl } from "../../api/apiClient";
 
 // =====================================================
 // 동호회 카드 컴포넌트
@@ -94,7 +95,8 @@ function ClubRecruit() {
 
         // 모집 중인 동호회 조회 API
         const url = new URL(
-          "http://localhost:8000/api/clubs/recruiting"
+          buildApiUrl("/api/clubs/recruiting"),
+          window.location.origin
         );
 
         // -------------------------------------------------

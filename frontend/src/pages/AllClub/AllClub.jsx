@@ -7,6 +7,7 @@ import ClubSearchFilter from "../../components/common/ClubSearchFilter";
 
 import { getMyClub } from "../../api/clubApi";
 import "./AllClub.css";
+import { buildApiUrl } from "../../api/apiClient";
 
 // =====================================================
 // 동호회 카드 컴포넌트
@@ -97,7 +98,8 @@ function AllClubs() {
         setError("");
 
         const url = new URL(
-          "http://localhost:8000/api/clubs/search"
+          buildApiUrl("/api/clubs/search"),
+          window.location.origin
         );
 
         // 종목 필터

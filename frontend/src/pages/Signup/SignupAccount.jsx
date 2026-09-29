@@ -11,6 +11,7 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 
 // ⭐ 공통 뒤로가기 버튼
 import BackButton from "../../components/BackButton/BackButton";
+import { buildApiUrl } from "../../api/apiClient";
 
 function Signup() {
     // 비밀번호 보여주는 함수(눈)
@@ -56,7 +57,7 @@ function Signup() {
         try {
             // ⭐ 백엔드 이메일 중복 확인 API
             const response = await fetch(
-                `http://127.0.0.1:8000/api/auth/check-email?email=${encodeURIComponent(email)}`
+                buildApiUrl(`/api/auth/check-email?email=${encodeURIComponent(email)}`)
             );
 
             const data = await response.json();

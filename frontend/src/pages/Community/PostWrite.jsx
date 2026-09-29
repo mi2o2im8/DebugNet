@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import BottomNav from "../../components/BottomNav";
 import { supabase } from "../../../supabaseClient";
 import "./CSS/PostWrite.css";
+import { buildApiUrl } from "../../api/apiClient";
 
 
 // ========================================
@@ -348,7 +349,7 @@ function PostWrite() {
         }
 
         const response = await fetch(
-          "http://127.0.0.1:8000/api/posts/write-options",
+          buildApiUrl("/api/posts/write-options"),
           {
             headers: {
               Authorization:
@@ -554,7 +555,7 @@ function PostWrite() {
 
 
     const response = await fetch(
-      "http://127.0.0.1:8000/api/posts/images",
+      buildApiUrl("/api/posts/images"),
       {
         method: "POST",
 
@@ -874,8 +875,8 @@ function PostWrite() {
       };
 
       const apiUrl = isEditMode
-        ? `http://127.0.0.1:8000/api/posts/${editPost.id}`
-        : "http://127.0.0.1:8000/api/posts";
+        ? buildApiUrl(`/api/posts/${editPost.id}`)
+        : buildApiUrl("/api/posts");
 
 
       const response = await fetch(

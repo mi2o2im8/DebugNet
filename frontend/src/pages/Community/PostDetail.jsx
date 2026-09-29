@@ -7,6 +7,7 @@ import basicProfileImg from "../../assets/img/basic_profile_img.png";
 import { supabase } from "../../../supabaseClient";
 
 import "./CSS/PostDetail.css";
+import { buildApiUrl } from "../../api/apiClient";
 
 
 const formatDateTime = (dateString) => {
@@ -217,7 +218,7 @@ function PostDetail() {
 
         // 게시글 상세 요청
         const response = await fetch(
-          `http://127.0.0.1:8000/api/posts/${postId}`,
+          buildApiUrl(`/api/posts/${postId}`),
           {
             headers: {
               Authorization:
@@ -321,7 +322,7 @@ function PostDetail() {
 
 
         const response = await fetch(
-          `http://127.0.0.1:8000/api/posts/${postId}/comments`,
+          buildApiUrl(`/api/posts/${postId}/comments`),
           {
             headers: {
               Authorization:
@@ -404,7 +405,7 @@ function PostDetail() {
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/posts/${post.id}`,
+        buildApiUrl(`/api/posts/${post.id}`),
         {
           method: "DELETE",
 
@@ -506,7 +507,7 @@ function PostDetail() {
       }
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/blocks",
+        buildApiUrl("/api/blocks"),
         {
           method: "POST",
 
@@ -598,7 +599,7 @@ function PostDetail() {
 
 
         const response = await fetch(
-          `http://127.0.0.1:8000/api/posts/${postId}/comments`,
+          buildApiUrl(`/api/posts/${postId}/comments`),
           {
             method: "POST",
 
@@ -709,7 +710,7 @@ function PostDetail() {
 
 
         const response = await fetch(
-          `http://127.0.0.1:8000/api/comments/${commentId}`,
+          buildApiUrl(`/api/comments/${commentId}`),
           {
             method: "PATCH",
 
@@ -838,7 +839,7 @@ function PostDetail() {
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/comments/${commentId}`,
+        buildApiUrl(`/api/comments/${commentId}`),
         {
           method: "DELETE",
 

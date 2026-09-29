@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ClubHome.css";
 import ClubSearchFilter from "../../components/common/ClubSearchFilter";
+import { buildApiUrl } from "../../api/apiClient";
 
 function ClubHome() {
   const navigate = useNavigate();
@@ -69,7 +70,8 @@ function ClubHome() {
         setError("");
 
         const url = new URL(
-          "http://localhost:8000/api/clubs/search"
+          buildApiUrl("/api/clubs/search"),
+          window.location.origin
         );
 
         // 선택한 종목 다중 전달
@@ -129,7 +131,7 @@ function ClubHome() {
         setGuestError("");
 
         const response = await fetch(
-          "http://localhost:8000/api/clubs/guest-recruiting",
+          buildApiUrl("/api/clubs/guest-recruiting"),
           {
             signal: controller.signal,
           }

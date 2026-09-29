@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 
 import "./ClubDetail.css";
+import { buildApiUrl } from "../../api/apiClient";
 
 function ClubDetail() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ function ClubDetail() {
         }
 
         const response = await fetch(
-          `http://localhost:8000/api/clubs/${clubId}/member-status?user_id=${user.id}`
+          buildApiUrl(`/api/clubs/${clubId}/member-status?user_id=${user.id}`)
         );
 
         if (!response.ok) {
@@ -77,7 +78,7 @@ function ClubDetail() {
     const fetchClub = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/api/clubs/${clubId}`
+          buildApiUrl(`/api/clubs/${clubId}`)
         );
 
         if (!response.ok) {

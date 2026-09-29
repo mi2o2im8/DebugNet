@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { supabase } from "../../../supabaseClient";
 import "./GuestRecruitDetail.css";
+import { buildApiUrl } from "../../api/apiClient";
 // =====================================================
 // 게스트 모집 상세 페이지
 // =====================================================
@@ -107,7 +108,7 @@ function GuestRecruitDetail() {
         setError("");
 
         const response = await fetch(
-          "http://localhost:8000/api/clubs/guest-recruiting",
+          buildApiUrl("/api/clubs/guest-recruiting"),
           {
             signal: controller.signal,
           }
@@ -199,7 +200,7 @@ function GuestRecruitDetail() {
       }
 
       const response = await fetch(
-        `http://localhost:8000/api/clubs/${event.club_id}/events/${event.event_id}/guest-application`,
+        buildApiUrl(`/api/clubs/${event.club_id}/events/${event.event_id}/guest-application`),
         {
           method: "POST",
           headers: {

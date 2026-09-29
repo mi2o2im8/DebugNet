@@ -6,6 +6,7 @@ import BottomNav from "../../components/BottomNav";
 import { useNotifications } from "../../context/NotificationContext";
 import { supabase } from "../../../supabaseClient";
 import "./CSS/Community.css";
+import { buildApiUrl } from "../../api/apiClient";
 
 const boards = [
   { id: "free", name: "자유게시판" },
@@ -142,7 +143,7 @@ function Community() {
         }
 
         const response = await fetch(
-          "http://127.0.0.1:8000/api/posts/write-options",
+          buildApiUrl("/api/posts/write-options"),
           {
             headers: {
               Authorization:
@@ -237,7 +238,7 @@ function Community() {
         }
 
         const response = await fetch(
-          `http://127.0.0.1:8000/api/posts?${params.toString()}`,
+          buildApiUrl(`/api/posts?${params.toString()}`),
           {
             headers: {
               Authorization:

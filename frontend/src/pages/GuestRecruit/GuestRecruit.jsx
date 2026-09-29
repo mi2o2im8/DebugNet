@@ -6,6 +6,7 @@ import ClubSearchFilter from "../../components/common/ClubSearchFilter";
 
 // 기존 전체 동호회 페이지의 CSS 재사용
 import "../AllClub/AllClub.css";
+import { buildApiUrl } from "../../api/apiClient";
 
 // =====================================================
 // 게스트 모집 페이지
@@ -46,7 +47,7 @@ function GuestRecruit() {
         setError("");
 
         const response = await fetch(
-          "http://localhost:8000/api/clubs/guest-recruiting",
+          buildApiUrl("/api/clubs/guest-recruiting"),
           {
             signal: controller.signal,
           }

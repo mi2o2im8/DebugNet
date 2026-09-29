@@ -8,6 +8,7 @@ import { useSignup } from "./SignupContext";
 import basicProfileImg from "../../assets/img/basic_profile_img.png";
 import { supabase } from "../../../supabaseClient";
 import backIcon from "../../assets/img/back.png";
+import { buildApiUrl } from "../../api/apiClient";
 
 // -------------------------------------------------
 // 활동 가능 시간: 같은 시간대끼리 묶어서 보여주기
@@ -312,7 +313,7 @@ function SignupReview() {
             // ========================================
 
             const response = await fetch(
-                "http://127.0.0.1:8000/api/auth/signup",
+                buildApiUrl("/api/auth/signup"),
                 {
                     method: "POST",
 
@@ -440,7 +441,7 @@ function SignupReview() {
                 // users.profile_image에 URL 저장
                 const profileResponse =
                     await fetch(
-                        "http://127.0.0.1:8000/api/users/me/profile-image",
+                        buildApiUrl("/api/users/me/profile-image"),
                         {
                             method: "PATCH",
 

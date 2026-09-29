@@ -17,7 +17,7 @@ import {
     getGuestRecruitingEvents,
 } from "../../api/clubApi";
 import { getMyClubShared as getMyClub } from "../../api/myClubCache";
-import { authenticatedRequest } from "../../api/apiClient";
+import { authenticatedRequest, buildApiUrl } from "../../api/apiClient";
 
 // ⭐ 이미지
 import profileIcon from "../../assets/img/basic_profile_img.png";
@@ -1174,7 +1174,7 @@ function MainHome() {
             try {
 
                 const response = await fetch(
-                    "http://127.0.0.1:8000/api/clubs/search"
+                    buildApiUrl("/api/clubs/search")
                 );
 
                 if (!response.ok) {

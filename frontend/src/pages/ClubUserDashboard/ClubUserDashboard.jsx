@@ -42,6 +42,7 @@ import {
 } from "../../api/clubApi";
 
 import "./ClubUserDashboard.css";
+import { buildApiUrl } from "../../api/apiClient";
 
 
 const WEEK_LABELS = [
@@ -251,7 +252,7 @@ function ClubUserDashboard() {
                     });
 
                     const response = await fetch(
-                        `http://127.0.0.1:8000/api/posts?${params.toString()}`,
+                        buildApiUrl(`/api/posts?${params.toString()}`),
                         {
                             headers: {
                                 Authorization:

@@ -1,8 +1,12 @@
 import { supabase } from "../../supabaseClient";
 
-const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ||
-    "http://127.0.0.1:8000";
+const API_BASE_URL = (
+    import.meta.env.DEV
+        ? import.meta.env.VITE_API_BASE_URL
+        : import.meta.env.VITE_API_BASE_URL_PROD
+)?.replace(/\/$/, "") ?? "";
+
+export const buildApiUrl = (path) => `${API_BASE_URL}${path}`;
 
 const getErrorMessage = (status, data) => {
     if (Array.isArray(data?.detail)) {

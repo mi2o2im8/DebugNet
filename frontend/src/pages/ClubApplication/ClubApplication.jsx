@@ -5,6 +5,7 @@ import { supabase } from "../../../supabaseClient";
 import { getClubMemberStatus } from "../../api/clubApi";
 
 import "./ClubApplication.css";
+import { buildApiUrl } from "../../api/apiClient";
 
 function ClubApplication() {
   const { clubId } = useParams();
@@ -77,7 +78,7 @@ function ClubApplication() {
         // ---------------------------------------------
 
         const clubResponse = await fetch(
-          `http://localhost:8000/api/clubs/${clubId}`
+          buildApiUrl(`/api/clubs/${clubId}`)
         );
 
         if (!clubResponse.ok) {
@@ -95,7 +96,7 @@ function ClubApplication() {
         // ---------------------------------------------
 
         const questionResponse = await fetch(
-          `http://localhost:8000/api/clubs/${clubId}/join-questions`
+          buildApiUrl(`/api/clubs/${clubId}/join-questions`)
         );
 
         if (!questionResponse.ok) {
@@ -354,7 +355,7 @@ function ClubApplication() {
       // ---------------------------------------------
 
       const response = await fetch(
-        `http://localhost:8000/api/clubs/${clubId}/application`,
+        buildApiUrl(`/api/clubs/${clubId}/application`),
         {
           method: "POST",
 

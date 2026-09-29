@@ -11,6 +11,7 @@ import basicProfileImg from "../../assets/img/basic_profile_img.png";
 
 // 뒤로가기 버튼 소환
 import backIcon from "../../assets/img/back.png";
+import { buildApiUrl } from "../../api/apiClient";
 
 function Signup() {
     const navigate = useNavigate();
@@ -167,7 +168,7 @@ function Signup() {
 
         try {
             const response = await fetch(
-                `http://127.0.0.1:8000/api/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`
+                buildApiUrl(`/api/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`)
             );
 
             if (!response.ok) {
