@@ -170,3 +170,104 @@ class MyEventRepository:
             }
             for row in warnings
         ]
+
+    # -----------------------------------------------------
+    # 내가 게스트로 신청 / 참여한 일정 (event_participants)
+    #
+    # participant_type = "guest"
+    # status: pending(승인 대기) / joined(참여 확정) 만
+    #         rejected / cancelled 는 일정에 보여주지 않는다.
+    #
+    # 같은 일정에 신청 기록이 여러 개면 가장 최근 것만 사용
+    # 반환 예: {12: "joined", 15: "pending"}
+    # -----------------------------------------------------
+    def find_guest_status_by_event(
+        self,
+        user_id: str,
+    ) -> dict[int, str]:
+
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .select("event_participant_id, event_id, status")
+            .eq("user_id", user_id)
+            .eq("participant_type", "guest")
+            .order("event_participant_id", desc=True)
+            .execute()
+        )
+
+        result: dict[int, str] = {}
+
+        # 최신 신청부터 보면서 일정마다 첫 번째(=최신)만 사용
+        seen_event_ids: set[int] = set()
+
+        for row in response.data or []:
+            event_id = int(row["event_id"])
+
+            if event_id in seen_event_ids:
+                continue
+
+            seen_event_ids.add(event_id)
+
+            if row.get("status") in ("pending", "joined"):
+                result[event_id] = row["status"]
+
+        return result
+
+    # -----------------------------------------------------
+    # 일정별 참여 확정된 게스트 수
+    #
+    # 반환 예: {12: 2, 15: 0}
+    # -----------------------------------------------------
+    def count_joined_guests_by_event_ids(
+        self,
+        event_ids: list[int],
+    ) -> dict[int, int]:
+
+        if not event_ids:
+            return {}
+
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .select("event_id")
+            .in_("event_id", event_ids)
+            .eq("participant_type", "guest")
+            .eq("status", "joined")
+            .execute()
+        )
+
+        result: dict[int, int] = {}
+
+        for row in response.data or []:
+            event_id = int(row["event_id"])
+            result[event_id] = result.get(event_id, 0) + 1
+
+        return result
+
+    # -----------------------------------------------------
+    # 동호회 이름 (게스트 일정의 상대 동호회용)
+    #
+    # 게스트 일정은 내가 가입하지 않은 동호회라서
+    # find_active_clubs_by_user 로는 이름을 알 수 없다.
+    # -----------------------------------------------------
+    def find_club_names_by_ids(
+        self,
+        club_ids: list[int],
+    ) -> dict[int, str]:
+
+        if not club_ids:
+            return {}
+
+        response = (
+            self.admin_client
+            .table("clubs")
+            .select("club_id, club_name")
+            .in_("club_id", club_ids)
+            .execute()
+        )
+
+        return {
+            int(row["club_id"]): row["club_name"]
+            for row in (response.data or [])
+        }

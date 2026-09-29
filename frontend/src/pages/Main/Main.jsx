@@ -8,6 +8,7 @@ import BottomNav from "../../components/BottomNav";
 import { supabase } from "../../../supabaseClient";
 
 import { attachClubInfoToEvents } from "../../utils/attachClubInfo";
+import { authenticatedRequest } from "../../api/apiClient";
 import { buildRecommendedClubs } from "../../utils/recommendClubs";
 
 import "./Main.css";
@@ -44,6 +45,38 @@ import { useNotifications } from "../../context/NotificationContext";
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ||
     "http://127.0.0.1:8000";
+
+
+// =========================================================
+// ⭐ 내 게스트 일정 조회 (이 페이지 전용)
+//
+// GET /api/users/me/guest-events?from_date=YYYY-MM-DD&to_date=YYYY-MM-DD
+// (기간은 선택, 안 보내면 전체)
+//
+// 다른 담당 영역 파일(api/userApi.js 등)을 수정하지 않도록
+// 페이지 안에 따로 둔다. apiClient 는 가져다 쓰기만 한다.
+// =========================================================
+const getMyGuestEvents = async ({ fromDate, toDate } = {}) => {
+
+    const params = new URLSearchParams();
+
+    if (fromDate) params.set("from_date", fromDate);
+    if (toDate) params.set("to_date", toDate);
+
+    const query = params.toString();
+
+    return authenticatedRequest(
+        `/api/users/me/guest-events${query ? `?${query}` : ""}`,
+        { method: "GET" }
+    );
+};
+
+
+// ⭐ 게스트 신청 상태 → 화면 표시 문구
+const GUEST_STATUS_LABEL = {
+    pending: "승인 대기",
+    joined: "참여 확정",
+};
 
 
 // ⭐ 종목별 기본 이미지 (동호회 이미지가 없을 때)
@@ -83,6 +116,15 @@ const formatGuestSchedule = (eventDate, startTime) => {
     return `${month}.${day}(${weekday}) ${time}`.trim();
 
 };
+
+
+// ⭐ Date → "YYYY-MM-DD" (로컬 날짜 기준)
+const toDateString = (date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+
+// ⭐ 메인에 보여줄 게스트 일정 최대 개수
+const MAX_WEEK_GUEST_SCHEDULES = 3;
 
 
 // ⭐ 카드 글씨 공통 스타일 (기존 인라인 스타일 그대로)
@@ -254,6 +296,77 @@ function Main() {
         };
 
         loadGuestEvents();
+
+        return () => {
+            isActive = false;
+        };
+
+    }, []);
+
+
+    // =========================================================
+    // ⭐ 이번 주 일정 = 내가 게스트로 신청 / 참여한 일정
+    // GET /api/users/me/guest-events?from_date=오늘&to_date=오늘+6일
+    //
+    // 가입 전 홈이라 동호회 일정은 없고, 게스트 일정만 보여준다.
+    // 로그인하지 않았으면 조회하지 않고 빈 상태로 둔다.
+    // =========================================================
+
+    const [weekGuestSchedules, setWeekGuestSchedules] = useState([]);
+
+    const [isWeekScheduleLoading, setIsWeekScheduleLoading] = useState(true);
+
+
+    useEffect(() => {
+
+        let isActive = true;
+
+        const loadWeekGuestSchedules = async () => {
+
+            try {
+
+                const {
+                    data: { session },
+                } = await supabase.auth.getSession();
+
+                if (!session?.access_token) {
+                    if (isActive) setWeekGuestSchedules([]);
+                    return;
+                }
+
+                const today = new Date();
+
+                const weekEnd = new Date(today);
+                weekEnd.setDate(today.getDate() + 6);
+
+                const data = await getMyGuestEvents({
+                    fromDate: toDateString(today),
+                    toDate: toDateString(weekEnd),
+                });
+
+                if (isActive) {
+                    setWeekGuestSchedules(data?.events || []);
+                }
+
+            } catch (error) {
+
+                console.error("⭐ Main 이번 주 게스트 일정 조회 오류:", error);
+
+                if (isActive) {
+                    setWeekGuestSchedules([]);
+                }
+
+            } finally {
+
+                if (isActive) {
+                    setIsWeekScheduleLoading(false);
+                }
+
+            }
+
+        };
+
+        loadWeekGuestSchedules();
 
         return () => {
             isActive = false;
@@ -872,50 +985,135 @@ function Main() {
 
 
 
-                    <div className="schedule-content">
+                    {isWeekScheduleLoading ? (
+
+                        <p className="schedule-guest-empty">
+                            일정을 불러오는 중이에요.
+                        </p>
+
+                    ) : weekGuestSchedules.length > 0 ? (
+
+                        // ⭐ 이번 주 게스트 일정 목록
+                        <ul className="schedule-guest-list">
+
+                            {weekGuestSchedules
+                                .slice(0, MAX_WEEK_GUEST_SCHEDULES)
+                                .map((event) => (
+
+                                    <li key={event.event_id}>
+
+                                        <button
+                                            type="button"
+                                            className="schedule-guest-item"
+                                            onClick={() =>
+                                                navigate(
+                                                    `/guest-recruit/${event.event_id}`,
+                                                    {
+                                                        // ⭐ 모집이 마감돼도 상세 화면이
+                                                        //    바로 표시되도록 일정 데이터를 넘긴다
+                                                        state: {
+                                                            event,
+                                                            guestStatus: event.guest_status,
+                                                        },
+                                                    }
+                                                )
+                                            }
+                                        >
+
+                                            <span className="schedule-guest-date">
+                                                {formatGuestSchedule(
+                                                    event.event_date,
+                                                    event.start_time
+                                                )}
+                                            </span>
+
+                                            <span className="schedule-guest-text">
+
+                                                <strong>
+                                                    {event.title}
+                                                </strong>
+
+                                                <small>
+                                                    {event.club_name}
+                                                    {event.location
+                                                        ? ` · ${event.location}`
+                                                        : ""}
+                                                </small>
+
+                                            </span>
+
+                                            <span
+                                                className={
+                                                    event.guest_status === "joined"
+                                                        ? "schedule-guest-status joined"
+                                                        : "schedule-guest-status"
+                                                }
+                                            >
+                                                {GUEST_STATUS_LABEL[event.guest_status] || "승인 대기"}
+                                            </span>
+
+                                        </button>
+
+                                    </li>
+
+                                ))}
+
+                            {weekGuestSchedules.length > MAX_WEEK_GUEST_SCHEDULES && (
+                                <li className="schedule-guest-more">
+                                    외 {weekGuestSchedules.length - MAX_WEEK_GUEST_SCHEDULES}개 일정
+                                </li>
+                            )}
+
+                        </ul>
+
+                    ) : (
+
+                        <div className="schedule-content">
 
 
-                        <div className="schedule-image">
+                            <div className="schedule-image">
 
-                            <img
-                                src={noScheduleImage}
-                                alt="예정된 일정이 없는 상태"
-                            />
-
-                        </div>
-
-
-                        <div className="schedule-info">
-
-                            <h4>
-                                예정된 일정이 있어요
-                            </h4>
-
-
-                            <div className="schedule-description">
-
-                                <p>
-                                    동호회에 가입하면 일정과 활동을
-                                </p>
-
-                                <p>
-                                    한눈에 확인할 수 있어요!
-                                </p>
+                                <img
+                                    src={noScheduleImage}
+                                    alt="예정된 일정이 없는 상태"
+                                />
 
                             </div>
 
 
-                            <button
-                                onClick={() =>
-                                    navigate("/clubs")
-                                }
-                            >
-                                일정 둘러보기
-                            </button>
+                            <div className="schedule-info">
+
+                                <h4>
+                                    이번 주 예정된 일정이 없어요
+                                </h4>
+
+
+                                <div className="schedule-description">
+
+                                    <p>
+                                        게스트로 참여하거나 동호회에 가입하면
+                                    </p>
+
+                                    <p>
+                                        일정을 한눈에 확인할 수 있어요!
+                                    </p>
+
+                                </div>
+
+
+                                <button
+                                    onClick={() =>
+                                        navigate("/clubs")
+                                    }
+                                >
+                                    일정 둘러보기
+                                </button>
+
+                            </div>
 
                         </div>
 
-                    </div>
+                    )}
 
                 </section>
 

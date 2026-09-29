@@ -1,0 +1,1241 @@
+diff -ru -x __pycache__ app_orig/repositories/my_event_repository.py app/repositories/my_event_repository.py
+--- app_orig/repositories/my_event_repository.py	2026-09-28 23:28:08.412402472 +0000
++++ app/repositories/my_event_repository.py	2026-09-29 00:15:19.714688550 +0000
+@@ -169,4 +169,105 @@
+                 "club_name": club_name_by_id.get(row["club_id"], "알 수 없는 동호회"),
+             }
+             for row in warnings
+-        ]
+\ No newline at end of file
++        ]
++
++    # -----------------------------------------------------
++    # 내가 게스트로 신청 / 참여한 일정 (event_participants)
++    #
++    # participant_type = "guest"
++    # status: pending(승인 대기) / joined(참여 확정) 만
++    #         rejected / cancelled 는 일정에 보여주지 않는다.
++    #
++    # 같은 일정에 신청 기록이 여러 개면 가장 최근 것만 사용
++    # 반환 예: {12: "joined", 15: "pending"}
++    # -----------------------------------------------------
++    def find_guest_status_by_event(
++        self,
++        user_id: str,
++    ) -> dict[int, str]:
++
++        response = (
++            self.admin_client
++            .table("event_participants")
++            .select("event_participant_id, event_id, status")
++            .eq("user_id", user_id)
++            .eq("participant_type", "guest")
++            .order("event_participant_id", desc=True)
++            .execute()
++        )
++
++        result: dict[int, str] = {}
++
++        # 최신 신청부터 보면서 일정마다 첫 번째(=최신)만 사용
++        seen_event_ids: set[int] = set()
++
++        for row in response.data or []:
++            event_id = int(row["event_id"])
++
++            if event_id in seen_event_ids:
++                continue
++
++            seen_event_ids.add(event_id)
++
++            if row.get("status") in ("pending", "joined"):
++                result[event_id] = row["status"]
++
++        return result
++
++    # -----------------------------------------------------
++    # 일정별 참여 확정된 게스트 수
++    #
++    # 반환 예: {12: 2, 15: 0}
++    # -----------------------------------------------------
++    def count_joined_guests_by_event_ids(
++        self,
++        event_ids: list[int],
++    ) -> dict[int, int]:
++
++        if not event_ids:
++            return {}
++
++        response = (
++            self.admin_client
++            .table("event_participants")
++            .select("event_id")
++            .in_("event_id", event_ids)
++            .eq("participant_type", "guest")
++            .eq("status", "joined")
++            .execute()
++        )
++
++        result: dict[int, int] = {}
++
++        for row in response.data or []:
++            event_id = int(row["event_id"])
++            result[event_id] = result.get(event_id, 0) + 1
++
++        return result
++
++    # -----------------------------------------------------
++    # 동호회 이름 (게스트 일정의 상대 동호회용)
++    #
++    # 게스트 일정은 내가 가입하지 않은 동호회라서
++    # find_active_clubs_by_user 로는 이름을 알 수 없다.
++    # -----------------------------------------------------
++    def find_club_names_by_ids(
++        self,
++        club_ids: list[int],
++    ) -> dict[int, str]:
++
++        if not club_ids:
++            return {}
++
++        response = (
++            self.admin_client
++            .table("clubs")
++            .select("club_id, club_name")
++            .in_("club_id", club_ids)
++            .execute()
++        )
++
++        return {
++            int(row["club_id"]): row["club_name"]
++            for row in (response.data or [])
++        }
+diff -ru -x __pycache__ app_orig/routers/users.py app/routers/users.py
+--- app_orig/routers/users.py	2026-09-28 23:28:08.413026593 +0000
++++ app/routers/users.py	2026-09-29 00:15:19.719223260 +0000
+@@ -10,6 +10,7 @@
+ 
+ from app.core.security import get_current_user_id
+ from app.schemas.my_events import (MyActivityResponse, MyEventListResponse,)
++from app.schemas.my_events import MyGuestEventListResponse
+ from app.services.my_event_service import MyEventService
+ from app.schemas.users import (
+     MyProfileResponse,
+@@ -118,6 +119,48 @@
+         ) from error
+ 
+ # ---------------------------------------------------------
++# 내 게스트 일정
++#
++# GET /api/users/me/guest-events
++# GET /api/users/me/guest-events?from_date=2026-09-28&to_date=2026-10-04
++#
++# 다른 동호회 일정에 게스트로 신청(승인 대기) / 참여(확정)한 일정
++# 기간을 안 보내면 전체
++# ---------------------------------------------------------
++@router.get(
++    "/me/guest-events",
++    response_model=MyGuestEventListResponse,
++)
++def get_my_guest_events(
++    from_date: date | None = Query(default=None),
++    to_date: date | None = Query(default=None),
++    user_id: str = Depends(get_current_user_id),
++):
++    if from_date and to_date and from_date > to_date:
++        raise HTTPException(
++            status_code=status.HTTP_400_BAD_REQUEST,
++            detail="조회 시작일은 종료일보다 늦을 수 없습니다.",
++        )
++
++    my_event_service = MyEventService()
++
++    try:
++        return my_event_service.get_my_guest_events(
++            user_id=user_id,
++            from_date=from_date,
++            to_date=to_date,
++        )
++
++    except Exception as error:
++        print("내 게스트 일정 조회 실제 오류:", repr(error))
++
++        raise HTTPException(
++            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
++            detail="게스트 일정을 조회하는 중 오류가 발생했습니다.",
++        ) from error
++
++
++# ---------------------------------------------------------
+ # 내 활동 (가입 후 지난 일정 전체)
+ #
+ # GET /api/users/me/activity
+@@ -248,4 +291,4 @@
+     return user_service.update_profile_image(
+         user_id=user_id,
+         profile_image=request_data.profile_image,
+-    )
+\ No newline at end of file
++    )
+diff -ru -x __pycache__ app_orig/schemas/my_events.py app/schemas/my_events.py
+--- app_orig/schemas/my_events.py	2026-09-28 23:28:08.414182550 +0000
++++ app/schemas/my_events.py	2026-09-29 00:15:19.717877682 +0000
+@@ -120,4 +120,50 @@
+     total: int
+ 
+     # 신뢰점수 계산용 (내가 받은 경고 전체, 최신순)
+-    warnings: list[MyWarningResponse] = []
+\ No newline at end of file
++    warnings: list[MyWarningResponse] = []
++
++
++# ---------------------------------------------------------
++# 내 게스트 일정 - 일정 1개
++#
++# GET /api/users/me/guest-events
++#
++# 게스트 모집 상세 화면(GuestRecruitDetail)에 그대로 넘길 수 있도록
++# 모집 정보(인원 / 마감 / 설명 / 이미지)도 같이 내려준다.
++# ---------------------------------------------------------
++class MyGuestEventItemResponse(BaseModel):
++    event_id: int
++
++    # 게스트로 참여하는 (내가 가입하지 않은) 동호회
++    club_id: int
++    club_name: str
++
++    title: str
++    description: str | None = None
++
++    event_date: date
++    start_time: time
++    end_time: time | None = None
++
++    location: str | None = None
++    event_image_url: str | None = None
++
++    event_type: str | None = None
++    status: str
++
++    max_guests: int | None = None
++    joined_guest_count: int = 0
++    registration_deadline: str | None = None
++
++    # "pending" 승인 대기 / "joined" 참여 확정
++    guest_status: str
++
++    is_guest: bool = True
++
++
++# ---------------------------------------------------------
++# 내 게스트 일정 응답
++# ---------------------------------------------------------
++class MyGuestEventListResponse(BaseModel):
++    events: list[MyGuestEventItemResponse]
++    total: int
+diff -ru -x __pycache__ app_orig/services/my_event_service.py app/services/my_event_service.py
+--- app_orig/services/my_event_service.py	2026-09-28 23:28:08.416374606 +0000
++++ app/services/my_event_service.py	2026-09-29 00:15:19.716231223 +0000
+@@ -19,6 +19,8 @@
+     MyEventClubResponse,
+     MyEventItemResponse,
+     MyEventListResponse,
++    MyGuestEventItemResponse,
++    MyGuestEventListResponse,
+ )
+ 
+ 
+@@ -565,4 +567,153 @@
+             activities=activities,
+             total=len(activities),
+             warnings=warnings,
+-        )
+\ No newline at end of file
++        )
++
++    # -----------------------------------------------------
++    # 내가 게스트로 신청 / 참여한 일정 모으기
++    #
++    # 1. 내 게스트 신청 상태 (pending / joined, 일정별 최신)
++    # 2. 일정 조회 (취소된 일정 제외)
++    # 3. 기간 필터 (YYYY-MM-DD 문자열 비교)
++    # 4. 상대 동호회 이름 / 참여 확정 게스트 수 붙이기
++    # 5. 날짜 / 시간 순 정렬
++    #
++    # 반환: MyGuestEventItemResponse 목록
++    # -----------------------------------------------------
++    def collect_my_guest_events(
++        self,
++        user_id: str,
++        from_date: str | None = None,
++        to_date: str | None = None,
++    ) -> list[MyGuestEventItemResponse]:
++
++        # 1. 내 게스트 신청 상태
++        guest_status_by_event = (
++            self.my_event_repository
++            .find_guest_status_by_event(user_id)
++        )
++
++        if not guest_status_by_event:
++            return []
++
++        # 2. 일정 (find_events_by_ids 는 취소 일정을 빼고 준다)
++        event_rows = (
++            self.event_repository
++            .find_events_by_ids(
++                event_ids=list(guest_status_by_event.keys()),
++            )
++        )
++
++        # 3. 기간 필터
++        filtered_rows = []
++
++        for event_row in event_rows:
++            event_date = str(event_row.get("event_date", ""))[:10]
++
++            if not event_date:
++                continue
++
++            if from_date and event_date < from_date:
++                continue
++
++            if to_date and event_date > to_date:
++                continue
++
++            filtered_rows.append(event_row)
++
++        if not filtered_rows:
++            return []
++
++        # 4. 동호회 이름 / 게스트 수
++        club_name_by_id = (
++            self.my_event_repository
++            .find_club_names_by_ids(
++                list({
++                    int(row["club_id"])
++                    for row in filtered_rows
++                    if row.get("club_id") is not None
++                })
++            )
++        )
++
++        joined_guest_count_by_event = (
++            self.my_event_repository
++            .count_joined_guests_by_event_ids(
++                [int(row["event_id"]) for row in filtered_rows]
++            )
++        )
++
++        # 5. 정렬
++        filtered_rows.sort(
++            key=lambda event: (
++                str(event.get("event_date", "")),
++                str(event.get("start_time", "") or ""),
++            ),
++        )
++
++        guest_events = []
++
++        for event_row in filtered_rows:
++            event_id = int(event_row["event_id"])
++            club_id = int(event_row["club_id"])
++
++            registration_deadline = event_row.get(
++                "registration_deadline"
++            )
++
++            guest_events.append(
++                MyGuestEventItemResponse(
++                    event_id=event_id,
++                    club_id=club_id,
++                    club_name=club_name_by_id.get(
++                        club_id, "알 수 없는 동호회"
++                    ),
++                    title=event_row.get("title") or "게스트 일정",
++                    description=event_row.get("description"),
++                    event_date=event_row["event_date"],
++                    start_time=event_row["start_time"],
++                    end_time=event_row.get("end_time"),
++                    location=event_row.get("location"),
++                    event_image_url=event_row.get("event_image_url"),
++                    event_type=event_row.get("event_type"),
++                    status=event_row.get("status") or "open",
++                    max_guests=event_row.get("max_guests"),
++                    joined_guest_count=(
++                        joined_guest_count_by_event.get(event_id, 0)
++                    ),
++                    registration_deadline=(
++                        str(registration_deadline)
++                        if registration_deadline
++                        else None
++                    ),
++                    guest_status=guest_status_by_event[event_id],
++                )
++            )
++
++        return guest_events
++
++    # -----------------------------------------------------
++    # 내 게스트 일정 (기간 선택)
++    #
++    # GET /api/users/me/guest-events
++    #   ?from_date=2026-09-28&to_date=2026-10-04
++    #
++    # 기간을 안 보내면 게스트로 신청 / 참여한 일정 전체
++    # -----------------------------------------------------
++    def get_my_guest_events(
++        self,
++        user_id: str,
++        from_date: date | None = None,
++        to_date: date | None = None,
++    ) -> MyGuestEventListResponse:
++
++        guest_events = self.collect_my_guest_events(
++            user_id=user_id,
++            from_date=from_date.isoformat() if from_date else None,
++            to_date=to_date.isoformat() if to_date else None,
++        )
++
++        return MyGuestEventListResponse(
++            events=guest_events,
++            total=len(guest_events),
++        )
+diff -ru src_orig/pages/Main/Main.css src/pages/Main/Main.css
+--- src_orig/pages/Main/Main.css	2026-09-28 23:28:08.488256681 +0000
++++ src/pages/Main/Main.css	2026-09-28 23:30:35.840646925 +0000
+@@ -950,4 +950,111 @@
+ 
+ .my-club-create-fixed p {
+     font-size: 11px;
+-}
+\ No newline at end of file
++}
++
++/* ========================================
++   ⭐ 이번 주 일정 - 게스트 일정 목록
++======================================== */
++
++.schedule-guest-empty {
++    margin: 8px 0;
++
++    font-size: 12px;
++    color: #888;
++    text-align: center;
++}
++
++.schedule-guest-list {
++    display: flex;
++    flex-direction: column;
++    gap: 8px;
++
++    margin: 0;
++    padding: 0;
++
++    list-style: none;
++}
++
++.schedule-guest-item {
++    display: flex;
++    align-items: center;
++    gap: 10px;
++
++    width: 100%;
++    padding: 10px 12px;
++
++    border: 1px solid #eee;
++    border-left: 3px solid #e0677f;
++    border-radius: 8px;
++
++    background-color: #fff;
++
++    font-family: "Maplestory", sans-serif;
++    text-align: left;
++
++    cursor: pointer;
++    box-sizing: border-box;
++}
++
++.schedule-guest-item:active {
++    transform: scale(0.99);
++}
++
++.schedule-guest-date {
++    flex-shrink: 0;
++
++    font-size: 11px;
++    font-weight: 700;
++    color: #01A17F;
++}
++
++.schedule-guest-text {
++    display: flex;
++    flex-direction: column;
++    gap: 2px;
++
++    flex: 1;
++    min-width: 0;
++}
++
++.schedule-guest-text strong,
++.schedule-guest-text small {
++    overflow: hidden;
++    white-space: nowrap;
++    text-overflow: ellipsis;
++}
++
++.schedule-guest-text strong {
++    font-size: 13px;
++    color: #333;
++}
++
++.schedule-guest-text small {
++    font-size: 11px;
++    color: #888;
++}
++
++.schedule-guest-status {
++    flex-shrink: 0;
++
++    padding: 3px 7px;
++
++    border: 1px solid #f0c2cb;
++    border-radius: 999px;
++
++    font-size: 10px;
++    font-weight: 700;
++    color: #c9485f;
++}
++
++.schedule-guest-status.joined {
++    border-color: #e0677f;
++
++    background-color: #fdf1f3;
++}
++
++.schedule-guest-more {
++    font-size: 11px;
++    color: #888;
++    text-align: right;
++}
+diff -ru src_orig/pages/Main/Main.jsx src/pages/Main/Main.jsx
+--- src_orig/pages/Main/Main.jsx	2026-09-28 23:28:08.488342536 +0000
++++ src/pages/Main/Main.jsx	2026-09-29 00:14:55.121573142 +0000
+@@ -8,6 +8,7 @@
+ import { supabase } from "../../../supabaseClient";
+ 
+ import { attachClubInfoToEvents } from "../../utils/attachClubInfo";
++import { authenticatedRequest } from "../../api/apiClient";
+ import { buildRecommendedClubs } from "../../utils/recommendClubs";
+ 
+ import "./Main.css";
+@@ -46,6 +47,38 @@
+     "http://127.0.0.1:8000";
+ 
+ 
++// =========================================================
++// ⭐ 내 게스트 일정 조회 (이 페이지 전용)
++//
++// GET /api/users/me/guest-events?from_date=YYYY-MM-DD&to_date=YYYY-MM-DD
++// (기간은 선택, 안 보내면 전체)
++//
++// 다른 담당 영역 파일(api/userApi.js 등)을 수정하지 않도록
++// 페이지 안에 따로 둔다. apiClient 는 가져다 쓰기만 한다.
++// =========================================================
++const getMyGuestEvents = async ({ fromDate, toDate } = {}) => {
++
++    const params = new URLSearchParams();
++
++    if (fromDate) params.set("from_date", fromDate);
++    if (toDate) params.set("to_date", toDate);
++
++    const query = params.toString();
++
++    return authenticatedRequest(
++        `/api/users/me/guest-events${query ? `?${query}` : ""}`,
++        { method: "GET" }
++    );
++};
++
++
++// ⭐ 게스트 신청 상태 → 화면 표시 문구
++const GUEST_STATUS_LABEL = {
++    pending: "승인 대기",
++    joined: "참여 확정",
++};
++
++
+ // ⭐ 종목별 기본 이미지 (동호회 이미지가 없을 때)
+ const SPORT_IMAGES = {
+     "축구": soccerImage,
+@@ -85,6 +118,15 @@
+ };
+ 
+ 
++// ⭐ Date → "YYYY-MM-DD" (로컬 날짜 기준)
++const toDateString = (date) =>
++    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
++
++
++// ⭐ 메인에 보여줄 게스트 일정 최대 개수
++const MAX_WEEK_GUEST_SCHEDULES = 3;
++
++
+ // ⭐ 카드 글씨 공통 스타일 (기존 인라인 스타일 그대로)
+ const cardTextStyle = {
+     margin: "3px 5px",
+@@ -263,6 +305,77 @@
+ 
+ 
+     // =========================================================
++    // ⭐ 이번 주 일정 = 내가 게스트로 신청 / 참여한 일정
++    // GET /api/users/me/guest-events?from_date=오늘&to_date=오늘+6일
++    //
++    // 가입 전 홈이라 동호회 일정은 없고, 게스트 일정만 보여준다.
++    // 로그인하지 않았으면 조회하지 않고 빈 상태로 둔다.
++    // =========================================================
++
++    const [weekGuestSchedules, setWeekGuestSchedules] = useState([]);
++
++    const [isWeekScheduleLoading, setIsWeekScheduleLoading] = useState(true);
++
++
++    useEffect(() => {
++
++        let isActive = true;
++
++        const loadWeekGuestSchedules = async () => {
++
++            try {
++
++                const {
++                    data: { session },
++                } = await supabase.auth.getSession();
++
++                if (!session?.access_token) {
++                    if (isActive) setWeekGuestSchedules([]);
++                    return;
++                }
++
++                const today = new Date();
++
++                const weekEnd = new Date(today);
++                weekEnd.setDate(today.getDate() + 6);
++
++                const data = await getMyGuestEvents({
++                    fromDate: toDateString(today),
++                    toDate: toDateString(weekEnd),
++                });
++
++                if (isActive) {
++                    setWeekGuestSchedules(data?.events || []);
++                }
++
++            } catch (error) {
++
++                console.error("⭐ Main 이번 주 게스트 일정 조회 오류:", error);
++
++                if (isActive) {
++                    setWeekGuestSchedules([]);
++                }
++
++            } finally {
++
++                if (isActive) {
++                    setIsWeekScheduleLoading(false);
++                }
++
++            }
++
++        };
++
++        loadWeekGuestSchedules();
++
++        return () => {
++            isActive = false;
++        };
++
++    }, []);
++
++
++    // =========================================================
+     // ⭐ 이런 활동도 있어요 (실제 데이터)
+     // GET /api/clubs/search
+     // =========================================================
+@@ -872,50 +985,135 @@
+ 
+ 
+ 
+-                    <div className="schedule-content">
++                    {isWeekScheduleLoading ? (
+ 
++                        <p className="schedule-guest-empty">
++                            일정을 불러오는 중이에요.
++                        </p>
++
++                    ) : weekGuestSchedules.length > 0 ? (
++
++                        // ⭐ 이번 주 게스트 일정 목록
++                        <ul className="schedule-guest-list">
++
++                            {weekGuestSchedules
++                                .slice(0, MAX_WEEK_GUEST_SCHEDULES)
++                                .map((event) => (
++
++                                    <li key={event.event_id}>
++
++                                        <button
++                                            type="button"
++                                            className="schedule-guest-item"
++                                            onClick={() =>
++                                                navigate(
++                                                    `/guest-recruit/${event.event_id}`,
++                                                    {
++                                                        // ⭐ 모집이 마감돼도 상세 화면이
++                                                        //    바로 표시되도록 일정 데이터를 넘긴다
++                                                        state: {
++                                                            event,
++                                                            guestStatus: event.guest_status,
++                                                        },
++                                                    }
++                                                )
++                                            }
++                                        >
++
++                                            <span className="schedule-guest-date">
++                                                {formatGuestSchedule(
++                                                    event.event_date,
++                                                    event.start_time
++                                                )}
++                                            </span>
++
++                                            <span className="schedule-guest-text">
++
++                                                <strong>
++                                                    {event.title}
++                                                </strong>
++
++                                                <small>
++                                                    {event.club_name}
++                                                    {event.location
++                                                        ? ` · ${event.location}`
++                                                        : ""}
++                                                </small>
++
++                                            </span>
++
++                                            <span
++                                                className={
++                                                    event.guest_status === "joined"
++                                                        ? "schedule-guest-status joined"
++                                                        : "schedule-guest-status"
++                                                }
++                                            >
++                                                {GUEST_STATUS_LABEL[event.guest_status] || "승인 대기"}
++                                            </span>
++
++                                        </button>
++
++                                    </li>
++
++                                ))}
++
++                            {weekGuestSchedules.length > MAX_WEEK_GUEST_SCHEDULES && (
++                                <li className="schedule-guest-more">
++                                    외 {weekGuestSchedules.length - MAX_WEEK_GUEST_SCHEDULES}개 일정
++                                </li>
++                            )}
+ 
+-                        <div className="schedule-image">
++                        </ul>
+ 
+-                            <img
+-                                src={noScheduleImage}
+-                                alt="예정된 일정이 없는 상태"
+-                            />
++                    ) : (
+ 
+-                        </div>
++                        <div className="schedule-content">
+ 
+ 
+-                        <div className="schedule-info">
++                            <div className="schedule-image">
+ 
+-                            <h4>
+-                                예정된 일정이 있어요
+-                            </h4>
++                                <img
++                                    src={noScheduleImage}
++                                    alt="예정된 일정이 없는 상태"
++                                />
+ 
++                            </div>
+ 
+-                            <div className="schedule-description">
+ 
+-                                <p>
+-                                    동호회에 가입하면 일정과 활동을
+-                                </p>
++                            <div className="schedule-info">
+ 
+-                                <p>
+-                                    한눈에 확인할 수 있어요!
+-                                </p>
++                                <h4>
++                                    이번 주 예정된 일정이 없어요
++                                </h4>
+ 
+-                            </div>
+ 
++                                <div className="schedule-description">
+ 
+-                            <button
+-                                onClick={() =>
+-                                    navigate("/clubs")
+-                                }
+-                            >
+-                                일정 둘러보기
+-                            </button>
++                                    <p>
++                                        게스트로 참여하거나 동호회에 가입하면
++                                    </p>
++
++                                    <p>
++                                        일정을 한눈에 확인할 수 있어요!
++                                    </p>
++
++                                </div>
++
++
++                                <button
++                                    onClick={() =>
++                                        navigate("/clubs")
++                                    }
++                                >
++                                    일정 둘러보기
++                                </button>
++
++                            </div>
+ 
+                         </div>
+ 
+-                    </div>
++                    )}
+ 
+                 </section>
+ 
+diff -ru src_orig/pages/MainHome/MainHome.css src/pages/MainHome/MainHome.css
+--- src_orig/pages/MainHome/MainHome.css	2026-09-28 23:28:08.488518318 +0000
++++ src/pages/MainHome/MainHome.css	2026-09-28 23:31:10.884910189 +0000
+@@ -1829,4 +1829,55 @@
+     border-color: #303844;
+ 
+     color: #7f8b9c;
+-}
+\ No newline at end of file
++}
++
++/* ========================================
++   ⭐ 게스트 일정 (다른 동호회에 게스트로 참여)
++======================================== */
++
++.main-home-calendar-dots {
++    gap: 2px;
++}
++
++.main-home-calendar-dots i.guest {
++    background-color: #e0677f;
++}
++
++.schedule-item.guest {
++    border-color: #f5d3da;
++
++    background: #fdf5f7;
++}
++
++.schedule-item.guest .schedule-time span {
++    color: #c9485f;
++}
++
++.schedule-guest-tag {
++    display: inline-block;
++
++    margin-right: 4px;
++    padding: 1px 5px;
++
++    border-radius: 4px;
++
++    background-color: #fbe3e8;
++
++    font-size: 10px;
++    font-weight: 700;
++    vertical-align: middle;
++
++    color: #c9485f;
++}
++
++.schedule-item button.guest-status {
++    border-color: #f0c2cb;
++
++    color: #c9485f;
++}
++
++.schedule-item button.guest-status.joined {
++    border-color: #e0677f;
++
++    background: #fbe3e8;
++}
+diff -ru src_orig/pages/MainHome/MainHome.jsx src/pages/MainHome/MainHome.jsx
+--- src_orig/pages/MainHome/MainHome.jsx	2026-09-28 23:28:08.488639956 +0000
++++ src/pages/MainHome/MainHome.jsx	2026-09-29 00:14:55.121168240 +0000
+@@ -16,6 +16,7 @@
+     getGuestRecruitingEvents,
+ } from "../../api/clubApi";
+ import { getMyClubShared as getMyClub } from "../../api/myClubCache";
++import { authenticatedRequest } from "../../api/apiClient";
+ 
+ // ⭐ 이미지
+ import profileIcon from "../../assets/img/basic_profile_img.png";
+@@ -54,6 +55,38 @@
+ 
+ 
+ // =========================================================
++// ⭐ 내 게스트 일정 조회 (이 페이지 전용)
++//
++// GET /api/users/me/guest-events?from_date=YYYY-MM-DD&to_date=YYYY-MM-DD
++// (기간은 선택, 안 보내면 전체)
++//
++// 다른 담당 영역 파일(api/userApi.js 등)을 수정하지 않도록
++// 페이지 안에 따로 둔다. apiClient 는 가져다 쓰기만 한다.
++// =========================================================
++const getMyGuestEvents = async ({ fromDate, toDate } = {}) => {
++
++    const params = new URLSearchParams();
++
++    if (fromDate) params.set("from_date", fromDate);
++    if (toDate) params.set("to_date", toDate);
++
++    const query = params.toString();
++
++    return authenticatedRequest(
++        `/api/users/me/guest-events${query ? `?${query}` : ""}`,
++        { method: "GET" }
++    );
++};
++
++
++// ⭐ 게스트 신청 상태 → 화면 표시 문구
++const GUEST_STATUS_LABEL = {
++    pending: "승인 대기",
++    joined: "참여 확정",
++};
++
++
++// =========================================================
+ // ⭐ 게스트 일정 이미지
+ //
+ // 우선순위: 일정 이미지 → 동호회 대표 이미지 → 종목 기본 이미지 → 달력 아이콘
+@@ -217,6 +250,11 @@
+     // MainHome에서 club_events를 직접 조회하지 않고,
+     // getMyClub()으로 내 동호회 ID를 가져온 다음
+     // 각 동호회의 getClubEvents()를 호출한다.
++    //
++    // ⭐ 게스트 일정:
++    // 다른 동호회에 게스트로 신청(승인 대기) / 참여(확정)한 일정도
++    // GET /api/users/me/guest-events 로 가져와서 같은 달력에 합친다.
++    // (같은 일정이 양쪽에 있으면 내 동호회 일정을 우선)
+     // =========================================================
+ 
+     useEffect(() => {
+@@ -278,18 +316,23 @@
+                     clubIds
+                 );
+ 
+-                if (clubIds.length === 0) {
+-
+-                    console.log(
+-                        "⭐ 일정 조회할 동호회가 없습니다."
+-                    );
++                // =================================================
++                // ⭐ 게스트 일정 (동호회가 없어도 조회)
++                //    실패해도 동호회 일정은 보여줄 수 있게 따로 처리
++                // =================================================
+ 
+-                    if (isActive) {
+-                        setSchedules([]);
+-                    }
++                const guestEventsPromise =
++                    getMyGuestEvents()
++                        .then((result) => result?.events || [])
++                        .catch((error) => {
++
++                            console.error(
++                                "⭐ MainHome 게스트 일정 조회 실패:",
++                                error
++                            );
+ 
+-                    return;
+-                }
++                            return [];
++                        });
+ 
+                 // =================================================
+                 // ⭐ 일정 관리 페이지와 동일한 API 사용
+@@ -332,6 +375,8 @@
+                 // ⭐ 여러 동호회의 일정 하나로 합치기
+                 const events = eventResults.flat();
+ 
++                const guestEvents = await guestEventsPromise;
++
+                 console.log(
+                     "⭐ MainHome 전체 일정 원본:",
+                     events
+@@ -394,12 +439,75 @@
+ 
+                             status:
+                                 event?.status,
++
++                            isGuest: false,
+                         };
+                     });
+ 
++                // =================================================
++                // ⭐ 게스트 일정 → MainHome 일정 형태로 변환
++                // =================================================
++
++                const mappedGuestSchedules =
++                    guestEvents.map((event) => ({
++                        eventId:
++                            event?.event_id,
++                        clubId:
++                            event?.club_id,
++
++                        date:
++                            event?.event_date
++                                ? String(event.event_date).slice(0, 10)
++                                : "",
++
++                        time:
++                            event?.start_time
++                                ? String(event.start_time).slice(0, 5)
++                                : "",
++
++                        endTime:
++                            event?.end_time
++                                ? String(event.end_time).slice(0, 5)
++                                : "",
++
++                        image:
++                            event?.event_image_url ||
++                            badmintonImage,
++
++                        alt:
++                            event?.title ||
++                            "게스트 일정",
++
++                        title:
++                            event?.title ||
++                            "게스트 일정",
++
++                        place:
++                            [event?.club_name, event?.location]
++                                .filter(Boolean)
++                                .join(" · ") ||
++                            "장소 미정",
++
++                        status:
++                            event?.status,
++
++                        // ⭐ 게스트 일정 표시용
++                        isGuest: true,
++                        guestStatus:
++                            event?.guest_status,
++
++                        // ⭐ 게스트 모집 상세로 넘길 원본 데이터
++                        //    (모집이 마감돼도 상세 화면이 바로 표시되도록)
++                        raw: event,
++                    }));
++
+                 // ⭐ 같은 event_id 중복 제거
++                //    (동호회 일정이 앞에 있으므로 동호회 일정이 우선)
+                 const uniqueSchedules =
+-                    mappedSchedules.filter(
++                    [
++                        ...mappedSchedules,
++                        ...mappedGuestSchedules,
++                    ].filter(
+                         (schedule, index, array) => {
+ 
+                             if (!schedule.eventId) {
+@@ -1710,9 +1818,13 @@
+                                     return (
+ 
+                                         <div
+-                                            className="schedule-item"
++                                            className={
++                                                schedule.isGuest
++                                                    ? "schedule-item guest"
++                                                    : "schedule-item"
++                                            }
+                                             key={
+-                                                schedule.title
++                                                `${schedule.isGuest ? "guest" : "club"}-${schedule.eventId ?? schedule.title}`
+                                             }
+                                         >
+ 
+@@ -1747,6 +1859,11 @@
+                                             <div className="schedule-info">
+ 
+                                                 <h4>
++                                                    {schedule.isGuest && (
++                                                        <span className="schedule-guest-tag">
++                                                            게스트
++                                                        </span>
++                                                    )}
+                                                     {
+                                                         schedule.title
+                                                     }
+@@ -1761,31 +1878,64 @@
+                                             </div>
+ 
+ 
+-                                            <button
+-                                                type="button"
+-                                                onClick={() =>
+-                                                    handleParticipation(
+-                                                        scheduleIndex
+-                                                    )
+-                                                }
+-                                                className={
+-                                                    participated[
+-                                                        scheduleIndex
+-                                                    ]
+-                                                        ? "participated"
+-                                                        : ""
+-                                                }
+-                                            >
++                                            {schedule.isGuest ? (
+ 
+-                                                {
+-                                                    participated[
+-                                                        scheduleIndex
+-                                                    ]
+-                                                        ? "참여 취소"
+-                                                        : "참여 예정"
+-                                                }
++                                                // ⭐ 게스트 일정 → 신청 상태 표시 + 상세로 이동
++                                                <button
++                                                    type="button"
++                                                    onClick={() =>
++                                                        navigate(
++                                                            `/guest-recruit/${schedule.eventId}`,
++                                                            {
++                                                                state: {
++                                                                    event:
++                                                                        schedule.raw,
++                                                                    guestStatus:
++                                                                        schedule.guestStatus,
++                                                                },
++                                                            }
++                                                        )
++                                                    }
++                                                    className={
++                                                        schedule.guestStatus === "joined"
++                                                            ? "guest-status joined"
++                                                            : "guest-status"
++                                                    }
++                                                >
++                                                    {GUEST_STATUS_LABEL[
++                                                        schedule.guestStatus
++                                                    ] || "승인 대기"}
++                                                </button>
++
++                                            ) : (
++
++                                                <button
++                                                    type="button"
++                                                    onClick={() =>
++                                                        handleParticipation(
++                                                            scheduleIndex
++                                                        )
++                                                    }
++                                                    className={
++                                                        participated[
++                                                            scheduleIndex
++                                                        ]
++                                                            ? "participated"
++                                                            : ""
++                                                    }
++                                                >
+ 
+-                                            </button>
++                                                    {
++                                                        participated[
++                                                            scheduleIndex
++                                                        ]
++                                                            ? "참여 취소"
++                                                            : "참여 예정"
++                                                    }
++
++                                                </button>
++
++                                            )}
+ 
+                                         </div>
+ 
+@@ -2315,10 +2465,20 @@
+ 
+     const scheduleDateSet =
+         new Set(
+-            schedules.map(
+-                (schedule) =>
+-                    schedule.date
+-            )
++            schedules
++                .filter((schedule) => !schedule.isGuest)
++                .map(
++                    (schedule) =>
++                        schedule.date
++                )
++        );
++
++    // ⭐ 게스트 일정이 있는 날짜 (다른 색 점)
++    const guestScheduleDateSet =
++        new Set(
++            schedules
++                .filter((schedule) => schedule.isGuest)
++                .map((schedule) => schedule.date)
+         );
+ 
+ 
+@@ -2599,6 +2759,11 @@
+                                 dateString
+                             );
+ 
++                        const hasGuestSchedule =
++                            guestScheduleDateSet.has(
++                                dateString
++                            );
++
+ 
+                         return (
+ 
+@@ -2624,11 +2789,16 @@
+                                 </span>
+ 
+ 
+-                                {hasSchedule && (
++                                {(hasSchedule || hasGuestSchedule) && (
+ 
+                                     <div className="main-home-calendar-dots">
+ 
+-                                        <i />
++                                        {hasSchedule && <i />}
++
++                                        {/* ⭐ 게스트 일정 점 */}
++                                        {hasGuestSchedule && (
++                                            <i className="guest" />
++                                        )}
+ 
+                                     </div>
+ 

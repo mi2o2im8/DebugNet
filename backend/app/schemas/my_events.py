@@ -121,3 +121,49 @@ class MyActivityResponse(BaseModel):
 
     # 신뢰점수 계산용 (내가 받은 경고 전체, 최신순)
     warnings: list[MyWarningResponse] = []
+
+
+# ---------------------------------------------------------
+# 내 게스트 일정 - 일정 1개
+#
+# GET /api/users/me/guest-events
+#
+# 게스트 모집 상세 화면(GuestRecruitDetail)에 그대로 넘길 수 있도록
+# 모집 정보(인원 / 마감 / 설명 / 이미지)도 같이 내려준다.
+# ---------------------------------------------------------
+class MyGuestEventItemResponse(BaseModel):
+    event_id: int
+
+    # 게스트로 참여하는 (내가 가입하지 않은) 동호회
+    club_id: int
+    club_name: str
+
+    title: str
+    description: str | None = None
+
+    event_date: date
+    start_time: time
+    end_time: time | None = None
+
+    location: str | None = None
+    event_image_url: str | None = None
+
+    event_type: str | None = None
+    status: str
+
+    max_guests: int | None = None
+    joined_guest_count: int = 0
+    registration_deadline: str | None = None
+
+    # "pending" 승인 대기 / "joined" 참여 확정
+    guest_status: str
+
+    is_guest: bool = True
+
+
+# ---------------------------------------------------------
+# 내 게스트 일정 응답
+# ---------------------------------------------------------
+class MyGuestEventListResponse(BaseModel):
+    events: list[MyGuestEventItemResponse]
+    total: int

@@ -16,6 +16,7 @@ import {
     getGuestRecruitingEvents,
 } from "../../api/clubApi";
 import { getMyClubShared as getMyClub } from "../../api/myClubCache";
+import { authenticatedRequest } from "../../api/apiClient";
 
 // ⭐ 이미지
 import profileIcon from "../../assets/img/basic_profile_img.png";
@@ -51,6 +52,38 @@ const sportImages = {
 import ChatbotButton from "../../components/Chatbot/ChatbotButton";
 import { useNotifications } from "../../context/NotificationContext";
 import Chatbot from "../Chatbot/Chatbot";
+
+
+// =========================================================
+// ⭐ 내 게스트 일정 조회 (이 페이지 전용)
+//
+// GET /api/users/me/guest-events?from_date=YYYY-MM-DD&to_date=YYYY-MM-DD
+// (기간은 선택, 안 보내면 전체)
+//
+// 다른 담당 영역 파일(api/userApi.js 등)을 수정하지 않도록
+// 페이지 안에 따로 둔다. apiClient 는 가져다 쓰기만 한다.
+// =========================================================
+const getMyGuestEvents = async ({ fromDate, toDate } = {}) => {
+
+    const params = new URLSearchParams();
+
+    if (fromDate) params.set("from_date", fromDate);
+    if (toDate) params.set("to_date", toDate);
+
+    const query = params.toString();
+
+    return authenticatedRequest(
+        `/api/users/me/guest-events${query ? `?${query}` : ""}`,
+        { method: "GET" }
+    );
+};
+
+
+// ⭐ 게스트 신청 상태 → 화면 표시 문구
+const GUEST_STATUS_LABEL = {
+    pending: "승인 대기",
+    joined: "참여 확정",
+};
 
 
 // =========================================================
@@ -217,6 +250,11 @@ function MainHome() {
     // MainHome에서 club_events를 직접 조회하지 않고,
     // getMyClub()으로 내 동호회 ID를 가져온 다음
     // 각 동호회의 getClubEvents()를 호출한다.
+    //
+    // ⭐ 게스트 일정:
+    // 다른 동호회에 게스트로 신청(승인 대기) / 참여(확정)한 일정도
+    // GET /api/users/me/guest-events 로 가져와서 같은 달력에 합친다.
+    // (같은 일정이 양쪽에 있으면 내 동호회 일정을 우선)
     // =========================================================
 
     useEffect(() => {
@@ -278,18 +316,23 @@ function MainHome() {
                     clubIds
                 );
 
-                if (clubIds.length === 0) {
+                // =================================================
+                // ⭐ 게스트 일정 (동호회가 없어도 조회)
+                //    실패해도 동호회 일정은 보여줄 수 있게 따로 처리
+                // =================================================
 
-                    console.log(
-                        "⭐ 일정 조회할 동호회가 없습니다."
-                    );
+                const guestEventsPromise =
+                    getMyGuestEvents()
+                        .then((result) => result?.events || [])
+                        .catch((error) => {
 
-                    if (isActive) {
-                        setSchedules([]);
-                    }
+                            console.error(
+                                "⭐ MainHome 게스트 일정 조회 실패:",
+                                error
+                            );
 
-                    return;
-                }
+                            return [];
+                        });
 
                 // =================================================
                 // ⭐ 일정 관리 페이지와 동일한 API 사용
@@ -331,6 +374,8 @@ function MainHome() {
 
                 // ⭐ 여러 동호회의 일정 하나로 합치기
                 const events = eventResults.flat();
+
+                const guestEvents = await guestEventsPromise;
 
                 console.log(
                     "⭐ MainHome 전체 일정 원본:",
@@ -394,12 +439,75 @@ function MainHome() {
 
                             status:
                                 event?.status,
+
+                            isGuest: false,
                         };
                     });
 
+                // =================================================
+                // ⭐ 게스트 일정 → MainHome 일정 형태로 변환
+                // =================================================
+
+                const mappedGuestSchedules =
+                    guestEvents.map((event) => ({
+                        eventId:
+                            event?.event_id,
+                        clubId:
+                            event?.club_id,
+
+                        date:
+                            event?.event_date
+                                ? String(event.event_date).slice(0, 10)
+                                : "",
+
+                        time:
+                            event?.start_time
+                                ? String(event.start_time).slice(0, 5)
+                                : "",
+
+                        endTime:
+                            event?.end_time
+                                ? String(event.end_time).slice(0, 5)
+                                : "",
+
+                        image:
+                            event?.event_image_url ||
+                            badmintonImage,
+
+                        alt:
+                            event?.title ||
+                            "게스트 일정",
+
+                        title:
+                            event?.title ||
+                            "게스트 일정",
+
+                        place:
+                            [event?.club_name, event?.location]
+                                .filter(Boolean)
+                                .join(" · ") ||
+                            "장소 미정",
+
+                        status:
+                            event?.status,
+
+                        // ⭐ 게스트 일정 표시용
+                        isGuest: true,
+                        guestStatus:
+                            event?.guest_status,
+
+                        // ⭐ 게스트 모집 상세로 넘길 원본 데이터
+                        //    (모집이 마감돼도 상세 화면이 바로 표시되도록)
+                        raw: event,
+                    }));
+
                 // ⭐ 같은 event_id 중복 제거
+                //    (동호회 일정이 앞에 있으므로 동호회 일정이 우선)
                 const uniqueSchedules =
-                    mappedSchedules.filter(
+                    [
+                        ...mappedSchedules,
+                        ...mappedGuestSchedules,
+                    ].filter(
                         (schedule, index, array) => {
 
                             if (!schedule.eventId) {
@@ -1710,9 +1818,13 @@ function MainHome() {
                                     return (
 
                                         <div
-                                            className="schedule-item"
+                                            className={
+                                                schedule.isGuest
+                                                    ? "schedule-item guest"
+                                                    : "schedule-item"
+                                            }
                                             key={
-                                                schedule.title
+                                                `${schedule.isGuest ? "guest" : "club"}-${schedule.eventId ?? schedule.title}`
                                             }
                                         >
 
@@ -1747,6 +1859,11 @@ function MainHome() {
                                             <div className="schedule-info">
 
                                                 <h4>
+                                                    {schedule.isGuest && (
+                                                        <span className="schedule-guest-tag">
+                                                            게스트
+                                                        </span>
+                                                    )}
                                                     {
                                                         schedule.title
                                                     }
@@ -1761,31 +1878,64 @@ function MainHome() {
                                             </div>
 
 
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    handleParticipation(
-                                                        scheduleIndex
-                                                    )
-                                                }
-                                                className={
-                                                    participated[
-                                                        scheduleIndex
-                                                    ]
-                                                        ? "participated"
-                                                        : ""
-                                                }
-                                            >
+                                            {schedule.isGuest ? (
 
-                                                {
-                                                    participated[
-                                                        scheduleIndex
-                                                    ]
-                                                        ? "참여 취소"
-                                                        : "참여 예정"
-                                                }
+                                                // ⭐ 게스트 일정 → 신청 상태 표시 + 상세로 이동
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        navigate(
+                                                            `/guest-recruit/${schedule.eventId}`,
+                                                            {
+                                                                state: {
+                                                                    event:
+                                                                        schedule.raw,
+                                                                    guestStatus:
+                                                                        schedule.guestStatus,
+                                                                },
+                                                            }
+                                                        )
+                                                    }
+                                                    className={
+                                                        schedule.guestStatus === "joined"
+                                                            ? "guest-status joined"
+                                                            : "guest-status"
+                                                    }
+                                                >
+                                                    {GUEST_STATUS_LABEL[
+                                                        schedule.guestStatus
+                                                    ] || "승인 대기"}
+                                                </button>
 
-                                            </button>
+                                            ) : (
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleParticipation(
+                                                            scheduleIndex
+                                                        )
+                                                    }
+                                                    className={
+                                                        participated[
+                                                            scheduleIndex
+                                                        ]
+                                                            ? "participated"
+                                                            : ""
+                                                    }
+                                                >
+
+                                                    {
+                                                        participated[
+                                                            scheduleIndex
+                                                        ]
+                                                            ? "참여 취소"
+                                                            : "참여 예정"
+                                                    }
+
+                                                </button>
+
+                                            )}
 
                                         </div>
 
@@ -2315,10 +2465,20 @@ function MainHomeCalendar({
 
     const scheduleDateSet =
         new Set(
-            schedules.map(
-                (schedule) =>
-                    schedule.date
-            )
+            schedules
+                .filter((schedule) => !schedule.isGuest)
+                .map(
+                    (schedule) =>
+                        schedule.date
+                )
+        );
+
+    // ⭐ 게스트 일정이 있는 날짜 (다른 색 점)
+    const guestScheduleDateSet =
+        new Set(
+            schedules
+                .filter((schedule) => schedule.isGuest)
+                .map((schedule) => schedule.date)
         );
 
 
@@ -2599,6 +2759,11 @@ function MainHomeCalendar({
                                 dateString
                             );
 
+                        const hasGuestSchedule =
+                            guestScheduleDateSet.has(
+                                dateString
+                            );
+
 
                         return (
 
@@ -2624,11 +2789,16 @@ function MainHomeCalendar({
                                 </span>
 
 
-                                {hasSchedule && (
+                                {(hasSchedule || hasGuestSchedule) && (
 
                                     <div className="main-home-calendar-dots">
 
-                                        <i />
+                                        {hasSchedule && <i />}
+
+                                        {/* ⭐ 게스트 일정 점 */}
+                                        {hasGuestSchedule && (
+                                            <i className="guest" />
+                                        )}
 
                                     </div>
 

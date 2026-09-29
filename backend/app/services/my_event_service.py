@@ -19,6 +19,8 @@ from app.schemas.my_events import (
     MyEventClubResponse,
     MyEventItemResponse,
     MyEventListResponse,
+    MyGuestEventItemResponse,
+    MyGuestEventListResponse,
 )
 
 
@@ -565,4 +567,153 @@ class MyEventService:
             activities=activities,
             total=len(activities),
             warnings=warnings,
+        )
+
+    # -----------------------------------------------------
+    # 내가 게스트로 신청 / 참여한 일정 모으기
+    #
+    # 1. 내 게스트 신청 상태 (pending / joined, 일정별 최신)
+    # 2. 일정 조회 (취소된 일정 제외)
+    # 3. 기간 필터 (YYYY-MM-DD 문자열 비교)
+    # 4. 상대 동호회 이름 / 참여 확정 게스트 수 붙이기
+    # 5. 날짜 / 시간 순 정렬
+    #
+    # 반환: MyGuestEventItemResponse 목록
+    # -----------------------------------------------------
+    def collect_my_guest_events(
+        self,
+        user_id: str,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> list[MyGuestEventItemResponse]:
+
+        # 1. 내 게스트 신청 상태
+        guest_status_by_event = (
+            self.my_event_repository
+            .find_guest_status_by_event(user_id)
+        )
+
+        if not guest_status_by_event:
+            return []
+
+        # 2. 일정 (find_events_by_ids 는 취소 일정을 빼고 준다)
+        event_rows = (
+            self.event_repository
+            .find_events_by_ids(
+                event_ids=list(guest_status_by_event.keys()),
+            )
+        )
+
+        # 3. 기간 필터
+        filtered_rows = []
+
+        for event_row in event_rows:
+            event_date = str(event_row.get("event_date", ""))[:10]
+
+            if not event_date:
+                continue
+
+            if from_date and event_date < from_date:
+                continue
+
+            if to_date and event_date > to_date:
+                continue
+
+            filtered_rows.append(event_row)
+
+        if not filtered_rows:
+            return []
+
+        # 4. 동호회 이름 / 게스트 수
+        club_name_by_id = (
+            self.my_event_repository
+            .find_club_names_by_ids(
+                list({
+                    int(row["club_id"])
+                    for row in filtered_rows
+                    if row.get("club_id") is not None
+                })
+            )
+        )
+
+        joined_guest_count_by_event = (
+            self.my_event_repository
+            .count_joined_guests_by_event_ids(
+                [int(row["event_id"]) for row in filtered_rows]
+            )
+        )
+
+        # 5. 정렬
+        filtered_rows.sort(
+            key=lambda event: (
+                str(event.get("event_date", "")),
+                str(event.get("start_time", "") or ""),
+            ),
+        )
+
+        guest_events = []
+
+        for event_row in filtered_rows:
+            event_id = int(event_row["event_id"])
+            club_id = int(event_row["club_id"])
+
+            registration_deadline = event_row.get(
+                "registration_deadline"
+            )
+
+            guest_events.append(
+                MyGuestEventItemResponse(
+                    event_id=event_id,
+                    club_id=club_id,
+                    club_name=club_name_by_id.get(
+                        club_id, "알 수 없는 동호회"
+                    ),
+                    title=event_row.get("title") or "게스트 일정",
+                    description=event_row.get("description"),
+                    event_date=event_row["event_date"],
+                    start_time=event_row["start_time"],
+                    end_time=event_row.get("end_time"),
+                    location=event_row.get("location"),
+                    event_image_url=event_row.get("event_image_url"),
+                    event_type=event_row.get("event_type"),
+                    status=event_row.get("status") or "open",
+                    max_guests=event_row.get("max_guests"),
+                    joined_guest_count=(
+                        joined_guest_count_by_event.get(event_id, 0)
+                    ),
+                    registration_deadline=(
+                        str(registration_deadline)
+                        if registration_deadline
+                        else None
+                    ),
+                    guest_status=guest_status_by_event[event_id],
+                )
+            )
+
+        return guest_events
+
+    # -----------------------------------------------------
+    # 내 게스트 일정 (기간 선택)
+    #
+    # GET /api/users/me/guest-events
+    #   ?from_date=2026-09-28&to_date=2026-10-04
+    #
+    # 기간을 안 보내면 게스트로 신청 / 참여한 일정 전체
+    # -----------------------------------------------------
+    def get_my_guest_events(
+        self,
+        user_id: str,
+        from_date: date | None = None,
+        to_date: date | None = None,
+    ) -> MyGuestEventListResponse:
+
+        guest_events = self.collect_my_guest_events(
+            user_id=user_id,
+            from_date=from_date.isoformat() if from_date else None,
+            to_date=to_date.isoformat() if to_date else None,
+        )
+
+        return MyGuestEventListResponse(
+            events=guest_events,
+            total=len(guest_events),
         )

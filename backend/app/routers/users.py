@@ -10,6 +10,7 @@ from fastapi import (
 
 from app.core.security import get_current_user_id
 from app.schemas.my_events import (MyActivityResponse, MyEventListResponse,)
+from app.schemas.my_events import MyGuestEventListResponse
 from app.services.my_event_service import MyEventService
 from app.schemas.users import (
     MyProfileResponse,
@@ -116,6 +117,48 @@ def get_my_events(
                 "오류가 발생했습니다."
             ),
         ) from error
+
+# ---------------------------------------------------------
+# 내 게스트 일정
+#
+# GET /api/users/me/guest-events
+# GET /api/users/me/guest-events?from_date=2026-09-28&to_date=2026-10-04
+#
+# 다른 동호회 일정에 게스트로 신청(승인 대기) / 참여(확정)한 일정
+# 기간을 안 보내면 전체
+# ---------------------------------------------------------
+@router.get(
+    "/me/guest-events",
+    response_model=MyGuestEventListResponse,
+)
+def get_my_guest_events(
+    from_date: date | None = Query(default=None),
+    to_date: date | None = Query(default=None),
+    user_id: str = Depends(get_current_user_id),
+):
+    if from_date and to_date and from_date > to_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="조회 시작일은 종료일보다 늦을 수 없습니다.",
+        )
+
+    my_event_service = MyEventService()
+
+    try:
+        return my_event_service.get_my_guest_events(
+            user_id=user_id,
+            from_date=from_date,
+            to_date=to_date,
+        )
+
+    except Exception as error:
+        print("내 게스트 일정 조회 실제 오류:", repr(error))
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="게스트 일정을 조회하는 중 오류가 발생했습니다.",
+        ) from error
+
 
 # ---------------------------------------------------------
 # 내 활동 (가입 후 지난 일정 전체)

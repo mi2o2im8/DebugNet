@@ -36,7 +36,7 @@ const EXCLUDE_NO_IMAGE_CLUBS = true;
 
 // 2) 이미지가 있는 더미도 빼고 싶으면 club_id를 여기에 적기
 //    예) [1, 2, 3]
-const DUMMY_CLUB_IDS = [];
+const DUMMY_CLUB_IDS = [1, 2, 3, 4, 5, 6, 7];
 
 
 // ⭐ 뱃지 종류 / 색상

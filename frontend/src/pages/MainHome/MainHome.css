@@ -1830,3 +1830,54 @@ body {
 
     color: #7f8b9c;
 }
+
+/* ========================================
+   ⭐ 게스트 일정 (다른 동호회에 게스트로 참여)
+======================================== */
+
+.main-home-calendar-dots {
+    gap: 2px;
+}
+
+.main-home-calendar-dots i.guest {
+    background-color: #e0677f;
+}
+
+.schedule-item.guest {
+    border-color: #f5d3da;
+
+    background: #fdf5f7;
+}
+
+.schedule-item.guest .schedule-time span {
+    color: #c9485f;
+}
+
+.schedule-guest-tag {
+    display: inline-block;
+
+    margin-right: 4px;
+    padding: 1px 5px;
+
+    border-radius: 4px;
+
+    background-color: #fbe3e8;
+
+    font-size: 10px;
+    font-weight: 700;
+    vertical-align: middle;
+
+    color: #c9485f;
+}
+
+.schedule-item button.guest-status {
+    border-color: #f0c2cb;
+
+    color: #c9485f;
+}
+
+.schedule-item button.guest-status.joined {
+    border-color: #e0677f;
+
+    background: #fbe3e8;
+}
