@@ -1,9 +1,9 @@
-import { buildApiUrl } from "../../api/apiClient";
 import { useEffect, useState } from "react";
-import { FiBell } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { FiBell, FiChevronLeft } from "react-icons/fi";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
+import { useNotifications } from "../../context/NotificationContext";
 import { supabase } from "../../../supabaseClient";
 import "./CSS/Community.css";
 
@@ -51,9 +51,37 @@ const POSTS_PER_PAGE = 10;
 
 function Community() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // 기본 게시판 = 자유게시판
-  const [selectedBoard, setSelectedBoard] = useState("free");
+  // 공통 알림 Context의 안 읽은 알림 개수
+  const { unreadCount: unreadNotificationCount } = useNotifications();
+
+  const { clubId } = useParams();
+  const isClubCommunity = Boolean(clubId);
+
+  // 운영자용 동호회 커뮤니티 경로인지 확인
+  const isManageCommunity =
+    location.pathname.includes(
+      "/manage/community"
+    );
+
+  // 현재 화면에 맞는 커뮤니티 기본 경로
+  const communityBasePath =
+    isClubCommunity
+      ? (
+          isManageCommunity
+            ? `/clubs/${clubId}/manage/community`
+            : `/clubs/${clubId}/community`
+        )
+      : "/community";
+
+  const clubDashboardPath =
+    isManageCommunity
+      ? `/clubs/${clubId}/manage`
+      : `/clubs/${clubId}/home`;
+
+  // 동호회 커뮤니티는 동호회 게시판, 그 외에는 자유게시판을 기본 선택
+  const [selectedBoard, setSelectedBoard] = useState(isClubCommunity ? "club" : "free");
 
   // 정렬
   const [sortType, setSortType] = useState("latest");
@@ -67,8 +95,8 @@ function Community() {
   const [sports, setSports] =
     useState([]);
 
-  // 검색할 게시판
-  const [searchBoard, setSearchBoard] = useState("free");
+  // 검색할 게시판_기본 게시판과 동호회 게시판 분리
+  const [searchBoard, setSearchBoard] = useState(isClubCommunity ? "club" : "free");
 
   // 검색 범위
   const [searchType, setSearchType] = useState("title");
@@ -99,6 +127,10 @@ function Community() {
   // 종목 목록 불러오기
   // =========================
   useEffect(() => {
+    if (isClubCommunity) {
+      return;
+    }
+
     const fetchSports = async () => {
       try {
         const {
@@ -109,7 +141,8 @@ function Community() {
           return;
         }
 
-        const response = await fetch(buildApiUrl("/api/posts/write-options"),
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/posts/write-options",
           {
             headers: {
               Authorization:
@@ -141,7 +174,7 @@ function Community() {
 
     fetchSports();
 
-  }, []);
+  }, [isClubCommunity]);
 
 
   // =========================
@@ -174,6 +207,11 @@ function Community() {
           sort: sortType,
         });
 
+        // 동호회 커뮤니티에서는 해당 동호회 게시글만 조회
+        if (isClubCommunity) {
+            params.set("club_id", String(clubId));
+        }
+
         // 종목별게시판에서 특정 종목을 선택했을 때만
         if (
           selectedBoard === "sports" &&
@@ -198,7 +236,8 @@ function Community() {
           );
         }
 
-        const response = await fetch(buildApiUrl(`/api/posts?${params.toString()}`),
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/posts?${params.toString()}`,
           {
             headers: {
               Authorization:
@@ -259,6 +298,8 @@ function Community() {
     searchKeyword,
     searchType,
     navigate,
+    clubId,
+    isClubCommunity,
   ]);
 
   // =========================
@@ -277,11 +318,16 @@ function Community() {
   // 새 게시글
   // =========================
   const handleWritePost = () => {
-    navigate("/community/write", {
-      state: {
-        board: selectedBoard,
-      },
-    });
+    navigate(
+      `${communityBasePath}/write`,
+      {
+        state: {
+          board: isClubCommunity
+            ? "club"
+            : selectedBoard
+        }
+      }
+    );
   };
 
 
@@ -339,46 +385,118 @@ function Community() {
   const visiblePages = getVisiblePages();
 
   return (
-    <div className="community-container">
+    <div
+      className={[
+        "community-container",
+        isClubCommunity
+          ? "club-community-mode"
+          : ""
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+
       {/* 상단 */}
       <header className="community-header">
-        <h1>소통하기</h1>
 
-        <button
-          type="button"
-          className="community-notification-btn"
-          aria-label="알림"
-          onClick={() => {
-            alert("알림 기능 연결 예정입니다.");
-          }}
-        >
-          <FiBell />
-        </button>
+        {isClubCommunity ? (
+
+          <div className="club-community-header-content">
+
+            <button
+              type="button"
+              className="club-community-back-btn"
+              aria-label="동호회 홈으로 돌아가기"
+              onClick={() =>
+                navigate(clubDashboardPath)
+              }
+            >
+              <FiChevronLeft />
+            </button>
+
+
+            <div className="club-community-header-title">
+
+              <h1>
+                커뮤니티
+              </h1>
+
+              <p>
+                동호회 회원들과 소식을 나눠보세요.
+              </p>
+
+            </div>
+
+          </div>
+
+        ) : (
+
+          <>
+            <h1>
+              소통하기
+            </h1>
+
+
+            <button
+              type="button"
+              className="community-notification-btn"
+              aria-label="알림"
+              onClick={() =>
+                navigate("/notification")
+              }
+            >
+
+              <FiBell />
+
+
+              {unreadNotificationCount > 0 && (
+
+                <span className="community-notification-badge">
+
+                  {unreadNotificationCount >= 10
+                    ? "10+"
+                    : unreadNotificationCount}
+
+                </span>
+
+              )}
+
+            </button>
+
+          </>
+
+        )}
+
       </header>
 
       <main className="community-main">
-        {/* 게시판 선택 */}
-        <nav className="community-board-tabs">
-          {boards.map((board) => (
-            <button
-              key={board.id}
-              type="button"
-              className={
-                selectedBoard === board.id
-                  ? "community-board-tab active"
-                  : "community-board-tab"
-              }
-              onClick={() => handleBoardChange(board.id)}
-            >
-              {board.name}
-            </button>
-          ))}
-        </nav>
+        {/* 전체 커뮤니티 게시판 선택 */}
+        {!isClubCommunity && (
+          <nav className="community-board-tabs">
+            {boards.map((board) => (
+              <button
+                key={board.id}
+                type="button"
+                className={
+                  selectedBoard === board.id
+                    ? "community-board-tab active"
+                    : "community-board-tab"
+                }
+                onClick={() =>
+                  handleBoardChange(board.id)
+                }
+              >
+                {board.name}
+              </button>
+            ))}
+          </nav>
+        )}
 
           {/* =========================
-                      종목별게시판 종목 탭
-                  ========================= */}
-                  {selectedBoard === "sports" && (
+              종목별게시판 종목 탭
+              ========================= */}
+                  {!isClubCommunity &&
+                    selectedBoard === "sports" && (
 
                     <div className="community-sport-tabs">
 
@@ -471,16 +589,23 @@ function Community() {
 
           {/* 검색 */}
           <div className="community-search">
-            <select
-              value={searchBoard}
-              onChange={(e) => setSearchBoard(e.target.value)}
-            >
-              {boards.map((board) => (
-                <option key={board.id} value={board.id}>
-                  {board.name}
-                </option>
-              ))}
-            </select>
+            {!isClubCommunity && (
+              <select
+                value={searchBoard}
+                onChange={(e) =>
+                  setSearchBoard(e.target.value)
+                }
+              >
+                {boards.map((board) => (
+                  <option
+                    key={board.id}
+                    value={board.id}
+                  >
+                    {board.name}
+                  </option>
+                ))}
+              </select>
+            )}
 
             <select
               value={searchType}
@@ -530,15 +655,28 @@ function Community() {
 
                 <article
                   key={post.id}
-                  className="community-post-item"
+                  className={[
+                    "community-post-item",
+                    isClubCommunity && post.isClubNotice
+                      ? "club-notice"
+                      : ""
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                   onClick={() =>
                     navigate(
-                      `/community/post/${post.id}`
+                      `${communityBasePath}/post/${post.id}`
                     )
                   }
                 >
 
                   <h3>
+                    {isClubCommunity && post.isClubNotice && (
+                      <span className="community-club-notice-badge">
+                        [공지]
+                      </span>
+                    )}
+
                     {post.title}
                   </h3>
 
@@ -634,7 +772,7 @@ function Community() {
         </section>
       </main>
 
-      <BottomNav />
+      {!isClubCommunity && <BottomNav />}
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { buildApiUrl } from "../../api/apiClient";
 import {
     FiArrowLeft,
     FiBell,
@@ -251,7 +250,8 @@ function ClubUserDashboard() {
                         sort: "latest",
                     });
 
-                    const response = await fetch(buildApiUrl(`/api/posts?${params.toString()}`),
+                    const response = await fetch(
+                        `http://127.0.0.1:8000/api/posts?${params.toString()}`,
                         {
                             headers: {
                                 Authorization:

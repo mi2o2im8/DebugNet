@@ -1,4 +1,3 @@
-import { buildApiUrl } from "../api/apiClient";
 // 게스트 모집 일정에 동호회 정보(이름 / 대표 이미지 / 종목) 붙이기
 //
 // ⭐ /api/clubs/guest-recruiting 응답에는 club_id 만 있고
@@ -7,7 +6,9 @@ import { buildApiUrl } from "../api/apiClient";
 // ⭐ 로그인 없이 호출 가능한 API라 게스트 화면에서도 사용 가능
 
 
-
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ||
+    "http://127.0.0.1:8000";
 
 
 export const attachClubInfoToEvents = async (events = []) => {
@@ -28,7 +29,7 @@ export const attachClubInfoToEvents = async (events = []) => {
         clubIds.map(async (clubId) => {
 
             const response = await fetch(
-                buildApiUrl(`/api/clubs/${clubId}`)
+                `${API_BASE_URL}/api/clubs/${clubId}`
             );
 
             if (!response.ok) {

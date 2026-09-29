@@ -1,4 +1,3 @@
-import { buildApiUrl } from "../../api/apiClient";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -46,7 +45,8 @@ function GuestRecruit() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(buildApiUrl("/api/clubs/guest-recruiting"),
+        const response = await fetch(
+          "http://localhost:8000/api/clubs/guest-recruiting",
           {
             signal: controller.signal,
           }

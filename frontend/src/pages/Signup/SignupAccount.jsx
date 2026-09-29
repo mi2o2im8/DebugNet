@@ -1,4 +1,3 @@
-import { buildApiUrl } from "../../api/apiClient";
 // 1. 이메일, 비밀번호 입력 (계정생성)
 
 import "./Signup.css";
@@ -56,7 +55,8 @@ function Signup() {
 
         try {
             // ⭐ 백엔드 이메일 중복 확인 API
-            const response = await fetch(buildApiUrl(`/api/auth/check-email?email=${encodeURIComponent(email)}`)
+            const response = await fetch(
+                `http://127.0.0.1:8000/api/auth/check-email?email=${encodeURIComponent(email)}`
             );
 
             const data = await response.json();
