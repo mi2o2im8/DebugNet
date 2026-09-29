@@ -3,6 +3,7 @@ import { FiBell, FiChevronLeft } from "react-icons/fi";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
+import { useNotifications } from "../../context/NotificationContext";
 import { supabase } from "../../../supabaseClient";
 import "./CSS/Community.css";
 
@@ -51,6 +52,9 @@ const POSTS_PER_PAGE = 10;
 function Community() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // 공통 알림 Context의 안 읽은 알림 개수
+  const { unreadCount: unreadNotificationCount } = useNotifications();
 
   const { clubId } = useParams();
   const isClubCommunity = Boolean(clubId);
@@ -391,10 +395,14 @@ function Community() {
         .filter(Boolean)
         .join(" ")}
     >
+
       {/* 상단 */}
       <header className="community-header">
+
         {isClubCommunity ? (
+
           <div className="club-community-header-content">
+
             <button
               type="button"
               className="club-community-back-btn"
@@ -406,30 +414,59 @@ function Community() {
               <FiChevronLeft />
             </button>
 
+
             <div className="club-community-header-title">
-              <h1>커뮤니티</h1>
+
+              <h1>
+                커뮤니티
+              </h1>
 
               <p>
                 동호회 회원들과 소식을 나눠보세요.
               </p>
+
             </div>
+
           </div>
+
         ) : (
+
           <>
-            <h1>소통하기</h1>
+            <h1>
+              소통하기
+            </h1>
+
 
             <button
               type="button"
               className="community-notification-btn"
               aria-label="알림"
-              onClick={() => {
-                alert("알림 기능 연결 예정입니다.");
-              }}
+              onClick={() =>
+                navigate("/notification")
+              }
             >
+
               <FiBell />
+
+
+              {unreadNotificationCount > 0 && (
+
+                <span className="community-notification-badge">
+
+                  {unreadNotificationCount >= 10
+                    ? "10+"
+                    : unreadNotificationCount}
+
+                </span>
+
+              )}
+
             </button>
+
           </>
+
         )}
+
       </header>
 
       <main className="community-main">

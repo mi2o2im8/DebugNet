@@ -19,6 +19,43 @@ class ClubApplicationAnswerResponse(BaseModel):
     question_text: str
     answer_text: str
 
+# ---------------------------------------------------------
+# H2 가입 신청자 적합도 분석
+#
+# 운영자의 가입 검토를 보조하는 참고 정보이며,
+# 자동 승인·거절에는 사용하지 않는다.
+# ---------------------------------------------------------
+class ClubApplicationFitResponse(BaseModel):
+    direct_fit_score: float | None = None
+    official_prior_score: float | None = None
+
+    classification: Literal[
+        "적합",
+        "조건부 적합",
+        "확인 필요",
+        "부적합",
+    ]
+
+    hard_constraint_passed: bool
+    hard_constraint_reason: str
+
+    severe_mismatch_axes: list[str] = Field(
+        default_factory=list
+    )
+    partial_mismatch_axes: list[str] = Field(
+        default_factory=list
+    )
+
+    trial_recommended: bool = False
+    operator_action: str
+
+    data_coverage: int = Field(
+        ge=0,
+        le=100,
+    )
+    missing_axes: list[str] = Field(
+        default_factory=list
+    )
 
 # ---------------------------------------------------------
 # 가입 신청자 목록 항목
@@ -33,6 +70,10 @@ class ClubApplicationListItemResponse(BaseModel):
     profile_image: str | None = None
 
     application_message: str | None = None
+
+    fit_analysis: (
+        ClubApplicationFitResponse | None
+    ) = None
 
     status: Literal[
         "pending",

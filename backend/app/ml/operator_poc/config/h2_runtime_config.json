@@ -1,0 +1,89 @@
+{
+  "version": "H2_MVP_v1",
+  "hypothesis": "가입 신청자의 활동조건과 동호회 특성을 비교해 운영자의 적합 회원 판단을 지원한다.",
+  "core_sports": [
+    "축구, 풋살",
+    "농구",
+    "배구",
+    "탁구",
+    "테니스"
+  ],
+  "hard_constraints": [
+    "종목 일치",
+    "일정 교집합 존재",
+    "이동 가능 범위 충족",
+    "운영자 필수 가입조건 충족"
+  ],
+  "direct_fit_axes": {
+    "일정": 1.0,
+    "실력": 1.0,
+    "목적": 1.0,
+    "분위기": 1.0,
+    "활동빈도": 1.0,
+    "비용": 0.5
+  },
+  "direct_fit_rule": "Role-based weighted average",
+  "purpose_rule": {
+    "친목": 0,
+    "운동": 1,
+    "경쟁": 2,
+    "same": 1.0,
+    "one_step_difference": 0.5,
+    "two_step_difference": 0.0
+  },
+  "diagnostic_rule": {
+    "severe_mismatch": "Score < 0.50",
+    "partial_mismatch": "0.50 <= Score < 0.75"
+  },
+  "mvp_fit_threshold": 85.0,
+  "final_classification": {
+    "부적합": "Hard Constraint 실패",
+    "확인 필요": "Hard Constraint 통과 + 심한 불일치축 존재",
+    "적합": "심한 불일치 없음 + DirectFit >= 85",
+    "조건부 적합": "심한 불일치 없음 + DirectFit < 85"
+  },
+  "trial_fallback": {
+    "target": [
+      "조건부 적합",
+      "확인 필요"
+    ],
+    "condition": "동호회 체험 가능"
+  },
+  "official_prior": {
+    "features": [
+      "최근1년_체육활동경험1",
+      "규칙적체육활동_빈도"
+    ],
+    "role": "Secondary Signal / 동점 및 참고용",
+    "included_in_direct_score": false,
+    "core_sport_weighted_roc_auc": 0.6319,
+    "warning": "실제 applicant-club Fit 확률이 아니라 현재 활동회원 행동특성 Prior"
+  },
+  "methodology_warning": "Fit 가중치 및 판정 Threshold는 실제 서비스 outcome으로 학습된 값이 아니라 MVP용 명시적 운영 Rule이다. 실제 가입/체험/참여/유지 로그 확보 후 재학습 또는 재조정한다.",
+  "runtime_schema": {
+    "service_input": {
+      "sport": "동호회/신청자 종목",
+      "activity_frequency": "규칙적 체육활동 빈도"
+    },
+    "legacy_model_feature_mapping": {
+      "sport": "최근1년_체육활동경험1",
+      "activity_frequency": "규칙적체육활동_빈도"
+    },
+    "legacy_feature_warning": "`최근1년_체육활동경험1`은 저장된 joblib의 legacy feature name이며, 실제 Encoder category 의미는 종목이다.",
+    "official_prior_supported_sports": [
+      "축구, 풋살",
+      "농구",
+      "배구",
+      "탁구"
+    ],
+    "tennis_policy": {
+      "direct_fit_supported": true,
+      "official_prior_supported": false,
+      "retraining_required": false,
+      "reason": "H2 Direct Fit은 종목 독립적 Rule Engine이며 종목 exact Hard Constraint로 동작한다. 기존 Official Prior는 테니스에 대해 검증되지 않았으므로 테니스에서는 Prior를 사용하지 않는다."
+    },
+    "official_prior_role": "Secondary Signal / 동점 및 참고용",
+    "official_prior_in_direct_fit": false,
+    "fit_threshold_learned": false
+  }
+}

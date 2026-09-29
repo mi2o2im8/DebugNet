@@ -1,0 +1,2 @@
+﻿가설,공식데이터_Target,공식모델,전체Active_Rolling_Weighted_AUC,핵심종목_Rolling_Weighted_AUC,핵심종목_Rolling_Weighted_PR_AUC,핵심종목_Rolling_Weighted_Top10_Lift,OfficialPrior_역할,DirectFit_핵심,HardConstraint,Fallback,최종결론
+H2 가입 신청자 적합도,현재 동호회 활동회원 Proxy,Sport + Frequency Logistic Regression,0.7769,0.6319,0.3947,1.369,총점 미포함 / Secondary Signal,일정·실력·목적·분위기·활동빈도 + 비용 보조,종목·일정·이동범위·필수가입조건,조건부/확인필요 신청자 체험 추천,"공식 ML 단독으로 가입 Fit을 예측하지 않고, 앱 직접 입력 기반 Fit Engine을 중심으로 사용"

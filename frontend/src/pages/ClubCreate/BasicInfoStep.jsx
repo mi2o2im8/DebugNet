@@ -55,7 +55,28 @@ const SPORT_OPTIONS = [
     //     { value: "성동구", label: "성동구" }
     // ];
 
-function BasicInfoStep({ formData, onChange }) {
+function BasicInfoStep({
+    formData,
+    onChange,
+    operatorProfile,
+    isOperatorLoading
+}) {
+
+    const operatorName = (
+        operatorProfile?.name
+        || operatorProfile?.nickname
+        || (
+            isOperatorLoading
+                ? "불러오는 중..."
+                : "운영자 정보 확인 필요"
+        )
+    );
+
+    const operatorInitial = (
+        operatorProfile?.name
+        || operatorProfile?.nickname
+        || "?"
+    ).trim().slice(0, 1);
 
     // const [isSportOpen, setIsSportOpen] = useState(false);
 
@@ -228,10 +249,19 @@ function BasicInfoStep({ formData, onChange }) {
 
                 <div className="club-basic-operator-card">
                     <span className="club-basic-operator-avatar">
-                        김
+                        {
+                            operatorProfile?.profile_image
+                                ? (
+                                    <img
+                                        src={operatorProfile.profile_image}
+                                        alt=""
+                                    />
+                                )
+                                : operatorInitial
+                        }
                     </span>
 
-                    <strong>김성우</strong>
+                    <strong>{operatorName}</strong>
 
                     <span className="club-basic-operator-badge">
                         운영자

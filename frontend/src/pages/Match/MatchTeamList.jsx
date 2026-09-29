@@ -35,6 +35,13 @@ function MatchTeamList() {
   const selectedDistrict =
     searchParams.get("district") || "전체";
 
+  // MatchHome의 현재 필터를 그대로 이어받는다.
+  const selectedDate =
+    searchParams.get("date") || "";
+
+  const selectedSportId =
+    searchParams.get("sportId") || "";
+
 
   // ========================================
   // 실제 상대팀 경기 목록
@@ -65,20 +72,54 @@ function MatchTeamList() {
 
       try {
 
-        // MatchHome에서 선택한 지역을 기준으로
-        // 실제 상대팀 경기 목록 조회
+        // MatchHome의 현재 날짜 / 종목 / 지역 조건을
+        // 그대로 이어받아 전체 목록을 조회한다.
         const response =
           await getMatchAvailabilities({
             region: selectedDistrict,
+
+            matchDate:
+              selectedDate || undefined,
+
+            sportId:
+              selectedSportId || undefined,
           });
 
 
+        const sortedTeams =
+          [...(response.items || [])]
+            .sort((a, b) => {
+
+              const createdAtCompare =
+                String(
+                  b.created_at || ""
+                ).localeCompare(
+                  String(
+                    a.created_at || ""
+                  )
+                );
+
+              if (createdAtCompare !== 0) {
+                return createdAtCompare;
+              }
+
+              return (
+                Number(
+                  b.availability_id || 0
+                ) -
+                Number(
+                  a.availability_id || 0
+                )
+              );
+            });
+
+
         setTeams(
-          response.items || []
+          sortedTeams
         );
 
         setTotalCount(
-          response.total_count || 0
+          sortedTeams.length
         );
 
       } catch (error) {
@@ -100,7 +141,11 @@ function MatchTeamList() {
 
     loadTeams();
 
-  }, [selectedDistrict]);
+  }, [
+    selectedDistrict,
+    selectedDate,
+    selectedSportId,
+  ]);
 
 
   // ========================================
@@ -150,7 +195,13 @@ function MatchTeamList() {
             </h2>
 
             <p>
-              {selectedDistrict === "전체"
+              {selectedDate
+                ? `${selectedDate} ${
+                    selectedDistrict === "전체"
+                      ? "서울 전체"
+                      : selectedDistrict
+                  }에서 신청 가능한 팀입니다.`
+                : selectedDistrict === "전체"
                 ? "서울 전체에서 매칭을 등록한 팀입니다."
                 : `${selectedDistrict}에서 매칭을 등록한 팀입니다.`}
             </p>

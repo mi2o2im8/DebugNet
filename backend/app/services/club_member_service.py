@@ -9,6 +9,7 @@ from app.repositories.club_member_repository import (
 from app.schemas.club_members import (
     ClubApplicationAnswerResponse,
     ClubApplicationDecisionResponse,
+    ClubApplicationFitResponse,
     ClubApplicationListItemResponse,
     ClubApplicationListResponse,
     ClubMemberListItemResponse,
@@ -19,6 +20,9 @@ from app.schemas.club_members import (
     ClubMemberVoteResponse,
     ClubMemberWarningResponse,
     ClubMemberWarningMutationResponse,
+)
+from app.services.operator_ml_service import (
+    OperatorMlService,
 )
 
 
@@ -36,6 +40,9 @@ class ClubMemberService:
     def __init__(self):
         self.member_repository = (
             ClubMemberRepository()
+        )
+        self.operator_ml_service = (
+            OperatorMlService()
         )
 
     # -----------------------------------------------------
@@ -833,6 +840,26 @@ class ClubMemberService:
             .find_join_questions(club_id)
         )
 
+        # H2 적합도 분석에 필요한 동호회·신청자 문맥을
+        # 신청자별 반복 조회 없이 한 번에 구성한다.
+        #
+        # ML 보조 기능의 데이터 조회가 실패하더라도
+        # 기존 가입 신청 목록 자체는 정상 반환한다.
+        try:
+            h2_contexts = (
+                self.member_repository
+                .find_h2_application_contexts(
+                    club_id=club_id,
+                    user_ids=applicant_user_ids,
+                )
+            )
+        except Exception as error:
+            print(
+                "H2 신청자 문맥 조회 오류:",
+                repr(error),
+            )
+            h2_contexts = {}
+
         user_map = {
             str(row["user_id"]): row
             for row in user_rows
@@ -876,6 +903,8 @@ class ClubMemberService:
 
             application_answers = []
 
+            answered_question_ids: set[int] = set()
+
             for answer_row in (
                 answers_by_application.get(
                     application_id,
@@ -891,6 +920,16 @@ class ClubMemberService:
                     {},
                 )
 
+                answer_text = (
+                    answer_row.get("answer_text")
+                    or ""
+                )
+
+                if answer_text.strip():
+                    answered_question_ids.add(
+                        question_id
+                    )
+
                 application_answers.append(
                     ClubApplicationAnswerResponse(
                         question_id=question_id,
@@ -903,14 +942,50 @@ class ClubMemberService:
                                 f"#{question_id}"
                             )
                         ),
-                        answer_text=(
-                            answer_row.get(
-                                "answer_text"
-                            )
-                            or ""
-                        ),
+                        answer_text=answer_text,
                     )
                 )
+
+            required_question_ids = {
+                int(question_row["question_id"])
+                for question_row in question_rows
+                if question_row.get("required")
+            }
+
+            required_answers_passed = (
+                required_question_ids.issubset(
+                    answered_question_ids
+                )
+            )
+
+            fit_analysis = None
+            h2_context = h2_contexts.get(
+                applicant_user_id
+            )
+
+            if h2_context is not None:
+                try:
+                    fit_result = (
+                        self.operator_ml_service
+                        .evaluate_h2_application(
+                            context=h2_context,
+                            required_answers_passed=(
+                                required_answers_passed
+                            ),
+                        )
+                    )
+
+                    fit_analysis = (
+                        ClubApplicationFitResponse(
+                            **fit_result
+                        )
+                    )
+                except Exception as error:
+                    print(
+                        "H2 신청자 적합도 계산 오류:",
+                        application_id,
+                        repr(error),
+                    )
 
             applications.append(
                 ClubApplicationListItemResponse(
@@ -935,6 +1010,7 @@ class ClubMemberService:
                             "application_message"
                         )
                     ),
+                    fit_analysis=fit_analysis,
                     status=application_row[
                         "status"
                     ],

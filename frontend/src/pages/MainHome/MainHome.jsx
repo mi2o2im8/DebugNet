@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import BottomNav from "../../components/BottomNav";
 import { attachClubInfoToEvents } from "../../utils/attachClubInfo";
 import { buildRecommendedClubs, safeImageUrl } from "../../utils/recommendClubs";
+import CommunityPreview from "../../components/CommunityPreview/CommunityPreview";
 import "./MainHome.css";
 
 import { supabase } from "../../../supabaseClient";
@@ -689,7 +690,7 @@ function MainHome() {
     // =========================================================
 
     // ⭐ 백엔드에서 받아온 최신 게시글
-    const [posts, setPosts] = useState([]);
+    // ⭐ 커뮤니티는 CommunityPreview 컴포넌트가 직접 불러옴
     // =========================================================
     // ⭐ 활동 추천 동호회
     // /api/clubs/search에서 실제 동호회 목록을 가져옴
@@ -1153,140 +1154,6 @@ function MainHome() {
         );
 
 
-    // =========================================================
-    // ⭐ 커뮤니티 최신 게시글 조회
-    //
-    // Community.jsx와 동일한 /api/posts 백엔드 사용
-    // 최신 자유게시판 게시글 3개만 MainHome에 표시
-    // =========================================================
-
-    useEffect(() => {
-
-        let isActive = true;
-
-        const loadCommunityPosts = async () => {
-
-            try {
-
-                // ⭐ 현재 로그인 세션
-                const {
-                    data: {
-                        session,
-                    },
-                } = await supabase.auth.getSession();
-
-                if (!session?.access_token) {
-
-                    console.log(
-                        "⭐ 커뮤니티 조회: 로그인 세션 없음"
-                    );
-
-                    return;
-                }
-
-                // ⭐ Community.jsx와 동일한 API 파라미터
-                const params = new URLSearchParams({
-                    board_type: "free",
-                    page: "1",
-                    size: "3",
-                    sort: "latest",
-                });
-
-                const response = await fetch(
-                    `http://127.0.0.1:8000/api/posts?${params.toString()}`,
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${session.access_token}`,
-                        },
-                    }
-                );
-
-                if (!response.ok) {
-
-                    const errorData =
-                        await response
-                            .json()
-                            .catch(() => null);
-
-                    throw new Error(
-                        errorData?.detail ||
-                        "커뮤니티 게시글을 불러오지 못했습니다."
-                    );
-                }
-
-                const data =
-                    await response.json();
-
-                console.log(
-                    "⭐ MainHome 커뮤니티 게시글:",
-                    data
-                );
-
-                if (!isActive) {
-                    return;
-                }
-
-                // ⭐ 백엔드 응답을 MainHome 카드 형태로 변환
-                const mappedPosts =
-                    (data.items || [])
-                        .slice(0, 3)
-                        .map((post) => ({
-
-                            id:
-                                post.id ??
-                                post.post_id,
-
-                            category:
-                                post.category ??
-                                post.board_name ??
-                                "자유게시판",
-
-                            title:
-                                post.title ??
-                                "제목 없음",
-
-                            description:
-                                post.content ??
-                                post.description ??
-                                "",
-
-                            date:
-                                post.createdAt ??
-                                post.created_at ??
-                                "",
-
-                            comments:
-                                post.comments ??
-                                post.comment_count ??
-                                0,
-
-                        }));
-
-                setPosts(mappedPosts);
-
-            } catch (error) {
-
-                console.error(
-                    "⭐ MainHome 커뮤니티 조회 오류:",
-                    error
-                );
-
-                if (isActive) {
-                    setPosts([]);
-                }
-
-            }
-
-        };
-
-        loadCommunityPosts();
-
-        return () => {
-            isActive = false;
-        };
-
-    }, []);
 
 
     // =========================================================
@@ -2082,96 +1949,20 @@ function MainHome() {
 
 
                 {/* =====================================================
-                    ⭐ 커뮤니티
+                    ⭐ 커뮤니티 (인기글 / 자유게시판 / 동호회 이야기)
                 ===================================================== */}
 
-                <section className="community-section">
-
-                    <div className="section-header">
-
-                        <h3>
-                            커뮤니티
-                        </h3>
-
-
-                        <Link
-                            to="/community"
-                            className="section-more"
-                        >
-
-                            더보기
-
-                            <img
-                                src={backIcon}
-                                alt="이동"
-                            />
-
-                        </Link>
-
-                    </div>
-
-
-                    <div className="community-list">
-
-                        {posts.map(
-                            (post) => (
-
-                                <Link
-                                    key={
-                                        post.id
-                                    }
-                                    to={
-                                        `/community/post/${post.id}`
-                                    }
-                                    className="community-card"
-                                >
-
-                                    <span className="community-category">
-                                        {
-                                            post.category
-                                        }
-                                    </span>
-
-
-                                    <div className="community-content">
-
-                                        <h4>
-                                            {
-                                                post.title
-                                            }
-                                        </h4>
-
-                                        <p>
-                                            {
-                                                post.description
-                                            }
-                                        </p>
-
-                                    </div>
-
-
-                                    <div className="community-meta">
-
-                                        <span>
-                                            {
-                                                post.date
-                                            }
-                                        </span>
-
-                                        <span>
-                                            댓글 {post.comments}
-                                        </span>
-
-                                    </div>
-
-                                </Link>
-
-                            )
-                        )}
-
-                    </div>
-
-                </section>
+                <CommunityPreview
+                    icon={activityIcon}
+                    clubIds={myClubs
+                        .map(
+                            (club) =>
+                                club?.club_id ||
+                                club?.id ||
+                                club?.clubId
+                        )
+                        .filter(Boolean)}
+                />
 
 
                 {/* =====================================================

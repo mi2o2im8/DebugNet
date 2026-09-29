@@ -96,8 +96,15 @@ const HISTORY_SPORT_FILTERS = [
   "축구/풋살",
   "농구",
   "배구",
+  "테니스",
   "탁구",
 ];
+
+const normalizeSportName = (name = "") =>
+  name
+    .replaceAll("ㆍ", "/")
+    .replaceAll("·", "/")
+    .replaceAll(" ", "");
 
 
 
@@ -356,8 +363,8 @@ function MatchManagementList() {
           // ------------------------------
           const matchesSport =
             selectedHistorySport === "전체" ||
-            match.sportName ===
-              selectedHistorySport;
+            normalizeSportName(match.sportName) ===
+              normalizeSportName(selectedHistorySport);
 
 
           return (

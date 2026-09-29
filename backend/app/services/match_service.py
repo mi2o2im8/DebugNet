@@ -1,6 +1,8 @@
 from datetime import (
     date,
     datetime,
+    time as datetime_time,
+    timedelta,
     timezone,
 )
 
@@ -139,6 +141,56 @@ class MatchService:
                 "동호회장 또는 운영진만 "
                 "팀매칭을 등록할 수 있습니다."
             )
+
+    # =====================================================
+    # 경기 종료 여부 확인
+    #
+    # 한국 시간(KST, UTC+9) 기준으로
+    # match_date + end_time이 현재 시각을 지났는지 확인
+    #
+    # end_time이 없는 기존 데이터는
+    # 기존 방식처럼 날짜가 지나야 종료 처리
+    # =====================================================
+    def is_match_finished(
+        self,
+        match_date,
+        end_time,
+    ) -> bool:
+
+        # 날짜 문자열 → date
+        if isinstance(match_date, str):
+            match_date = date.fromisoformat(
+                match_date[:10]
+            )
+
+        # 한국 시간
+        korea_timezone = timezone(
+            timedelta(hours=9)
+        )
+
+        now = datetime.now(
+            korea_timezone
+        )
+
+        # 혹시 기존 데이터에 end_time이 없다면
+        # 날짜가 지나야 종료된 것으로 처리
+        if end_time is None:
+            return match_date < now.date()
+
+        # 시간 문자열 → time
+        if isinstance(end_time, str):
+            end_time = datetime_time.fromisoformat(
+                end_time
+            )
+
+        # 경기 종료 일시
+        match_end_at = datetime.combine(
+            match_date,
+            end_time,
+            tzinfo=korea_timezone,
+        )
+
+        return now >= match_end_at
 
 
     # =====================================================
@@ -2555,42 +2607,24 @@ class MatchService:
         )
 
 
-        # availability_id → match_date
-        availability_date_map = {}
-
-        for availability in availabilities:
-
-            availability_id = int(
+        # availability_id → availability
+        availability_map = {
+            int(
                 availability[
                     "availability_id"
                 ]
-            )
-
-            match_date = availability[
-                "match_date"
-            ]
-
-            # Supabase에서 문자열로 내려오는 경우
-            if isinstance(
-                match_date,
-                str,
-            ):
-                match_date = date.fromisoformat(
-                    match_date
-                )
-
-            availability_date_map[
-                availability_id
-            ] = match_date
+            ): availability
+            for availability in availabilities
+        }
 
 
         # -----------------------------------------------------
         # 7. 예정 경기 / 지난 경기 계산
+        #
+        # 날짜 + 경기 종료시간 기준
         # -----------------------------------------------------
         upcoming = 0
         history = 0
-
-        today = date.today()
 
         for match in approved_matches:
 
@@ -2600,23 +2634,27 @@ class MatchService:
                 ]
             )
 
-            match_date = (
-                availability_date_map.get(
+            availability = (
+                availability_map.get(
                     availability_id
                 )
             )
 
-            # 원본 availability를 찾을 수 없는 경우
-            if match_date is None:
+            if availability is None:
                 continue
 
-            # 오늘 경기 포함 → 예정 경기
-            if match_date >= today:
-                upcoming += 1
-
-            # 어제 이전 → 지난 경기
-            else:
+            if self.is_match_finished(
+                match_date=availability[
+                    "match_date"
+                ],
+                end_time=availability.get(
+                    "end_time"
+                ),
+            ):
                 history += 1
+
+            else:
+                upcoming += 1
 
 
         # -----------------------------------------------------
@@ -2885,8 +2923,6 @@ class MatchService:
 
             filtered_matches = []
 
-            today = date.today()
-
             for match in matches:
 
                 availability_id = int(
@@ -2903,22 +2939,21 @@ class MatchService:
                     continue
 
 
-                match_date = availability[
-                    "match_date"
-                ]
-
-                if isinstance(
-                    match_date,
-                    str,
-                ):
-                    match_date = date.fromisoformat(
-                        match_date
+                is_finished = (
+                    self.is_match_finished(
+                        match_date=availability[
+                            "match_date"
+                        ],
+                        end_time=availability.get(
+                            "end_time"
+                        ),
                     )
+                )
 
 
                 if (
                     match_type == "upcoming"
-                    and match_date >= today
+                    and not is_finished
                 ):
                     filtered_matches.append(
                         match
@@ -2926,7 +2961,7 @@ class MatchService:
 
                 elif (
                     match_type == "history"
-                    and match_date < today
+                    and is_finished
                 ):
                     filtered_matches.append(
                         match
@@ -3634,7 +3669,12 @@ class MatchService:
         # -----------------------------------------------------
         elif match_status == "approved":
 
-            if match_date >= date.today():
+            if not self.is_match_finished(
+                match_date=match_date,
+                end_time=availability.get(
+                    "end_time"
+                ),
+            ):
 
                 detail_type = "upcoming"
 
@@ -3672,7 +3712,12 @@ class MatchService:
                 is_cancel_request_received = True
 
 
-            if match_date >= date.today():
+            if not self.is_match_finished(
+                match_date=match_date,
+                end_time=availability.get(
+                    "end_time"
+                ),
+            ):
 
                 detail_type = "upcoming"
 
@@ -3710,7 +3755,12 @@ class MatchService:
                 is_cancel_request_received = True
 
 
-            if match_date >= date.today():
+            if not self.is_match_finished(
+                match_date=match_date,
+                end_time=availability.get(
+                    "end_time"
+                ),
+            ):
 
                 detail_type = "upcoming"
 
@@ -5151,7 +5201,12 @@ class MatchService:
             )
 
 
-        if match_date < date.today():
+        if self.is_match_finished(
+            match_date=match_date,
+            end_time=availability.get(
+                "end_time"
+            ),
+        ):
 
             raise ValueError(
                 "이미 종료된 경기는 "
@@ -5679,12 +5734,17 @@ class MatchService:
 
 
         # -----------------------------------------------------
-        # 6. 지난 경기만 결과 작성 가능
+        # 6. 종료된 경기만 결과 작성 가능
         #
-        # 현재 우리 history 기준과 동일하게
-        # 오늘 이전 경기만 기록 가능
+        # match_date + end_time 기준으로
+        # 실제 경기 종료 시각이 지난 뒤부터 기록 가능
         # -----------------------------------------------------
-        if match_date >= date.today():
+        if not self.is_match_finished(
+            match_date=match_date,
+            end_time=availability.get(
+                "end_time"
+            ),
+        ):
 
             raise ValueError(
                 "아직 종료되지 않은 경기의 "

@@ -1,0 +1,229 @@
+{
+  "engine": {
+    "name": "H4 Participation Early Warning Engine",
+    "version": "MVP_v1",
+    "purpose": "가입 후 실제 참여 행동을 기반으로 참여저하 회원을 조기에 탐지하고 운영자 개입을 지원"
+  },
+  "data_roles": {
+    "official_survey": {
+      "role": "Research Evidence",
+      "production_score": false,
+      "reason": "참여감소 Target의 연도별 Drift와 코로나 외부충격, 서비스 모집단 내 양성표본 부족으로 안정적 개인 예측모델로 사용하지 않음"
+    },
+    "qualitative_crawl": {
+      "role": "Explainability / Intervention",
+      "production_score": false,
+      "usage": "Risk Reason 후보와 운영자 Intervention 설계"
+    },
+    "service_log": {
+      "role": "Primary Detection Data",
+      "production_score": true
+    }
+  },
+  "behavior_features": [
+    "이전4주_참석률",
+    "최근4주_참석률",
+    "참석률_변화폭",
+    "최근4주_취소율",
+    "최근4주_노쇼율",
+    "연속미참여횟수",
+    "연속노쇼횟수",
+    "희망빈도대비_실제참여",
+    "마지막참석후_미참여기회"
+  ],
+  "risk_dimensions": {
+    "Risk_Trend": "최근 참석률 및 참석률 하락",
+    "Risk_NoShow": "노쇼율 및 연속 노쇼",
+    "Risk_Cancel": "최근 반복 취소",
+    "Risk_EngagementGap": "희망 활동빈도 대비 실제 참여 부족",
+    "Risk_Inactivity": "마지막 참석 이후 참여 가능한 활동 미참여"
+  },
+  "risk_aggregation": {
+    "method": "Dominant + Breadth",
+    "formula": "0.70 * Max(Risk Dimensions) + 0.30 * Mean(Risk Dimensions)",
+    "dominant_weight": 0.7,
+    "breadth_weight": 0.3,
+    "interpretation": "Risk Severity Index",
+    "probability": false
+  },
+  "thresholds": {
+    "normal": {
+      "min": 0,
+      "max_exclusive": 30
+    },
+    "attention": {
+      "min": 30,
+      "max_exclusive": 55
+    },
+    "manage": {
+      "min": 55,
+      "max_exclusive": 80
+    },
+    "high": {
+      "min": 80,
+      "max": 100
+    }
+  },
+  "grade_labels": {
+    "normal": "정상",
+    "attention": "관찰",
+    "manage": "관리 필요",
+    "high": "고위험"
+  },
+  "reason_policy": {
+    "behavior_log_can_confirm_reason": false,
+    "reason_candidate_only": true,
+    "confirmation_required": true,
+    "qualitative_frequency_as_weight": false
+  },
+  "recovery": {
+    "separate_positive_signal": true,
+    "subtract_from_risk_score": false,
+    "description": "참여가 회복된 회원은 위험점수를 강제로 차감하지 않고 별도의 Recovery Signal로 표시"
+  },
+  "important_limitations": [
+    "Risk Score는 이탈확률이 아니며 MVP 운영 우선순위 지수이다.",
+    "70:30 Aggregation은 실제 이탈 라벨로 학습된 가중치가 아니다.",
+    "30/55/80 Threshold 역시 Synthetic Scenario 기반 MVP Rule이다.",
+    "향후 실제 서비스 로그가 축적되면 향후 4주 참여감소/이탈 등을 Target으로 가중치와 Threshold를 재검증해야 한다.",
+    "not_eligible 일정은 불참으로 계산하지 않는다."
+  ],
+  "runtime_rules": {
+    "rule_metadata": {
+      "rule_type": "MVP Explicit Runtime Rule",
+      "learned_from_service_target": false,
+      "probability_model": false,
+      "source": "Existing H4 Reference QA Contract",
+      "future_validation": "실제 서비스 로그 축적 후 향후 4주 참여감소/이탈 Target으로 재검증"
+    },
+    "event_policy": {
+      "eligible_events": [
+        "attended",
+        "cancelled",
+        "no_show"
+      ],
+      "excluded_from_absence": [
+        "not_eligible"
+      ],
+      "not_eligible_is_absence": false
+    },
+    "signal_thresholds": {
+      "급격한참여하락": {
+        "feature": "참석률_변화폭",
+        "operator": "<=",
+        "value": -0.5,
+        "learned": false
+      },
+      "최근저참여": {
+        "feature": "최근4주_참석률",
+        "operator": "<",
+        "value": 0.5,
+        "learned": false
+      },
+      "노쇼발생": {
+        "feature": "최근4주_노쇼율",
+        "operator": ">",
+        "value": 0.0,
+        "learned": false
+      },
+      "연속노쇼": {
+        "feature": "연속노쇼횟수",
+        "operator": ">=",
+        "value": 2,
+        "learned": false
+      },
+      "연속미참여": {
+        "feature": "연속미참여횟수",
+        "operator": ">=",
+        "value": 2,
+        "learned": false
+      },
+      "희망빈도미달": {
+        "feature": "희망빈도대비_실제참여",
+        "operator": "<",
+        "value": 0.5,
+        "learned": false
+      },
+      "반복취소": {
+        "feature": "최근4주_취소율",
+        "operator": ">=",
+        "value": 0.5,
+        "learned": false
+      },
+      "장기미참여": {
+        "feature": "마지막참석후_미참여기회",
+        "operator": ">=",
+        "value": 2,
+        "learned": false
+      },
+      "회복": {
+        "feature": "참석률_변화폭",
+        "operator": ">",
+        "value": 0.0,
+        "learned": false
+      }
+    },
+    "dimension_formulas": {
+      "Risk_Trend": {
+        "formula": "max(max(0, 1 - 최근4주_참석률), max(0, -참석률_변화폭))",
+        "learned": false
+      },
+      "Risk_NoShow": {
+        "formula": "max(최근4주_노쇼율, min(1, 연속노쇼횟수 / 3))",
+        "consecutive_no_show_saturation": 3,
+        "learned": false
+      },
+      "Risk_Cancel": {
+        "formula": "최근4주_취소율",
+        "learned": false
+      },
+      "Risk_EngagementGap": {
+        "formula": "max(0, 1 - 희망빈도대비_실제참여)",
+        "learned": false
+      },
+      "Risk_Inactivity": {
+        "formula": "min(1, 마지막참석후_미참여기회 / 3)",
+        "missed_opportunity_saturation": 3,
+        "learned": false
+      },
+      "Recovery_Strength": {
+        "formula": "max(0, 참석률_변화폭)",
+        "subtract_from_risk": false,
+        "learned": false
+      }
+    },
+    "aggregation": {
+      "dimensions": [
+        "Risk_Trend",
+        "Risk_NoShow",
+        "Risk_Cancel",
+        "Risk_EngagementGap",
+        "Risk_Inactivity"
+      ],
+      "formula": "0.70 * Max + 0.30 * Mean",
+      "dominant_weight": 0.7,
+      "breadth_weight": 0.3,
+      "learned": false,
+      "probability": false
+    },
+    "grade_thresholds": {
+      "정상": {
+        "min_inclusive": 0,
+        "max_exclusive": 30
+      },
+      "관찰": {
+        "min_inclusive": 30,
+        "max_exclusive": 55
+      },
+      "관리 필요": {
+        "min_inclusive": 55,
+        "max_exclusive": 80
+      },
+      "고위험": {
+        "min_inclusive": 80,
+        "max_exclusive": null
+      },
+      "learned": false
+    }
+  }
+}

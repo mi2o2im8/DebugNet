@@ -47,14 +47,23 @@ const getInitialMonth = (
 
 function MatchCalendar({
   selectedDate,
+  selectedDates = [],
+  multiple = false,
   onSelectDate,
   myAvailabilityDates = [],
   opponentAvailableDates = [],
   showLegend = true,
 }) {
+  // 다중 선택 모드에서는 날짜를 누를 때마다
+  // 달력이 다른 달로 튀지 않도록 현재 보고 있는 달을 유지한다.
+  const calendarSelectedDate =
+    multiple
+      ? ""
+      : selectedDate;
+
   const initialMonth =
     getInitialMonth(
-      selectedDate
+      calendarSelectedDate
     );
 
   const [viewYear, setViewYear] =
@@ -65,18 +74,18 @@ function MatchCalendar({
 
 
   useEffect(() => {
-    if (!selectedDate) {
+    if (!calendarSelectedDate) {
       return;
     }
 
     const [year, month] =
-      selectedDate
+      calendarSelectedDate
         .split("-")
         .map(Number);
 
     setViewYear(year);
     setViewMonth(month);
-  }, [selectedDate]);
+  }, [calendarSelectedDate]);
 
 
   const myDateSet =
@@ -258,8 +267,12 @@ function MatchCalendar({
 
 
             const isSelected =
-              dateString ===
-              selectedDate;
+              multiple
+                ? selectedDates.includes(
+                    dateString
+                  )
+                : dateString ===
+                    selectedDate;
 
             const isMine =
               myDateSet.has(

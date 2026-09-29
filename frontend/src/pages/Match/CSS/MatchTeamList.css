@@ -20,7 +20,9 @@
 ======================================== */
 
 .match-team-list-header {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 40;
 
   display: flex;
   align-items: center;
