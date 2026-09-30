@@ -4,6 +4,7 @@ import { FiChevronRight, FiMapPin, FiRefreshCw } from "react-icons/fi";
 
 import BackButton from "../../components/BackButton/BackButton";
 import "./ClubRecommend.css";
+import { goBack } from "../../utils/navigation";
 
 const formatFee = (value) => {
   const number = Number(value ?? 0);
@@ -99,7 +100,7 @@ function ClubRecommendResult() {
             <div className="club-recommend-empty">
               <strong>조건에 맞는 동호회가 아직 없어요.</strong>
               <p>지역이나 시간, 선호 조건을 조금 넓혀 다시 추천받아보세요.</p>
-              <button type="button" onClick={() => navigate(-1)}>
+              <button type="button" onClick={() => goBack(navigate)}>
                 <FiRefreshCw /> 조건 다시 입력하기
               </button>
             </div>
@@ -188,7 +189,7 @@ function ClubRecommendResult() {
           <button
             type="button"
             className="club-recommend-retry"
-            onClick={() => navigate(-1)}
+            onClick={() => goBack(navigate)}
           >
             <FiRefreshCw /> 조건 다시 설정하기
           </button>

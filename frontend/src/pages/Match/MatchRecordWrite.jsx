@@ -27,6 +27,7 @@ import {
 } from "../../api/clubApi";
 
 import "./CSS/MatchRecordWrite.css";
+import { goBack } from "../../utils/navigation";
 
 
 // ========================================
@@ -281,7 +282,7 @@ function MatchRecordWrite() {
 
 
       // 기존 상세 페이지로 돌아가기
-      navigate(-1);
+      goBack(navigate);
 
     } catch (error) {
 
@@ -344,7 +345,7 @@ function MatchRecordWrite() {
             type="button"
             className="match-record-write-back"
             onClick={() =>
-              navigate(-1)
+              goBack(navigate)
             }
             aria-label="뒤로가기"
           >

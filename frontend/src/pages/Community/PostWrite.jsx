@@ -7,6 +7,7 @@ import CustomSelect from "../../components/common/CustomSelect";
 import { supabase } from "../../../supabaseClient";
 import "./CSS/PostWrite.css";
 import { buildApiUrl } from "../../api/apiClient";
+import { goBack } from "../../utils/navigation";
 
 
 const createClientId = () => {
@@ -1022,7 +1023,7 @@ function PostWrite() {
         <button
           type="button"
           className="post-write-back"
-          onClick={() => navigate(-1)}
+          onClick={() => goBack(navigate)}
         >
           <BackButtonIcon />
         </button>

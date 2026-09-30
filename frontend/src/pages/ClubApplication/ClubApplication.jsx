@@ -5,6 +5,7 @@ import { supabase } from "../../../supabaseClient";
 
 import "./ClubApplication.css";
 import { buildApiUrl } from "../../api/apiClient";
+import { goBack } from "../../utils/navigation";
 
 function ClubApplication() {
   const { clubId } = useParams();
@@ -325,7 +326,7 @@ function ClubApplication() {
         <button
           type="button"
           onClick={() =>
-            navigate(-1)
+            goBack(navigate)
           }
         >
           <BackButtonIcon />

@@ -32,6 +32,7 @@ import {
 } from "./api/matchApi";
 
 import "./CSS/MatchManagementDetail.css";
+import { goBack } from "../../utils/navigation";
 
 
 
@@ -247,7 +248,7 @@ function MatchManagementDetail() {
       );
 
 
-      navigate(-1);
+      goBack(navigate);
 
     } catch (error) {
 
@@ -295,7 +296,7 @@ function MatchManagementDetail() {
       );
 
 
-      navigate(-1);
+      goBack(navigate);
 
     } catch (error) {
 
@@ -343,7 +344,7 @@ function MatchManagementDetail() {
       );
 
 
-      navigate(-1);
+      goBack(navigate);
 
     } catch (error) {
 
@@ -455,7 +456,7 @@ function MatchManagementDetail() {
       );
 
 
-      navigate(-1);
+      goBack(navigate);
 
     } catch (error) {
 
@@ -815,7 +816,7 @@ function MatchManagementDetail() {
           <button
             type="button"
             onClick={() =>
-              navigate(-1)
+              goBack(navigate)
             }
             aria-label="뒤로가기"
           >
@@ -857,7 +858,7 @@ function MatchManagementDetail() {
         <button
           type="button"
           className="match-management-detail-back"
-          onClick={() => navigate(-1)}
+          onClick={() => goBack(navigate)}
           aria-label="뒤로가기"
         >
           <BackButtonIcon />

@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../../../supabaseClient";
 import "./GuestRecruitDetail.css";
 import { buildApiUrl } from "../../api/apiClient";
+import { goBack } from "../../utils/navigation";
 // =====================================================
 // 게스트 모집 상세 페이지
 // =====================================================
@@ -240,7 +241,7 @@ function GuestRecruitDetail() {
           type="button"
           className="pb-back-text-button"
           aria-label="뒤로가기"
-          onClick={() => navigate(-1)}
+          onClick={() => goBack(navigate)}
         >
           <BackButtonIcon />
           <span>뒤로가기</span>
@@ -267,7 +268,7 @@ function GuestRecruitDetail() {
         <button
           type="button"
           className="GuestRecruitDetail-back-button"
-          onClick={() => navigate(-1)}
+          onClick={() => goBack(navigate)}
           aria-label="뒤로 가기"
         >
           <BackButtonIcon />

@@ -32,6 +32,7 @@ import {
 } from "../../api/clubApi";
 
 import "./ClubMemberDetail.css";
+import { goBack } from "../../utils/navigation";
 
 
 const DETAIL_TABS = [
@@ -477,7 +478,7 @@ function ClubMemberDetail() {
                 <button
                     type="button"
                     className="pb-back-text-button"
-                    onClick={() => navigate(-1)}
+                    onClick={() => goBack(navigate)}
                 >
                     <BackButtonIcon />
                     <span>이전 화면으로</span>
@@ -493,7 +494,7 @@ function ClubMemberDetail() {
                 <button
                     type="button"
                     aria-label="이전 화면"
-                    onClick={() => navigate(-1)}
+                    onClick={() => goBack(navigate)}
                 >
                     <BackButtonIcon />
                 </button>

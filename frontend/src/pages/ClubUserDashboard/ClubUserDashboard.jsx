@@ -43,6 +43,7 @@ import {
 } from "../../api/clubApi";
 
 import "./ClubUserDashboard.css";
+import { goBack } from "../../utils/navigation";
 import { buildApiUrl } from "../../api/apiClient";
 
 
@@ -955,19 +956,8 @@ function ClubUserDashboard() {
 
     const profileImage = dashboard.representative_image_url;
 
-    // ⭐ 뒤로가기
-    // 챗봇·알림·새로고침·주소 직접 입력으로 들어오면 돌아갈 기록이 없어서
-    // navigate(-1)이 아무 동작도 하지 않는다. 그럴 땐 활동 홈으로 보낸다.
-    const handleBack = () => {
-        const historyIndex = window.history.state?.idx ?? 0;
-
-        if (historyIndex > 0) {
-            navigate(-1);
-            return;
-        }
-
-        navigate("/mainhome", { replace: true });
-    };
+    // ⭐ 뒤로가기 (기록이 없으면 활동 홈으로: utils/navigation.js)
+    const handleBack = () => goBack(navigate);
 
 
     return (

@@ -26,6 +26,7 @@ import {
 } from "../../api/clubApi";
 
 import "./CSS/MatchManagement.css";
+import { goBack } from "../../utils/navigation";
 
 
 function MatchManagement() {
@@ -226,7 +227,7 @@ function MatchManagement() {
         <button
           type="button"
           className="match-management-back-btn"
-          onClick={() => navigate(-1)}
+          onClick={() => goBack(navigate)}
           aria-label="뒤로가기"
         >
           <BackButtonIcon />

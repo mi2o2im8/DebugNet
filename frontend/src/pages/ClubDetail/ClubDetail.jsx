@@ -18,6 +18,7 @@ import {
   getClubReviews,
   getClubLeaveReviews,
 } from "../../api/clubApi";
+import { goBack } from "../../utils/navigation";
 
 function ClubDetail() {
   const navigate = useNavigate();
@@ -260,7 +261,7 @@ function ClubDetail() {
 
         <button
           className="club-detail-header-btn"
-          onClick={() => navigate(-1)}
+          onClick={() => goBack(navigate)}
         >
           <BackButtonIcon />
         </button>

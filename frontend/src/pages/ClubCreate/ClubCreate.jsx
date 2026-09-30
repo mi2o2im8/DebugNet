@@ -14,6 +14,7 @@ import { createClub } from "../../api/clubApi";
 import { getMyGender, getMyProfile } from "../../api/userApi";
 
 import "./ClubCreate.css";
+import { goBack } from "../../utils/navigation";
 
 const STEP_TITLES = [
     "기본 정보 입력",
@@ -153,7 +154,7 @@ function ClubCreate() {
     // 이전 버튼
     const handlePrevious = () => {
         if (currentStep === 1) {
-            navigate(-1);
+            goBack(navigate);
             return;
         }
 

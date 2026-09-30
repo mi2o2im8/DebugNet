@@ -31,6 +31,7 @@ import {
 } from "../../api/clubApi";
 
 import "./ClubEventForm.css";
+import { goBack } from "../../utils/navigation";
 
 
 const INITIAL_FORM = {
@@ -573,7 +574,7 @@ function ClubEventForm() {
             return;
         }
 
-        navigate(-1);
+        goBack(navigate);
     };
 
     // -----------------------------------------------------
@@ -1485,7 +1486,7 @@ function ClubEventForm() {
                         disabled={isSaving}
                         onClick={
                             activeStep === 1
-                                ? () => navigate(-1)
+                                ? () => goBack(navigate)
                                 : handlePreviousStep
                         }
                     >

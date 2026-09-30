@@ -29,6 +29,7 @@ import {
 } from "../../api/clubApi";
 
 import "./CSS/MatchReviewDetail.css";
+import { goBack } from "../../utils/navigation";
 
 
 // ========================================
@@ -253,7 +254,7 @@ function MatchReviewDetail() {
             type="button"
             className="match-review-detail-back"
             onClick={() =>
-              navigate(-1)
+              goBack(navigate)
             }
             aria-label="뒤로가기"
           >
@@ -309,7 +310,7 @@ function MatchReviewDetail() {
             type="button"
             className="match-review-detail-back"
             onClick={() =>
-              navigate(-1)
+              goBack(navigate)
             }
             aria-label="뒤로가기"
           >
@@ -378,7 +379,7 @@ function MatchReviewDetail() {
           type="button"
           className="match-review-detail-back"
           onClick={() =>
-            navigate(-1)
+            goBack(navigate)
           }
           aria-label="뒤로가기"
         >

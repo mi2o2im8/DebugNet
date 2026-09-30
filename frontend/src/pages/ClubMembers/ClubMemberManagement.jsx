@@ -36,6 +36,7 @@ import ClubRecruitmentRecommendations from "./ClubRecruitmentRecommendations";
 import ClubParticipationRisk from "./ClubParticipationRisk";
 
 import "./ClubMemberManagement.css";
+import { goBack } from "../../utils/navigation";
 
 
 const APPLICATION_TABS = [
@@ -558,7 +559,7 @@ function ClubMemberManagement() {
                     type="button"
                     className="club-member-back-button"
                     aria-label="이전 화면"
-                    onClick={() => navigate(-1)}
+                    onClick={() => goBack(navigate)}
                 >
                     <BackButtonIcon />
                 </button>

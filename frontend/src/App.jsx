@@ -134,6 +134,7 @@ import Chatbot from './pages/Chatbot/Chatbot';
 // 모든 페이지 화면이동시 애니메이션 적용
 import PageTransition from "./components/PageTransition";
 
+import { canGoBack, getBackFallback, isRootPath } from "./utils/navigation";
 import './App.css'
 
 function AndroidBackButtonHandler() {
@@ -151,14 +152,23 @@ function AndroidBackButtonHandler() {
       const handle = await CapacitorApp.addListener(
         'backButton',
         () => {
-          const historyIndex = window.history.state?.idx ?? 0;
-
-          if (historyIndex > 0) {
+          // 1) 방문 기록이 있으면 뒤로
+          if (canGoBack()) {
             navigate(-1);
             return;
           }
 
-          CapacitorApp.exitApp();
+          // 2) 첫 화면이면 앱 종료
+          if (isRootPath(window.location.pathname)) {
+            CapacitorApp.exitApp();
+            return;
+          }
+
+          // 3) 알림·딥링크로 바로 들어온 화면이면 상위 화면으로
+          navigate(
+            getBackFallback(window.location.pathname),
+            { replace: true }
+          );
         }
       );
 

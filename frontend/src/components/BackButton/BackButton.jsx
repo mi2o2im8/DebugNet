@@ -1,6 +1,7 @@
 // 뒤로가기 공용 상단 바
 
 import { useNavigate } from "react-router-dom";
+import { goBack } from "../../utils/navigation";
 import backIcon from "../../assets/img/back.png";
 
 import "./BackButton.css";
@@ -9,7 +10,7 @@ import "./BackButton.css";
 // # BackButton      // 공용 뒤로가기 버튼 컴포넌트.         // ## 사용법
 // <BackButton />
 // ----------------------
-// → 이전 페이지로 이동 (`navigate(-1)`)
+// → 이전 페이지로 이동 (기록이 없으면 상위 화면으로: utils/navigation.js)
 
 // <BackButton to="/Login" />
 // → 지정한 경로로 이동
@@ -19,7 +20,7 @@ import "./BackButton.css";
 
 // ## 동작 우선순위
 // ```text
-// onClick → to → navigate(-1)
+// onClick → to → goBack(navigate)
 // ```
 
 // ## Props
@@ -77,7 +78,7 @@ function BackButton({
             return;
         }
 
-        navigate(-1);
+        goBack(navigate);
     };
 
     return (

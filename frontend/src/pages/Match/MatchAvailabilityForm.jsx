@@ -23,6 +23,7 @@ import {
 
 import "./CSS/MatchAvailability.css";
 import "./CSS/MatchCommon.css";
+import { goBack } from "../../utils/navigation";
 
 const extractSeoulDistrict = (address = "") => {
   const match = address.match(
@@ -1295,7 +1296,7 @@ function MatchAvailabilityForm() {
           <button
             type="button"
             onClick={() =>
-              navigate(-1)
+              goBack(navigate)
             }
           >
             취소

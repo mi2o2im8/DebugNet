@@ -600,8 +600,34 @@ ML1 결과만으로 사용자의 의도나 사실을 단정하지 마세요.
 
 
 # 이 점수 이상이면 LLM 없이 규칙 답변을 바로 쓴다.
-# (낮은 점수는 LLM 답변이 실패했을 때 대신 쓴다.)
-INTENT_DIRECT_SCORE = 4
+# ("강퇴", "경고", "출석" 같은 한 단어 질문도 바로 답하도록 2로 둔다.)
+INTENT_DIRECT_SCORE = 2
+
+# 생활체육 일반 질문(규칙, 준비물 등)은 점수가 낮으면 LLM에게 맡긴다.
+# 예) "축구 시합 규칙 알려줘" → 팀 매칭 안내가 아니라 규칙 설명
+GENERAL_SPORTS_WORDS = (
+    "규칙", "룰", "준비물", "부상", "아파", "통증", "운동법",
+    "스트레칭", "자세", "요령", "잘하는법", "초보팁",
+)
+GENERAL_SPORTS_OVERRIDE_SCORE = 6
+
+
+def _is_general_sports_question(question: str, score: int) -> bool:
+
+    compact = question.replace(" ", "")
+
+    return (
+        any(word in compact for word in GENERAL_SPORTS_WORDS)
+        and score < GENERAL_SPORTS_OVERRIDE_SCORE
+    )
+
+
+def _should_answer_by_intent(question: str, intent: dict | None, score: int) -> bool:
+
+    if not intent or score < INTENT_DIRECT_SCORE:
+        return False
+
+    return not _is_general_sports_question(question, score)
 
 
 class ChatbotService:
@@ -644,10 +670,14 @@ class ChatbotService:
                 intent_score,
             )
 
-            if intent and intent_score >= INTENT_DIRECT_SCORE:
+            if _should_answer_by_intent(question, intent, intent_score):
                 return ChatbotResponse(
                     **_build_intent_reply(user_id, intent)
                 )
+
+            # 일반 운동 질문이면 LLM이 실패해도 규칙 답변으로 대신하지 않는다.
+            if intent and _is_general_sports_question(question, intent_score):
+                intent = None
 
         # -------------------------------------------------
         # 3. 그 외 질문 → LLM

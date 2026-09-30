@@ -9,6 +9,7 @@ import { supabase } from "../../../supabaseClient";
 
 import "./CSS/PostDetail.css";
 import { buildApiUrl } from "../../api/apiClient";
+import { goBack } from "../../utils/navigation";
 
 
 const formatDateTime = (dateString) => {
@@ -960,7 +961,7 @@ function PostDetail() {
         <button
           type="button"
           className="post-back-btn"
-          onClick={() => navigate(-1)}
+          onClick={() => goBack(navigate)}
         >
           <BackButtonIcon />
         </button>
