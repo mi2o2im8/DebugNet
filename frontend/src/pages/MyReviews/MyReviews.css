@@ -13,7 +13,7 @@
     margin: 0 auto;
 
     /* 아래 100px: 하단 네비게이션(68px)에 내용이 가리지 않도록 */
-    padding: 10px 20px 100px;
+    padding: 8px 20px 100px;
 
     box-sizing: border-box;
 
@@ -337,7 +337,7 @@
 }
 
 /* 운영 동호회가 없으면 멤버 영역이 맨 위에 오므로 간격 줄이기 */
-.my-reviews-header + .my-reviews-member {
+.page-header + .my-reviews-member {
     margin-top: 8px;
 }
 
@@ -413,7 +413,7 @@
 }
 
 /* 운영 동호회가 없으면 게스트 영역이 맨 위에 오므로 간격 줄이기 */
-.my-reviews-header + .my-reviews-guest {
+.page-header + .my-reviews-guest {
     margin-top: 8px;
 }
 

@@ -178,6 +178,13 @@ class MyPostItem(BaseModel):
     comments: int = 0
     createdAt: datetime
 
+    # 어느 게시판 글인지 (free / sports / recruit / notice / club)
+    boardType: str | None = None
+
+    # 동호회 커뮤니티 글이면 동호회 정보 (아니면 None)
+    clubId: int | None = None
+    clubName: str | None = None
+
 
 class MyPostListResponse(BaseModel):
     items: list[MyPostItem]
@@ -554,4 +561,4 @@ class PostUpdateResponse(BaseModel):
 
     id: int
 
-    message: str = "게시글이 수정되었습니다."
+    message: str = "게시글이 수정되었습니다."

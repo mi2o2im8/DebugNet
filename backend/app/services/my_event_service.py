@@ -10,7 +10,7 @@ from app.repositories.match_repository import (
 from app.repositories.my_event_repository import (
     MyEventRepository,
 )
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from app.schemas.my_events import (
     MyActivityItemResponse,
@@ -543,7 +543,28 @@ class MyEventService:
                 )
             )
 
-        # 7. 내가 받은 경고 (신뢰점수 계산용)
+        # 7. 게스트로 참여한 지난 경기 (참여 확정만)
+        #    참석 투표 대상이 아니므로 vote_eligible=False
+        #    → 신뢰점수 · 참여율에는 영향 없음
+        activities.extend(
+            self.collect_guest_activities(
+                user_id=user_id,
+                exclude_event_ids={
+                    activity.event_id for activity in activities
+                },
+            )
+        )
+
+        # 멤버 일정 + 게스트 경기를 합쳐서 다시 최신순
+        activities.sort(
+            key=lambda activity: (
+                str(activity.event_date),
+                str(activity.start_time or ""),
+            ),
+            reverse=True,
+        )
+
+        # 8. 내가 받은 경고 (신뢰점수 계산용)
         warnings = [
             MyWarningResponse(
                 warning_id=int(row["warning_id"]),
@@ -568,6 +589,68 @@ class MyEventService:
             total=len(activities),
             warnings=warnings,
         )
+
+    # -----------------------------------------------------
+    # 내 활동용: 게스트로 참여한 지난 경기
+    #
+    # - 게스트 참여 확정(joined) 일정만
+    # - 지난 일정만 (오늘 제외, 멤버 일정과 같은 기준)
+    # - 이미 멤버 일정으로 들어간 일정은 제외 (중복 방지)
+    # -----------------------------------------------------
+    def collect_guest_activities(
+        self,
+        user_id: str,
+        exclude_event_ids: set[int],
+    ) -> list[MyActivityItemResponse]:
+
+        yesterday_string = (
+            date.today() - timedelta(days=1)
+        ).isoformat()
+
+        guest_events = [
+            guest_event
+            for guest_event in self.collect_my_guest_events(
+                user_id=user_id,
+                to_date=yesterday_string,
+            )
+            if guest_event.guest_status == "joined"
+            and guest_event.event_id not in exclude_event_ids
+        ]
+
+        if not guest_events:
+            return []
+
+        sport_names_by_club = (
+            self.my_event_repository
+            .find_sport_names_by_club_ids(
+                list({guest_event.club_id for guest_event in guest_events})
+            )
+        )
+
+        guest_activities = []
+
+        for guest_event in guest_events:
+            club_sports = sport_names_by_club.get(guest_event.club_id, [])
+
+            guest_activities.append(
+                MyActivityItemResponse(
+                    event_id=guest_event.event_id,
+                    club_id=guest_event.club_id,
+                    club_name=guest_event.club_name,
+                    title=guest_event.title,
+                    event_date=guest_event.event_date,
+                    start_time=guest_event.start_time,
+                    end_time=guest_event.end_time,
+                    location=guest_event.location,
+                    sport_name=club_sports[0] if club_sports else None,
+                    is_match=False,
+                    is_guest=True,
+                    my_attendance=None,
+                    vote_eligible=False,
+                )
+            )
+
+        return guest_activities
 
     # -----------------------------------------------------
     # 내가 게스트로 신청 / 참여한 일정 모으기

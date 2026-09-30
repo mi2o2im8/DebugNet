@@ -16,7 +16,7 @@
     min-height: 100vh;
 
     margin: 0 auto;
-    padding: 60px 20px 100px;
+    padding: 8px 20px 100px;
 
     box-sizing: border-box;
 
@@ -554,4 +554,4 @@
         font-size: 14px;
     }
 
-}
+}

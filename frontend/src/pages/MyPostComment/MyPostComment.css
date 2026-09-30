@@ -5,7 +5,10 @@
 
 
 /* =========================================================
-   ⭐ 전체 페이지
+   ⭐ 내가 쓴 글 / 댓글
+
+   커뮤니티 글 = 초록, 동호회 글 = 파랑 으로 구분
+   (카드 왼쪽 띠 · 태그 · 범위 버튼 색이 모두 같은 규칙)
 ========================================================= */
 
 .my-post-comment-page {
@@ -14,386 +17,443 @@
     min-height: 100vh;
 
     margin: 0 auto;
-
-    padding: 60px 20px 90px;
+    padding: 8px 20px 100px;
 
     box-sizing: border-box;
 
     background-color: #fff;
 
     font-family: "Maplestory", sans-serif;
+    text-align: left;
 
     position: relative;
 }
 
 
 /* =========================================================
-   ⭐ 헤더
+   ⭐ 글 / 댓글 탭 (알약 모양)
 ========================================================= */
 
-.my-post-comment-header {
+.mpc-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+
+    padding: 4px;
+
+    border-radius: 14px;
+
+    background: #eef4f2;
+}
+
+.mpc-tabs button {
+    height: 40px;
+
     display: flex;
     align-items: center;
     justify-content: center;
-
-    margin-bottom: 22px;
-}
-
-
-.my-post-comment-header h2 {
-    margin: 0;
-
-    font-size: 20px;
-    font-weight: 700;
-
-    color: #222;
-}
-
-
-/* =========================================================
-   ⭐ 탭
-========================================================= */
-
-.my-post-comment-tabs {
-    width: 100%;
-
-    display: flex;
-
-    margin-bottom: 22px;
-
-    border-bottom: 1px solid #eaeaea;
-}
-
-
-.my-post-comment-tabs button {
-    flex: 1;
-
-    height: 44px;
+    gap: 6px;
 
     border: none;
-    border-bottom: 2px solid transparent;
+    border-radius: 10px;
 
     background: transparent;
 
-    color: #999;
-
-    font-family: "Maplestory", sans-serif;
+    color: #6b7c7c;
+    font-family: inherit;
     font-size: 14px;
 
     cursor: pointer;
 }
 
+.mpc-tabs button svg {
+    width: 15px;
+    height: 15px;
+}
 
-.my-post-comment-tabs button.active {
-    border-bottom: 2px solid #01A17F;
+.mpc-tabs button span {
+    font-size: 12px;
+    font-weight: 700;
 
-    color: #01A17F;
+    color: #9aa9a6;
+}
+
+.mpc-tabs button.active {
+    background: #ffffff;
+
+    color: #01a17f;
+    font-weight: 700;
+
+    box-shadow: 0 2px 6px rgba(1, 110, 86, 0.14);
+}
+
+.mpc-tabs button.active span {
+    color: #01a17f;
+}
+
+
+/* =========================================================
+   ⭐ 범위: 전체 / 커뮤니티 / 동호회
+========================================================= */
+
+.mpc-scopes {
+    display: flex;
+    gap: 6px;
+
+    margin-top: 14px;
+}
+
+.mpc-scope {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    height: 32px;
+    padding: 0 12px;
+
+    border: 1.5px solid #e3ecea;
+    border-radius: 16px;
+
+    background: #ffffff;
+
+    color: #5b6776;
+    font-family: inherit;
+    font-size: 12px;
+
+    cursor: pointer;
+}
+
+.mpc-scope span {
+    font-weight: 700;
+
+    color: #9aa4b1;
+}
+
+.mpc-scope.active {
+    border-color: #082d63;
+    background: #082d63;
+    color: #ffffff;
+}
+
+.mpc-scope.community.active {
+    border-color: #01a17f;
+    background: #01a17f;
+}
+
+.mpc-scope.club.active {
+    border-color: #3f6fd8;
+    background: #3f6fd8;
+}
+
+.mpc-scope.active span {
+    color: #ffffff;
+}
+
+
+/* ⭐ 동호회별 칩 (가로 스크롤) */
+.mpc-clubs {
+    display: flex;
+    gap: 6px;
+
+    margin: 10px -20px 0;
+    padding: 2px 20px;
+
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.mpc-clubs::-webkit-scrollbar {
+    display: none;
+}
+
+.mpc-club {
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    height: 30px;
+    padding: 0 11px;
+
+    border: 1.5px dashed #c9d8f5;
+    border-radius: 15px;
+
+    background: #ffffff;
+
+    color: #3f6fd8;
+    font-family: inherit;
+    font-size: 12px;
+
+    cursor: pointer;
+}
+
+.mpc-club span {
+    font-weight: 700;
+}
+
+.mpc-club.active {
+    border-style: solid;
+    border-color: #3f6fd8;
+
+    background: #eef3ff;
 
     font-weight: 700;
 }
 
 
 /* =========================================================
-   ⭐ 섹션
+   ⭐ 목록 / 카드
 ========================================================= */
 
-.my-post-comment-section {
-    width: 100%;
-}
-
-
-.my-post-comment-count {
-    margin-bottom: 12px;
-
-    font-size: 13px;
-
-    color: #888;
-}
-
-
-/* =========================================================
-   ⭐ 게시글 목록
-========================================================= */
-
-.my-post-list {
+.mpc-list {
     display: flex;
     flex-direction: column;
+    gap: 10px;
 
-    gap: 12px;
+    margin: 16px 0 0;
+    padding: 0;
+
+    list-style: none;
 }
 
-
-.my-post-card {
+.mpc-card {
     width: 100%;
 
-    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+
+    padding: 14px 16px 12px 18px;
 
     box-sizing: border-box;
 
-    border: 1px solid #e5e5e5;
-    border-radius: 12px;
+    border: 1.5px solid #eef2f1;
+    border-left: 5px solid #01a17f;
+    border-radius: 16px;
 
-    background-color: #fff;
+    background: #ffffff;
 
+    font-family: inherit;
     text-align: left;
-
-    font-family: "Maplestory", sans-serif;
 
     cursor: pointer;
 
-    transition: 0.15s;
+    transition: transform 0.12s ease;
+}
+
+.mpc-card.club {
+    border-left-color: #3f6fd8;
+}
+
+.mpc-card:active {
+    transform: scale(0.985);
+
+    background: #f7fbfa;
 }
 
 
-.my-post-card:active {
-    background-color: #F4FBF9;
+/* ⭐ 어디에 쓴 글인지 태그 */
+.mpc-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 
-    transform: scale(0.99);
+    max-width: 100%;
+
+    padding: 3px 8px;
+
+    border-radius: 8px;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mpc-tag svg {
+    flex-shrink: 0;
+
+    width: 12px;
+    height: 12px;
+}
+
+.mpc-tag.community {
+    background: #e8f7f2;
+    color: #008f75;
+}
+
+.mpc-tag.club {
+    background: #eef3ff;
+    color: #3f6fd8;
 }
 
 
-/* ⭐ 게시글 상단 */
+/* ⭐ 글 제목 / 내용 */
+.mpc-title {
+    width: 100%;
 
-.my-post-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
+    overflow: hidden;
 
-    gap: 10px;
-}
-
-
-.my-post-top h3 {
-    margin: 0;
-
-    flex: 1;
-
+    color: #1c2b3a;
     font-size: 16px;
     font-weight: 700;
 
-    color: #222;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
+.mpc-content {
+    width: 100%;
 
-.my-post-top span {
-    flex-shrink: 0;
+    margin: 0;
 
-    font-size: 11px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 
-    color: #aaa;
-}
-
-
-/* ⭐ 게시글 내용 */
-
-.my-post-content {
-    margin: 10px 0 14px;
-
+    color: #667281;
     font-size: 13px;
+    line-height: 1.55;
+}
 
-    line-height: 1.6;
 
-    color: #666;
+/* ⭐ 댓글: 원글 제목 + 내 댓글 말풍선 */
+.mpc-origin {
+    width: 100%;
 
+    overflow: hidden;
+
+    color: #8a929d;
+    font-size: 12px;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.mpc-origin::before {
+    content: "원글  ";
+
+    color: #b0b8c2;
+}
+
+.mpc-bubble {
+    position: relative;
+
+    max-width: calc(100% - 8px);
+
+    margin: 2px 0 0 8px;
+    padding: 9px 12px;
+
+    border-radius: 4px 14px 14px 14px;
+
+    background: #f1f6f5;
+
+    color: #1c2b3a;
+    font-size: 14px;
+    line-height: 1.5;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
+.mpc-card.club .mpc-bubble {
+    background: #f2f5fd;
+}
 
-/* ⭐ 게시글 하단 */
 
-.my-post-bottom {
+/* ⭐ 날짜 · 댓글 수 */
+.mpc-meta {
+    width: 100%;
+
     display: flex;
     align-items: center;
     justify-content: space-between;
 
-    padding-top: 10px;
+    margin-top: 2px;
 
-    border-top: 1px solid #f1f1f1;
+    color: #a0a9b3;
+    font-size: 11px;
 }
 
-
-.my-post-bottom span {
-    font-size: 12px;
-
-    color: #01A17F;
+.mpc-meta-comments {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
 }
 
-
-.my-post-arrow {
-    font-size: 20px !important;
-
-    color: #aaa !important;
+.mpc-meta-comments svg {
+    width: 13px;
+    height: 13px;
 }
 
 
 /* =========================================================
-   ⭐ 댓글 목록
+   ⭐ 로딩 / 에러 / 빈 목록
 ========================================================= */
 
-.my-comment-list {
+.mpc-message {
+    margin: 0;
+    padding: 40px 0;
+
+    text-align: center;
+
+    color: #8a929d;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.mpc-empty {
     display: flex;
     flex-direction: column;
-
-    gap: 12px;
-}
-
-
-.my-comment-card {
-    width: 100%;
-
-    padding: 15px;
-
-    box-sizing: border-box;
-
-    border: 1px solid #e5e5e5;
-    border-radius: 12px;
-
-    background-color: #fff;
-
-    text-align: left;
-
-    font-family: "Maplestory", sans-serif;
-
-    cursor: pointer;
-
-    position: relative;
-
-    transition: 0.15s;
-}
-
-
-.my-comment-card:active {
-    background-color: #F4FBF9;
-
-    transform: scale(0.99);
-}
-
-
-/* ⭐ 댓글 상단 */
-
-.my-comment-header {
-    display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 12px;
 
-    margin-bottom: 8px;
+    padding: 44px 0;
 }
 
-
-.my-comment-header span:first-child {
-    font-size: 11px;
-
-    color: #01A17F;
-}
-
-
-.my-comment-header span:last-child {
-    font-size: 11px;
-
-    color: #aaa;
-}
-
-
-/* ⭐ 원글 제목 */
-
-.my-comment-card h3 {
-    margin: 0 0 9px;
-
-    padding-right: 20px;
-
-    font-size: 15px;
-    font-weight: 700;
-
-    color: #222;
-}
-
-
-/* ⭐ 댓글 내용 */
-
-.my-comment-card p {
+.mpc-empty p {
     margin: 0;
 
-    padding-right: 20px;
-
+    color: #8a929d;
     font-size: 13px;
-
-    line-height: 1.6;
-
-    color: #555;
 }
 
+.mpc-empty button {
+    padding: 9px 16px;
 
-/* ⭐ 화살표 */
+    border: 1.5px solid #01a17f;
+    border-radius: 10px;
 
-.my-comment-arrow {
-    position: absolute;
+    background: #ffffff;
 
-    right: 14px;
-    top: 50%;
-
-    transform: translateY(-50%);
-
-    font-size: 20px;
-
-    color: #aaa;
-}
-
-
-/* =========================================================
-   ⭐ 빈 상태
-========================================================= */
-
-.my-post-comment-empty {
-    width: 100%;
-
-    min-height: 180px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border: 1px solid #eeeeee;
-    border-radius: 12px;
-
-    background-color: #fafafa;
-
+    color: #01a17f;
+    font-family: inherit;
     font-size: 13px;
+    font-weight: 700;
 
-    color: #aaa;
+    cursor: pointer;
 }
 
 
-/* =========================================================
-   ⭐ 모바일
-========================================================= */
-
-@media (max-width: 500px) {
-
-    .my-post-comment-page {
-        padding-left: 18px;
-        padding-right: 18px;
-    }
-
+/* ⭐ 키보드 포커스 / 움직임 줄이기 */
+.mpc-tabs button:focus-visible,
+.mpc-scope:focus-visible,
+.mpc-club:focus-visible,
+.mpc-card:focus-visible,
+.mpc-empty button:focus-visible {
+    outline: 2px solid #01a17f;
+    outline-offset: 2px;
 }
 
-
-@media (max-width: 360px) {
-
-    .my-post-comment-page {
-        padding-left: 14px;
-        padding-right: 14px;
+@media (prefers-reduced-motion: reduce) {
+    .mpc-card {
+        transition: none;
     }
-
-    .my-post-comment-header h2 {
-        font-size: 18px;
-    }
-
-    .my-post-top h3 {
-        font-size: 14px;
-    }
-
-    .my-comment-card h3 {
-        font-size: 14px;
-    }
-
 }

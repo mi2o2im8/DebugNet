@@ -253,6 +253,8 @@ class CommentService:
                 ):
                     continue
 
+            is_club_post = post.get("board_type") == "club"
+
             items.append(
                 MyCommentItem(
                     commentId=comment["comment_id"],
@@ -260,11 +262,32 @@ class CommentService:
                     postTitle=post["title"],
                     content=comment["content"],
                     createdAt=comment["created_at"],
+                    boardType=post.get("board_type"),
+                    clubId=(
+                        int(post["club_id"])
+                        if is_club_post and post.get("club_id") is not None
+                        else None
+                    ),
                 )
             )
 
         # -------------------------------------------------
-        # 4. 최종 Response
+        # 4. 동호회 커뮤니티 댓글에 동호회 이름 붙이기
+        # -------------------------------------------------
+        club_name_by_id = self.post_repository.find_club_names_by_ids(
+            list({
+                item.clubId
+                for item in items
+                if item.clubId is not None
+            })
+        )
+
+        for item in items:
+            if item.clubId is not None:
+                item.clubName = club_name_by_id.get(item.clubId)
+
+        # -------------------------------------------------
+        # 5. 최종 Response
         # -------------------------------------------------
         return MyCommentListResponse(
             items=items
@@ -688,4 +711,4 @@ class CommentService:
             "trust_score": trust_score,
         }
 
-    
+    

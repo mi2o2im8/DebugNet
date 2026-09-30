@@ -122,12 +122,11 @@
 /* ⭐ 알림 / 프로필 아이콘 */
 .welcome-actions img {
     display: block;
-
     width: 30px;
     height: 30px;
-
-    object-fit: contain;
-
+    object-fit: cover;
+    border-radius: 50%;
+    overflow: hidden;
     cursor: pointer;
 }
 

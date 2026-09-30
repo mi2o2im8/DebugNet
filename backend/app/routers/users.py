@@ -12,6 +12,11 @@ from app.core.security import get_current_user_id
 from app.schemas.my_events import (MyActivityResponse, MyEventListResponse,)
 from app.schemas.my_events import MyGuestEventListResponse
 from app.services.my_event_service import MyEventService
+from app.schemas.my_applications import (
+    MyApplicationsResponse,
+    ReceivedApplicationsResponse,
+)
+from app.services.my_application_service import MyApplicationService
 from app.schemas.users import (
     MyProfileResponse,
     MyProfileUpdateRequest,
@@ -157,6 +162,67 @@ def get_my_guest_events(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="게스트 일정을 조회하는 중 오류가 발생했습니다.",
+        ) from error
+
+
+# ---------------------------------------------------------
+# 내 신청 현황 (마이페이지)
+#
+# GET /api/users/me/applications
+#
+# 동호회 가입 신청 + 게스트 신청 상태를 한 번에 조회
+# ---------------------------------------------------------
+@router.get(
+    "/me/applications",
+    response_model=MyApplicationsResponse,
+)
+def get_my_applications(
+    user_id: str = Depends(get_current_user_id),
+):
+    application_service = MyApplicationService()
+
+    try:
+        return application_service.get_my_applications(
+            user_id=user_id,
+        )
+
+    except Exception as error:
+        print("내 신청 현황 조회 실제 오류:", repr(error))
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="신청 현황을 조회하는 중 오류가 발생했습니다.",
+        ) from error
+
+
+# ---------------------------------------------------------
+# 받은 신청 (운영자용, 마이페이지 신청 현황 > 받은 신청 탭)
+#
+# GET /api/users/me/received-applications
+#
+# 내가 운영하는 동호회들의 승인 대기 가입 신청 + 게스트 신청
+# 운영 동호회가 없으면 is_operator=False, 빈 목록
+# ---------------------------------------------------------
+@router.get(
+    "/me/received-applications",
+    response_model=ReceivedApplicationsResponse,
+)
+def get_my_received_applications(
+    user_id: str = Depends(get_current_user_id),
+):
+    application_service = MyApplicationService()
+
+    try:
+        return application_service.get_received_applications(
+            user_id=user_id,
+        )
+
+    except Exception as error:
+        print("받은 신청 조회 실제 오류:", repr(error))
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="받은 신청을 조회하는 중 오류가 발생했습니다.",
         ) from error
 
 

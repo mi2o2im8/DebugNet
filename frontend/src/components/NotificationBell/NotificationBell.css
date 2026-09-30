@@ -1,0 +1,76 @@
+/* =========================================================
+   ⭐ 공용 알림 종 버튼
+   (커뮤니티 · 팀매칭 홈의 알림 버튼과 같은 모양)
+========================================================= */
+
+.notification-bell {
+    position: relative;
+
+    width: 32px;
+    height: 32px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: none;
+    background: transparent;
+
+    color: #333333;
+    font-size: 22px;
+
+    cursor: pointer;
+}
+
+.notification-bell:active {
+    opacity: 0.6;
+}
+
+.notification-bell:focus-visible {
+    outline: 2px solid #01a17f;
+    outline-offset: 2px;
+
+    border-radius: 8px;
+}
+
+
+/* ⭐ 안 읽은 알림 개수 */
+.notification-bell-badge {
+    position: absolute;
+    top: -3px;
+    right: -4px;
+
+    min-width: 15px;
+    height: 15px;
+
+    padding: 0 4px;
+
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+
+    background-color: #ff4d4d;
+
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+
+    white-space: nowrap;
+
+    pointer-events: none;
+}
+
+
+/* ⭐ 다크모드 (앱의 .dark-mode 규칙과 맞춤) */
+.dark-mode .notification-bell {
+    color: #e6e9ee;
+}

@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import BackButton from "../../components/BackButton/BackButton";
+import PageHeader from "../../components/PageHeader/PageHeader";
 import BottomNav from "../../components/BottomNav";
 
 // ⭐ API
@@ -518,16 +518,8 @@ function MyReviews() {
         <div className="my-reviews-page">
 
             {/* ⭐ 헤더 */}
-            <div className="my-reviews-header">
-                <BackButton
-                    className="my-reviews-back-btn"
-                    aria-label="뒤로가기"
-                />
-
-                <h2 className="my-reviews-title">
-                    경기 후기
-                </h2>
-            </div>
+            {/* ⭐ 상단 제목 (공용) */}
+            <PageHeader title="경기 후기" />
 
 
             {loading ? (

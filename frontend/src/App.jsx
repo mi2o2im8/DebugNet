@@ -113,6 +113,9 @@ import { NotificationProvider } from './context/NotificationContext';
 // 나의 동호회 리뷰들 모아보기
 import MyReviews from './pages/MyReviews/MyReviews';
 
+// 신청 현황 (동호회 가입 / 게스트 신청)
+import MyApplications from './pages/MyApplications/MyApplications';
+
 // FAQ 화면
 import Faq from './pages/Settings/Faq';
 
@@ -542,6 +545,12 @@ function App() {
               <Route
                 path="/my-reviews"
                 element={<MyReviews />}
+              />
+
+              {/* ⭐ 신청 현황 (동호회 가입 / 게스트 신청) */}
+              <Route
+                path="/my-applications"
+                element={<MyApplications />}
               />
 
               {/* ⭐ Main의 '내 동호회 전체 일정 보기' 버튼용 */}

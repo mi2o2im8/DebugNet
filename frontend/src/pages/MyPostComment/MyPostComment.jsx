@@ -1,22 +1,108 @@
 // 내가 쓴 글 / 댓글 모음 페이지
+//
+// GET /api/posts/my      내가 쓴 글
+// GET /api/comments/my   내가 쓴 댓글
+//
+// 두 API 모두 글마다 boardType / clubId / clubName 을 내려준다.
+//   - 커뮤니티 글 (free / sports / recruit / notice) → /community/post/:postId
+//   - 동호회 커뮤니티 글 (club)                        → /clubs/:clubId/community/post/:postId
+//
+// 화면: [내가 쓴 글 | 내가 쓴 댓글] 탭
+//       → [전체 | 커뮤니티 | 동호회] 범위
+//       → (동호회 선택 시) 동호회별 칩
+
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
-    useEffect,
-    useState,
-} from "react";
+    FiEdit3,
+    FiMessageCircle,
+    FiUsers,
+} from "react-icons/fi";
 
-import {
-    useNavigate,
-} from "react-router-dom";
-
-import BackButton from "../../components/BackButton/BackButton";
+import PageHeader from "../../components/PageHeader/PageHeader";
 import BottomNav from "../../components/BottomNav";
 
-import {
-    authenticatedRequest,
-} from "../../api/apiClient";
+import { authenticatedRequest } from "../../api/apiClient";
 
 import "./MyPostComment.css";
+
+
+/* ========================================
+   ⭐ 게시판 이름 (Community.jsx 와 같은 이름)
+   ======================================== */
+
+const BOARD_LABELS = {
+    free: "자유게시판",
+    sports: "종목별게시판",
+    recruit: "홍보·회원구인",
+    notice: "공지사항",
+    club: "동호회",
+};
+
+const SCOPES = [
+    { key: "all", label: "전체" },
+    { key: "community", label: "커뮤니티" },
+    { key: "club", label: "동호회" },
+];
+
+const ALL_CLUBS = "all";
+
+const isClubItem = (item) => item.boardType === "club" && item.clubId != null;
+
+
+/* ========================================
+   ⭐ 날짜: "오늘" / "어제" / "9월 27일" / "2025년 12월 3일"
+   ======================================== */
+
+const formatDate = (value) => {
+
+    if (!value) return "";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "";
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+
+    const days = Math.round((today - target) / 86400000);
+
+    if (days === 0) return "오늘";
+    if (days === 1) return "어제";
+
+    if (date.getFullYear() !== today.getFullYear()) {
+        return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+    }
+
+    return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+};
+
+
+/* ========================================
+   ⭐ 글이 어디에 있는지 표시 (게시판 / 동호회)
+   ======================================== */
+
+function PlaceTag({ item }) {
+
+    if (isClubItem(item)) {
+        return (
+            <span className="mpc-tag club">
+                <FiUsers aria-hidden="true" />
+                {item.clubName || "동호회"}
+            </span>
+        );
+    }
+
+    return (
+        <span className="mpc-tag community">
+            {BOARD_LABELS[item.boardType] || "커뮤니티"}
+        </span>
+    );
+}
 
 
 function MyPostComment() {
@@ -25,573 +111,379 @@ function MyPostComment() {
 
 
     // =========================================================
-    // ⭐ 현재 탭
+    // ⭐ 화면 상태
     // =========================================================
-
     const [activeTab, setActiveTab] = useState("posts");
+    const [scope, setScope] = useState("all");
+    const [clubFilter, setClubFilter] = useState(ALL_CLUBS);
 
 
     // =========================================================
-    // ⭐ 내가 작성한 게시글
+    // ⭐ 데이터
     // =========================================================
-
     const [myPosts, setMyPosts] = useState([]);
-
-
-    // =========================================================
-    // ⭐ 게시글 조회 상태
-    // =========================================================
-
     const [loading, setLoading] = useState(true);
-
     const [error, setError] = useState("");
 
-
-    // =========================================================
-    // ⭐ 내가 작성한 댓글
-    // =========================================================
-
     const [myComments, setMyComments] = useState([]);
-
     const [commentLoading, setCommentLoading] = useState(true);
-
     const [commentError, setCommentError] = useState("");
 
 
     // =========================================================
-    // ⭐ 내가 작성한 게시글 조회
-    //
-    // GET /api/posts/my
+    // ⭐ 내가 쓴 글  GET /api/posts/my
     // =========================================================
-
     useEffect(() => {
 
-        const fetchMyPosts = async () => {
+        let ignore = false;
 
-            try {
-
-                setLoading(true);
-
-                setError("");
-
-
-                // -------------------------------------------------
-                // 백엔드에서 현재 로그인 사용자의 게시글 조회
-                // -------------------------------------------------
-
-                const data = await authenticatedRequest(
-                    "/api/posts/my"
-                );
-
-
-                // -------------------------------------------------
-                // Backend 응답을 Frontend 형태로 변환
-                // -------------------------------------------------
+        authenticatedRequest("/api/posts/my")
+            .then((data) => {
+                if (ignore) return;
 
                 setMyPosts(
                     (data.items || []).map((post) => ({
-
+                        key: `post-${post.id}`,
                         postId: post.id,
-
                         title: post.title,
-
                         content: post.content,
-
                         createdAt: post.createdAt,
-
                         commentCount: post.comments,
-
+                        boardType: post.boardType,
+                        clubId: post.clubId,
+                        clubName: post.clubName,
                     }))
                 );
+            })
+            .catch((fetchError) => {
+                console.error("내가 작성한 게시글 조회 실패:", fetchError);
+                if (!ignore) {
+                    setError(fetchError.message || "게시글을 불러오지 못했습니다.");
+                }
+            })
+            .finally(() => {
+                if (!ignore) setLoading(false);
+            });
 
-
-            } catch (error) {
-
-                console.error(
-                    "내가 작성한 게시글 조회 실패:",
-                    error
-                );
-
-
-                setError(
-                    error.message ||
-                    "게시글을 불러오지 못했습니다."
-                );
-
-
-            } finally {
-
-                setLoading(false);
-
-            }
-
+        return () => {
+            ignore = true;
         };
-
-
-        fetchMyPosts();
 
     }, []);
 
 
     // =========================================================
-    // ⭐ 내가 작성한 댓글 조회
-    //
-    // GET /api/comments/my
+    // ⭐ 내가 쓴 댓글  GET /api/comments/my
     // =========================================================
-
     useEffect(() => {
 
-        const fetchMyComments = async () => {
+        let ignore = false;
 
-            try {
-
-                setCommentLoading(true);
-
-                setCommentError("");
-
-
-                // -------------------------------------------------
-                // 백엔드에서 현재 로그인 사용자의 댓글 조회
-                // -------------------------------------------------
-
-                const data = await authenticatedRequest(
-                    "/api/comments/my"
-                );
-
-
-                // -------------------------------------------------
-                // Backend 응답 저장
-                // -------------------------------------------------
+        authenticatedRequest("/api/comments/my")
+            .then((data) => {
+                if (ignore) return;
 
                 setMyComments(
-                    data.items || []
+                    (data.items || []).map((comment) => ({
+                        key: `comment-${comment.commentId}`,
+                        commentId: comment.commentId,
+                        postId: comment.postId,
+                        postTitle: comment.postTitle,
+                        content: comment.content,
+                        createdAt: comment.createdAt,
+                        boardType: comment.boardType,
+                        clubId: comment.clubId,
+                        clubName: comment.clubName,
+                    }))
                 );
+            })
+            .catch((fetchError) => {
+                console.error("내가 작성한 댓글 조회 실패:", fetchError);
+                if (!ignore) {
+                    setCommentError(fetchError.message || "댓글을 불러오지 못했습니다.");
+                }
+            })
+            .finally(() => {
+                if (!ignore) setCommentLoading(false);
+            });
 
-
-            } catch (error) {
-
-                console.error(
-                    "내가 작성한 댓글 조회 실패:",
-                    error
-                );
-
-
-                setCommentError(
-                    error.message ||
-                    "댓글을 불러오지 못했습니다."
-                );
-
-
-            } finally {
-
-                setCommentLoading(false);
-
-            }
-
+        return () => {
+            ignore = true;
         };
-
-
-        fetchMyComments();
 
     }, []);
 
 
     // =========================================================
-    // ⭐ 내가 쓴 글 상세 이동
+    // ⭐ 현재 탭 데이터
     // =========================================================
+    const isPostsTab = activeTab === "posts";
 
-    const handlePostClick = (postId) => {
+    const items = isPostsTab ? myPosts : myComments;
+    const isLoading = isPostsTab ? loading : commentLoading;
+    const errorMessage = isPostsTab ? error : commentError;
 
-        navigate(
-            `/community/post/${postId}`
-        );
+    // 범위별 개수
+    const scopeCounts = useMemo(() => {
+        const club = items.filter(isClubItem).length;
 
+        return {
+            all: items.length,
+            community: items.length - club,
+            club,
+        };
+    }, [items]);
+
+    // 동호회 칩 (내 글/댓글이 있는 동호회만, 많은 순)
+    const clubChips = useMemo(() => {
+        const clubMap = new Map();
+
+        items.filter(isClubItem).forEach((item) => {
+            const previous = clubMap.get(item.clubId);
+
+            clubMap.set(item.clubId, {
+                id: item.clubId,
+                name: item.clubName || "동호회",
+                count: (previous?.count || 0) + 1,
+            });
+        });
+
+        return [...clubMap.values()].sort((a, b) => b.count - a.count);
+    }, [items]);
+
+    const visibleItems = items.filter((item) => {
+        if (scope === "community") return !isClubItem(item);
+
+        if (scope === "club") {
+            if (!isClubItem(item)) return false;
+            return clubFilter === ALL_CLUBS || item.clubId === clubFilter;
+        }
+
+        return true;
+    });
+
+
+    // 탭 / 범위를 바꾸면 동호회 선택은 처음으로
+    const changeTab = (tab) => {
+        setActiveTab(tab);
+        setClubFilter(ALL_CLUBS);
+    };
+
+    const changeScope = (nextScope) => {
+        setScope(nextScope);
+        setClubFilter(ALL_CLUBS);
     };
 
 
     // =========================================================
-    // ⭐ 댓글이 달린 게시글 상세 이동
+    // ⭐ 글 상세로 이동 (동호회 글은 동호회 커뮤니티 경로)
     // =========================================================
+    const openPost = (item) => {
 
-    const handleCommentClick = (postId) => {
+        if (isClubItem(item)) {
+            navigate(`/clubs/${item.clubId}/community/post/${item.postId}`);
+            return;
+        }
 
-        navigate(
-            `/community/post/${postId}`
-        );
-
+        navigate(`/community/post/${item.postId}`);
     };
+
+
+    // =========================================================
+    // ⭐ 빈 화면 문구
+    // =========================================================
+    const emptyText = (() => {
+        const what = isPostsTab ? "쓴 글" : "남긴 댓글";
+
+        if (scope === "community") return `커뮤니티에 ${what}이 아직 없어요.`;
+        if (scope === "club") return `동호회 커뮤니티에 ${what}이 아직 없어요.`;
+        return `아직 ${what}이 없어요.`;
+    })();
 
 
     return (
-
         <div className="my-post-comment-page">
 
-
-            {/* =================================================
-                뒤로가기
-            ================================================= */}
-
-            <BackButton />
+            {/* ⭐ 상단 제목 (공용) */}
+            <PageHeader title="내가 쓴 글 / 댓글" />
 
 
-            {/* =================================================
-                헤더
-            ================================================= */}
-
-            <header className="my-post-comment-header">
-
-                <h2>
-                    내가 쓴 글 / 댓글
-                </h2>
-
-            </header>
-
-
-            {/* =================================================
-                탭
-            ================================================= */}
-
-            <div className="my-post-comment-tabs">
-
+            {/* ⭐ 글 / 댓글 탭 */}
+            <div className="mpc-tabs" role="tablist">
                 <button
                     type="button"
-                    className={
-                        activeTab === "posts"
-                            ? "active"
-                            : ""
-                    }
-                    onClick={() =>
-                        setActiveTab("posts")
-                    }
+                    role="tab"
+                    aria-selected={isPostsTab}
+                    className={isPostsTab ? "active" : ""}
+                    onClick={() => changeTab("posts")}
                 >
+                    <FiEdit3 aria-hidden="true" />
                     내가 쓴 글
+                    {!loading && <span>{myPosts.length}</span>}
                 </button>
-
 
                 <button
                     type="button"
-                    className={
-                        activeTab === "comments"
-                            ? "active"
-                            : ""
-                    }
-                    onClick={() =>
-                        setActiveTab("comments")
-                    }
+                    role="tab"
+                    aria-selected={!isPostsTab}
+                    className={!isPostsTab ? "active" : ""}
+                    onClick={() => changeTab("comments")}
                 >
+                    <FiMessageCircle aria-hidden="true" />
                     내가 쓴 댓글
+                    {!commentLoading && <span>{myComments.length}</span>}
                 </button>
-
             </div>
 
 
-            {/* =================================================
-                내가 쓴 글
-            ================================================= */}
-
-            {activeTab === "posts" && (
-
-                <section className="my-post-comment-section">
-
-
-                    {/* -------------------------------------------------
-                        작성한 글 개수
-                    ------------------------------------------------- */}
-
-                    <div className="my-post-comment-count">
-
-                        내가 작성한 글 {myPosts.length}
-
-                    </div>
-
-
-                    {/* -------------------------------------------------
-                        로딩 중
-                    ------------------------------------------------- */}
-
-                    {loading ? (
-
-                        <div className="my-post-comment-empty">
-
-                            게시글을 불러오는 중입니다.
-
-                        </div>
+            {/* ⭐ 범위: 전체 / 커뮤니티 / 동호회 */}
+            <div className="mpc-scopes" role="radiogroup" aria-label="어디에 쓴 글인지">
+                {SCOPES.map((item) => (
+                    <button
+                        key={item.key}
+                        type="button"
+                        role="radio"
+                        aria-checked={scope === item.key}
+                        className={
+                            scope === item.key
+                                ? `mpc-scope ${item.key} active`
+                                : `mpc-scope ${item.key}`
+                        }
+                        onClick={() => changeScope(item.key)}
+                    >
+                        {item.label}
+                        {!isLoading && <span>{scopeCounts[item.key]}</span>}
+                    </button>
+                ))}
+            </div>
 
 
-                    ) : error ? (
+            {/* ⭐ 동호회별 칩 (동호회를 골랐고, 동호회가 있을 때만) */}
+            {scope === "club" && clubChips.length > 0 && (
+                <div className="mpc-clubs" role="radiogroup" aria-label="동호회">
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={clubFilter === ALL_CLUBS}
+                        className={clubFilter === ALL_CLUBS ? "mpc-club active" : "mpc-club"}
+                        onClick={() => setClubFilter(ALL_CLUBS)}
+                    >
+                        모든 동호회
+                    </button>
+
+                    {clubChips.map((club) => (
+                        <button
+                            key={club.id}
+                            type="button"
+                            role="radio"
+                            aria-checked={clubFilter === club.id}
+                            className={clubFilter === club.id ? "mpc-club active" : "mpc-club"}
+                            onClick={() => setClubFilter(club.id)}
+                        >
+                            {club.name}
+                            <span>{club.count}</span>
+                        </button>
+                    ))}
+                </div>
+            )}
 
 
-                        /* -------------------------------------------------
-                           조회 오류
-                        ------------------------------------------------- */
+            {/* ⭐ 목록 */}
+            {isLoading ? (
 
-                        <div className="my-post-comment-empty">
+                <p className="mpc-message">
+                    {isPostsTab ? "게시글을" : "댓글을"} 불러오는 중이에요...
+                </p>
 
-                            {error}
+            ) : errorMessage ? (
 
-                        </div>
+                <p className="mpc-message">
+                    {errorMessage}
+                </p>
 
+            ) : visibleItems.length === 0 ? (
 
-                    ) : myPosts.length === 0 ? (
+                <div className="mpc-empty">
+                    <p>{emptyText}</p>
 
+                    <button
+                        type="button"
+                        onClick={() => navigate("/community")}
+                    >
+                        커뮤니티 둘러보기
+                    </button>
+                </div>
 
-                        /* -------------------------------------------------
-                            작성한 글 없음
-                        ------------------------------------------------- */
+            ) : isPostsTab ? (
 
-                        <div className="my-post-comment-empty">
+                <ul className="mpc-list">
+                    {visibleItems.map((post) => (
+                        <li key={post.key}>
+                            <button
+                                type="button"
+                                className={`mpc-card ${isClubItem(post) ? "club" : "community"}`}
+                                onClick={() => openPost(post)}
+                            >
+                                <PlaceTag item={post} />
 
-                            작성한 글이 없습니다.
+                                <strong className="mpc-title">
+                                    {post.title}
+                                </strong>
 
-                        </div>
-
-
-                    ) : (
-
-
-                        /* -------------------------------------------------
-                            게시글 목록
-                        ------------------------------------------------- */
-
-                        <div className="my-post-list">
-
-                            {myPosts.map((post) => (
-
-                                <button
-                                    key={post.postId}
-                                    type="button"
-                                    className="my-post-card"
-                                    onClick={() =>
-                                        handlePostClick(
-                                            post.postId
-                                        )
-                                    }
-                                >
-
-
-                                    {/* -------------------------------------
-                                        제목 + 날짜
-                                    ------------------------------------- */}
-
-                                    <div className="my-post-top">
-
-                                        <h3>
-
-                                            {post.title}
-
-                                        </h3>
-
-
-                                        <span>
-
-                                            {post.createdAt}
-
-                                        </span>
-
-                                    </div>
-
-
-                                    {/* -------------------------------------
-                                        게시글 내용
-                                    ------------------------------------- */}
-
-                                    <p className="my-post-content">
-
+                                {post.content && (
+                                    <p className="mpc-content">
                                         {post.content}
-
                                     </p>
-
-
-                                    {/* -------------------------------------
-                                        댓글 수 + 화살표
-                                    ------------------------------------- */}
-
-                                    <div className="my-post-bottom">
-
-                                        <span>
-
-                                            댓글 {post.commentCount}
-
-                                        </span>
-
-
-                                        <span className="my-post-arrow">
-
-                                            ›
-
-                                        </span>
-
-                                    </div>
-
-
-                                </button>
-
-                            ))}
-
-                        </div>
-
-                    )}
-
-                </section>
-
-            )}
-
-
-            {/* =================================================
-                내가 쓴 댓글
-            ================================================= */}
-
-            {activeTab === "comments" && (
-
-                <section className="my-post-comment-section">
-
-
-                    {/* -------------------------------------------------
-                        작성한 댓글 개수
-                    ------------------------------------------------- */}
-
-                    <div className="my-post-comment-count">
-
-                        내가 작성한 댓글 {myComments.length}
-
-                    </div>
-
-
-                    {/* -------------------------------------------------
-                        로딩 중
-                    ------------------------------------------------- */}
-
-                    {commentLoading ? (
-
-                        <div className="my-post-comment-empty">
-
-                            댓글을 불러오는 중입니다.
-
-                        </div>
-
-
-                    ) : commentError ? (
-
-                        /* -------------------------------------------------
-                           조회 오류
-                        ------------------------------------------------- */
-
-                        <div className="my-post-comment-empty">
-
-                            {commentError}
-
-                        </div>
-
-
-                    ) : myComments.length === 0 ? (
-
-                        /* -------------------------------------------------
-                            작성한 댓글 없음
-                        ------------------------------------------------- */
-
-                        <div className="my-post-comment-empty">
-
-                            작성한 댓글이 없습니다.
-
-                        </div>
-
-
-                    ) : (
-
-                        <div className="my-comment-list">
-
-                            {myComments.map((comment) => (
-
-                                <button
-                                    key={comment.commentId}
-                                    type="button"
-                                    className="my-comment-card"
-                                    onClick={() =>
-                                        handleCommentClick(
-                                            comment.postId
-                                        )
-                                    }
-                                >
-
-
-                                    {/* -------------------------------------
-                                        댓글 작성 정보
-                                    ------------------------------------- */}
-
-                                    <div className="my-comment-header">
-
-                                        <span>
-
-                                            내가 댓글을 남긴 글
-
-                                        </span>
-
-
-                                        <span>
-
-                                            {comment.createdAt}
-
-                                        </span>
-
-                                    </div>
-
-
-                                    {/* -------------------------------------
-                                        원본 게시글 제목
-                                    ------------------------------------- */}
-
-                                    <h3>
-
-                                        {comment.postTitle}
-
-                                    </h3>
-
-
-                                    {/* -------------------------------------
-                                        내가 작성한 댓글
-                                    ------------------------------------- */}
-
-                                    <p>
-
-                                        {comment.content}
-
-                                    </p>
-
-
-                                    {/* -------------------------------------
-                                        화살표
-                                    ------------------------------------- */}
-
-                                    <span className="my-comment-arrow">
-
-                                        ›
-
+                                )}
+
+                                <span className="mpc-meta">
+                                    <span>{formatDate(post.createdAt)}</span>
+                                    <span className="mpc-meta-comments">
+                                        <FiMessageCircle aria-hidden="true" />
+                                        {post.commentCount}
                                     </span>
+                                </span>
+                            </button>
+                        </li>
+                    ))}
+                </ul>
 
+            ) : (
 
-                                </button>
+                <ul className="mpc-list">
+                    {visibleItems.map((comment) => (
+                        <li key={comment.key}>
+                            <button
+                                type="button"
+                                className={`mpc-card ${isClubItem(comment) ? "club" : "community"}`}
+                                onClick={() => openPost(comment)}
+                            >
+                                <PlaceTag item={comment} />
 
-                            ))}
+                                <span className="mpc-origin">
+                                    {comment.postTitle}
+                                </span>
 
-                        </div>
+                                {/* 내 댓글: 말풍선 */}
+                                <span className="mpc-bubble">
+                                    {comment.content}
+                                </span>
 
-                    )}
-
-                </section>
+                                <span className="mpc-meta">
+                                    <span>{formatDate(comment.createdAt)}</span>
+                                </span>
+                            </button>
+                        </li>
+                    ))}
+                </ul>
 
             )}
 
-
-            {/* =================================================
-                공통 하단 네비게이션
-            ================================================= */}
 
             <BottomNav />
 
         </div>
-
     );
-
 }
 
 

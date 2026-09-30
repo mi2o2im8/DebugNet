@@ -1,16 +1,15 @@
 /* ========================================
    ⭐ 내 활동 페이지
+
+   톤: 앱 초록(#01a17f)을 중심으로,
+       회원가입 화면의 종목 스티커를 곳곳에 써서 발랄하게.
+   가장 눈에 띄는 곳은 맨 위 초록 히어로 카드 하나.
 ======================================== */
 
 .my-activity-page {
     min-height: 100vh;
     background-color: #f1f6f5;
 }
-
-
-/* ========================================
-   ⭐ 전체 컨테이너
-======================================== */
 
 .myactivity-container {
     width: 100%;
@@ -20,10 +19,12 @@
     margin: 0 auto;
 
     /* 아래 100px: 하단 네비게이션(68px)에 내용이 가리지 않도록 */
-    padding: 15px 16px 100px;
+    padding: 8px 20px 100px;
 
     background-color: #ffffff;
     box-sizing: border-box;
+
+    text-align: left;
 }
 
 
@@ -57,25 +58,149 @@
     pointer-events: none;
 }
 
+
 /* ========================================
-   ⭐ 필터
+   ⭐ 기간 (알약 모양 4칸)
 ======================================== */
 
-.myactivity-filter {
-    display: flex;
-    gap: 10px;
+.myactivity-period {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
 
-    margin-bottom: 10px;
+    padding: 4px;
+
+    border-radius: 14px;
+
+    background: #eef4f2;
 }
 
-.myactivity-filter select {
-    flex: 1;
+.myactivity-period-btn {
+    height: 36px;
 
-    height: 48px;
-    padding: 0 16px;
+    border: none;
+    border-radius: 10px;
 
-    border: 1px solid #d7dee8;
-    border-radius: 9px;
+    background: transparent;
+
+    color: #6b7c7c;
+    font-family: inherit;
+    font-size: 13px;
+
+    cursor: pointer;
+}
+
+.myactivity-period-btn.active {
+    background: #ffffff;
+
+    color: #01a17f;
+    font-weight: 700;
+
+    box-shadow: 0 2px 6px rgba(1, 110, 86, 0.14);
+}
+
+
+/* ========================================
+   ⭐ 종목 스티커 타일 (전체 + 5종목, 한 줄에 다 보이게)
+======================================== */
+
+.myactivity-sport-chips {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+
+    margin-top: 12px;
+}
+
+.myactivity-sport-chip {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+
+    padding: 8px 0 7px;
+
+    border: 1.5px solid #e3ecea;
+    border-radius: 14px;
+
+    background: #ffffff;
+
+    color: #5b6776;
+    font-family: inherit;
+    font-size: 11px;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition: transform 0.15s ease;
+}
+
+.myactivity-sport-chip img {
+    width: 30px;
+    height: 30px;
+
+    object-fit: contain;
+
+    /* 안 고른 종목은 살짝 흐리게 */
+    opacity: 0.55;
+    filter: saturate(0.6);
+}
+
+.myactivity-sport-chip:active {
+    transform: scale(0.94);
+}
+
+.myactivity-sport-chip.active {
+    border-color: #01a17f;
+
+    background: #e8f7f2;
+
+    color: #008f75;
+    font-weight: 700;
+}
+
+.myactivity-sport-chip.active img {
+    opacity: 1;
+    filter: none;
+
+    transform: rotate(-8deg) scale(1.08);
+}
+
+.myactivity-sport-chip-all {
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #cfe3dd;
+
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.myactivity-sport-chip.active .myactivity-sport-chip-all {
+    background: #01a17f;
+}
+
+
+/* ⭐ 동호회 선택 */
+.myactivity-club-select {
+    width: 100%;
+    height: 44px;
+
+    margin-top: 10px;
+    padding: 0 14px;
+
+    border: 1.5px solid #e3ecea;
+    border-radius: 12px;
 
     background-color: #ffffff;
 
@@ -87,73 +212,122 @@
     cursor: pointer;
 }
 
-.myactivity-filter select:focus {
+.myactivity-club-select:focus {
     border-color: #01a17f;
 }
 
 
 /* ========================================
-   ⭐ 활동 통계
+   ⭐ 히어로 카드 (이 페이지의 주인공)
 ======================================== */
 
-.myactivity-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+.myactivity-hero {
+    position: relative;
 
-    margin-bottom: 25px;
+    margin-top: 30px;
+    padding: 20px 20px 18px;
+
+    border-radius: 22px;
+
+    background: #01a17f;
+
+    color: #ffffff;
 }
 
-.myactivity-stat {
-    min-height: 70px;
+/* 오른쪽 위로 삐져나온 종목 스티커 */
+.myactivity-hero-sticker {
+    position: absolute;
+    top: -26px;
+    right: 8px;
 
-    padding: 8px 4px;
+    width: 92px;
+    height: 92px;
 
+    object-fit: contain;
+
+    transform: rotate(12deg);
+
+    filter: drop-shadow(0 6px 10px rgba(0, 60, 45, 0.25));
+
+    pointer-events: none;
+}
+
+.myactivity-hero-period {
+    margin: 0;
+
+    font-size: 13px;
+
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.myactivity-hero-stats {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    gap: 26px;
 
-    border: 1px solid #dce3ec;
-    border-radius: 10px;
-
-    box-sizing: border-box;
+    margin-top: 8px;
 }
 
-.myactivity-stat strong {
-    margin-bottom: 5px;
+.myactivity-hero-stats div {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
 
-    color: #082d63;
-    font-size: 18px;
+.myactivity-hero-stats strong {
+    font-size: 34px;
     font-weight: 700;
+    line-height: 1.1;
 }
 
-.myactivity-stat span {
-    color: #8a929d;
-    font-size: 10px;
+.myactivity-hero-stats span {
+    font-size: 13px;
+
+    color: rgba(255, 255, 255, 0.85);
 }
+
+.myactivity-hero-summary {
+    margin: 16px 0 0;
+    padding: 10px 14px;
+
+    border-radius: 14px;
+
+    background: rgba(255, 255, 255, 0.16);
+
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
 
 /* ========================================
-   ⭐ 참여율 카드
-   (앱 전체가 가운데 정렬이라 카드 안은 왼쪽 정렬로 고정)
+   ⭐ 섹션 / 카드 공통
 ======================================== */
 
-.myactivity-rate-card {
-    padding: 16px;
-
-    border: 1px solid #dce3ec;
-    border-radius: 12px;
-
-    text-align: left;
+.myactivity-section {
+    margin-top: 28px;
 }
 
+.myactivity-section h3,
 .myactivity-card-title {
-    margin: 0 0 14px;
+    margin: 0 0 12px;
 
     color: #111111;
     font-size: 16px;
     font-weight: 700;
-    text-align: left;
+}
+
+.myactivity-card {
+    margin-top: 16px;
+    padding: 18px 16px;
+
+    border: 1.5px solid #e3ecea;
+    border-radius: 18px;
+
+    background: #ffffff;
+}
+
+.myactivity-section + .myactivity-card {
+    margin-top: 28px;
 }
 
 .myactivity-rate-empty {
@@ -161,8 +335,446 @@
 
     color: #8a929d;
     font-size: 13px;
+    line-height: 1.5;
 }
 
+
+/* ========================================
+   ⭐ 참여 종류 탭 (전체 / 일반 / 팀매칭 / 게스트)
+   색은 목록 배지와 같게: 일반 초록 / 팀매칭 파랑 / 게스트 주황
+======================================== */
+
+.myactivity-type-tabs {
+    display: flex;
+    gap: 6px;
+
+    margin-bottom: 12px;
+
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.myactivity-type-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.myactivity-type-tab {
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    height: 32px;
+    padding: 0 12px;
+
+    border: 1.5px solid #e3ecea;
+    border-radius: 16px;
+
+    background: #ffffff;
+
+    color: #5b6776;
+    font-family: inherit;
+    font-size: 12px;
+
+    cursor: pointer;
+}
+
+.myactivity-type-tab span {
+    font-weight: 700;
+
+    color: #9aa4b1;
+}
+
+.myactivity-type-tab.active {
+    border-color: #082d63;
+    background: #082d63;
+    color: #ffffff;
+}
+
+.myactivity-type-tab.active span {
+    color: #ffffff;
+}
+
+.myactivity-type-tab.member.active {
+    border-color: #01a17f;
+    background: #01a17f;
+}
+
+.myactivity-type-tab.match.active {
+    border-color: #3f6fd8;
+    background: #3f6fd8;
+}
+
+.myactivity-type-tab.guest.active {
+    border-color: #e07b22;
+    background: #e07b22;
+}
+
+
+/* ========================================
+   ⭐ 경기 목록
+======================================== */
+
+.myactivity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.myactivity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 10px 12px;
+
+    border: 1.5px solid #eef2f1;
+    border-radius: 16px;
+
+    background: #ffffff;
+}
+
+/* 종목 스티커 */
+.activity-sticker {
+    flex-shrink: 0;
+
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 14px;
+
+    background: #f3f8f6;
+}
+
+.myactivity-item.match .activity-sticker {
+    background: #eef3ff;
+}
+
+.myactivity-item.guest .activity-sticker {
+    background: #fff4e8;
+}
+
+.activity-sticker img {
+    width: 30px;
+    height: 30px;
+
+    object-fit: contain;
+}
+
+.activity-info {
+    min-width: 0;
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.activity-info strong {
+    overflow: hidden;
+
+    color: #18365e;
+    font-size: 14px;
+    font-weight: 700;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.activity-info span {
+    overflow: hidden;
+
+    color: #7d8794;
+    font-size: 11px;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.activity-status {
+    flex-shrink: 0;
+
+    padding: 5px 9px;
+
+    border-radius: 10px;
+
+    background-color: #e8f7f2;
+
+    color: #008f75;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.activity-status.match {
+    background-color: #eef3ff;
+    color: #3f6fd8;
+}
+
+.activity-status.guest {
+    background-color: #fff4e8;
+    color: #c46a1c;
+}
+
+.myactivity-more {
+    width: 100%;
+
+    margin-top: 8px;
+    padding: 11px 0;
+
+    border: 1.5px dashed #d5e3df;
+    border-radius: 14px;
+
+    background: #ffffff;
+
+    color: #5b6776;
+    font-family: inherit;
+    font-size: 13px;
+
+    cursor: pointer;
+}
+
+
+/* ========================================
+   ⭐ 나의 운동 패턴
+======================================== */
+
+.myactivity-pattern-block + .myactivity-pattern-block,
+.myactivity-rate-empty + .myactivity-pattern-block {
+    margin-top: 20px;
+}
+
+.myactivity-pattern-label {
+    margin: 0 0 10px;
+
+    color: #3d4b5c;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+
+/* 요일 · 월별: 세로 막대 */
+.myactivity-weekdays,
+.myactivity-months {
+    display: grid;
+    gap: 6px;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.myactivity-weekdays {
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.myactivity-months {
+    grid-template-columns: repeat(6, 1fr);
+}
+
+.myactivity-weekdays li,
+.myactivity-months li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.myactivity-weekday-track,
+.myactivity-month-track {
+    width: 100%;
+    max-width: 28px;
+
+    display: flex;
+    align-items: flex-end;
+
+    border-radius: 10px;
+
+    background: #f2f6f5;
+}
+
+.myactivity-weekday-track {
+    height: 60px;
+}
+
+.myactivity-month-track {
+    height: 76px;
+}
+
+.myactivity-weekday-bar,
+.myactivity-month-bar {
+    width: 100%;
+
+    border-radius: 10px;
+
+    background: #bfe6da;
+}
+
+.myactivity-weekdays li.top .myactivity-weekday-bar,
+.myactivity-months li.current .myactivity-month-bar {
+    background: #01a17f;
+}
+
+.myactivity-weekday-name,
+.myactivity-month-name {
+    color: #8a929d;
+    font-size: 11px;
+}
+
+.myactivity-weekdays li.top .myactivity-weekday-name,
+.myactivity-months li.current .myactivity-month-name {
+    color: #01a17f;
+    font-weight: 700;
+}
+
+.myactivity-month-count {
+    color: #3d4b5c;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+/* 시간대: 아이콘 4칸 (시간대마다 색) */
+.myactivity-slots {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.myactivity-slots li {
+    --slot-color: #7a8a8a;
+    --slot-bg: #f6f8fa;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+
+    padding: 10px 0 9px;
+
+    border: 1.5px solid transparent;
+    border-radius: 14px;
+
+    background: var(--slot-bg);
+}
+
+.myactivity-slots li.dawn { --slot-color: #7b6cd9; --slot-bg: #f3f1ff; }
+.myactivity-slots li.morning { --slot-color: #e8892b; --slot-bg: #fff4e8; }
+.myactivity-slots li.afternoon { --slot-color: #d9a100; --slot-bg: #fff9e0; }
+.myactivity-slots li.evening { --slot-color: #e5577a; --slot-bg: #fdedf1; }
+
+.myactivity-slots svg {
+    width: 20px;
+    height: 20px;
+
+    color: var(--slot-color);
+}
+
+.myactivity-slots span {
+    color: #6b7c7c;
+    font-size: 11px;
+}
+
+.myactivity-slots strong {
+    color: #082d63;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.myactivity-slots li.top {
+    border-color: var(--slot-color);
+}
+
+.myactivity-slots li.top strong {
+    color: var(--slot-color);
+}
+
+
+/* 종목: 스티커 + 가로 막대 (종목마다 색) */
+.myactivity-sports {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.myactivity-sports li {
+    display: grid;
+    grid-template-columns: 24px 64px 1fr 34px;
+    align-items: center;
+    gap: 8px;
+}
+
+.myactivity-sports img {
+    width: 24px;
+    height: 24px;
+
+    object-fit: contain;
+}
+
+.myactivity-sport-name {
+    overflow: hidden;
+
+    color: #3d4b5c;
+    font-size: 12px;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.myactivity-sport-track {
+    height: 10px;
+
+    border-radius: 5px;
+
+    background: #f2f6f5;
+}
+
+.myactivity-sport-bar {
+    display: block;
+
+    height: 100%;
+
+    border-radius: 5px;
+
+    background: #9b8ce8;
+}
+
+.myactivity-sport-bar.soccer { background: #3fae5a; }
+.myactivity-sport-bar.basketball { background: #f08a24; }
+.myactivity-sport-bar.volleyball { background: #4f7fe8; }
+.myactivity-sport-bar.tabletennis { background: #e5484d; }
+.myactivity-sport-bar.tennis { background: #a8c317; }
+
+.myactivity-sport-count {
+    color: #8a929d;
+    font-size: 11px;
+    text-align: right;
+}
+
+
+/* ========================================
+   ⭐ 참여율
+======================================== */
 
 /* ⭐ 원형 그래프 2개 나란히 */
 .myactivity-donuts {
@@ -303,139 +915,6 @@
 }
 
 
-/* ========================================
-   ⭐ 최근 참여 경기
-======================================== */
-
-.myactivity-section h3 {
-    margin: 0 0 12px;
-
-    text-align: left;
-
-    color: #111111;
-    font-size: 16px;
-    font-weight: 700;
-}
-
-
-/* ========================================
-   ⭐ 경기 리스트
-======================================== */
-
-.myactivity-list {
-    overflow: hidden;
-
-    border: 1px solid #dce3ec;
-    border-radius: 12px;
-
-    background-color: #ffffff;
-}
-
-.myactivity-item {
-    min-height: 64px;
-
-    display: flex;
-    align-items: center;
-
-    padding: 10px 12px;
-
-    box-sizing: border-box;
-}
-
-.myactivity-item + .myactivity-item {
-    border-top: 1px solid #e5e9ef;
-}
-
-
-/* ========================================
-   ⭐ 날짜
-======================================== */
-
-.activity-date {
-    width: 48px;
-
-    text-align: left;
-
-    display: flex;
-    flex-direction: column;
-
-    flex-shrink: 0;
-}
-
-.activity-date strong {
-    margin-bottom: 3px;
-
-    color: #082d63;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.activity-date span {
-    color: #718096;
-    font-size: 10px;
-}
-
-
-/* ========================================
-   ⭐ 경기 정보
-======================================== */
-
-.activity-info {
-    min-width: 0;
-    flex: 1;
-
-    padding: 0 8px;
-
-    text-align: left;
-
-    display: flex;
-    flex-direction: column;
-}
-
-.activity-info strong {
-    overflow: hidden;
-
-    margin-bottom: 4px;
-
-    color: #18365e;
-    font-size: 13px;
-    font-weight: 600;
-
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.activity-info span {
-    color: #7d8794;
-    font-size: 10px;
-}
-
-
-/* ========================================
-   ⭐ 참여 상태
-======================================== */
-
-.activity-status {
-    flex-shrink: 0;
-
-    padding: 6px 9px;
-
-    border-radius: 20px;
-
-    background-color: #edf9f5;
-
-    color: #01a17f;
-    font-size: 9px;
-    font-weight: 600;
-}
-
-
-/* ⭐ 팀매칭 경기 */
-.activity-status.match {
-    background-color: #f1f5ff;
-
-    color: #3f6fd8;
-}
 
 
 /* ========================================
@@ -455,14 +934,19 @@
 
 
 /* ========================================
-   ⭐ 반응형
+   ⭐ 키보드 포커스 / 움직임 줄이기
 ======================================== */
 
-@media (max-width: 430px) {
+.myactivity-period-btn:focus-visible,
+.myactivity-sport-chip:focus-visible,
+.myactivity-type-tab:focus-visible,
+.myactivity-more:focus-visible {
+    outline: 2px solid #01a17f;
+    outline-offset: 2px;
+}
 
-    .myactivity-container {
-        padding-left: 16px;
-        padding-right: 16px;
+@media (prefers-reduced-motion: reduce) {
+    .myactivity-sport-chip {
+        transition: none;
     }
-
 }

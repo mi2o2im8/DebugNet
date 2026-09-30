@@ -9,7 +9,7 @@ import {
     useNavigate,
 } from "react-router-dom";
 
-import BackButton from "../../components/BackButton/BackButton";
+import PageHeader from "../../components/PageHeader/PageHeader";
 import BottomNav from "../../components/BottomNav";
 
 // import {
@@ -461,16 +461,11 @@ function FavoriteClub() {
                 뒤로가기
             ================================================= */}
 
-            <BackButton />
-
-
             {/* =================================================
-                헤더
+                상단 제목 (공용)
             ================================================= */}
 
-            <header className="favorite-club-header">
-                <h2>찜한 동호회</h2>
-            </header>
+            <PageHeader title="찜한 동호회" />
 
 
             {/* =================================================

@@ -149,3 +149,46 @@ export const getMyGuestEvents = async (fromDate, toDate) => {
         }
     );
 };
+
+
+// =========================================================
+// 내 신청 현황 (마이페이지)
+//
+// GET /api/users/me/applications
+// 응답: { club_applications: [{ application_id, club_id, club_name,
+//                              club_image_url, status, is_active_member,
+//                              created_at, decided_at }],
+//         guest_applications: [{ event_participant_id, event_id,
+//                               club_id, club_name, title, event_date,
+//                               start_time, end_time, location,
+//                               event_status, guest_status, ... }] }
+// =========================================================
+export const getMyApplications = async () => {
+    return authenticatedRequest(
+        "/api/users/me/applications",
+        {
+            method: "GET"
+        }
+    );
+};
+
+
+// =========================================================
+// 받은 신청 (운영자용)
+//
+// GET /api/users/me/received-applications
+// 응답: { is_operator,
+//         club_applications: [{ application_id, club_id, club_name,
+//                              user_id, nickname, profile_image, created_at }],
+//         guest_applications: [{ event_participant_id, event_id, club_id,
+//                               club_name, title, event_date, start_time,
+//                               user_id, nickname, profile_image }] }
+// =========================================================
+export const getMyReceivedApplications = async () => {
+    return authenticatedRequest(
+        "/api/users/me/received-applications",
+        {
+            method: "GET"
+        }
+    );
+};
