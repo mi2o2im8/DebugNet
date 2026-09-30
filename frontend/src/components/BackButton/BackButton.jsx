@@ -40,6 +40,22 @@ import "./BackButton.css";
 // 처럼 `to`를 지정.
 
 
+export function BackButtonIcon({
+    alt = "",
+    className = "",
+    ...props
+}) {
+    return (
+        <img
+            src={backIcon}
+            alt={alt}
+            aria-hidden={alt ? undefined : true}
+            className={`BackButton-icon ${className}`.trim()}
+            {...props}
+        />
+    );
+}
+
 function BackButton({
     to,
     onClick,
@@ -72,7 +88,11 @@ function BackButton({
             aria-label={alt}
             {...props}
         >
-            <img src={icon} alt={alt} />
+            <img
+                src={icon}
+                alt={alt}
+                className="BackButton-icon"
+            />
         </button>
     );
 }

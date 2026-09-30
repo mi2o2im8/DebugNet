@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
@@ -1023,7 +1024,7 @@ function PostWrite() {
           className="post-write-back"
           onClick={() => navigate(-1)}
         >
-          ←
+          <BackButtonIcon />
         </button>
 
         <h1>

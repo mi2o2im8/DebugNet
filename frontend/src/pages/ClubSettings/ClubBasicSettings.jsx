@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useEffect,
     useState
@@ -9,7 +10,6 @@ import {
 } from "react-router-dom";
 
 import {
-    FiChevronLeft,
     FiSave
 } from "react-icons/fi";
 
@@ -198,7 +198,7 @@ function ClubBasicSettings() {
                         )
                     }
                 >
-                    <FiChevronLeft />
+                    <BackButtonIcon />
                 </button>
 
                 <h1>기본 정보 수정</h1>

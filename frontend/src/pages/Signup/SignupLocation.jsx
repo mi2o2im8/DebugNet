@@ -6,7 +6,7 @@ import { useSignup } from "./SignupContext";
 import { useState } from "react";
 
 // 뒤로가기 버튼 소환
-import backIcon from "../../assets/img/back.png";
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 
 // 화살표 이미지
 import down_arrow from "../../assets/img/down_arrow.png";
@@ -95,7 +95,7 @@ function SignupLocation() {
                 onClick={() => navigate("/signup/basic/SignupSportLevel")}
                 aria-label="뒤로가기"
             >
-                <img src={backIcon} alt="뒤로가기" />
+                <BackButtonIcon alt="뒤로가기" />
             </button>
 
             <div className="signup-header05">

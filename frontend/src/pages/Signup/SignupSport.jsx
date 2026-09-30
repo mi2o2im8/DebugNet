@@ -11,7 +11,7 @@ import tableTennisImg from "../../assets/img/table_tennis.png";
 import tennisImg from "../../assets/img/tennis.png";
 import otherImg from "../../assets/img/other.png";
 // 뒤로가기 버튼 소환
-import backIcon from "../../assets/img/back.png";
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 
 function Signup() {
     const navigate = useNavigate();
@@ -54,7 +54,7 @@ function Signup() {
                 onClick={() => navigate("/signup/basic")}
                 aria-label="뒤로가기"
             >
-                <img src={backIcon} alt="뒤로가기" />
+                <BackButtonIcon alt="뒤로가기" />
             </button>
 
             <div className="signup-header03">

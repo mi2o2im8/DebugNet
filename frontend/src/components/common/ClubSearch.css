@@ -252,7 +252,7 @@
   display: flex;
   gap: 10px;
 
-  padding: 15px 20px;
+  padding: 15px 20px calc(15px + env(safe-area-inset-bottom, 0px));
 
   border-top: 1px solid #eeeeee;
   background: #ffffff;
@@ -306,6 +306,6 @@
   }
 
   .ClubSearch-filter-modal-footer {
-    padding: 12px 16px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
   }
 }

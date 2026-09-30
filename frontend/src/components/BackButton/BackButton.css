@@ -69,6 +69,41 @@
 }
 
 
+
+/* ========================================
+   공용 뒤로가기 아이콘
+   - 기존 BackButton 레이아웃은 그대로 두고
+   - 페이지별 헤더 버튼에서도 동일한 아이콘만 재사용
+   ======================================== */
+.BackButton-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    display: block;
+    flex: 0 0 auto;
+    pointer-events: none;
+
+    filter:
+        brightness(0)
+        saturate(100%)
+        invert(45%)
+        sepia(90%)
+        saturate(900%)
+        hue-rotate(120deg)
+        brightness(90%);
+}
+
+.dark-mode .BackButton-icon {
+    filter:
+        brightness(0)
+        saturate(100%)
+        invert(45%)
+        sepia(90%)
+        saturate(900%)
+        hue-rotate(120deg)
+        brightness(90%);
+}
+
 /* ========================================
    ⭐ 클릭 효과
    ======================================== */
@@ -140,4 +175,47 @@
     margin: -8px;
 
     box-sizing: content-box;
+}
+
+/* ========================================
+   뒤로가기 아이콘 최종 공통 규격
+   - "내 정보" PageHeader의 아이콘 모양을 기준으로 통일
+   - 페이지별 .Back-btn img / button img 규칙이 있어도
+     아이콘 자체 크기·색·정렬은 동일하게 유지
+   ======================================== */
+.BackButton-icon,
+.Back-btn img.BackButton-icon {
+    width: 24px !important;
+    height: 24px !important;
+
+    padding: 8px !important;
+    margin: -8px !important;
+    box-sizing: content-box !important;
+
+    object-fit: contain !important;
+    display: block !important;
+    flex: 0 0 auto !important;
+
+    transform: none !important;
+
+    filter:
+        brightness(0)
+        saturate(100%)
+        invert(45%)
+        sepia(90%)
+        saturate(900%)
+        hue-rotate(120deg)
+        brightness(90%) !important;
+}
+
+.dark-mode .BackButton-icon,
+.dark-mode .Back-btn img.BackButton-icon {
+    filter:
+        brightness(0)
+        saturate(100%)
+        invert(45%)
+        sepia(90%)
+        saturate(900%)
+        hue-rotate(120deg)
+        brightness(90%) !important;
 }

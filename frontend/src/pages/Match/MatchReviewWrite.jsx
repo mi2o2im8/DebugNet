@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
   useEffect,
   useState,
@@ -386,7 +387,7 @@ function MatchReviewWrite() {
             }
             aria-label="뒤로가기"
           >
-            ‹
+            <BackButtonIcon />
           </button>
 
           <h1>
@@ -438,7 +439,7 @@ function MatchReviewWrite() {
             }
             aria-label="뒤로가기"
           >
-            ‹
+            <BackButtonIcon />
           </button>
 
           <h1>
@@ -492,7 +493,7 @@ function MatchReviewWrite() {
           }
           aria-label="뒤로가기"
         >
-          ‹
+          <BackButtonIcon />
         </button>
 
 

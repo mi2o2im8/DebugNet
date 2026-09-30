@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
   useEffect,
   useState,
@@ -818,7 +819,7 @@ function MatchManagementDetail() {
             }
             aria-label="뒤로가기"
           >
-            ‹
+            <BackButtonIcon />
           </button>
 
           <h1>
@@ -859,7 +860,7 @@ function MatchManagementDetail() {
           onClick={() => navigate(-1)}
           aria-label="뒤로가기"
         >
-          ‹
+          <BackButtonIcon />
         </button>
 
 

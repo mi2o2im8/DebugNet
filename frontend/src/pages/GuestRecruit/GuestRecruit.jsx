@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -235,7 +236,7 @@ function GuestRecruit() {
           onClick={() => navigate("/clubs")}
           aria-label="뒤로 가기"
         >
-          ←
+          <BackButtonIcon />
         </button>
 
         <h2>게스트 모집</h2>

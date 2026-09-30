@@ -3,7 +3,7 @@
 import "./Signup.css"; 
 import { useNavigate } from "react-router-dom"; 
 import { useSignup } from "./SignupContext"; 
-import backIcon from "../../assets/img/back.png"; 
+import { BackButtonIcon } from "../../components/BackButton/BackButton"; 
  
 function SignupFee() { 
     const navigate = useNavigate(); 
@@ -28,7 +28,7 @@ function SignupFee() {
                 onClick={() => navigate("/signup/basic/SignupClubPreference")} 
                 aria-label="뒤로가기" 
             > 
-                <img src={backIcon} alt="뒤로가기" /> 
+                <BackButtonIcon alt="뒤로가기" /> 
             </button> 
  
             <div className="signup-header07">

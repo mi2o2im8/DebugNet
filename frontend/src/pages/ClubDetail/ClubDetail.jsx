@@ -1,9 +1,9 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { supabase } from "../../../supabaseClient";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import BottomNav from "../../components/BottomNav";
 import {
-  FiArrowLeft,
   FiShare2,
   FiHeart,
   FiMapPin,
@@ -260,7 +260,7 @@ function ClubDetail() {
           className="club-detail-header-btn"
           onClick={() => navigate(-1)}
         >
-          <FiArrowLeft />
+          <BackButtonIcon />
         </button>
 
         <h1>동호회 상세</h1>

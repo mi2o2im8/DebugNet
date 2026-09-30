@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useEffect,
     useState
@@ -11,7 +12,6 @@ import {
 
 import {
     FiCheck,
-    FiChevronLeft,
     FiClock,
     FiHelpCircle,
     FiX
@@ -226,7 +226,7 @@ function ClubEventAttendance() {
                     aria-label="이전"
                     onClick={() => navigate(-1)}
                 >
-                    <FiChevronLeft />
+                    <BackButtonIcon />
                 </button>
 
                 <div className="club-attendance-header-text">

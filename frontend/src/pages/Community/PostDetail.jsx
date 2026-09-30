@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { useEffect, useRef, useState } from "react";
 import { FiMoreVertical, FiX } from "react-icons/fi";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -959,7 +960,7 @@ function PostDetail() {
           className="post-back-btn"
           onClick={() => navigate(-1)}
         >
-          ←
+          <BackButtonIcon />
         </button>
 
         <h1>

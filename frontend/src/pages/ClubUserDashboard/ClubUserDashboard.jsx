@@ -1,5 +1,5 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
-    FiArrowLeft,
     FiBell,
     FiMoreHorizontal,
     FiCheckCircle,
@@ -967,7 +967,7 @@ function ClubUserDashboard() {
                         aria-label="뒤로가기"
                         onClick={() => navigate(-1)}
                     >
-                        <FiArrowLeft />
+                        <BackButtonIcon />
                     </button>
 
                     <div className="club-user-header-actions">

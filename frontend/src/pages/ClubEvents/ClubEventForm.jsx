@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useEffect,
     useState
@@ -723,7 +724,7 @@ function ClubEventForm() {
                     aria-label="이전"
                     onClick={handleHeaderBack}
                 >
-                    <FiChevronLeft />
+                    <BackButtonIcon />
                 </button>
 
                 <div>

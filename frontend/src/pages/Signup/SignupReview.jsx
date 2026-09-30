@@ -7,7 +7,7 @@ import { useSignup } from "./SignupContext";
 
 import basicProfileImg from "../../assets/img/basic_profile_img.png";
 import { supabase } from "../../../supabaseClient";
-import backIcon from "../../assets/img/back.png";
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { buildApiUrl } from "../../api/apiClient";
 
 // -------------------------------------------------
@@ -528,10 +528,7 @@ function SignupReview() {
                 }
             >
 
-                <img
-                    src={backIcon}
-                    alt="뒤로가기"
-                />
+                <BackButtonIcon alt="뒤로가기" />
 
             </button>
 

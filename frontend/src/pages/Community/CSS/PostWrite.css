@@ -8,7 +8,7 @@
 
   background-color: #ffffff;
 
-  padding-bottom: 90px;
+  padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
 
   box-sizing: border-box;
 }
@@ -20,7 +20,7 @@
 
 .post-write-header {
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   z-index: 40;
 
   display: flex;

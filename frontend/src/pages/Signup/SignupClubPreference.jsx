@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useSignup } from "./SignupContext";
 
 // 뒤로가기 버튼 소환
-import backIcon from "../../assets/img/back.png";
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 
 function SignupClubPreference() {
     const navigate = useNavigate();
@@ -45,7 +45,7 @@ function SignupClubPreference() {
                 onClick={() => navigate("/signup/basic/SignupFrequency")}
                 aria-label="뒤로가기"
             >
-                <img src={backIcon} alt="뒤로가기" />
+                <BackButtonIcon alt="뒤로가기" />
             </button>
             
             <div className="signup-header03">

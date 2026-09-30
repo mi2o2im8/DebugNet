@@ -1,6 +1,6 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     FiActivity,
-    FiArrowLeft,
     FiBell,
     FiCalendar,
     FiCheckCircle,
@@ -656,7 +656,7 @@ function ClubDashboard() {
                         aria-label="이전 화면"
                         onClick={() => navigate("/mainhome")}
                     >
-                        <FiArrowLeft />
+                        <BackButtonIcon />
                     </button>
 
                     <div className="club-dashboard-header-actions">

@@ -208,7 +208,7 @@ body {
 
 .Back-btn {
     position: fixed;
-    top: 0;
+    top: env(safe-area-inset-top, 0px);
     left: 50%;
     transform: translateX(-50%);
 
@@ -858,7 +858,7 @@ body {
     /* ⭐ 모바일 상단 헤더 */
 
     .Back-btn {
-        top: 0;
+        top: env(safe-area-inset-top, 0px);
         left: 0;                     /* ⭐ 왼쪽 끝에 붙임 */
         transform: none;             /* ⭐ 가운데 정렬 제거 */
 

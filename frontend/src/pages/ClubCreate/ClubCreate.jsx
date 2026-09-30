@@ -1,9 +1,9 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useEffect,
     useState
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiChevronLeft } from "react-icons/fi";
 import BasicInfoStep from "./BasicInfoStep";
 import ScheduleStep from "./ScheduleStep";
 import ConditionStep from "./ConditionStep";
@@ -268,7 +268,7 @@ function ClubCreate() {
                         onClick={handlePrevious}
                         aria-label="이전 화면으로 이동"
                     >
-                        <FiChevronLeft />
+                        <BackButtonIcon />
                     </button>
 
                     <h1 className="club-create-header-title">동호회 만들기</h1>

@@ -28,7 +28,13 @@
 
 .club-recommend-back {
   position: absolute !important;
+  top: 50% !important;
   left: 14px;
+  transform: translateY(-50%) !important;
+}
+
+.club-recommend-back:active {
+  transform: translateY(-50%) !important;
 }
 
 .club-recommend-main {

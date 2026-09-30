@@ -6,7 +6,7 @@
     min-height: 100dvh;
     box-sizing: border-box;
 
-    padding-bottom: 90px;
+    padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
 
     display: flex;
     flex-direction: column;
@@ -654,7 +654,7 @@
   display: flex;
   gap: 10px;
 
-  padding: 16px 20px;
+  padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
 
   border-top: 1px solid #eee;
   background-color: #fff;
@@ -717,7 +717,7 @@
   }
 
   .ClubHome-filter-modal-footer {
-    padding: 12px 16px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -1285,7 +1285,7 @@
     position: fixed;
 
     right: 14px;
-    bottom: 72px;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
 
     width: 70px;
     height: 70px;

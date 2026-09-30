@@ -1,6 +1,6 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FiArrowLeft } from "react-icons/fi";
 import { supabase } from "../../../supabaseClient";
 
 import "./ClubApplication.css";
@@ -328,7 +328,7 @@ function ClubApplication() {
             navigate(-1)
           }
         >
-          <FiArrowLeft />
+          <BackButtonIcon />
         </button>
 
         <h1>

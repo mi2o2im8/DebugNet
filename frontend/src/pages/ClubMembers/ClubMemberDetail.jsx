@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useCallback,
     useEffect,
@@ -11,7 +12,6 @@ import {
 
 import {
     FiAlertTriangle,
-    FiArrowLeft,
     FiCalendar,
     FiCheckCircle,
     FiClock,
@@ -493,7 +493,7 @@ function ClubMemberDetail() {
                     aria-label="이전 화면"
                     onClick={() => navigate(-1)}
                 >
-                    <FiArrowLeft />
+                    <BackButtonIcon />
                 </button>
 
                 <h1>회원 상세</h1>

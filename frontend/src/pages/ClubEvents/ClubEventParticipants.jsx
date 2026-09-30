@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useCallback,
     useEffect,
@@ -11,7 +12,6 @@ import {
 
 import {
     FiCheck,
-    FiChevronLeft,
     FiClock,
     FiUser,
     FiUsers,
@@ -463,7 +463,7 @@ function ClubEventParticipants() {
                         )
                     }
                 >
-                    <FiChevronLeft />
+                    <BackButtonIcon />
                 </button>
 
                 <div>

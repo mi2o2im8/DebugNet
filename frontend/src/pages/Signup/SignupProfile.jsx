@@ -10,7 +10,7 @@ import { useSignup } from "./SignupContext";
 import basicProfileImg from "../../assets/img/basic_profile_img.png";
 
 // 뒤로가기 버튼 소환
-import backIcon from "../../assets/img/back.png";
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { buildApiUrl } from "../../api/apiClient";
 
 function Signup() {
@@ -245,10 +245,7 @@ function Signup() {
                 onClick={() => navigate("/signup")}
                 aria-label="뒤로가기"
             >
-                <img
-                    src={backIcon}
-                    alt="뒤로가기"
-                />
+                <BackButtonIcon alt="뒤로가기" />
             </button>
 
             <div className="signup-header02">

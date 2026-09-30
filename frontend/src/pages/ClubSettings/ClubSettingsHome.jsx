@@ -1,5 +1,5 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
-    FiChevronLeft,
     FiChevronRight,
     FiEdit3,
     FiFileText,
@@ -79,7 +79,7 @@ function ClubSettingsHome() {
                         navigate(`/clubs/${clubId}/manage`)
                     }
                 >
-                    <FiChevronLeft />
+                    <BackButtonIcon />
                 </button>
 
                 <h1>동호회 설정</h1>

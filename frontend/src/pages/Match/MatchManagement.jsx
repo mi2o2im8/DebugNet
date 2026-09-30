@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   useEffect,
@@ -228,7 +229,7 @@ function MatchManagement() {
           onClick={() => navigate(-1)}
           aria-label="뒤로가기"
         >
-          ‹
+          <BackButtonIcon />
         </button>
 
 

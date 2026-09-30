@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useEffect,
     useRef,
@@ -10,7 +11,6 @@ import {
 } from "react-router-dom";
 
 import {
-    FiArrowLeft,
     FiCalendar,
     FiCheckCircle,
     FiClock,
@@ -431,7 +431,7 @@ function ClubEventDetail() {
                         )
                     }
                 >
-                    <FiArrowLeft />
+                    <BackButtonIcon />
                 </button>
 
                 <h1>일정 상세</h1>
