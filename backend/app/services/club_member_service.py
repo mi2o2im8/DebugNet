@@ -12,6 +12,7 @@ from app.schemas.club_members import (
     ClubApplicationFitResponse,
     ClubApplicationListItemResponse,
     ClubApplicationListResponse,
+    ClubRecruitmentRecommendationResponse,
     ClubMemberListItemResponse,
     ClubMemberListResponse,
     ClubMemberUpdateResponse,
@@ -1034,6 +1035,40 @@ class ClubMemberService:
         return ClubApplicationListResponse(
             applications=applications,
             total=len(applications),
+        )
+
+    # -----------------------------------------------------
+    # H1 모집 대상 추천
+    # -----------------------------------------------------
+    def get_recruitment_recommendations(
+        self,
+        club_id: int,
+        user_id: str,
+        limit: int = 10,
+    ) -> ClubRecruitmentRecommendationResponse:
+
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        context_bundle = (
+            self.member_repository
+            .find_h1_recruitment_context(
+                club_id=club_id,
+            )
+        )
+
+        result = (
+            self.operator_ml_service
+            .recommend_h1_candidates(
+                context_bundle=context_bundle,
+                limit=limit,
+            )
+        )
+
+        return ClubRecruitmentRecommendationResponse(
+            **result
         )
 
     # -----------------------------------------------------

@@ -16,6 +16,7 @@ from app.schemas.club_members import (
     ClubApplicationDecisionRequest,
     ClubApplicationDecisionResponse,
     ClubApplicationListResponse,
+    ClubRecruitmentRecommendationResponse,
     ClubMemberListResponse,
     ClubMemberRoleUpdateRequest,
     ClubMemberStatusUpdateRequest,
@@ -529,6 +530,65 @@ def update_club_member_status(
                 status.HTTP_500_INTERNAL_SERVER_ERROR
             ),
             detail="회원 상태 변경 중 오류가 발생했습니다.",
+        ) from error
+
+
+# ---------------------------------------------------------
+# H1 모집 대상 추천
+#
+# GET /api/clubs/{club_id}/recruitment-recommendations
+# ---------------------------------------------------------
+@router.get(
+    "/recruitment-recommendations",
+    response_model=(
+        ClubRecruitmentRecommendationResponse
+    ),
+    status_code=status.HTTP_200_OK,
+)
+def get_club_recruitment_recommendations(
+    club_id: int,
+    limit: int = Query(default=10, ge=1, le=20),
+    manager_user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    member_service = ClubMemberService()
+
+    try:
+        return (
+            member_service
+            .get_recruitment_recommendations(
+                club_id=club_id,
+                user_id=manager_user_id,
+                limit=limit,
+            )
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "H1 모집 대상 추천 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_503_SERVICE_UNAVAILABLE
+            ),
+            detail=(
+                "모집 대상 추천을 현재 사용할 수 없습니다."
+            ),
         ) from error
 
 

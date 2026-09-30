@@ -57,6 +57,66 @@ class ClubApplicationFitResponse(BaseModel):
         default_factory=list
     )
 
+
+# ---------------------------------------------------------
+# H1 모집 대상 추천
+#
+# 아직 가입 신청하지 않은 사용자 중 운영 조건과의 적합도를
+# 계산한다. 현재 MVP에서는 초대 발송 없이 조회만 제공한다.
+# ---------------------------------------------------------
+class ClubRecruitmentAxisScores(BaseModel):
+    schedule: int = Field(ge=0, le=100)
+    skill: int = Field(ge=0, le=100)
+    purpose: int = Field(ge=0, le=100)
+    atmosphere: int = Field(ge=0, le=100)
+    activity_frequency: int = Field(ge=0, le=100)
+    cost: int = Field(ge=0, le=100)
+
+
+class ClubRecruitmentRecommendationItem(BaseModel):
+    rank: int = Field(ge=1)
+    user_id: str
+    nickname: str
+    profile_image: str | None = None
+    direct_match_score: float = Field(ge=0, le=100)
+    action: Literal[
+        "최우선 모집",
+        "우선 모집",
+        "일반 후보",
+        "체험 제안",
+        "후순위",
+    ]
+    severe_mismatch_axes: list[str] = Field(
+        default_factory=list
+    )
+    partial_mismatch_axes: list[str] = Field(
+        default_factory=list
+    )
+    axis_scores: ClubRecruitmentAxisScores
+    data_coverage: int = Field(ge=0, le=100)
+    missing_axes: list[str] = Field(
+        default_factory=list
+    )
+
+
+class ClubRecruitmentRecommendationResponse(BaseModel):
+    recommendations: list[
+        ClubRecruitmentRecommendationItem
+    ] = Field(default_factory=list)
+    total_users_scanned: int = Field(ge=0)
+    candidate_pool_count: int = Field(ge=0)
+    eligible_count: int = Field(ge=0)
+    returned_count: int = Field(ge=0)
+    excluded_member_count: int = Field(ge=0)
+    excluded_application_count: int = Field(ge=0)
+    excluded_summary: dict[str, int] = Field(
+        default_factory=dict
+    )
+    consent_filter_applied: bool = False
+    travel_filter_mode: Literal[
+        "region_proxy"
+    ] = "region_proxy"
+
 # ---------------------------------------------------------
 # 가입 신청자 목록 항목
 # ---------------------------------------------------------

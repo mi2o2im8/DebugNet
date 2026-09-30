@@ -64,6 +64,18 @@ class OperatorMlService:
         "자유 참여": "한 달에 3번 이하",
     }
 
+    H1_SKILL_BY_SCORE = {
+        1.0: "초보",
+        0.5: "중급",
+        0.0: "숙련",
+    }
+
+    H1_PURPOSE_BY_SCORE = {
+        1.0: "친목",
+        0.5: "운동",
+        0.0: "경쟁",
+    }
+
     @staticmethod
     def _normalize_text(value) -> str:
         return str(value or "").strip()
@@ -620,6 +632,475 @@ class OperatorMlService:
                 * 100
             ),
             "missing_axes": unique_missing_axes,
+        }
+
+    @classmethod
+    def _h1_age(cls, birth_date) -> int | None:
+        if not birth_date:
+            return None
+
+        try:
+            if isinstance(birth_date, datetime):
+                parsed = birth_date.date()
+            elif isinstance(birth_date, date):
+                parsed = birth_date
+            else:
+                parsed = date.fromisoformat(
+                    str(birth_date)[:10]
+                )
+        except (TypeError, ValueError):
+            return None
+
+        today = date.today()
+        return (
+            today.year
+            - parsed.year
+            - (
+                (today.month, today.day)
+                < (parsed.month, parsed.day)
+            )
+        )
+
+    @classmethod
+    def _h1_age_constraint(
+        cls,
+        age_groups: list[str],
+    ) -> list[int] | None:
+        ranges = {
+            "10대": (10, 19),
+            "20대": (20, 29),
+            "30대": (30, 39),
+            "40대": (40, 49),
+            "50대": (50, 59),
+            "60대 이상": (60, 120),
+        }
+        selected = [
+            ranges[value]
+            for value in age_groups
+            if value in ranges
+        ]
+        if not selected:
+            return None
+        return [
+            min(value[0] for value in selected),
+            max(value[1] for value in selected),
+        ]
+
+    @classmethod
+    def _h1_gender(cls, value) -> str | None:
+        aliases = {
+            "남성": "male",
+            "남자": "male",
+            "male": "male",
+            "여성": "female",
+            "여자": "female",
+            "female": "female",
+        }
+        return aliases.get(
+            cls._normalize_text(value).lower()
+        )
+
+    @classmethod
+    def _h1_gender_constraint(
+        cls,
+        value,
+    ) -> list[str] | None:
+        normalized = cls._normalize_text(value).lower()
+        if normalized == "male":
+            return ["male"]
+        if normalized == "female":
+            return ["female"]
+        return None
+
+    @classmethod
+    def _h1_monthly_frequency(
+        cls,
+        value,
+        is_club: bool,
+    ) -> float | None:
+        mapping = (
+            cls.CLUB_FREQUENCY_VALUE
+            if is_club
+            else cls.USER_FREQUENCY_VALUE
+        )
+        weekly = mapping.get(
+            cls._normalize_text(value)
+        )
+        if weekly is None:
+            return None
+        return round(float(weekly) * 4, 2)
+
+    @classmethod
+    def _h1_score_bucket(cls, value) -> float:
+        score = float(value)
+        if score >= 0.75:
+            return 1.0
+        if score >= 0.25:
+            return 0.5
+        return 0.0
+
+    @staticmethod
+    def _h1_split_axes(value) -> list[str]:
+        text = str(value or "").strip()
+        if not text or text == "-":
+            return []
+        return [
+            item.strip()
+            for item in text.split(",")
+            if item.strip()
+        ]
+
+    def recommend_h1_candidates(
+        self,
+        context_bundle: dict,
+        limit: int = 10,
+    ) -> dict:
+        """H1 엔진 입력을 실제 서비스 DB 문맥으로 변환한다."""
+        from app.ml.operator_poc.engines.h1_recruitment import (
+            run_h1_recruitment,
+        )
+
+        contexts = context_bundle.get("contexts") or {}
+        if not contexts:
+            return {
+                "recommendations": [],
+                "total_users_scanned": context_bundle.get(
+                    "total_users_scanned", 0
+                ),
+                "candidate_pool_count": context_bundle.get(
+                    "candidate_pool_count", 0
+                ),
+                "eligible_count": 0,
+                "returned_count": 0,
+                "excluded_member_count": context_bundle.get(
+                    "excluded_member_count", 0
+                ),
+                "excluded_application_count": context_bundle.get(
+                    "excluded_application_count", 0
+                ),
+                "excluded_summary": {},
+                "consent_filter_applied": False,
+                "travel_filter_mode": "region_proxy",
+            }
+
+        first_context = next(iter(contexts.values()))
+        club = first_context.get("club") or {}
+        club_schedules = club.get("schedules") or []
+        club_slots = [
+            f"club-schedule-{index}"
+            for index, _ in enumerate(club_schedules)
+        ]
+
+        engine_club = {
+            "운영종목": club.get("sport_name"),
+            "정기활동슬롯": club_slots,
+            # 실제 적합도는 아래에서 먼저 계산하고 H1 점수 구간으로
+            # 인코딩한다. 엔진의 가중치·판정 규칙은 그대로 사용한다.
+            "모집희망실력": ["초보"],
+            "운영목적": "친목",
+            "분위기점수": 5.0,
+            "월활동횟수": 4.0,
+            "월예상비용_원": float(
+                club.get("monthly_fee") or 0
+            ),
+            "모집연령조건": self._h1_age_constraint(
+                club.get("age_groups") or []
+            ),
+            "모집성별조건": self._h1_gender_constraint(
+                club.get("gender_rule")
+            ),
+            "체험가능여부": False,
+        }
+
+        engine_users = []
+        meta_by_user: dict[str, dict] = {}
+
+        club_traits = list(
+            dict.fromkeys(
+                (club.get("atmospheres") or [])
+                + (club.get("intro_keywords") or [])
+            )
+        )
+        club_frequency = self._h1_monthly_frequency(
+            club.get("activity_frequency"),
+            is_club=True,
+        )
+        engine_club["월활동횟수"] = (
+            club_frequency
+            if club_frequency is not None
+            else 4.0
+        )
+
+        for user_id, context in contexts.items():
+            applicant = context.get("applicant") or {}
+            profile = context.get("candidate_profile") or {}
+            missing_axes: list[str] = []
+
+            matching_slots = []
+            for index, schedule in enumerate(
+                club_schedules
+            ):
+                single_score = self._schedule_score(
+                    [schedule],
+                    applicant.get("available_times") or [],
+                )
+                if single_score and single_score > 0:
+                    matching_slots.append(
+                        f"club-schedule-{index}"
+                    )
+            if (
+                not club_schedules
+                or not applicant.get("available_times")
+            ):
+                missing_axes.append("일정")
+
+            club_sport_id = club.get("sport_id")
+            sport_ids = {
+                int(value)
+                for value in applicant.get("sport_ids") or []
+            }
+            sport_match = (
+                club_sport_id is not None
+                and int(club_sport_id) in sport_ids
+            )
+
+            user_level = (
+                applicant.get("sport_levels") or {}
+            ).get(str(club_sport_id))
+            if user_level is None:
+                user_level = (
+                    applicant.get("sport_levels") or {}
+                ).get(club_sport_id)
+            skill_score = self._skill_score(
+                club.get("sport_levels") or [],
+                user_level,
+            )
+            if skill_score is None:
+                missing_axes.append("실력")
+                skill_score = 0.5
+            skill_bucket = self._h1_score_bucket(
+                skill_score
+            )
+
+            user_traits = applicant.get("atmospheres") or []
+            purpose_score = self._purpose_score(
+                club_traits,
+                user_traits,
+            )
+            if purpose_score is None:
+                missing_axes.append("목적")
+                purpose_score = 0.5
+            purpose_bucket = self._h1_score_bucket(
+                purpose_score
+            )
+
+            atmosphere_score = self._atmosphere_score(
+                club_traits,
+                user_traits,
+            )
+            if atmosphere_score is None:
+                missing_axes.append("분위기")
+                atmosphere_score = 0.5
+
+            user_frequency = self._h1_monthly_frequency(
+                applicant.get("activity_frequency"),
+                is_club=False,
+            )
+            if (
+                club_frequency is None
+                or user_frequency is None
+            ):
+                missing_axes.append("활동빈도")
+                encoded_user_frequency = (
+                    engine_club["월활동횟수"] * 0.5
+                )
+            else:
+                frequency_score = min(
+                    club_frequency,
+                    user_frequency,
+                ) / max(
+                    club_frequency,
+                    user_frequency,
+                )
+                encoded_user_frequency = (
+                    engine_club["월활동횟수"]
+                    * frequency_score
+                )
+
+            monthly_fee = float(
+                club.get("monthly_fee") or 0
+            )
+            budget = applicant.get("max_monthly_fee")
+            if budget is None:
+                missing_axes.append("비용")
+                encoded_budget = (
+                    monthly_fee * 0.5
+                    if monthly_fee > 0
+                    else 0
+                )
+            else:
+                encoded_budget = float(budget)
+
+            region_result = self._region_pass(
+                club.get("region"),
+                applicant.get("regions") or [],
+            )
+            if region_result is None:
+                missing_axes.append("이동거리")
+
+            unique_missing = list(
+                dict.fromkeys(missing_axes)
+            )
+            covered_axes = 6 - len([
+                value
+                for value in unique_missing
+                if value in self.DIRECT_FIT_AXES
+            ])
+
+            engine_users.append({
+                "회원_ID": user_id,
+                # 현재 MVP는 초대 발송이 없는 내부 미리보기다.
+                # 동의 컬럼 도입 전까지 엔진 통과값만 주입하고
+                # 응답에 필터 미적용 사실을 명시한다.
+                "모집제안수신동의": True,
+                "희망종목": (
+                    club.get("sport_name")
+                    if sport_match
+                    else None
+                ),
+                "가능슬롯": matching_slots,
+                "예상이동시간_분": (
+                    2 if region_result is False else 0
+                ),
+                "이동가능시간_분": 1,
+                "나이": self._h1_age(
+                    applicant.get("birth_date")
+                ),
+                "성별": self._h1_gender(
+                    applicant.get("gender")
+                ),
+                "실력": self.H1_SKILL_BY_SCORE[
+                    skill_bucket
+                ],
+                "목적": self.H1_PURPOSE_BY_SCORE[
+                    purpose_bucket
+                ],
+                "분위기점수": round(
+                    1 + 4 * float(atmosphere_score),
+                    4,
+                ),
+                "희망월활동횟수": max(
+                    encoded_user_frequency,
+                    0.01,
+                ),
+                "월예산_원": encoded_budget,
+            })
+
+            meta_by_user[user_id] = {
+                "profile": profile,
+                "missing_axes": unique_missing,
+                "data_coverage": round(
+                    covered_axes / 6 * 100
+                ),
+            }
+
+        ranked = run_h1_recruitment(
+            club=engine_club,
+            users=engine_users,
+            return_all=True,
+        )
+
+        recommendations = []
+        excluded_summary: dict[str, int] = {}
+
+        for row in ranked.to_dict(orient="records"):
+            user_id = str(row["Candidate_ID"])
+            if not bool(row["Hard_Filter_Pass"]):
+                reason = str(
+                    row["Hard_Filter_Fail_Reason"]
+                )
+                excluded_summary[reason] = (
+                    excluded_summary.get(reason, 0) + 1
+                )
+                continue
+
+            meta = meta_by_user.get(user_id, {})
+            profile = meta.get("profile") or {}
+            recommendations.append({
+                "rank": int(row["Ranking"]),
+                "user_id": user_id,
+                "nickname": profile.get(
+                    "nickname"
+                ) or "이름 없는 사용자",
+                "profile_image": profile.get(
+                    "profile_image"
+                ),
+                "direct_match_score": float(
+                    row["Direct_Match_Score"]
+                ),
+                "action": str(row["Action"]),
+                "severe_mismatch_axes": (
+                    self._h1_split_axes(
+                        row.get("Severe_Mismatch")
+                    )
+                ),
+                "partial_mismatch_axes": (
+                    self._h1_split_axes(
+                        row.get("Partial_Mismatch")
+                    )
+                ),
+                "axis_scores": {
+                    "schedule": round(
+                        float(row["Match_schedule"]) * 100
+                    ),
+                    "skill": round(
+                        float(row["Match_skill"]) * 100
+                    ),
+                    "purpose": round(
+                        float(row["Match_purpose"]) * 100
+                    ),
+                    "atmosphere": round(
+                        float(row["Match_atmosphere"]) * 100
+                    ),
+                    "activity_frequency": round(
+                        float(
+                            row["Match_activity_frequency"]
+                        ) * 100
+                    ),
+                    "cost": round(
+                        float(row["Match_cost"]) * 100
+                    ),
+                },
+                "data_coverage": meta.get(
+                    "data_coverage", 0
+                ),
+                "missing_axes": meta.get(
+                    "missing_axes", []
+                ),
+            })
+
+        eligible_count = len(recommendations)
+        recommendations = recommendations[:limit]
+
+        return {
+            "recommendations": recommendations,
+            "total_users_scanned": context_bundle.get(
+                "total_users_scanned", 0
+            ),
+            "candidate_pool_count": context_bundle.get(
+                "candidate_pool_count", len(contexts)
+            ),
+            "eligible_count": eligible_count,
+            "returned_count": len(recommendations),
+            "excluded_member_count": context_bundle.get(
+                "excluded_member_count", 0
+            ),
+            "excluded_application_count": context_bundle.get(
+                "excluded_application_count", 0
+            ),
+            "excluded_summary": excluded_summary,
+            "consent_filter_applied": False,
+            "travel_filter_mode": "region_proxy",
         }
 
     @classmethod

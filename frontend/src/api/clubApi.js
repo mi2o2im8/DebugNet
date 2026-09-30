@@ -686,6 +686,29 @@ export async function getClubApplications(
 
 
 // ---------------------------------------------------------
+// H1 운영자용 모집 대상 추천
+// ---------------------------------------------------------
+export async function getClubRecruitmentRecommendations(
+    clubId,
+    limit = 10
+) {
+    const query = new URLSearchParams({
+        limit: String(limit)
+    });
+
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/recruitment-recommendations`
+            + `?${query.toString()}`
+        ),
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
 // 동호회 가입 신청 승인·거절
 // ---------------------------------------------------------
 export async function decideClubApplication(
