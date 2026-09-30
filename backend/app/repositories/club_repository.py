@@ -412,7 +412,20 @@ class ClubRepository:
         )
 
         if member_response.data:
-            return member_response.data[0]["status"]
+            member_status = member_response.data[0]["status"]
+
+            # 현재 정식 회원이면 가입 완료
+            if member_status == "active":
+                return "active"
+
+            # 탈퇴한 회원이면 기존 탈퇴 이력을 유지하면서
+            # 다시 가입 신청할 수 있도록 아래의 신청 상태를 확인한다.
+            if member_status == "withdrawn":
+                pass
+
+            # 그 외 회원 상태가 있다면 기존 상태 반환
+            else:
+                return member_status
 
         # 2. 가입 신청 상태 확인
         application_response = (
@@ -427,11 +440,18 @@ class ClubRepository:
         )
 
         if application_response.data:
-            return application_response.data[0]["status"]
+            application_status = application_response.data[0]["status"]
 
-        # 3. 아무 기록도 없으면 아직 신청하지 않음
+            # 현재 가입 신청이 승인 대기 중
+            if application_status == "pending":
+                return "pending"
+
+            # 최근 신청 상태가 그 외라면 해당 상태 반환
+            return application_status
+
+        # 3. 회원 기록은 있지만 withdrawn이고,
+        #    새로운 가입 신청도 없으면 다시 가입 신청 가능
         return None
-
     # -----------------------------------------------------
     # 종목명으로 sports 조회
     # -----------------------------------------------------

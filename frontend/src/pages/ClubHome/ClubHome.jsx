@@ -1,12 +1,46 @@
 import BottomNav from "../../components/BottomNav";
-import { useEffect, useState } from "react";
+import { Link, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ClubHome.css";
 import ClubSearchFilter from "../../components/common/ClubSearchFilter";
 import { buildApiUrl } from "../../api/apiClient";
+import { useNotifications } from "../../context/NotificationContext";
+import profileIcon from "../../assets/img/basic_profile_img.png";
+import { supabase } from "../../../supabaseClient";
 
 function ClubHome() {
   const navigate = useNavigate();
+
+  // =====================================================
+  // 사용자 프로필
+  // =====================================================
+  const [profileImage, setProfileImage] = useState(
+    () => localStorage.getItem("playbridge_profile_image") || ""
+  );
+
+  // =====================================================
+  // 알림
+  // =====================================================
+  const {
+    unreadCount: unreadNotificationCount,
+  } = useNotifications();
+
+  // =====================================================
+  // 동호회 이미지 오류 처리
+  // =====================================================
+  const handleClubImageError = (event) => {
+    const img = event.currentTarget;
+
+    img.style.display = "none";
+
+    const fallback = img.parentElement?.querySelector(
+      ".Club-card-no-image"
+    );
+
+    if (fallback) {
+      fallback.style.display = "flex";
+    }
+  };
 
   // =========================================
   // 동호회 목록 및 상태
@@ -17,25 +51,34 @@ function ClubHome() {
 
   // =========================================
   // 게스트 모집중 목록 및 상태
-  // =========================================  
+  // =========================================
   const [guestEvents, setGuestEvents] = useState([]);
   const [guestLoading, setGuestLoading] = useState(true);
   const [guestError, setGuestError] = useState("");
 
-  
+  // =========================================
   // 검색 결과 화면 표시 여부
+  // =========================================
   const [isSearchResult, setIsSearchResult] = useState(false);
 
+  // =========================================
   // 회원 모집중 더보기 상태
+  // =========================================
   const [showAllClubs, setShowAllClubs] = useState(false);
 
+  // =========================================
   // 게스트 모집중 더보기 상태
+  // =========================================
   const [showAllGuests, setShowAllGuests] = useState(false);
 
+  // =========================================
   // 검색창 열림 / 닫힘
+  // =========================================
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  // =========================================
   // 검색어
+  // =========================================
   const [searchKeyword, setSearchKeyword] = useState("");
 
   // =========================================
@@ -44,10 +87,14 @@ function ClubHome() {
   const [selectedSports, setSelectedSports] = useState([]);
   const [selectedRegions, setSelectedRegions] = useState([]);
 
+  // =========================================
   // 실제 적용된 활동 요일
+  // =========================================
   const [selectedDays, setSelectedDays] = useState([]);
 
+  // =========================================
   // 실제 적용된 활동 시간
+  // =========================================
   const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
 
   // =========================================
@@ -104,12 +151,20 @@ function ClubHome() {
 
         const data = await response.json();
 
-        console.log("API에서 가져온 동호회 데이터:", data);
-        console.log("동호회 개수:", data.length);
+        console.log(
+          "API에서 가져온 동호회 데이터:",
+          data
+        );
+
+        console.log(
+          "동호회 개수:",
+          data.length
+        );
 
         setClubs(data);
       } catch (error) {
         console.error(error);
+
         setError(error.message);
         setClubs([]);
       } finally {
@@ -118,7 +173,77 @@ function ClubHome() {
     };
 
     fetchClubs();
-  }, [selectedSports, selectedRegions, selectedDays, selectedTimeSlots,]);
+  }, [
+    selectedSports,
+    selectedRegions,
+    selectedDays,
+    selectedTimeSlots,
+  ]);
+
+  // =====================================================
+  // 사용자 프로필 이미지 조회
+  // =====================================================
+  useEffect(() => {
+    let isActive = true;
+
+    const loadUserProfile = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user || !isActive) {
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("users")
+          .select("profile_image")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error(
+            "ClubHome 프로필 이미지 조회 오류:",
+            error
+          );
+
+          return;
+        }
+
+        if (!isActive) {
+          return;
+        }
+
+        if (data?.profile_image) {
+          setProfileImage(data.profile_image);
+
+          localStorage.setItem(
+            "playbridge_profile_image",
+            data.profile_image
+          );
+        } else {
+          setProfileImage("");
+
+          localStorage.removeItem(
+            "playbridge_profile_image"
+          );
+        }
+      } catch (error) {
+        console.error(
+          "ClubHome 프로필 이미지 조회 오류:",
+          error
+        );
+      }
+    };
+
+    loadUserProfile();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   // =========================================
   // 게스트 모집 이벤트 조회
   // =========================================
@@ -159,7 +284,10 @@ function ClubHome() {
           );
         }
 
-        console.log("게스트 모집 이벤트:", eventList);
+        console.log(
+          "게스트 모집 이벤트:",
+          eventList
+        );
 
         console.log(
           "게스트 첫 번째 데이터:",
@@ -168,9 +296,14 @@ function ClubHome() {
 
         setGuestEvents(eventList);
       } catch (err) {
-        if (err.name === "AbortError") return;
+        if (err.name === "AbortError") {
+          return;
+        }
 
-        console.error("게스트 모집 조회 오류:", err);
+        console.error(
+          "게스트 모집 조회 오류:",
+          err
+        );
 
         setGuestError(err.message);
         setGuestEvents([]);
@@ -187,68 +320,165 @@ function ClubHome() {
       controller.abort();
     };
   }, []);
+
   // =========================================
   // 검색어 + 적용된 필터를 기준으로 동호회 검색
   // =========================================
   const filteredClubs = clubs.filter((club) => {
-    const keyword = searchKeyword.trim().toLowerCase();
+    const keyword = searchKeyword
+      .trim()
+      .toLowerCase();
 
     // 동호회 이름 또는 소개글에 검색어가 포함되는지 확인
     const matchesKeyword =
       !keyword ||
-      club.club_name?.toLowerCase().includes(keyword) ||
-      club.club_intro?.toLowerCase().includes(keyword);
+      club.club_name
+        ?.toLowerCase()
+        .includes(keyword) ||
+      club.club_intro
+        ?.toLowerCase()
+        .includes(keyword);
+
     return matchesKeyword;
   });
-  
+
   // =========================================
-  // 홈 화면 회원 모집중 목록
-  // 기본 6개, 더보기 클릭 시 전체 표시
-  // 검색 결과 화면에서는 전체 표시
+  // 회원 모집중인 동호회만 필터링
+  // is_recruiting = true인 동호회만 표시
   // =========================================
-  const displayClubs = isSearchResult
-    ? filteredClubs
-    : showAllClubs
-      ? filteredClubs
-      : filteredClubs.slice(0, 6);
-  
-  // 전체 동호회 홈 화면 표시용 (최대 6개)
-  const displayAllClubs = filteredClubs.slice(0, 6);
+  const recruitingClubs = filteredClubs.filter(
+    (club) => club.is_recruiting === true
+  );
+
+  // =========================================
+  // 회원 모집중 홈 화면 표시용
+  // 최대 6개
+  // =========================================
+  const displayRecruitingClubs =
+    recruitingClubs.slice(0, 6);
+
+  // =========================================
+  // 전체 동호회 홈 화면 표시용
+  // 최대 6개
+  // =========================================
+  const displayAllClubs =
+    filteredClubs.slice(0, 6);
 
   return (
     <div className="ClubHome-container">
 
-      {/* 상단 영역 */}
+      {/* =====================================================
+          상단 영역
+      ===================================================== */}
       <header className="ClubHome-header">
 
         <button className="ClubHome-region">
           서울
-          <span className="ClubHome-arrow">⌄</span>
+          <span className="ClubHome-arrow">
+            ⌄
+          </span>
         </button>
 
         <div className="ClubHome-actions">
+
+          {/* 검색 */}
           <button
             className="ClubHome-icon-button"
-            onClick={() => setIsSearchOpen((prev) => !prev)}
+            onClick={() =>
+              setIsSearchOpen(
+                (prev) => !prev
+              )
+            }
+            aria-label="동호회 검색"
           >
-            🔍
+            <svg
+              viewBox="0 0 24 24"
+              width="22"
+              height="22"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="11"
+                cy="11"
+                r="7"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              />
+
+              <path
+                d="M16.5 16.5L21 21"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
           </button>
 
-          <button className="ClubHome-icon-button">
-            🔔
+          {/* 알림 */}
+          <button
+            type="button"
+            className="ClubHome-icon-button ClubHome-notification"
+            aria-label="알림"
+            onClick={() => navigate("/notification")}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="22"
+              height="22"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 8C18 4.686 15.314 2 12 2C8.686 2 6 4.686 6 8C6 14 3 16 3 18H21C21 16 18 14 18 8Z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+
+              <path
+                d="M10 21H14"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+
+            {unreadNotificationCount > 0 && (
+              <span className="ClubHome-notification-badge">
+                {unreadNotificationCount >= 10
+                  ? "10+"
+                  : unreadNotificationCount}
+              </span>
+            )}
           </button>
 
-          <button className="ClubHome-icon-button">
-            ⚙
+          {/* 내 정보 / 프로필 */}
+          <button
+            type="button"
+            className="ClubHome-profile-button"
+            aria-label="내 정보"
+            onClick={() => navigate("/mypage")}
+          >
+            <img
+              src={
+                profileImage || profileIcon
+              }
+              alt="내 정보"
+              onError={(e) => {
+                e.currentTarget.src =
+                  profileIcon;
+              }}
+            />
           </button>
+
         </div>
-
       </header>
 
-      {/* ===================================== */}
-      {/* 공통 검색 및 필터 */}
-      {/* ===================================== */}
-
+      {/* =====================================================
+          공통 검색 및 필터
+      ===================================================== */}
       <ClubSearchFilter
         isSearchOpen={isSearchOpen}
         searchKeyword={searchKeyword}
@@ -258,7 +488,9 @@ function ClubHome() {
           // 검색어가 입력되면 검색 결과 화면 표시
           if (keyword.trim()) {
             setIsSearchResult(true);
-          } else if (selectedFilterCount === 0) {
+          } else if (
+            selectedFilterCount === 0
+          ) {
             // 검색어가 없고 적용된 필터도 없으면 기본 화면
             setIsSearchResult(false);
           }
@@ -270,29 +502,44 @@ function ClubHome() {
           timeSlots: selectedTimeSlots,
         }}
         onSelectedFiltersChange={(filters) => {
-          setSelectedSports(filters.sports);
-          setSelectedRegions(filters.regions);
-          setSelectedDays(filters.days);
-          setSelectedTimeSlots(filters.timeSlots);
+          setSelectedSports(
+            filters.sports
+          );
+
+          setSelectedRegions(
+            filters.regions
+          );
+
+          setSelectedDays(
+            filters.days
+          );
+
+          setSelectedTimeSlots(
+            filters.timeSlots
+          );
 
           // 필터 적용 후 검색 결과 화면 표시
           setIsSearchResult(true);
         }}
       />
 
-      {/* ===================================== */}
-      {/* 1. AI 맞춤 동호회 추천 */}
-      {/* 기본 화면에서만 표시 */}
-      {/* ===================================== */}
-
+      {/* =====================================================
+          1. AI 맞춤 동호회 추천
+          기본 화면에서만 표시
+      ===================================================== */}
       {!isSearchResult && (
         <section className="ClubHome-ai">
 
           <div className="ClubHome-ai-content">
 
             <div className="ClubHome-ai-title">
-              <span className="ClubHome-ai-badge">AI</span>
-              <h2>나의 맞춤 동호회 추천</h2>
+              <span className="ClubHome-ai-badge">
+                AI
+              </span>
+
+              <h2>
+                나의 맞춤 동호회 추천
+              </h2>
             </div>
 
             <p className="ClubHome-ai-description">
@@ -314,24 +561,27 @@ function ClubHome() {
         </section>
       )}
 
-      {/* ===================================== */}
-      {/* 전체 동호회 */}
-      {/* ===================================== */}
-
+      {/* =====================================================
+          전체 동호회
+      ===================================================== */}
       {!isSearchResult && (
         <section className="ClubHome-all-clubs">
 
-          {/* 제목 */}
           <div className="ClubHome-section-header">
+
             <h2
-              onClick={() => navigate("/clubs/all")}
-              style={{ cursor: "pointer" }}
+              onClick={() =>
+                navigate("/clubs/all")
+              }
+              style={{
+                cursor: "pointer",
+              }}
             >
               전체 동호회
             </h2>
+
           </div>
 
-          {/* 동호회 목록 */}
           <div className="Club-list ClubHome-all-clubs-list">
 
             {loading ? (
@@ -349,41 +599,66 @@ function ClubHome() {
             ) : (
               <>
                 {/* 동호회 카드 최대 6개 */}
-                {filteredClubs.slice(0, 6).map((club) => (
-                  <div
-                    className="Club-card"
-                    key={club.club_id}
-                    onClick={() =>
-                      navigate(`/clubs/${club.club_id}`)
-                    }
-                  >
+                {displayAllClubs.map(
+                  (club) => (
+                    <div
+                      className="Club-card"
+                      key={club.club_id}
+                      onClick={() =>
+                        navigate(
+                          `/clubs/${club.club_id}`
+                        )
+                      }
+                    >
 
-                    {/* 동호회 이미지 */}
-                    <div className="Club-card-image">
-                      {club.image_url ? (
-                        <img
-                          src={club.image_url}
-                          alt={club.club_name}
-                        />
-                      ) : (
-                        <div className="Club-card-no-image">
-                          이미지 없음
-                        </div>
-                      )}
+                      {/* 동호회 이미지 */}
+                      <div className="Club-card-image">
+
+                        {club.image_url ? (
+                          <>
+                            <img
+                              src={
+                                club.image_url
+                              }
+                              alt={
+                                club.club_name
+                              }
+                              onError={
+                                handleClubImageError
+                              }
+                            />
+
+                            <div
+                              className="Club-card-no-image"
+                              style={{
+                                display:
+                                  "none",
+                              }}
+                            >
+                              이미지 없음
+                            </div>
+                          </>
+                        ) : (
+                          <div className="Club-card-no-image">
+                            이미지 없음
+                          </div>
+                        )}
+
+                      </div>
+
+                      {/* 동호회 이름 */}
+                      <h3 className="Club-card-name">
+                        {club.club_name}
+                      </h3>
+
+                      {/* 동호회 소개 */}
+                      <p className="Club-card-intro">
+                        {club.club_intro}
+                      </p>
+
                     </div>
-
-                    {/* 동호회 이름 */}
-                    <h3 className="Club-card-name">
-                      {club.club_name}
-                    </h3>
-
-                    {/* 동호회 소개 */}
-                    <p className="Club-card-intro">
-                      {club.club_intro}
-                    </p>
-
-                  </div>
-                ))}
+                  )
+                )}
 
                 {/* 6개 이후 더보기 버튼 */}
                 {filteredClubs.length > 6 && (
@@ -391,13 +666,17 @@ function ClubHome() {
                     type="button"
                     className="ClubHome-all-clubs-more"
                     onClick={() => {
-                      console.log("전체 동호회 더보기 클릭");
+                      console.log(
+                        "전체 동호회 더보기 클릭"
+                      );
+
                       navigate("/clubs/all");
                     }}
                   >
                     더보기 →
                   </button>
                 )}
+
               </>
             )}
 
@@ -406,10 +685,9 @@ function ClubHome() {
         </section>
       )}
 
-      {/* ===================================== */}
-      {/* 2. 회원 모집중 / 동호회 검색 결과 */}
-      {/* ===================================== */}
-
+      {/* =====================================================
+          2. 회원 모집중 / 동호회 검색 결과
+      ===================================================== */}
       <section className="ClubHome-recruit">
 
         <div className="ClubHome-section-header">
@@ -420,20 +698,28 @@ function ClubHome() {
                 navigate("/clubs/recruit");
               }
             }}
-            style={{ cursor: isSearchResult ? "default" : "pointer" }}
+            style={{
+              cursor: isSearchResult
+                ? "default"
+                : "pointer",
+            }}
           >
-
-            {isSearchResult ? "검색 결과" : "회원 모집중"}
+            {isSearchResult
+              ? "검색 결과"
+              : "회원 모집중"}
           </h2>
 
         </div>
 
         {/* 검색 결과 개수 */}
-        {isSearchResult && !loading && !error && (
-          <p className="ClubHome-result-count">
-            검색 결과 {filteredClubs.length}개
-          </p>
-        )}
+        {isSearchResult &&
+          !loading &&
+          !error && (
+            <p className="ClubHome-result-count">
+              검색 결과{" "}
+              {filteredClubs.length}개
+            </p>
+          )}
 
         {/* 동호회 목록 */}
         <div className="Club-list">
@@ -446,55 +732,91 @@ function ClubHome() {
             <p className="ClubHome-message">
               {error}
             </p>
+          ) : !isSearchResult &&
+            recruitingClubs.length === 0 ? (
+            <p className="ClubHome-message">
+              현재 모집 중인 동호회가 없습니다.
+            </p>
           ) : filteredClubs.length === 0 ? (
             <p className="ClubHome-message">
               선택한 조건에 해당하는 동호회가 없습니다.
             </p>
           ) : (
             <>
-              {/* 동호회 카드 */}
-              {displayClubs.map((club) => (
-                <div
-                  className="Club-card"
-                  key={club.club_id}
-                  onClick={() => navigate(`/clubs/${club.club_id}`)}
-                >
+              {/* 회원 모집중 동호회 카드 */}
+              {displayRecruitingClubs.map(
+                (club) => (
+                  <div
+                    className="Club-card"
+                    key={club.club_id}
+                    onClick={() =>
+                      navigate(
+                        `/clubs/${club.club_id}`
+                      )
+                    }
+                  >
 
-                  <div className="Club-card-image">
+                    <div className="Club-card-image">
 
-                    {club.image_url ? (
-                      <img
-                        src={club.image_url}
-                        alt={club.club_name}
-                      />
-                    ) : (
-                      <div className="Club-card-no-image">
-                        이미지 없음
-                      </div>
-                    )}
+                      {club.image_url ? (
+                        <>
+                          <img
+                            src={
+                              club.image_url
+                            }
+                            alt={
+                              club.club_name
+                            }
+                            onError={
+                              handleClubImageError
+                            }
+                          />
+
+                          <div
+                            className="Club-card-no-image"
+                            style={{
+                              display:
+                                "none",
+                            }}
+                          >
+                            이미지 없음
+                          </div>
+                        </>
+                      ) : (
+                        <div className="Club-card-no-image">
+                          이미지 없음
+                        </div>
+                      )}
+
+                    </div>
+
+                    <h3 className="Club-card-name">
+                      {club.club_name}
+                    </h3>
+
+                    <p className="Club-card-intro">
+                      {club.club_intro}
+                    </p>
 
                   </div>
-
-                  <h3 className="Club-card-name">
-                    {club.club_name}
-                  </h3>
-
-                  <p className="Club-card-intro">
-                    {club.club_intro}
-                  </p>
-
-                </div>
-              ))}
+                )
+              )}
 
               {/* 6개 이후 더보기 버튼 */}
-              {!isSearchResult && filteredClubs.length > 6 && (
-                <button
-                  className="ClubHome-more-button"
-                  onClick={() => navigate("/clubs/recruit")}
-                >
-                  더보기 →
-                </button>
-              )}
+              {!isSearchResult &&
+                recruitingClubs.length > 6 && (
+                  <button
+                    type="button"
+                    className="ClubHome-more-button"
+                    onClick={() =>
+                      navigate(
+                        "/clubs/recruit"
+                      )
+                    }
+                  >
+                    더보기 →
+                  </button>
+                )}
 
             </>
           )}
@@ -503,23 +825,26 @@ function ClubHome() {
 
       </section>
 
-
-      {/* ===================================== */}
-      {/* 3. 게스트 모집중 */}
-      {/* 기본 화면에서만 표시 */}
-      {/* ===================================== */}
-
+      {/* =====================================================
+          3. 게스트 모집중
+          기본 화면에서만 표시
+      ===================================================== */}
       {!isSearchResult && (
         <section className="ClubHome-guest">
 
           <div className="ClubHome-section-header">
 
             <h2
-              onClick={() => navigate("/guest-recruit")}
-              style={{ cursor: "pointer" }}
+              onClick={() =>
+                navigate("/guest-recruit")
+              }
+              style={{
+                cursor: "pointer",
+              }}
             >
               게스트 모집중
             </h2>
+
           </div>
 
           <div className="Guest-list">
@@ -538,56 +863,86 @@ function ClubHome() {
               </p>
             ) : (
               <>
-                {guestEvents.slice(0, 6).map((event) => (
-                  <div
-                    className="Guest-card"
-                    key={event.event_id}
-                    onClick={() =>
-                      navigate(`/guest-recruit/${event.event_id}`, {
-                        state: {
-                          event: event,
-                        },
-                      })
-                    }
-                  >
-                    <div className="Guest-card-image">
-                      {event.event_image_url ? (
-                        <img
-                          src={event.event_image_url}
-                          alt={event.title}
-                        />
-                      ) : (
-                        "이미지"
-                      )}
-                    </div>
+                {guestEvents
+                  .slice(0, 6)
+                  .map((event) => (
+                    <div
+                      className="Guest-card"
+                      key={event.event_id}
+                      onClick={() =>
+                        navigate(
+                          `/guest-recruit/${event.event_id}`,
+                          {
+                            state: {
+                              event: event,
+                            },
+                          }
+                        )
+                      }
+                    >
 
-                    <h3 className="Guest-card-title">
-                      {event.title}
-                    </h3>
+                      <div className="Guest-card-image">
 
-                    <div className="Guest-card-info">
+                        {event.event_image_url ? (
+                          <img
+                            src={
+                              event.event_image_url
+                            }
+                            alt={
+                              event.title
+                            }
+                          />
+                        ) : (
+                          "이미지"
+                        )}
+
+                      </div>
+
+                      <h3 className="Guest-card-title">
+                        {event.title}
+                      </h3>
+
+                      <div className="Guest-card-info">
+
                         <span className="Guest-card-time">
-                            {event.start_time?.slice(0, 5)}
-                            {" - "}
-                            {event.end_time?.slice(0, 5)}
+                          {event.start_time?.slice(
+                            0,
+                            5
+                          )}
+
+                          {" - "}
+
+                          {event.end_time?.slice(
+                            0,
+                            5
+                          )}
                         </span>
 
                         <span className="Guest-card-location">
-                            └ {event.location || "장소 미정"}
+                          └{" "}
+                          {event.location ||
+                            "장소 미정"}
                         </span>
+
+                      </div>
+
                     </div>
-                  </div>
-                ))}
+                  ))}
 
                 {guestEvents.length > 6 && (
                   <button
                     type="button"
                     className="ClubHome-guest-more"
-                    onClick={() => navigate("/guest-recruit")}
+                    onClick={() =>
+                      navigate(
+                        "/guest-recruit"
+                      )
+                    }
                   >
                     더보기 →
                   </button>
                 )}
+
               </>
             )}
 
@@ -595,14 +950,17 @@ function ClubHome() {
 
         </section>
       )}
-    
-      {/* 검색 결과 화면 상단 */}
+
+      {/* =====================================================
+          검색 결과 화면 상단
+      ===================================================== */}
       {isSearchResult && (
         <div className="ClubHome-search-result-header">
 
           <button
             className="ClubHome-search-back"
             onClick={() => {
+
               // 검색 결과 화면 닫기
               setIsSearchResult(false);
 
@@ -622,18 +980,28 @@ function ClubHome() {
           >
             ← 동호회 찾기로
           </button>
+
         </div>
       )}
 
-      {/* 이용 도우미 챗봇 버튼 */}
+      {/* =====================================================
+          이용 도우미 챗봇 버튼
+      ===================================================== */}
       <button className="ClubHome-chatbot-button">
-        <span className="ClubHome-chatbot-icon">🤖</span>
+
+        <span className="ClubHome-chatbot-icon">
+          🤖
+        </span>
+
         <span className="ClubHome-chatbot-text">
           이용 도우미
         </span>
+
       </button>
 
-{/* 하단 네비게이션 */}
+      {/* =====================================================
+          하단 네비게이션
+      ===================================================== */}
       <BottomNav />
 
     </div>

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import { supabase } from "../../../supabaseClient";
-import { getClubMemberStatus } from "../../api/clubApi";
 
 import "./ClubApplication.css";
 import { buildApiUrl } from "../../api/apiClient";
@@ -43,18 +42,6 @@ function ClubApplication() {
   const [agree, setAgree] = useState(false);
 
   // =========================================================
-  // ⭐ 현재 로그인 사용자
-  // =========================================================
-
-  const [currentUserId, setCurrentUserId] = useState(null);
-
-  // =========================================================
-  // ⭐ 승인 대기 상태
-  // =========================================================
-
-  const [waitingApproval, setWaitingApproval] = useState(false);
-
-  // =========================================================
   // ⭐ 동호회 정보 + 가입 질문 조회
   // =========================================================
 
@@ -68,10 +55,6 @@ function ClubApplication() {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-
-        if (user) {
-          setCurrentUserId(user.id);
-        }
 
         // ---------------------------------------------
         // 2. 동호회 정보 조회
@@ -134,115 +117,6 @@ function ClubApplication() {
       [questionId]: value,
     }));
   };
-
-  // =========================================================
-  // ⭐ 운영자 승인 여부 확인
-  //
-  // pending
-  //   → 계속 대기
-  //
-  // active
-  //   → 운영자 승인 완료
-  //   → MainHome 이동
-  //
-  // rejected
-  //   → 신청 화면으로 돌아감
-  // =========================================================
-
-  useEffect(() => {
-    if (
-      !waitingApproval ||
-      !currentUserId
-    ) {
-      return;
-    }
-
-    let isChecking = true;
-
-    const checkApproval = async () => {
-      try {
-        const result =
-          await getClubMemberStatus(
-            clubId,
-            currentUserId
-          );
-
-        const status =
-          result?.status;
-
-        console.log(
-          "현재 가입 상태:",
-          status
-        );
-
-        // ---------------------------------------------
-        // ⭐ 운영자 승인 완료
-        // ---------------------------------------------
-
-        if (
-          status === "active" &&
-          isChecking
-        ) {
-          alert(
-            "운영자의 승인이 완료되었습니다.\n가입 후 메인 홈으로 이동합니다."
-          );
-
-          navigate(
-            "/mainhome",
-            {
-              replace: true,
-            }
-          );
-
-          return;
-        }
-
-        // ---------------------------------------------
-        // ⭐ 가입 거절
-        // ---------------------------------------------
-
-        if (
-          status === "rejected" &&
-          isChecking
-        ) {
-          alert(
-            "가입 신청이 거절되었습니다."
-          );
-
-          setWaitingApproval(false);
-
-          return;
-        }
-
-      } catch (error) {
-        console.error(
-          "가입 승인 상태 확인 오류:",
-          error
-        );
-      }
-    };
-
-    // 처음 한 번 바로 확인
-    checkApproval();
-
-    // ⭐ 3초마다 승인 여부 확인
-    const intervalId =
-      setInterval(
-        checkApproval,
-        3000
-      );
-
-    return () => {
-      isChecking = false;
-      clearInterval(intervalId);
-    };
-
-  }, [
-    waitingApproval,
-    currentUserId,
-    clubId,
-    navigate,
-  ]);
 
   // =========================================================
   // ⭐ 가입 신청 제출
@@ -317,8 +191,6 @@ function ClubApplication() {
         );
         return;
       }
-
-      setCurrentUserId(user.id);
 
       // ---------------------------------------------
       // 6. 신청 메시지 구성
@@ -407,13 +279,13 @@ function ClubApplication() {
       );
 
       alert(
-        "가입 신청이 완료되었습니다.\n운영자의 승인을 기다려주세요."
+        "동호회 가입 신청이 완료되었습니다.\n운영자의 승인 후 이용하실 수 있습니다."
       );
 
-      // ⭐ 여기서 바로 MainHome으로 이동하지 않는다.
-      // ⭐ 운영자가 승인해서 active가 될 때 이동한다.
-
-      setWaitingApproval(true);
+      // 확인을 누르면 다시 동호회 상세 페이지로 이동
+      navigate(`/clubs/${clubId}`, {
+        replace: true,
+      });
 
     } catch (error) {
       console.error(
@@ -435,56 +307,6 @@ function ClubApplication() {
     return (
       <div>
         불러오는 중...
-      </div>
-    );
-  }
-
-  // =========================================================
-  // ⭐ 승인 대기 화면
-  // =========================================================
-
-  if (waitingApproval) {
-    return (
-      <div className="club-application-page">
-
-        <header className="club-application-header">
-
-          <button
-            type="button"
-            onClick={() =>
-              navigate(
-                `/clubs/${clubId}`
-              )
-            }
-          >
-            <FiArrowLeft />
-          </button>
-
-          <h1>
-            가입 승인 대기
-          </h1>
-
-        </header>
-
-        <div className="club-application-waiting">
-
-          <h2>
-            가입 신청이 완료되었습니다.
-          </h2>
-
-          <p>
-            운영자의 승인을 기다리고 있습니다.
-            <br />
-            승인되면 자동으로
-            가입 후 메인 홈으로 이동합니다.
-          </p>
-
-          <p>
-            현재 승인 상태를 확인하는 중입니다...
-          </p>
-
-        </div>
-
       </div>
     );
   }
