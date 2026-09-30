@@ -110,3 +110,31 @@ class EventReviewRepository:
             )
 
         return response.data[0]
+
+    # -----------------------------------------------------
+    # 게스트로 참여 확정(joined)됐는지 확인
+    #
+    # 같은 일정에 게스트 신청 기록이 여러 개면
+    # 가장 최근 신청 기준으로 판단한다.
+    # -----------------------------------------------------
+    def is_joined_guest(
+        self,
+        event_id: int,
+        user_id: str,
+    ) -> bool:
+        response = (
+            self.admin_client
+            .table("event_participants")
+            .select("event_participant_id, status")
+            .eq("event_id", event_id)
+            .eq("user_id", user_id)
+            .eq("participant_type", "guest")
+            .order("event_participant_id", desc=True)
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return False
+
+        return response.data[0].get("status") == "joined"

@@ -182,6 +182,8 @@ class EventReviewService:
             )
 
         # 4. 참석 여부 확인
+        #    - 멤버: 참석 투표에서 "참석"
+        #    - 게스트: 게스트 신청이 참여 확정(joined)
         attendance_status = (
             self.get_user_attendance_status(
                 event_id=event_id,
@@ -189,7 +191,19 @@ class EventReviewService:
             )
         )
 
-        if attendance_status != "attending":
+        is_attending_member = (
+            attendance_status == "attending"
+        )
+
+        is_joined_guest = (
+            not is_attending_member
+            and self.review_repository.is_joined_guest(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        if not (is_attending_member or is_joined_guest):
             raise PermissionError(
                 "활동에 참석한 이용자만 후기를 작성할 수 있습니다."
             )
@@ -247,4 +261,4 @@ class EventReviewService:
             .find_event_reviews(
                 event_id=event_id,
             )
-        )
+        )

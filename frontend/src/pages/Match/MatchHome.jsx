@@ -11,8 +11,10 @@ import {
 } from "react-icons/fi";
 
 import BottomNav from "../../components/BottomNav";
+import ChatbotButton from "../../components/Chatbot/ChatbotButton";
 import { useNotifications } from "../../context/NotificationContext";
 import CustomSelect from "../../components/common/CustomSelect";
+import Chatbot from "../Chatbot/Chatbot";
 import MatchCalendar from "./components/MatchCalendar";
 import {
   getMatchOptions,
@@ -111,6 +113,10 @@ const formatSelectedDate = (dateString) => {
 
 function MatchHome() {
   const navigate = useNavigate();
+
+  // 이용 도우미 열림 여부
+  const [isChatbotOpen, setIsChatbotOpen] =
+    useState(false);
 
   // 공통 알림 Context의 안 읽은 알림 개수
   const { unreadCount: unreadNotificationCount } = useNotifications();
@@ -909,6 +915,14 @@ function MatchHome() {
         </section>
 
 
+        {/* 이용 도우미가 하단 콘텐츠를 가리지 않도록 여유 공간 */}
+        <div
+          aria-hidden="true"
+          style={{
+            height: "100px",
+          }}
+        />
+
 
       </main>
 
@@ -964,6 +978,24 @@ function MatchHome() {
 
           </div>
         )}
+
+
+      {/* 이용 도우미 */}
+      {!isChatbotOpen && (
+        <ChatbotButton
+          onClick={() =>
+            setIsChatbotOpen(true)
+          }
+        />
+      )}
+
+      {isChatbotOpen && (
+        <Chatbot
+          onClose={() =>
+            setIsChatbotOpen(false)
+          }
+        />
+      )}
 
 
       <BottomNav />

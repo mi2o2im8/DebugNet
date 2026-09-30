@@ -3,6 +3,8 @@
 // 운영자: 내가 운영하는 모든 동호회의 팀매칭 후기를 한곳에서 확인
 //         (작성할 후기 / 작성한 후기 / 받은 후기)
 // 멤버:   후기는 운영진 전용이라 안내만 표시
+// 게스트: 다른 동호회 일정에 게스트로 참여(확정)한 경기의
+//         활동 후기를 이 페이지에서 바로 작성 / 확인
 //
 // ※ 팀원이 만든 팀매칭 API(getMatchManagementMatches)를
 //   import만 해서 사용한다. matchApi.js는 수정하지 않음.
@@ -16,6 +18,11 @@ import BottomNav from "../../components/BottomNav";
 // ⭐ API
 import { authenticatedRequest } from "../../api/apiClient";
 import { getMatchManagementMatches } from "../Match/api/matchApi";
+import { getMyGuestEvents } from "../../api/userApi";
+import {
+    createEventReview,
+    getMyEventReview,
+} from "../../api/clubApi";
 
 import "./MyReviews.css";
 
@@ -165,6 +172,86 @@ const getCardAction = (tab, item) => {
 };
 
 
+/* ========================================
+   ⭐ 게스트 경기: 활동이 끝났는지
+   (서버 EventReviewService.is_event_finished 와 같은 기준:
+    종료 시간이 지나야 후기 작성 가능)
+   ======================================== */
+
+const isGuestEventFinished = (event) => {
+
+    if (!event?.event_date || !event?.end_time) return false;
+
+    const [year, month, day] = String(event.event_date)
+        .slice(0, 10)
+        .split("-")
+        .map(Number);
+
+    const [hour, minute] = String(event.end_time)
+        .split(":")
+        .map(Number);
+
+    const endAt = new Date(year, month - 1, day, hour || 0, minute || 0);
+
+    return Date.now() >= endAt.getTime();
+};
+
+
+/* ========================================
+   ⭐ 게스트로 참여한 경기 + 내 후기 가져오기
+   ======================================== */
+
+const fetchGuestReviewData = async () => {
+
+    const data = await getMyGuestEvents();
+
+    // 참여 확정(joined) + 이미 끝난 경기만
+    const finishedEvents = (data?.events ?? []).filter(
+        (event) =>
+            event.guest_status === "joined" &&
+            isGuestEventFinished(event)
+    );
+
+    // 경기마다 내가 쓴 후기가 있는지 확인
+    // (하나가 실패해도 나머지는 보여준다 → 실패한 건 "작성 전"으로 표시)
+    const reviewResults = await Promise.allSettled(
+        finishedEvents.map((event) =>
+            getMyEventReview(event.club_id, event.event_id)
+        )
+    );
+
+    const items = finishedEvents.map((event, index) => {
+        const result = reviewResults[index];
+
+        return {
+            ...event,
+            myReview:
+                result.status === "fulfilled"
+                    ? result.value ?? null
+                    : null,
+        };
+    });
+
+    // 작성 전: 오래된 경기부터 / 작성 완료: 최신 경기부터
+    const todo = items
+        .filter((item) => !item.myReview)
+        .sort((a, b) =>
+            String(a.event_date).localeCompare(String(b.event_date))
+        );
+
+    const written = items
+        .filter((item) => item.myReview)
+        .sort((a, b) =>
+            String(b.event_date).localeCompare(String(a.event_date))
+        );
+
+    return [...todo, ...written];
+};
+
+
+const REVIEW_MAX_LENGTH = 500;
+
+
 function MyReviews() {
 
     const navigate = useNavigate();
@@ -187,6 +274,16 @@ function MyReviews() {
     // 일부 동호회 조회가 실패했을 때 이름 표시용
     const [failedClubNames, setFailedClubNames] = useState([]);
 
+    // 게스트로 참여한 (끝난) 경기
+    const [guestItems, setGuestItems] = useState([]);
+    const [guestErrorMessage, setGuestErrorMessage] = useState("");
+
+    // 게스트 후기 팝업 ("write" 작성 / "view" 내 후기 보기)
+    const [reviewModal, setReviewModal] = useState(null);
+    const [reviewRating, setReviewRating] = useState(5);
+    const [reviewText, setReviewText] = useState("");
+    const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
 
@@ -204,14 +301,35 @@ function MyReviews() {
 
                 setLoading(true);
                 setErrorMessage("");
+                setGuestErrorMessage("");
 
-                // 1. 내 동호회 (운영 / 멤버)
-                const clubData = await authenticatedRequest(
-                    "/api/clubs/my",
-                    { method: "GET" }
-                );
+                // 1. 내 동호회 (운영 / 멤버) + 게스트 경기 (동시에)
+                //    게스트 조회가 실패해도 동호회 후기는 보여준다
+                const [clubData, guestResult] = await Promise.all([
+                    authenticatedRequest(
+                        "/api/clubs/my",
+                        { method: "GET" }
+                    ),
+                    fetchGuestReviewData().then(
+                        (value) => ({ status: "fulfilled", value }),
+                        (reason) => ({ status: "rejected", reason })
+                    ),
+                ]);
 
                 if (ignore) return;
+
+                if (guestResult.status === "fulfilled") {
+                    setGuestItems(guestResult.value);
+                } else {
+                    console.error(
+                        "게스트 경기 후기 조회 실패:",
+                        guestResult.reason
+                    );
+                    setGuestItems([]);
+                    setGuestErrorMessage(
+                        "게스트로 참여한 경기를 불러오지 못했어요. 잠시 후 다시 시도해주세요."
+                    );
+                }
 
                 const split = splitMyClubs(clubData);
 
@@ -301,6 +419,96 @@ function MyReviews() {
 
     const isOperator = operatingClubs.length > 0;
     const visibleItems = reviewData[activeTab] ?? [];
+
+    const hasGuestSection =
+        guestItems.length > 0 || Boolean(guestErrorMessage);
+
+    const guestTodoCount = guestItems.filter(
+        (item) => !item.myReview
+    ).length;
+
+
+    // =========================================================
+    // ⭐ 게스트 후기 팝업 열기 / 닫기
+    // =========================================================
+    const openGuestReview = (item) => {
+
+        if (item.myReview) {
+            setReviewModal({ mode: "view", item });
+            return;
+        }
+
+        setReviewRating(5);
+        setReviewText("");
+        setReviewModal({ mode: "write", item });
+    };
+
+    const closeGuestReview = () => {
+        if (reviewSubmitting) return;
+        setReviewModal(null);
+    };
+
+
+    // =========================================================
+    // ⭐ 게스트 후기 저장
+    // =========================================================
+    const handleSubmitGuestReview = async () => {
+
+        const item = reviewModal?.item;
+        if (!item) return;
+
+        const trimmedText = reviewText.trim();
+
+        if (!reviewRating) {
+            alert("별점을 선택해주세요.");
+            return;
+        }
+
+        if (!trimmedText) {
+            alert("후기 내용을 작성해주세요.");
+            return;
+        }
+
+        setReviewSubmitting(true);
+
+        try {
+
+            const savedReview = await createEventReview(
+                item.club_id,
+                item.event_id,
+                reviewRating,
+                trimmedText
+            );
+
+            // 목록에서 "작성 완료"로 바꾸기
+            setGuestItems((current) =>
+                current.map((guestItem) =>
+                    guestItem.event_id === item.event_id
+                        ? {
+                            ...guestItem,
+                            myReview: savedReview ?? {
+                                rating: reviewRating,
+                                review_text: trimmedText,
+                            },
+                        }
+                        : guestItem
+                )
+            );
+
+            alert("후기가 등록되었습니다.");
+            setReviewModal(null);
+
+        } catch (error) {
+
+            console.error("게스트 후기 등록 실패:", error);
+            alert(error?.message || "후기 등록에 실패했습니다.");
+
+        } finally {
+
+            setReviewSubmitting(false);
+
+        }
+    };
 
 
     // =========================================================
@@ -461,6 +669,97 @@ function MyReviews() {
 
 
                     {/* ========================================
+                       ⭐ 게스트 영역
+                       ======================================== */}
+
+                    {hasGuestSection && (
+                        <section className="my-reviews-guest">
+
+                            <h3 className="my-reviews-guest-title">
+                                게스트로 참여한 경기
+                                {guestTodoCount > 0 && (
+                                    <span className="my-reviews-guest-count">
+                                        작성 전 {guestTodoCount}
+                                    </span>
+                                )}
+                            </h3>
+
+                            <p className="my-reviews-guest-desc">
+                                다른 동호회 일정에 게스트로 참여한 경기는 활동 후기를 남길 수 있어요.
+                            </p>
+
+                            {guestErrorMessage && (
+                                <p className="my-reviews-warning">
+                                    {guestErrorMessage}
+                                </p>
+                            )}
+
+                            {guestItems.length > 0 && (
+                                <ul className="my-reviews-list">
+                                    {guestItems.map((item) => (
+                                        <li key={`guest-${item.event_id}`}>
+                                            <button
+                                                type="button"
+                                                className="my-reviews-card guest"
+                                                onClick={() => openGuestReview(item)}
+                                            >
+
+                                                {item.event_image_url ? (
+                                                    <img
+                                                        className="my-reviews-thumb"
+                                                        src={item.event_image_url}
+                                                        alt=""
+                                                    />
+                                                ) : (
+                                                    <span
+                                                        className="my-reviews-thumb placeholder guest"
+                                                        aria-hidden="true"
+                                                    >
+                                                        {item.club_name?.slice(0, 1)}
+                                                    </span>
+                                                )}
+
+                                                <span className="my-reviews-info">
+
+                                                    <span className="my-reviews-opponent">
+                                                        {item.title}
+                                                    </span>
+
+                                                    <span className="my-reviews-meta">
+                                                        {formatDateLabel(item.event_date)}
+                                                        {item.location && `, ${item.location}`}
+                                                    </span>
+
+                                                    <span className="my-reviews-club guest">
+                                                        <span className="my-reviews-guest-badge">
+                                                            게스트
+                                                        </span>
+                                                        {item.club_name}
+                                                    </span>
+
+                                                </span>
+
+                                                <span
+                                                    className={
+                                                        item.myReview
+                                                            ? "my-reviews-action view"
+                                                            : "my-reviews-action write"
+                                                    }
+                                                >
+                                                    {item.myReview ? "내 후기" : "후기 쓰기"}
+                                                </span>
+
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+
+                        </section>
+                    )}
+
+
+                    {/* ========================================
                        ⭐ 멤버 영역
                        ======================================== */}
 
@@ -495,16 +794,164 @@ function MyReviews() {
                     )}
 
 
-                    {/* ⭐ 가입한 동호회가 하나도 없을 때 */}
-                    {!isOperator && memberClubs.length === 0 && (
+                    {/* ⭐ 가입한 동호회도, 게스트로 참여한 경기도 없을 때 */}
+                    {!isOperator && memberClubs.length === 0 && !hasGuestSection && (
                         <p className="my-reviews-message">
-                            가입한 동호회가 없어요.
+                            아직 확인할 경기 후기가 없어요.
                             <br />
-                            동호회에 가입하면 팀매칭 후기를 확인할 수 있어요.
+                            동호회에 가입하거나 게스트로 경기에 참여하면
+                            <br />
+                            후기를 남기고 확인할 수 있어요.
                         </p>
                     )}
                 </>
 
+            )}
+
+
+            {/* ========================================
+               ⭐ 게스트 후기 팝업 (작성 / 내 후기 보기)
+               ======================================== */}
+
+            {reviewModal && (
+                <div
+                    className="my-reviews-modal-overlay"
+                    onClick={closeGuestReview}
+                >
+                    <div
+                        className="my-reviews-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="my-reviews-modal-title"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+
+                        <div className="my-reviews-modal-header">
+                            <h3 id="my-reviews-modal-title">
+                                {reviewModal.mode === "write"
+                                    ? "활동 후기 작성"
+                                    : "내가 쓴 후기"}
+                            </h3>
+
+                            <button
+                                type="button"
+                                className="my-reviews-modal-close"
+                                aria-label="닫기"
+                                onClick={closeGuestReview}
+                                disabled={reviewSubmitting}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className="my-reviews-modal-event">
+                            <strong>{reviewModal.item.title}</strong>
+                            <span>
+                                {reviewModal.item.club_name}
+                                {" · "}
+                                {formatDateLabel(reviewModal.item.event_date)}
+                            </span>
+                        </div>
+
+                        {reviewModal.mode === "write" ? (
+                            <>
+                                <div className="my-reviews-modal-rating">
+                                    <p>이번 경기는 어땠나요?</p>
+
+                                    <div className="my-reviews-stars">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                                key={star}
+                                                type="button"
+                                                aria-label={`${star}점`}
+                                                className={
+                                                    star <= reviewRating
+                                                        ? "active"
+                                                        : ""
+                                                }
+                                                onClick={() => setReviewRating(star)}
+                                            >
+                                                ★
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <span>{reviewRating}점</span>
+                                </div>
+
+                                <div className="my-reviews-modal-text">
+                                    <textarea
+                                        value={reviewText}
+                                        onChange={(e) => setReviewText(e.target.value)}
+                                        placeholder="게스트로 참여한 경기에 대한 후기를 남겨주세요."
+                                        maxLength={REVIEW_MAX_LENGTH}
+                                    />
+                                    <small>
+                                        {reviewText.length}/{REVIEW_MAX_LENGTH}
+                                    </small>
+                                </div>
+
+                                <div className="my-reviews-modal-actions">
+                                    <button
+                                        type="button"
+                                        onClick={closeGuestReview}
+                                        disabled={reviewSubmitting}
+                                    >
+                                        취소
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        className="primary"
+                                        onClick={handleSubmitGuestReview}
+                                        disabled={reviewSubmitting}
+                                    >
+                                        {reviewSubmitting ? "등록 중..." : "후기 등록"}
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="my-reviews-modal-rating">
+                                    <div
+                                        className="my-reviews-stars readonly"
+                                        aria-label={`${reviewModal.item.myReview.rating ?? 0}점`}
+                                    >
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <span
+                                                key={star}
+                                                className={
+                                                    star <= (reviewModal.item.myReview.rating ?? 0)
+                                                        ? "active"
+                                                        : ""
+                                                }
+                                            >
+                                                ★
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    <span>{reviewModal.item.myReview.rating ?? 0}점</span>
+                                </div>
+
+                                <p className="my-reviews-modal-review">
+                                    {reviewModal.item.myReview.review_text}
+                                </p>
+
+                                <div className="my-reviews-modal-actions">
+                                    <button
+                                        type="button"
+                                        className="primary"
+                                        onClick={closeGuestReview}
+                                    >
+                                        닫기
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                    </div>
+                </div>
             )}
 
 
