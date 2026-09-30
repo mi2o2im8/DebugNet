@@ -117,6 +117,20 @@ function ClubUserDashboard() {
     const [withdrawSubmitting, setWithdrawSubmitting] =
         useState(false);
 
+    // -----------------------------------------------------
+    // 동호회 탈퇴 리뷰
+    // -----------------------------------------------------
+    const [leaveRating, setLeaveRating] = useState(null);
+
+    const [leaveReason, setLeaveReason] =
+        useState("");
+
+    const [leaveReviewText, setLeaveReviewText] =
+        useState("");
+
+    const [leaveReviewOpen, setLeaveReviewOpen] =
+        useState(false);
+
     // 출석 투표 처리 중인 일정
     const [votingEventId, setVotingEventId] = useState(null);
 
@@ -792,7 +806,9 @@ function ClubUserDashboard() {
     // ---------------------------------------------------------
     // 동호회 탈퇴
     // ---------------------------------------------------------
-    const handleWithdrawClub = async () => {
+    const handleWithdrawClub = async (
+        withReview = false
+    ) => {
         if (!clubId) {
             return;
         }
@@ -800,11 +816,28 @@ function ClubUserDashboard() {
         setWithdrawSubmitting(true);
 
         try {
-            await withdrawMyClub(clubId);
+            await withdrawMyClub(
+                clubId,
+                withReview
+                    ? {
+                        rating: leaveRating,
+                        leave_reason:
+                            leaveReason.trim() || null,
+                        review_text:
+                            leaveReviewText.trim() || null,
+                    }
+                    : {}
+            );
 
             alert("동호회에서 탈퇴했습니다.");
 
             setWithdrawModalOpen(false);
+            setLeaveReviewOpen(false);
+
+            // 탈퇴 리뷰 입력값 초기화
+            setLeaveRating(null);
+            setLeaveReason("");
+            setLeaveReviewText("");
 
             // 탈퇴한 동호회의 상세 페이지로 이동
             // 상세 페이지에서는 더 이상 가입 회원이 아니므로
@@ -1641,7 +1674,7 @@ function ClubUserDashboard() {
                 )}
 
                 {/* -------------------------------------------------
-                    동호회 탈퇴 확인 팝업
+                    동호회 탈퇴 확인 / 탈퇴 리뷰 팝업
                 ------------------------------------------------- */}
                 {withdrawModalOpen && (
                     <div
@@ -1649,6 +1682,7 @@ function ClubUserDashboard() {
                         onClick={() => {
                             if (!withdrawSubmitting) {
                                 setWithdrawModalOpen(false);
+                                setLeaveReviewOpen(false);
                             }
                         }}
                     >
@@ -1657,13 +1691,18 @@ function ClubUserDashboard() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="club-user-review-header">
-                                <h3>동호회 탈퇴</h3>
+                                <h3>
+                                    {leaveReviewOpen
+                                        ? "탈퇴 후기 작성"
+                                        : "동호회 탈퇴"}
+                                </h3>
 
                                 <button
                                     type="button"
                                     onClick={() => {
                                         if (!withdrawSubmitting) {
                                             setWithdrawModalOpen(false);
+                                            setLeaveReviewOpen(false);
                                         }
                                     }}
                                 >
@@ -1671,54 +1710,217 @@ function ClubUserDashboard() {
                                 </button>
                             </div>
 
-                            <div className="club-user-review-event">
-                                <strong>
-                                    {dashboard.club_name}
-                                </strong>
+                            {!leaveReviewOpen ? (
+                                <>
+                                    <div className="club-user-review-event">
+                                        <strong>
+                                            {dashboard.club_name}
+                                        </strong>
 
-                                <span>
-                                    정말 이 동호회에서 탈퇴하시겠습니까?
-                                </span>
-                            </div>
+                                        <span>
+                                            정말 이 동호회에서 탈퇴하시겠습니까?
+                                        </span>
+                                    </div>
 
-                            <div
-                                style={{
-                                    marginTop: "16px",
-                                    padding: "14px",
-                                    borderRadius: "10px",
-                                    background: "#f8fafc",
-                                    fontSize: "13px",
-                                    lineHeight: "1.6",
-                                    color: "#64748b",
-                                }}
-                            >
-                                동호회 탈퇴 후에도 기존에 참여한 활동 기록과
-                                작성한 후기는 삭제되지 않습니다.
-                            </div>
+                                    <div
+                                        style={{
+                                            marginTop: "16px",
+                                            padding: "14px",
+                                            borderRadius: "10px",
+                                            background: "#f8fafc",
+                                            fontSize: "13px",
+                                            lineHeight: "1.6",
+                                            color: "#64748b",
+                                        }}
+                                    >
+                                        동호회 탈퇴 후에도 기존에 참여한 활동 기록과
+                                        작성한 후기는 삭제되지 않습니다.
+                                    </div>
 
-                            <div className="club-user-review-actions">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        if (!withdrawSubmitting) {
-                                            setWithdrawModalOpen(false);
-                                        }
-                                    }}
-                                    disabled={withdrawSubmitting}
-                                >
-                                    취소
-                                </button>
+                                    <div className="club-user-review-actions">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (!withdrawSubmitting) {
+                                                    setWithdrawModalOpen(false);
+                                                }
+                                            }}
+                                            disabled={withdrawSubmitting}
+                                        >
+                                            취소
+                                        </button>
 
-                                <button
-                                    type="button"
-                                    onClick={handleWithdrawClub}
-                                    disabled={withdrawSubmitting}
-                                >
-                                    {withdrawSubmitting
-                                        ? "탈퇴 처리 중..."
-                                        : "탈퇴하기"}
-                                </button>
-                            </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setLeaveReviewOpen(true);
+                                            }}
+                                            disabled={withdrawSubmitting}
+                                        >
+                                            탈퇴하기
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="club-user-review-event">
+                                        <strong>
+                                            {dashboard.club_name}
+                                        </strong>
+
+                                        <span>
+                                            탈퇴하면서 동호회에 대한 의견을 남겨주세요.
+                                        </span>
+                                    </div>
+
+                                    {/* 별점 */}
+                                    <div
+                                        style={{
+                                            marginTop: "20px",
+                                        }}
+                                    >
+                                        <strong
+                                            style={{
+                                                display: "block",
+                                                marginBottom: "10px",
+                                                fontSize: "14px",
+                                            }}
+                                        >
+                                            별점
+                                        </strong>
+
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                gap: "6px",
+                                            }}
+                                        >
+                                            {[1, 2, 3, 4, 5].map((score) => (
+                                                <button
+                                                    key={score}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setLeaveRating(score);
+                                                    }}
+                                                    style={{
+                                                        border: "none",
+                                                        background: "transparent",
+                                                        cursor: "pointer",
+                                                        fontSize: "28px",
+                                                        padding: "0",
+                                                        color:
+                                                            leaveRating !== null &&
+                                                            score <= leaveRating
+                                                                ? "#f59e0b"
+                                                                : "#cbd5e1",
+                                                    }}
+                                                >
+                                                    ★
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* 탈퇴 사유 */}
+                                    <div
+                                        style={{
+                                            marginTop: "20px",
+                                        }}
+                                    >
+                                        <strong
+                                            style={{
+                                                display: "block",
+                                                marginBottom: "10px",
+                                                fontSize: "14px",
+                                            }}
+                                        >
+                                            탈퇴 사유
+                                        </strong>
+
+                                        <textarea
+                                            value={leaveReason}
+                                            onChange={(e) => {
+                                                setLeaveReason(e.target.value);
+                                            }}
+                                            placeholder="탈퇴 사유를 남겨주세요. (선택)"
+                                            rows={3}
+                                            style={{
+                                                width: "100%",
+                                                boxSizing: "border-box",
+                                                resize: "vertical",
+                                                padding: "10px",
+                                                borderRadius: "8px",
+                                                border: "1px solid #e2e8f0",
+                                                fontSize: "13px",
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* 상세 의견 */}
+                                    <div
+                                        style={{
+                                            marginTop: "16px",
+                                        }}
+                                    >
+                                        <strong
+                                            style={{
+                                                display: "block",
+                                                marginBottom: "10px",
+                                                fontSize: "14px",
+                                            }}
+                                        >
+                                            상세 의견
+                                        </strong>
+
+                                        <textarea
+                                            value={leaveReviewText}
+                                            onChange={(e) => {
+                                                setLeaveReviewText(
+                                                    e.target.value
+                                                );
+                                            }}
+                                            placeholder="동호회에 대한 의견을 남겨주세요. (선택)"
+                                            rows={4}
+                                            maxLength={1000}
+                                            style={{
+                                                width: "100%",
+                                                boxSizing: "border-box",
+                                                resize: "vertical",
+                                                padding: "10px",
+                                                borderRadius: "8px",
+                                                border: "1px solid #e2e8f0",
+                                                fontSize: "13px",
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="club-user-review-actions">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (!withdrawSubmitting) {
+                                                    handleWithdrawClub();
+                                                }
+                                            }}
+                                            disabled={withdrawSubmitting}
+                                        >
+                                            {withdrawSubmitting
+                                                ? "탈퇴 처리 중..."
+                                                : "건너뛰고 탈퇴"}
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={handleWithdrawClub}
+                                            disabled={withdrawSubmitting}
+                                        >
+                                            {withdrawSubmitting
+                                                ? "탈퇴 처리 중..."
+                                                : "리뷰 작성 후 탈퇴"}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

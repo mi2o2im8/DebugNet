@@ -532,3 +532,17 @@ class ClubEventReviewResponse(BaseModel):
     rating: int | None = None
     review_text: str | None = None
     created_at: datetime | None = None
+
+# ---------------------------------------------------------
+# 동호회 탈퇴 후기
+# ---------------------------------------------------------
+
+class ClubLeaveReviewResponse(BaseModel):
+    leave_review_id: int
+    club_id: int
+    user_id: str
+    rating: int | None = None
+    leave_reason: str | None = None
+    review_text: str | None = None
+    created_at: datetime | None = None
+    nickname: str | None = None

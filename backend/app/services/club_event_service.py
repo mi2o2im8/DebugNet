@@ -3616,3 +3616,20 @@ class ClubEventService:
         )
 
         return reviews
+
+    # -----------------------------------------------------
+    # 동호회의 전체 탈퇴 후기 조회
+    # -----------------------------------------------------
+    def get_club_leave_reviews(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+
+        reviews = (
+            self.event_repository
+            .find_club_leave_reviews(
+                club_id=club_id,
+            )
+        )
+
+        return reviews

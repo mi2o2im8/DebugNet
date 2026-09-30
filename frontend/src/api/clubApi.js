@@ -589,6 +589,20 @@ export async function getClubReviews(
     );
 }
 
+// -----------------------------------------------------
+// 동호회 전체 탈퇴 후기 조회
+// -----------------------------------------------------
+export async function getClubLeaveReviews(
+    clubId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/leave-reviews`,
+        {
+            method: "GET",
+        }
+    );
+}
+
 // ---------------------------------------------------------
 // 특정 활동의 후기 목록 조회
 // ---------------------------------------------------------
@@ -798,12 +812,25 @@ export async function removeClubMember(
 // 내가 가입한 동호회 탈퇴
 // ---------------------------------------------------------
 export async function withdrawMyClub(
-    clubId
+    clubId,
+    {
+        rating = null,
+        leave_reason = null,
+        review_text = null,
+    } = {}
 ) {
     return authenticatedRequest(
         `/api/clubs/${clubId}/members/me`,
         {
-            method: "DELETE"
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                rating,
+                leave_reason,
+                review_text,
+            }),
         }
     );
 }

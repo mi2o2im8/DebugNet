@@ -1231,3 +1231,45 @@ class ClubEventRepository:
             )
 
         return reviews
+
+    # -----------------------------------------------------
+    # 동호회의 탈퇴 리뷰 목록 조회
+    # -----------------------------------------------------
+    def find_club_leave_reviews(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+        response = (
+            self.admin_client
+            .table("club_leave_reviews")
+            .select(
+                """
+                *,
+                users(
+                    nickname
+                )
+                """
+            )
+            .eq("club_id", club_id)
+            .order(
+                "created_at",
+                desc=True,
+            )
+            .execute()
+        )
+
+        reviews = response.data or []
+
+        for review in reviews:
+            user_data = review.pop(
+                "users",
+                None,
+            )
+
+            review["nickname"] = (
+                user_data.get("nickname")
+                if user_data
+                else None
+            )
+
+        return reviews

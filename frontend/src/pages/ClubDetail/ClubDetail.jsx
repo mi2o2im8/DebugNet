@@ -14,7 +14,10 @@ import {
 
 import "./ClubDetail.css";
 import { buildApiUrl } from "../../api/apiClient";
-import { getClubReviews } from "../../api/clubApi";
+import {
+  getClubReviews,
+  getClubLeaveReviews,
+} from "../../api/clubApi";
 
 function ClubDetail() {
   const navigate = useNavigate();
@@ -34,7 +37,6 @@ function ClubDetail() {
       "*".repeat(nickname.length - 3)
     );
   };
-
 
   const [club, setClub] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -61,11 +63,15 @@ function ClubDetail() {
         }
 
         const response = await fetch(
-          buildApiUrl(`/api/clubs/${clubId}/member-status?user_id=${user.id}`)
+          buildApiUrl(
+            `/api/clubs/${clubId}/member-status?user_id=${user.id}`
+          )
         );
 
         if (!response.ok) {
-          throw new Error("가입 상태를 불러오지 못했습니다.");
+          throw new Error(
+            "가입 상태를 불러오지 못했습니다."
+          );
         }
 
         const data = await response.json();
@@ -77,7 +83,10 @@ function ClubDetail() {
           return;
         }
       } catch (error) {
-        console.error("가입 상태 조회 오류:", error);
+        console.error(
+          "가입 상태 조회 오류:",
+          error
+        );
       }
     };
 
@@ -102,7 +111,9 @@ function ClubDetail() {
         );
 
         if (!response.ok) {
-          throw new Error("동호회 정보를 불러오지 못했습니다.");
+          throw new Error(
+            "동호회 정보를 불러오지 못했습니다."
+          );
         }
 
         const data = await response.json();
@@ -120,35 +131,84 @@ function ClubDetail() {
   }, [clubId]);
 
   // -----------------------------------------------------
-  // 동호회 활동 후기 조회
+  // 동호회 활동 후기 + 탈퇴 후기 조회
   // -----------------------------------------------------
   useEffect(() => {
-      const fetchReviews = async () => {
-          try {
-              setReviewLoading(true);
+    const fetchReviews = async () => {
+      try {
+        setReviewLoading(true);
 
-              const data = await getClubReviews(clubId);
+        const [
+          activityReviews,
+          leaveReviews,
+        ] = await Promise.all([
+          getClubReviews(clubId),
+          getClubLeaveReviews(clubId),
+        ]);
 
-              console.log(
-                  "동호회 후기 조회 결과:",
-                  data
-              );
+        console.log(
+          "동호회 활동 후기 조회 결과:",
+          activityReviews
+        );
 
-              setReviews(
-                  Array.isArray(data) ? data : []
-              );
-          } catch (error) {
-              console.error(
-                  "동호회 후기 조회 오류:",
-                  error
-              );
-              setReviews([]);
-          } finally {
-              setReviewLoading(false);
+        console.log(
+          "동호회 탈퇴 후기 조회 결과:",
+          leaveReviews
+        );
+
+        const activityReviewList =
+          Array.isArray(activityReviews)
+            ? activityReviews
+            : [];
+
+        const leaveReviewList =
+          Array.isArray(leaveReviews)
+            ? leaveReviews
+            : [];
+
+        // -------------------------------------------------
+        // 활동 후기 + 탈퇴 후기를 하나의 리뷰 목록으로 통합
+        // -------------------------------------------------
+        const mergedReviews = [
+          ...activityReviewList,
+          ...leaveReviewList,
+        ];
+
+        // -------------------------------------------------
+        // 작성 시간 기준 최신순 정렬
+        // -------------------------------------------------
+        mergedReviews.sort(
+          (a, b) => {
+            const dateA = a.created_at
+              ? new Date(
+                  a.created_at
+                ).getTime()
+              : 0;
+
+            const dateB = b.created_at
+              ? new Date(
+                  b.created_at
+                ).getTime()
+              : 0;
+
+            return dateB - dateA;
           }
-      };
+        );
 
-      fetchReviews();
+        setReviews(mergedReviews);
+      } catch (error) {
+        console.error(
+          "동호회 후기 조회 오류:",
+          error
+        );
+
+        setReviews([]);
+      } finally {
+        setReviewLoading(false);
+      }
+    };
+
+    fetchReviews();
   }, [clubId]);
 
   // -----------------------------------------------------
@@ -219,11 +279,11 @@ function ClubDetail() {
 
       </header>
 
-
       {/* 대표 이미지 */}
       <section className="club-detail-cover">
 
-        {club.images && club.images.length > 0 ? (
+        {club.images &&
+        club.images.length > 0 ? (
 
           <img
             className="club-detail-cover-image"
@@ -241,7 +301,6 @@ function ClubDetail() {
 
       </section>
 
-
       {/* 동호회 기본 정보 */}
       <section className="club-detail-main-info">
 
@@ -255,7 +314,8 @@ function ClubDetail() {
 
             {/* 운동 종목 */}
             <span className="club-detail-sport">
-              {club.sports?.join(", ") || "종목 정보 없음"}
+              {club.sports?.join(", ") ||
+                "종목 정보 없음"}
             </span>
 
             {/* 동호회 이름 */}
@@ -265,7 +325,8 @@ function ClubDetail() {
 
             {/* 지역 + 회원 수 */}
             <p>
-              {club.regions?.join(", ") || "지역 정보 없음"}
+              {club.regions?.join(", ") ||
+                "지역 정보 없음"}
               {" · "}
               회원 {club.current_members}명
             </p>
@@ -274,30 +335,33 @@ function ClubDetail() {
 
         </div>
 
-
         {/* 한 줄 소개 */}
         <p className="club-detail-intro">
           {club.club_intro}
         </p>
 
-
         {/* 태그 */}
         <div className="club-detail-tags">
 
-          {club.sports?.map((sport, index) => (
-            <span key={`sport-${index}`}>
-              {sport}
-            </span>
-          ))}
+          {club.sports?.map(
+            (sport, index) => (
+              <span key={`sport-${index}`}>
+                {sport}
+              </span>
+            )
+          )}
 
-          {club.atmospheres?.map((atmosphere, index) => (
-            <span key={`atmosphere-${index}`}>
-              {atmosphere}
-            </span>
-          ))}
+          {club.atmospheres?.map(
+            (atmosphere, index) => (
+              <span
+                key={`atmosphere-${index}`}
+              >
+                {atmosphere}
+              </span>
+            )
+          )}
 
         </div>
-
 
         {/* 가입 버튼 */}
         <button
@@ -316,7 +380,6 @@ function ClubDetail() {
         </button>
 
       </section>
-
 
       {/* 탭 */}
       <nav className="club-detail-tabs">
@@ -339,18 +402,17 @@ function ClubDetail() {
 
       </nav>
 
-
       {/* 동호회 소개 */}
       <section className="club-detail-section">
 
         <h3>동호회 소개</h3>
 
         <p className="club-detail-description">
-          {club.club_description || club.club_intro}
+          {club.club_description ||
+            club.club_intro}
         </p>
 
       </section>
-
 
       {/* 기본 정보 */}
       <section className="club-detail-section">
@@ -380,7 +442,6 @@ function ClubDetail() {
 
           </div>
 
-
           {/* 활동 강도 */}
           <div className="club-detail-info-item">
 
@@ -393,13 +454,13 @@ function ClubDetail() {
               </span>
 
               <strong>
-                {club.activity_intensity || "정보 없음"}
+                {club.activity_intensity ||
+                  "정보 없음"}
               </strong>
 
             </div>
 
           </div>
-
 
           {/* 활동 시간 */}
           <div className="club-detail-info-item">
@@ -416,26 +477,34 @@ function ClubDetail() {
 
                 {club.schedules?.length > 0 ? (
 
-                  club.schedules.map((schedule, index) => (
+                  club.schedules.map(
+                    (schedule, index) => (
 
-                    <span
-                      key={index}
-                      style={{
-                        display: "block",
-                      }}
-                    >
+                      <span
+                        key={index}
+                        style={{
+                          display: "block",
+                        }}
+                      >
 
-                      {schedule.day_of_week}{" "}
+                        {schedule.day_of_week}{" "}
 
-                      {schedule.start_time.slice(0, 5)}
+                        {schedule.start_time.slice(
+                          0,
+                          5
+                        )}
 
-                      {" ~ "}
+                        {" ~ "}
 
-                      {schedule.end_time.slice(0, 5)}
+                        {schedule.end_time.slice(
+                          0,
+                          5
+                        )}
 
-                    </span>
+                      </span>
 
-                  ))
+                    )
+                  )
 
                 ) : (
 
@@ -449,7 +518,6 @@ function ClubDetail() {
 
           </div>
 
-
           {/* 활동 장소 */}
           <div className="club-detail-info-item">
 
@@ -462,7 +530,8 @@ function ClubDetail() {
               </span>
 
               <strong>
-                {club.regions?.join(", ") || "정보 없음"}
+                {club.regions?.join(", ") ||
+                  "정보 없음"}
               </strong>
 
             </div>
@@ -472,7 +541,6 @@ function ClubDetail() {
         </div>
 
       </section>
-
 
       {/* 활동 일정 */}
       <section className="club-detail-section">
@@ -489,47 +557,54 @@ function ClubDetail() {
 
         </div>
 
-
         {club.schedules?.length > 0 ? (
 
-          club.schedules.map((schedule, index) => (
+          club.schedules.map(
+            (schedule, index) => (
 
-            <div
-              className="club-detail-schedule"
-              key={index}
-            >
+              <div
+                className="club-detail-schedule"
+                key={index}
+              >
 
-              <div className="club-detail-date">
+                <div className="club-detail-date">
 
-                <strong>
-                  {schedule.day_of_week}
-                </strong>
+                  <strong>
+                    {schedule.day_of_week}
+                  </strong>
+
+                </div>
+
+                <div className="club-detail-schedule-info">
+
+                  <strong>
+                    정기 운동
+                  </strong>
+
+                  <span>
+                    {schedule.start_time.slice(
+                      0,
+                      5
+                    )}
+                    {" ~ "}
+                    {schedule.end_time.slice(
+                      0,
+                      5
+                    )}
+                  </span>
+
+                  <span>
+                    {club.regions?.join(", ") ||
+                      "활동 지역 정보 없음"}
+                  </span>
+
+                </div>
 
               </div>
 
+            )
 
-              <div className="club-detail-schedule-info">
-
-                <strong>
-                  정기 운동
-                </strong>
-
-                <span>
-                  {schedule.start_time.slice(0, 5)}
-                  {" ~ "}
-                  {schedule.end_time.slice(0, 5)}
-                </span>
-
-                <span>
-                  {club.regions?.join(", ") ||
-                    "활동 지역 정보 없음"}
-                </span>
-
-              </div>
-
-            </div>
-
-          ))
+          )
 
         ) : (
 
@@ -541,53 +616,88 @@ function ClubDetail() {
 
       </section>
 
-      {/* 활동 후기 */}
+      {/* -------------------------------------------------
+          전체 리뷰
+          활동 후기 + 탈퇴 후기
+          작성 시간 기준 최신순
+      ------------------------------------------------- */}
       <section className="club-detail-section">
-          <div className="club-detail-section-title">
-              <h3>활동 후기</h3>
+
+        <div className="club-detail-section-title">
+
+          <h3>
+            리뷰
+          </h3>
+
+        </div>
+
+        {reviewLoading ? (
+
+          <p>
+            후기를 불러오는 중...
+          </p>
+
+        ) : reviews.length === 0 ? (
+
+          <p>
+            아직 작성된 후기가 없습니다.
+          </p>
+
+        ) : (
+
+          <div className="club-detail-reviews">
+
+            {reviews.map((review) => (
+
+              <div
+                className="club-detail-review"
+                key={
+                  review.review_id
+                    ? `event-${review.review_id}`
+                    : `leave-${review.leave_review_id}`
+                }
+              >
+
+                <div className="club-detail-review-header">
+
+                  <span className="club-detail-review-nickname">
+                    {maskNickname(
+                      review.nickname
+                    )}
+                  </span>
+
+                  <span className="club-detail-review-date">
+                    {review.created_at
+                      ? new Date(
+                          review.created_at
+                        ).toLocaleDateString(
+                          "ko-KR"
+                        )
+                      : ""}
+                  </span>
+
+                </div>
+
+                <div className="club-detail-review-rating">
+                  {"⭐".repeat(
+                    review.rating || 0
+                  )}
+                </div>
+
+                <p className="club-detail-review-text">
+                  {review.review_text ||
+                    "작성된 후기가 없습니다."}
+                </p>
+
+              </div>
+
+            ))}
+
           </div>
 
-          {reviewLoading ? (
-              <p>후기를 불러오는 중...</p>
-          ) : reviews.length === 0 ? (
-              <p>아직 작성된 후기가 없습니다.</p>
-          ) : (
-              <div className="club-detail-reviews">
-                  {reviews.map((review) => (
-                      <div
-                          className="club-detail-review"
-                          key={review.review_id}
-                      >
-                          <div className="club-detail-review-header">
-                              <span className="club-detail-review-nickname">
-                                  {maskNickname(review.nickname)}
-                              </span>
+        )}
 
-                              <span className="club-detail-review-date">
-                                  {review.created_at
-                                      ? new Date(
-                                            review.created_at
-                                        ).toLocaleDateString(
-                                            "ko-KR"
-                                        )
-                                      : ""}
-                              </span>
-                          </div>
-
-                          <div className="club-detail-review-rating">
-                              {"⭐".repeat(review.rating)}
-                          </div>
-
-                          <p className="club-detail-review-text">
-                              {review.review_text ||
-                                  "작성된 후기가 없습니다."}
-                          </p>
-                      </div>
-                  ))}
-              </div>
-          )}
       </section>
-
 
       {/* 공통 하단 네비게이션 */}
       <BottomNav />

@@ -23,6 +23,7 @@ from app.schemas.club_members import (
     ClubMemberDetailResponse,
     ClubMemberWarningCreateRequest,
     ClubMemberWarningMutationResponse,
+    ClubLeaveReviewRequest,
 )
 
 from app.services.club_member_service import (
@@ -290,6 +291,8 @@ def delete_club_member_warning(
 def withdraw_my_club(
     club_id: int,
 
+    request: ClubLeaveReviewRequest,
+
     user_id: str = Depends(
         get_current_user_id
     ),
@@ -300,6 +303,9 @@ def withdraw_my_club(
         return member_service.withdraw_my_membership(
             club_id=club_id,
             user_id=user_id,
+            rating=request.rating,
+            leave_reason=request.leave_reason,
+            review_text=request.review_text,
         )
 
     except LookupError as error:

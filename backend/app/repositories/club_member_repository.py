@@ -1380,3 +1380,35 @@ class ClubMemberRepository:
             return None
 
         return response.data[0]
+
+    # -----------------------------------------------------
+    # 동호회 탈퇴 리뷰 작성
+    # -----------------------------------------------------
+    def create_club_leave_review(
+        self,
+        club_id: int,
+        user_id: str,
+        rating: int | None = None,
+        leave_reason: str | None = None,
+        review_text: str | None = None,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_leave_reviews")
+            .insert(
+                {
+                    "club_id": club_id,
+                    "user_id": user_id,
+                    "rating": rating,
+                    "leave_reason": leave_reason,
+                    "review_text": review_text,
+                }
+            )
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]

@@ -344,3 +344,19 @@ class ClubMemberDetailResponse(
     can_remove_member: bool = False
     can_manage_warnings: bool = False
 
+# ---------------------------------------------------------
+# 동호회 탈퇴 리뷰 작성 요청
+# ---------------------------------------------------------
+class ClubLeaveReviewRequest(BaseModel):
+    rating: int | None = Field(
+        default=None,
+        ge=1,
+        le=5,
+    )
+
+    leave_reason: str | None = None
+
+    review_text: str | None = Field(
+        default=None,
+        max_length=1000,
+    )

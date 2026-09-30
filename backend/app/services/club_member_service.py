@@ -1672,6 +1672,9 @@ class ClubMemberService:
         self,
         club_id: int,
         user_id: str,
+        rating: int | None = None,
+        leave_reason: str | None = None,
+        review_text: str | None = None,
     ) -> dict:
 
         # -------------------------------------------------
@@ -1698,8 +1701,6 @@ class ClubMemberService:
         # -------------------------------------------------
         # 3. 동호회 탈퇴 처리
         #
-        # club_members의 status만 withdrawn으로 변경한다.
-        #
         # 활동 기록:
         # - event_participants
         # - event_votes
@@ -1721,7 +1722,34 @@ class ClubMemberService:
             )
 
         # -------------------------------------------------
-        # 4. 현재 활동 회원 수 다시 계산
+        # 4. 탈퇴 리뷰 저장
+        #
+        # 탈퇴 리뷰는 선택 사항이다.
+        # 아무 내용도 작성하지 않았다면 저장하지 않는다.
+        # -------------------------------------------------
+        has_leave_review = (
+            rating is not None
+            or leave_reason is not None
+            or review_text is not None
+        )
+
+        if has_leave_review:
+            try:
+                self.member_repository.create_club_leave_review(
+                    club_id=club_id,
+                    user_id=user_id,
+                    rating=rating,
+                    leave_reason=leave_reason,
+                    review_text=review_text,
+                )
+            except Exception as error:
+                print(
+                    "동호회 탈퇴 리뷰 저장 실패:",
+                    repr(error),
+                )
+
+        # -------------------------------------------------
+        # 5. 현재 활동 회원 수 다시 계산
         # -------------------------------------------------
         current_members = (
             self.member_repository.count_active_members(
@@ -1730,7 +1758,7 @@ class ClubMemberService:
         )
 
         # -------------------------------------------------
-        # 5. clubs.current_members 동기화
+        # 6. clubs.current_members 동기화
         # -------------------------------------------------
         self.member_repository.update_current_member_count(
             club_id=club_id,
@@ -1738,7 +1766,6 @@ class ClubMemberService:
         )
 
         return withdrawn_member
-
     # -----------------------------------------------------
     # 경고 관리 대상 및 운영자 권한 확인
     # -----------------------------------------------------
