@@ -123,6 +123,36 @@ def get_club_reviews(
             ),
         ) from error
 
+# ---------------------------------------------------------
+# 활동 종료 후 리뷰 안내 여부 조회
+#
+# GET /api/clubs/{club_id}/events/{event_id}/review-prompt
+# ---------------------------------------------------------
+@router.get(
+    "/{event_id}/review-prompt",
+)
+def get_review_prompt(
+    club_id: int,
+    event_id: int,
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    review_service = EventReviewService()
+
+    try:
+        return review_service.get_review_prompt(
+            club_id=club_id,
+            event_id=event_id,
+            user_id=user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
 
 # ---------------------------------------------------------
 # 내가 작성한 활동 후기 조회

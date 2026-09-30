@@ -234,6 +234,104 @@ class EventReviewService:
         )
 
     # -----------------------------------------------------
+    # 리뷰 안내 대상 확인
+    #
+    # 활동 종료 후 최초 접속 시 한 번만 안내
+    # -----------------------------------------------------
+    def get_review_prompt(
+        self,
+        club_id: int,
+        event_id: int,
+        user_id: str,
+    ) -> dict | None:
+
+        # 1. 일정 조회
+        event = (
+            self.event_repository
+            .find_event_by_id(
+                club_id=club_id,
+                event_id=event_id,
+            )
+        )
+
+        if event is None:
+            return None
+
+        # 2. 취소된 일정은 제외
+        if event.get("status") == "cancelled":
+            return None
+
+        # 3. 아직 활동이 끝나지 않았으면 제외
+        if not self.is_event_finished(event):
+            return None
+
+        # 4. 이미 리뷰 안내를 보여줬다면 제외
+        existing_prompt = (
+            self.review_repository
+            .find_review_prompt(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        if existing_prompt is not None:
+            return None
+
+        # 5. 참석 여부 확인
+        attendance_status = (
+            self.get_user_attendance_status(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        is_attending_member = (
+            attendance_status == "attending"
+        )
+
+        is_joined_guest = (
+            not is_attending_member
+            and self.review_repository.is_joined_guest(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        # 참석하지 않은 이용자는 제외
+        if not (
+            is_attending_member
+            or is_joined_guest
+        ):
+            return None
+
+        # 6. 이미 리뷰를 작성했다면 제외
+        existing_review = (
+            self.review_repository
+            .find_user_event_review(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        if existing_review is not None:
+            return None
+
+        # 7. 안내 표시 기록 생성
+        prompt = (
+            self.review_repository
+            .create_review_prompt(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        return {
+            "event_id": event_id,
+            "club_id": club_id,
+            "prompt_id": prompt["prompt_id"],
+        }    
+
+    # -----------------------------------------------------
     # 내 후기 조회
     # -----------------------------------------------------
     def get_my_review(
@@ -261,4 +359,4 @@ class EventReviewService:
             .find_event_reviews(
                 event_id=event_id,
             )
-        )
+        )

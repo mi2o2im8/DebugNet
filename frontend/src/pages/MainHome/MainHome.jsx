@@ -258,6 +258,8 @@ function MainHome() {
     // GET /api/users/me/guest-events 로 가져와서 같은 달력에 합친다.
     // (같은 일정이 양쪽에 있으면 내 동호회 일정을 우선)
     // =========================================================
+    
+    const [reviewPrompt, setReviewPrompt] = useState(null);
 
     useEffect(() => {
 
@@ -568,6 +570,47 @@ function MainHome() {
         };
 
     }, []);
+
+    // =====================================================
+    // 활동 종료 후 리뷰 안내 확인
+    // =====================================================
+    useEffect(() => {
+        const checkReviewPrompt = async () => {
+            if (!schedules || schedules.length === 0) {
+                return;
+            }
+
+            try {
+                for (const schedule of schedules) {
+                    const clubId = schedule.clubId;
+                    const eventId = schedule.eventId;
+
+                    if (!clubId || !eventId) {
+                        continue;
+                    }
+
+                    const response = await authenticatedRequest(
+                        `/api/clubs/${clubId}/events/${eventId}/review-prompt`,
+                        {
+                            method: "GET",
+                        }
+                    );
+
+                    if (response) {
+                        setReviewPrompt(response);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error(
+                    "리뷰 안내 조회 오류:",
+                    error
+                );
+            }
+        };
+
+        checkReviewPrompt();
+    }, [schedules]);
 
     // =========================================================
     // ⭐ 게스트 모집
@@ -1295,6 +1338,50 @@ function MainHome() {
     return (
 
         <div className="main-home">
+                {/* ⭐ 활동 종료 후 리뷰 안내 */}
+                {reviewPrompt && (
+                    <div className="MainHome-review-overlay">
+                        <div className="MainHome-review-prompt">
+
+                            <h2>활동은 어떠셨나요?</h2>
+
+                            <p>
+                                함께한 활동에 대한 후기를 남겨주세요.
+                            </p>
+
+                            <div className="MainHome-review-buttons">
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        navigate(
+                                            `/clubs/${reviewPrompt.club_id}/home`,
+                                            {
+                                                state: {
+                                                    openReviewEventId:
+                                                        reviewPrompt.event_id,
+                                                },
+                                            }
+                                        );
+                                    }}
+                                >
+                                    리뷰하러 가기
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setReviewPrompt(null);
+                                    }}
+                                >
+                                    다음에 하기
+                                </button>
+
+                            </div>
+
+                        </div>
+                    </div>
+                )}
 
             <main className="main-home-main">
 

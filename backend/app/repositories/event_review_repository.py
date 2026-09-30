@@ -138,3 +138,53 @@ class EventReviewRepository:
             return False
 
         return response.data[0].get("status") == "joined"
+    
+    # -----------------------------------------------------
+    # 리뷰 안내를 이미 보여줬는지 확인
+    # -----------------------------------------------------
+    def find_review_prompt(
+        self,
+        event_id: int,
+        user_id: str,
+    ) -> dict | None:
+        response = (
+            self.admin_client
+            .table("event_review_prompts")
+            .select("*")
+            .eq("event_id", event_id)
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 리뷰 안내 표시 기록 생성
+    # -----------------------------------------------------
+    def create_review_prompt(
+        self,
+        event_id: int,
+        user_id: str,
+    ) -> dict:
+        prompt_data = {
+            "event_id": event_id,
+            "user_id": user_id,
+        }
+
+        response = (
+            self.admin_client
+            .table("event_review_prompts")
+            .insert(prompt_data)
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError(
+                "리뷰 안내 표시 기록 생성에 실패했습니다."
+            )
+
+        return response.data[0]
