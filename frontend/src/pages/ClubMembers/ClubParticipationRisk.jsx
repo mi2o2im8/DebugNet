@@ -529,7 +529,7 @@ function ClubParticipationRisk({ clubId }) {
                                                 </div>
 
                                                 <div>
-                                                    <span>최근 활동 참석률</span>
+                                                    <span>최근 4회 활동 참석률</span>
 
                                                     <strong>
                                                         {formatPercent(
