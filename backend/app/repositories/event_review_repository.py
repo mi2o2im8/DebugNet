@@ -37,22 +37,48 @@ class EventReviewRepository:
     # 특정 일정의 후기 목록 조회
     # -----------------------------------------------------
     def find_event_reviews(
-        self,
-        event_id: int,
-    ) -> list[dict]:
-        response = (
-            self.admin_client
-            .table("event_reviews")
-            .select("*")
-            .eq("event_id", event_id)
-            .order(
-                "created_at",
-                desc=True,
+            self,
+            event_id: int,
+        ) -> list[dict]:
+            response = (
+                self.admin_client
+                .table("event_reviews")
+                .select(
+                    """
+                    *,
+                    users!event_reviews_user_id_fkey(
+                        nickname
+                    )
+                    """
+                )
+                .eq("event_id", event_id)
+                .order(
+                    "created_at",
+                    desc=True,
+                )
+                .execute()
             )
-            .execute()
-        )
 
-        return response.data or []
+            reviews = response.data or []
+
+            print(
+                "후기 조회 원본 데이터:",
+                reviews,
+            )
+
+            for review in reviews:
+                user_data = review.pop(
+                    "users",
+                    None,
+                )
+
+                review["nickname"] = (
+                    user_data.get("nickname")
+                    if user_data
+                    else None
+                )
+
+            return reviews
 
     # -----------------------------------------------------
     # 동호회 활동 후기 작성

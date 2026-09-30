@@ -14,15 +14,35 @@ import {
 
 import "./ClubDetail.css";
 import { buildApiUrl } from "../../api/apiClient";
+import { getClubReviews } from "../../api/clubApi";
 
 function ClubDetail() {
   const navigate = useNavigate();
   const { clubId } = useParams();
 
+  const maskNickname = (nickname) => {
+    if (!nickname) {
+      return "익명";
+    }
+
+    if (nickname.length <= 3) {
+      return nickname;
+    }
+
+    return (
+      nickname.slice(0, 3) +
+      "*".repeat(nickname.length - 3)
+    );
+  };
+
+
   const [club, setClub] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [memberStatus, setMemberStatus] = useState(null);
+
+  const [reviews, setReviews] = useState([]);
+  const [reviewLoading, setReviewLoading] = useState(true);
 
   // -----------------------------------------------------
   // 동호회 가입 상태 확인
@@ -97,6 +117,38 @@ function ClubDetail() {
     };
 
     fetchClub();
+  }, [clubId]);
+
+  // -----------------------------------------------------
+  // 동호회 활동 후기 조회
+  // -----------------------------------------------------
+  useEffect(() => {
+      const fetchReviews = async () => {
+          try {
+              setReviewLoading(true);
+
+              const data = await getClubReviews(clubId);
+
+              console.log(
+                  "동호회 후기 조회 결과:",
+                  data
+              );
+
+              setReviews(
+                  Array.isArray(data) ? data : []
+              );
+          } catch (error) {
+              console.error(
+                  "동호회 후기 조회 오류:",
+                  error
+              );
+              setReviews([]);
+          } finally {
+              setReviewLoading(false);
+          }
+      };
+
+      fetchReviews();
   }, [clubId]);
 
   // -----------------------------------------------------
@@ -487,6 +539,53 @@ function ClubDetail() {
 
         )}
 
+      </section>
+
+      {/* 활동 후기 */}
+      <section className="club-detail-section">
+          <div className="club-detail-section-title">
+              <h3>활동 후기</h3>
+          </div>
+
+          {reviewLoading ? (
+              <p>후기를 불러오는 중...</p>
+          ) : reviews.length === 0 ? (
+              <p>아직 작성된 후기가 없습니다.</p>
+          ) : (
+              <div className="club-detail-reviews">
+                  {reviews.map((review) => (
+                      <div
+                          className="club-detail-review"
+                          key={review.review_id}
+                      >
+                          <div className="club-detail-review-header">
+                              <span className="club-detail-review-nickname">
+                                  {maskNickname(review.nickname)}
+                              </span>
+
+                              <span className="club-detail-review-date">
+                                  {review.created_at
+                                      ? new Date(
+                                            review.created_at
+                                        ).toLocaleDateString(
+                                            "ko-KR"
+                                        )
+                                      : ""}
+                              </span>
+                          </div>
+
+                          <div className="club-detail-review-rating">
+                              {"⭐".repeat(review.rating)}
+                          </div>
+
+                          <p className="club-detail-review-text">
+                              {review.review_text ||
+                                  "작성된 후기가 없습니다."}
+                          </p>
+                      </div>
+                  ))}
+              </div>
+          )}
       </section>
 
 

@@ -18,13 +18,17 @@ from app.services.event_review_service import (
     EventReviewService,
 )
 
+from app.services.club_event_service import (
+    ClubEventService,
+)
+
 
 # ---------------------------------------------------------
 # 동호회 활동 후기 Router
 # ---------------------------------------------------------
 
 router = APIRouter(
-    prefix="/api/clubs/{club_id}/events/{event_id}/reviews",
+    prefix="/api/clubs/{club_id}/events",
     tags=["Event Reviews"],
 )
 
@@ -35,7 +39,7 @@ router = APIRouter(
 # POST /api/clubs/{club_id}/events/{event_id}/reviews
 # ---------------------------------------------------------
 @router.post(
-    "",
+    "/{event_id}/reviews",
     response_model=EventReviewResponse,
     status_code=status.HTTP_201_CREATED,
 )
@@ -77,13 +81,56 @@ def create_event_review(
         ) from error
 
 
+# -----------------------------------------------------
+# 동호회의 전체 활동 후기 조회
+#
+# GET /api/clubs/{club_id}/events/reviews
+# -----------------------------------------------------
+@router.get(
+    "/reviews",
+    response_model=list[EventReviewResponse],
+    status_code=status.HTTP_200_OK,
+)
+def get_club_reviews(
+    club_id: int,
+):
+    event_service = ClubEventService()
+
+    try:
+        return event_service.get_club_reviews(
+            club_id=club_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "동호회 후기 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "동호회 후기 조회 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+
 # ---------------------------------------------------------
 # 내가 작성한 활동 후기 조회
 #
 # GET /api/clubs/{club_id}/events/{event_id}/reviews/me
 # ---------------------------------------------------------
 @router.get(
-    "/me",
+    "/{event_id}/reviews/me",
     response_model=EventReviewResponse | None,
 )
 def get_my_event_review(
@@ -114,7 +161,7 @@ def get_my_event_review(
 # GET /api/clubs/{club_id}/events/{event_id}/reviews
 # ---------------------------------------------------------
 @router.get(
-    "",
+    "/{event_id}/reviews",
     response_model=list[EventReviewResponse],
 )
 def get_event_reviews(

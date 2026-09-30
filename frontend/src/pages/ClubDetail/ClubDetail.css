@@ -416,4 +416,88 @@
 .club-detail-schedule-info span {
   color: #777777;
   font-size: 12px;
+}/* =========================
+   활동 후기
+========================= */
+
+.club-detail-reviews {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.club-detail-review {
+    padding: 15px;
+    border: 1px solid #eeeeee;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.club-detail-review-rating {
+    margin-bottom: 8px;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.club-detail-review-text {
+    margin: 0;
+    color: #555555;
+    font-size: 13px;
+    line-height: 1.7;
+    word-break: break-word;
+}
+
+.club-detail-review-date {
+    display: block;
+    margin-top: 10px;
+    color: #999999;
+    font-size: 11px;
+}
+
+/* =========================
+   활동 후기
+========================= */
+
+.club-detail-reviews {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.club-detail-review {
+  padding: 16px;
+  border: 1px solid #eeeeee;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.club-detail-review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.club-detail-review-nickname {
+  color: #333333;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.club-detail-review-date {
+  color: #999999;
+  font-size: 11px;
+}
+
+.club-detail-review-rating {
+  margin-bottom: 8px;
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+.club-detail-review-text {
+  margin: 0;
+  color: #555555;
+  font-size: 13px;
+  line-height: 1.6;
 }

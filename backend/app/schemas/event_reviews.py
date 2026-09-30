@@ -25,6 +25,7 @@ class EventReviewResponse(BaseModel):
     review_id: int
     event_id: int
     user_id: str
+    nickname: str | None = None
 
     rating: int | None = None
     review_text: str | None = None

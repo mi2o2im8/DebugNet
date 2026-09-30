@@ -3448,6 +3448,8 @@ class ClubEventService:
             )
 
         # 참석 여부 확인
+
+        # 회원 참석 여부 확인
         attendance_by_user = (
             self.build_attendance_status_by_user(
                 event_id
@@ -3460,7 +3462,28 @@ class ClubEventService:
             )
         )
 
-        if attendance_status != "attending":
+        is_member_attending = (
+            attendance_status == "attending"
+        )
+
+        # 게스트 참가 여부 확인
+        participant = (
+            self.event_repository
+            .find_user_event_participant(
+                event_id=event_id,
+                user_id=user_id,
+            )
+        )
+
+        is_guest_joined = (
+            participant is not None
+            and participant.get("participant_type") == "guest"
+            and participant.get("status") == "joined"
+        )
+
+        # 회원으로 참석했거나
+        # 승인된 게스트로 참가한 경우 후기 작성 허용
+        if not is_member_attending and not is_guest_joined:
             raise PermissionError(
                 "활동에 참석한 이용자만 후기를 작성할 수 있습니다."
             )
@@ -3540,3 +3563,56 @@ class ClubEventService:
                 event_id=event_id
             )
         )
+    
+    # -----------------------------------------------------
+    # 동호회의 전체 활동 후기 조회
+    # -----------------------------------------------------
+    def get_club_reviews(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+        events = (
+            self.event_repository
+            .find_all_events_by_club(
+                club_id=club_id,
+            )
+        )
+
+        reviews = []
+
+        for event in events:
+            event_id = int(
+                event["event_id"]
+            )
+
+            event_reviews = (
+                self.event_repository
+                .find_event_reviews(
+                    event_id=event_id
+                )
+            )
+
+            for review in event_reviews:
+                print(
+                    "후기 최종 데이터:",
+                    review,
+                )
+
+                review["event_title"] = (
+                    event.get("title")
+                )
+
+                review["event_date"] = (
+                    event.get("event_date")
+                )
+
+                reviews.append(review)
+
+        reviews.sort(
+            key=lambda review: (
+                review.get("created_at") or ""
+            ),
+            reverse=True,
+        )
+
+        return reviews

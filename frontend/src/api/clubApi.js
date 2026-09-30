@@ -576,6 +576,20 @@ export async function getMyEventReview(
 }
 
 // ---------------------------------------------------------
+// 동호회의 전체 활동 후기 조회
+// ---------------------------------------------------------
+export async function getClubReviews(
+    clubId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/reviews`,
+        {
+            method: "GET",
+        }
+    );
+}
+
+// ---------------------------------------------------------
 // 특정 활동의 후기 목록 조회
 // ---------------------------------------------------------
 export async function getEventReviews(

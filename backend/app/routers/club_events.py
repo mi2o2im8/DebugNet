@@ -142,6 +142,48 @@ def get_club_events(
         ) from error
 
 # ---------------------------------------------------------
+# 동호회의 전체 활동 후기 조회
+#
+# GET /api/clubs/{club_id}/events/reviews
+# ---------------------------------------------------------
+@router.get(
+    "/reviews",
+    response_model=list[ClubEventReviewResponse],
+    status_code=status.HTTP_200_OK,
+)
+def get_club_reviews(
+    club_id: int,
+):
+    event_service = ClubEventService()
+
+    try:
+        return event_service.get_club_reviews(
+            club_id=club_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "동호회 후기 조회 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "동호회 후기 조회 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# ---------------------------------------------------------
 # 일정 단건 조회
 #
 # GET /api/clubs/{club_id}/events/{event_id}

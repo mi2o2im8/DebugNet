@@ -164,6 +164,26 @@ class ClubEventRepository:
         return response.data or []
 
     # -----------------------------------------------------
+    # 동호회의 전체 일정 조회
+    # -----------------------------------------------------
+    def find_all_events_by_club(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+        response = (
+            self.admin_client
+            .table("club_events")
+            .select("*")
+            .eq("club_id", club_id)
+            .neq("status", "cancelled")
+            .order("event_date", desc=True)
+            .order("start_time", desc=True)
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
     # 일정 기본 정보 수정
     # -----------------------------------------------------
     def update_event(
@@ -1180,7 +1200,14 @@ class ClubEventRepository:
         response = (
             self.admin_client
             .table("event_reviews")
-            .select("*")
+            .select(
+                """
+                *,
+                users(
+                    nickname
+                )
+                """
+            )
             .eq("event_id", event_id)
             .order(
                 "created_at",
@@ -1189,4 +1216,18 @@ class ClubEventRepository:
             .execute()
         )
 
-        return response.data or []
+        reviews = response.data or []
+
+        for review in reviews:
+            user_data = review.pop(
+                "users",
+                None,
+            )
+
+            review["nickname"] = (
+                user_data.get("nickname")
+                if user_data
+                else None
+            )
+
+        return reviews
