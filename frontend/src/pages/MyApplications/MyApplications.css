@@ -1,0 +1,564 @@
+/* ========================================
+    신청 현황 페이지
+
+   ※ 다른 페이지 CSS와 섞이지 않도록
+     모든 클래스는 my-apps- 로 시작
+   ======================================== */
+
+.my-apps-page {
+    width: 100%;
+    max-width: 400px;
+    min-height: 100vh;
+
+    margin: 0 auto;
+
+    /* 아래 100px: 하단 네비게이션에 내용이 가리지 않도록 */
+    padding: 10px 20px 100px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    font-family: "Maplestory", sans-serif;
+}
+
+
+/* ⭐ 헤더 (경기 후기 페이지와 같은 구조) */
+.my-apps-header {
+    position: relative;
+
+    width: 100%;
+    height: 60px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.my-apps-title {
+    position: relative;
+    z-index: 999;
+
+    margin: 0;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    color: #222;
+}
+
+.my-apps-back-btn {
+    position: absolute !important;
+
+    left: 0 !important;
+    top: 50% !important;
+
+    width: 38px !important;
+    height: 38px !important;
+
+    padding: 0 !important;
+
+    transform: translateY(-50%) !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    background: transparent !important;
+
+    z-index: 1000 !important;
+}
+
+.my-apps-back-btn img {
+    margin: 0 !important;
+}
+
+
+/* ⭐ 로딩 / 에러 */
+.my-apps-message {
+    margin: 0;
+    padding: 36px 0;
+
+    text-align: center;
+
+    font-size: 13px;
+    line-height: 1.6;
+
+    color: #8a9a9a;
+}
+
+
+/* ========================================
+   ⭐ 탭
+   ======================================== */
+
+.my-apps-tabs {
+    display: grid;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+    gap: 4px;
+
+    margin-top: 8px;
+    padding: 4px;
+
+    border-radius: 10px;
+
+    background: #f1f5f4;
+}
+
+.my-apps-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    padding: 10px 0;
+
+    border: none;
+    border-radius: 8px;
+
+    background: transparent;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    color: #6b7c7c;
+
+    cursor: pointer;
+}
+
+.my-apps-tab.active {
+    background: #ffffff;
+
+    font-weight: 700;
+
+    color: #01a17f;
+
+    box-shadow: 0 1px 3px rgba(0, 60, 45, 0.12);
+}
+
+.my-apps-tab-count {
+    min-width: 18px;
+
+    box-sizing: border-box;
+
+    padding: 1px 6px;
+
+    border-radius: 9px;
+
+    background: #fff1dc;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    color: #c46a1c;
+}
+
+
+/* ========================================
+   ⭐ 목록 / 카드
+   ======================================== */
+
+.my-apps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    margin: 16px 0 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.my-apps-card {
+    overflow: hidden;
+
+    border: 1px solid #e3ecea;
+    border-radius: 10px;
+
+    background: #ffffff;
+}
+
+.my-apps-card-main {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 14px 12px;
+
+    box-sizing: border-box;
+
+    border: none;
+
+    background: transparent;
+
+    font-family: inherit;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.my-apps-card-main:active {
+    background: #f6faf9;
+}
+
+.my-apps-card-main.static {
+    cursor: default;
+}
+
+.my-apps-card-main.static:active {
+    background: transparent;
+}
+
+.my-apps-thumb {
+    flex-shrink: 0;
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+}
+
+.my-apps-thumb.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #e8f5f1;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    color: #01a17f;
+}
+
+.my-apps-thumb.placeholder.guest {
+    background: #eaf1fd;
+
+    color: #5b8def;
+}
+
+.my-apps-info {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.my-apps-name {
+    overflow: hidden;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    color: #263b52;
+}
+
+.my-apps-meta {
+    overflow: hidden;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    font-size: 12px;
+
+    color: #7a8a8a;
+}
+
+.my-apps-club {
+    font-size: 12px;
+    font-weight: 700;
+
+    color: #5b8def;
+}
+
+
+/* ⭐ 상태 배지 */
+.my-apps-status {
+    flex-shrink: 0;
+
+    padding: 5px 9px;
+
+    border-radius: 8px;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* 승인 대기 */
+.my-apps-status.waiting {
+    background: #fff6ee;
+
+    color: #c46a1c;
+}
+
+/* 가입 완료 / 참여 확정 */
+.my-apps-status.done {
+    background: #e8f5f1;
+
+    color: #008f75;
+}
+
+/* 참여 완료 (끝난 경기) */
+.my-apps-status.finished {
+    background: #eaf1fd;
+
+    color: #3f6fd1;
+}
+
+/* 거절 */
+.my-apps-status.rejected {
+    background: #fdecec;
+
+    color: #d14343;
+}
+
+/* 취소 / 탈퇴 / 마감 */
+.my-apps-status.muted {
+    background: #f1f3f3;
+
+    color: #8a9a9a;
+}
+
+
+/* ⭐ 게스트 신청 취소 버튼 (카드 하단) */
+.my-apps-cancel {
+    width: 100%;
+
+    padding: 10px 0;
+
+    border: none;
+    border-top: 1px solid #edf0f2;
+
+    background: #fafbfb;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    color: #d14343;
+
+    cursor: pointer;
+}
+
+.my-apps-cancel:disabled {
+    color: #b5bcbc;
+
+    cursor: default;
+}
+
+
+/* ⭐ 빈 목록 */
+.my-apps-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+
+    padding: 40px 0;
+}
+
+.my-apps-empty p {
+    margin: 0;
+
+    font-size: 13px;
+
+    color: #8a9a9a;
+}
+
+.my-apps-empty button {
+    padding: 9px 16px;
+
+    border: 1px solid #01a17f;
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+
+    color: #01a17f;
+
+    cursor: pointer;
+}
+
+
+/* ⭐ 키보드 포커스 */
+.my-apps-tab:focus-visible,
+.my-apps-card-main:focus-visible,
+.my-apps-cancel:focus-visible,
+.my-apps-empty button:focus-visible {
+    outline: 2px solid #01a17f;
+    outline-offset: -2px;
+}
+
+
+/* ========================================
+   ⭐ 받은 신청 (운영자용)
+   ======================================== */
+
+.my-apps-received-group + .my-apps-received-group {
+    margin-top: 24px;
+}
+
+.my-apps-received-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    margin: 18px 0 0;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    color: #263b52;
+}
+
+.my-apps-received-title span {
+    font-size: 14px;
+
+    color: #01a17f;
+}
+
+.my-apps-received-group .my-apps-list {
+    margin-top: 10px;
+}
+
+/* 받은 신청 카드의 동호회 이름은 초록 (게스트 파랑과 구분) */
+.my-apps-club.received {
+    color: #01a17f;
+}
+
+/* ⭐ 받은 신청 카드: 왼쪽은 상세(관리 화면)로 이동, 오른쪽은 승인/거절 */
+.my-apps-card.received {
+    display: flex;
+    align-items: center;
+}
+
+.my-apps-card.received .my-apps-card-main {
+    flex: 1;
+    min-width: 0;
+
+    padding-right: 4px;
+}
+
+.my-apps-decision {
+    flex-shrink: 0;
+
+    display: flex;
+    gap: 6px;
+
+    padding-right: 12px;
+}
+
+.my-apps-decision-btn {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border-radius: 50%;
+
+    font-size: 17px;
+
+    cursor: pointer;
+}
+
+/* 거절: 눈에 덜 띄게 (실수로 누르지 않도록) */
+.my-apps-decision-btn.reject {
+    border: 1px solid #e3e8e8;
+
+    background: #ffffff;
+
+    color: #9aa6a6;
+}
+
+.my-apps-decision-btn.reject:active {
+    border-color: #d14343;
+
+    color: #d14343;
+}
+
+/* 승인: 앱 메인 초록 */
+.my-apps-decision-btn.approve {
+    border: 1px solid #01a17f;
+
+    background: #01a17f;
+
+    color: #ffffff;
+}
+
+.my-apps-decision-btn:disabled {
+    opacity: 0.5;
+
+    cursor: default;
+}
+
+.my-apps-decision-btn:focus-visible {
+    outline: 2px solid #01a17f;
+    outline-offset: 2px;
+}
+
+/* 처리 중 표시 */
+.my-apps-spinner {
+    width: 14px;
+    height: 14px;
+
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+
+    animation: my-apps-spin 0.7s linear infinite;
+}
+
+@keyframes my-apps-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .my-apps-spinner {
+        animation-duration: 2s;
+    }
+}
+
+/* 처리 결과 안내 */
+.my-apps-notice {
+    margin: 14px 0 0;
+    padding: 10px 12px;
+
+    border-radius: 8px;
+
+    background: #e8f5f1;
+
+    font-size: 13px;
+
+    color: #008f75;
+}
+
+/* 게스트 신청: 일정까지 남은 날 (오늘/내일만 빨간색) */
+.my-apps-dday {
+    margin-right: 5px;
+
+    font-weight: 700;
+
+    color: #7a8a8a;
+}
+
+.my-apps-dday.urgent {
+    color: #d14343;
+}

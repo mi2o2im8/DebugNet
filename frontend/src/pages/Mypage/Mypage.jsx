@@ -7,7 +7,7 @@ import BackButton from "../../components/BackButton/BackButton";
 
 // ⭐ API
 import { authenticatedRequest } from "../../api/apiClient";
-import { getMyProfile } from "../../api/userApi";
+import { getMyApplications, getMyProfile } from "../../api/userApi";
 // ⭐ 내 동호회: 메인/하단 메뉴에서 이미 받아둔 결과가 있으면 재사용
 import { getMyClubShared } from "../../api/myClubCache";
 
@@ -18,7 +18,9 @@ import { calculateTrustScore } from "../../utils/trustScore";
 import settingIcon from "../../assets/img/mypage/setting_icon.png";
 import profileIcon from "../../assets/img/basic_profile_img.png";
 import clubHeartIcon from "../../assets/img/mypage/club_heart.png";
-import writeCommentIcon from "../../assets/img/mypage/write_comment.png";
+
+// ⭐ 내 활동 메뉴 아이콘
+import ActivityIcon from "./ActivityIcons";
 
 import BottomNav from "../../components/BottomNav";
 
@@ -57,6 +59,33 @@ const buildClubList = (clubData) => {
 };
 
 
+// =========================================================
+// ⭐ 내 활동 메뉴
+// =========================================================
+const ACTIVITY_MENUS = [
+    {
+        key: "stats",
+        label: "최근 참여경기 / 통계",
+        path: "/myactivity",
+    },
+    {
+        key: "posts",
+        label: "내가 쓴 글 / 댓글",
+        path: "/mypostcomment",
+    },
+    {
+        key: "applications",
+        label: "가입 / 게스트 신청 현황",
+        path: "/my-applications",
+    },
+    {
+        key: "favorites",
+        label: "찜한 동호회",
+        path: "/favoriteClub",
+    },
+];
+
+
 function Mypage() {
 
     const navigate = useNavigate();
@@ -78,6 +107,9 @@ function Mypage() {
     // ⭐ 슬라이드 현재 위치
     const [clubIndex, setClubIndex] = useState(0);
     const sliderRef = useRef(null);
+
+    // ⭐ 결과를 기다리는 신청 수 (동호회 가입 + 게스트)
+    const [waitingApplications, setWaitingApplications] = useState(0);
 
     // ⭐ 신뢰점수 (null = 아직 못 불러옴)
     const [trust, setTrust] = useState(null);
@@ -102,6 +134,54 @@ function Mypage() {
     // =========================================================
     // ⭐ 내 정보 + 내 동호회 한 번에 조회
     // =========================================================
+    // =========================================================
+    // ⭐ 승인 대기 중인 신청 수 (내 활동 > 신청 현황 옆에 표시)
+    //
+    // 실패해도 마이페이지 다른 영역에는 영향 없음 → 표시만 안 함
+    // =========================================================
+    useEffect(() => {
+
+        let ignore = false;
+
+        getMyApplications()
+            .then((data) => {
+
+                if (ignore) return;
+
+                const now = Date.now();
+
+                const clubWaiting = (data?.club_applications ?? [])
+                    .filter((item) => item.status === "pending")
+                    .length;
+
+                // 게스트: 승인 대기 + 아직 시작 전 + 일정 취소 안 됨
+                const guestWaiting = (data?.guest_applications ?? [])
+                    .filter((item) => {
+                        if (item.guest_status !== "pending") return false;
+                        if (item.event_status === "cancelled") return false;
+
+                        const [y, m, d] = String(item.event_date)
+                            .slice(0, 10).split("-").map(Number);
+                        const [hh, mm] = String(item.start_time || "00:00")
+                            .split(":").map(Number);
+
+                        return now < new Date(y, m - 1, d, hh, mm).getTime();
+                    })
+                    .length;
+
+                setWaitingApplications(clubWaiting + guestWaiting);
+            })
+            .catch((error) => {
+                console.error("신청 현황 개수 조회 실패:", error);
+            });
+
+        return () => {
+            ignore = true;
+        };
+
+    }, []);
+
+
     useEffect(() => {
 
         let isActive = true;
@@ -507,68 +587,25 @@ function Mypage() {
 
 
                 <div className="activity-list">
+                    {ACTIVITY_MENUS.map(({ key, label, path }) => (
+                        <button
+                            key={key}
+                            type="button"
+                            className="activity-item"
+                            onClick={() => navigate(path)}
+                        >
+                            <ActivityIcon type={key} />
 
+                            <p>{label}</p>
 
-                    {/* ⭐ 최근 참여경기 / 통계 */}
-                    <button
-                        type="button"
-                        className="activity-item"
-                        onClick={() =>
-                            navigate("/myactivity")
-                        }
-                    >
-
-                        <img
-                            src={clubHeartIcon}
-                            alt="최근 참여경기"
-                        />
-
-
-                        <p>
-                            최근 참여경기 / 통계
-                        </p>
-
-                    </button>
-
-
-                    {/* ⭐ 내가 쓴 글 / 댓글 */}
-                    <button
-                        type="button"
-                        className="activity-item"
-                        onClick={() =>
-                            navigate("/mypostcomment")
-                        }
-                    >
-
-                        <img
-                            src={writeCommentIcon}
-                            alt="내가 쓴 글 / 댓글"
-                        />
-
-
-                        <p>
-                            내가 쓴 글 / 댓글
-                        </p>
-
-                    </button>
-
-
-                    {/* ⭐ 찜한 동호회 */}
-                    <button
-                        type="button"
-                        className="activity-item"
-                        onClick={() => navigate("/favoriteClub")}
-                    >
-                        <img
-                            src={clubHeartIcon}
-                            alt="찜한 동호회"
-                        />
-
-                        <p>
-                            찜한 동호회
-                        </p>
-                    </button>
-
+                            {/* 신청 현황: 결과 기다리는 신청이 있을 때만 */}
+                            {key === "applications" && waitingApplications > 0 && (
+                                <span className="activity-badge">
+                                    승인 대기 {waitingApplications}
+                                </span>
+                            )}
+                        </button>
+                    ))}
                 </div>
 
 

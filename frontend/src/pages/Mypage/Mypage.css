@@ -625,11 +625,11 @@
 .activity-item {
     width: 100%;
 
-    height: 55px;
-    min-height: 55px;
-    max-height: 55px;
+    height: 62px;
+    min-height: 62px;
+    max-height: 62px;
 
-    padding: 0 14px;
+    padding: 0 16px;
 
     box-sizing: border-box;
 
@@ -641,7 +641,7 @@
     display: flex;
     align-items: center;
 
-    gap: 12px;
+    gap: 14px;
 
     font-family: "Maplestory", sans-serif;
 
@@ -652,21 +652,21 @@
     border-bottom: none;
 }
 
-.activity-item > img {
-    width: 24px;
-    height: 24px;
+.activity-item:active {
+    background: #f4f8f7;
+}
 
-    padding: 4px;
+.activity-item:focus-visible {
+    outline: 2px solid #01a17f;
+    outline-offset: -2px;
+}
 
-    box-sizing: border-box;
-
+/* ⭐ 아이콘: 동그란 배경 2톤 아이콘 (ActivityIcons.jsx) */
+.activity-icon {
     flex-shrink: 0;
 
-    border-radius: 6px;
-
-    background: #f3f8f6;
-
-    object-fit: contain;
+    width: 40px;
+    height: 40px;
 }
 
 .activity-item > p {
@@ -680,6 +680,22 @@
     font-weight: 400;
 
     color: #333;
+}
+
+/* ⭐ 승인 대기 개수 (있을 때만) */
+.activity-badge {
+    flex-shrink: 0;
+
+    padding: 3px 8px;
+
+    border-radius: 999px;
+
+    background: #fff1dc;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    color: #c46a1c;
 }
 
 
@@ -824,9 +840,9 @@
     }
 
     .activity-item {
-        height: 55px;
-        min-height: 55px;
-        max-height: 55px;
+        height: 62px;
+        min-height: 62px;
+        max-height: 62px;
     }
 
     .profile-name {
@@ -888,4 +904,4 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
+}
