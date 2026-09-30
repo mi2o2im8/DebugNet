@@ -1,0 +1,171 @@
+/* ========================================
+   ⭐ 홈 월간 달력 (공용)
+   MainHome.css 의 main-home-calendar 와 같은 모양
+======================================== */
+
+.home-calendar {
+    width: 100%;
+    padding: 10px 10px 9px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.home-calendar-header {
+    width: 100%;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.home-calendar-header strong {
+    font-size: 16px;
+    font-weight: 700;
+    color: #222;
+}
+
+.home-calendar-header-right {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.home-calendar-header button {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    font-family: "Maplestory", sans-serif;
+    font-size: 21px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.home-calendar-header button:hover {
+    background: #E8F6F2;
+}
+
+.home-calendar-header .home-calendar-today {
+    width: auto;
+    padding: 0 7px;
+    font-size: 12px;
+    color: #777;
+}
+
+.home-calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 2px;
+}
+
+.home-calendar-weekdays span {
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #777;
+}
+
+.home-calendar-weekdays .sunday {
+    color: #e05c64;
+}
+
+.home-calendar-weekdays .saturday {
+    color: #5279bd;
+}
+
+.home-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    row-gap: 1px;
+}
+
+.home-calendar-empty {
+    width: 100%;
+    height: 34px;
+}
+
+.home-calendar-day {
+    position: relative;
+    width: 100%;
+    height: 34px;
+    padding: 2px 0 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    font-family: "Maplestory", sans-serif;
+    cursor: pointer;
+}
+
+.home-calendar-day > span {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 12px;
+    color: #333;
+}
+
+.home-calendar-day:hover > span {
+    background-color: #E8F6F2;
+}
+
+.home-calendar-day.selected > span,
+.home-calendar-day.selected:hover > span {
+    background-color: #01A17F;
+    color: #fff;
+    font-weight: 700;
+}
+
+.home-calendar-dots {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    pointer-events: none;
+}
+
+.home-calendar-dots i {
+    width: 4px;
+    height: 4px;
+    display: block;
+    border-radius: 50%;
+    background-color: #F5A623;
+}
+
+.home-calendar-dots i.guest {
+    background-color: #e0677f;
+}
+
+@media (max-width: 360px) {
+    .home-calendar {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .home-calendar-day > span {
+        width: 26px;
+        height: 26px;
+        font-size: 11px;
+    }
+}

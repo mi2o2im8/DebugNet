@@ -11,6 +11,8 @@ import { attachClubInfoToEvents } from "../../utils/attachClubInfo";
 import { authenticatedRequest, buildApiUrl } from "../../api/apiClient";
 import { buildRecommendedClubs, safeImageUrl } from "../../utils/recommendClubs";
 import CommunityPreview from "../../components/CommunityPreview/CommunityPreview";
+import HomeCalendar from "../../components/HomeCalendar/HomeCalendar";
+import CardSlider from "../../components/CardSlider/CardSlider";
 
 import "./Main.css";
 
@@ -117,13 +119,13 @@ const formatGuestSchedule = (eventDate, startTime) => {
 };
 
 
+// ⭐ 게스트 모집 / 이런 활동도 있어요 카드 개수 (한 화면 3개 × 3페이지)
+const SLIDER_ITEM_COUNT = 9;
+
+
 // ⭐ Date → "YYYY-MM-DD" (로컬 날짜 기준)
 const toDateString = (date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-
-
-// ⭐ 메인에 보여줄 게스트 일정 최대 개수
-const MAX_WEEK_GUEST_SCHEDULES = 3;
 
 
 // ⭐ 카드 글씨 공통 스타일 (기존 인라인 스타일 그대로)
@@ -270,7 +272,7 @@ function Main() {
                 // ⭐ 동호회 이미지 / 이름 붙이기
                 const eventsWithClub =
                     await attachClubInfoToEvents(
-                        eventList.slice(0, 4)
+                        eventList.slice(0, SLIDER_ITEM_COUNT)
                     );
 
                 if (isActive) {
@@ -305,23 +307,26 @@ function Main() {
 
 
     // =========================================================
-    // ⭐ 이번 주 일정 = 내가 게스트로 신청 / 참여한 일정
-    // GET /api/users/me/guest-events?from_date=오늘&to_date=오늘+6일
+    // ⭐ 이번 달 일정 = 내가 게스트로 신청 / 참여한 일정
+    // GET /api/users/me/guest-events (기간 없이 전체)
     //
-    // 가입 전 홈이라 동호회 일정은 없고, 게스트 일정만 보여준다.
-    // 로그인하지 않았으면 조회하지 않고 빈 상태로 둔다.
+    // 가입 전 홈이라 동호회 일정은 없고, 게스트 일정만 달력에 보여준다.
+    // (MainHome 달력과 같은 모양, 게스트 일정은 분홍 점)
+    // 로그인하지 않았으면 조회하지 않고 빈 달력으로 둔다.
     // =========================================================
 
-    const [weekGuestSchedules, setWeekGuestSchedules] = useState([]);
+    const [guestSchedules, setGuestSchedules] = useState([]);
 
-    const [isWeekScheduleLoading, setIsWeekScheduleLoading] = useState(true);
+    const [isGuestScheduleLoading, setIsGuestScheduleLoading] = useState(true);
+
+    const [selectedDate, setSelectedDate] = useState(() => toDateString(new Date()));
 
 
     useEffect(() => {
 
         let isActive = true;
 
-        const loadWeekGuestSchedules = async () => {
+        const loadGuestSchedules = async () => {
 
             try {
 
@@ -330,49 +335,71 @@ function Main() {
                 } = await supabase.auth.getSession();
 
                 if (!session?.access_token) {
-                    if (isActive) setWeekGuestSchedules([]);
+                    if (isActive) setGuestSchedules([]);
                     return;
                 }
 
-                const today = new Date();
+                const data = await getMyGuestEvents();
 
-                const weekEnd = new Date(today);
-                weekEnd.setDate(today.getDate() + 6);
+                // ⭐ 동호회 설정 이미지 붙이기 (실패해도 일정은 그대로)
+                const eventsWithClub = await attachClubInfoToEvents(
+                    data?.events || []
+                ).catch(() => data?.events || []);
 
-                const data = await getMyGuestEvents({
-                    fromDate: toDateString(today),
-                    toDate: toDateString(weekEnd),
-                });
+                const events = eventsWithClub
+                    .filter((event) => event?.event_date)
+                    .map((event) => ({
+                        ...event,
+                        date: String(event.event_date).slice(0, 10),
+                        isGuest: true,
+                        // ⭐ 동호회 설정 이미지 → 일정 이미지 → 종목 기본 이미지
+                        image:
+                            safeImageUrl(event.club_image_url) ||
+                            safeImageUrl(event.event_image_url) ||
+                            SPORT_IMAGES[event.club_sport] ||
+                            calendarIcon,
+                    }))
+                    .sort((a, b) =>
+                        `${a.date} ${a.start_time || ""}`.localeCompare(
+                            `${b.date} ${b.start_time || ""}`
+                        )
+                    );
 
                 if (isActive) {
-                    setWeekGuestSchedules(data?.events || []);
+                    setGuestSchedules(events);
                 }
 
             } catch (error) {
 
-                console.error("⭐ Main 이번 주 게스트 일정 조회 오류:", error);
+                console.error("⭐ Main 게스트 일정 조회 오류:", error);
 
                 if (isActive) {
-                    setWeekGuestSchedules([]);
+                    setGuestSchedules([]);
                 }
 
             } finally {
 
                 if (isActive) {
-                    setIsWeekScheduleLoading(false);
+                    setIsGuestScheduleLoading(false);
                 }
 
             }
 
         };
 
-        loadWeekGuestSchedules();
+        loadGuestSchedules();
 
         return () => {
             isActive = false;
         };
 
     }, []);
+
+
+    // ⭐ 선택한 날짜의 게스트 일정
+    const selectedGuestSchedules = guestSchedules.filter(
+        (event) => event.date === selectedDate
+    );
 
 
     // =========================================================
@@ -410,11 +437,11 @@ function Main() {
                             ? data.items
                             : [];
 
-                // ⭐ 랜덤 4개 + 실제 이미지/종목/지역 + 추천·신규·HOT 뱃지
+                // ⭐ 랜덤 9개(3개씩 3페이지) + 실제 이미지/종목/지역 + 추천·신규·HOT 뱃지
                 const recommendedClubs =
                     await buildRecommendedClubs({
                         clubs: clubList,
-                        count: 4,
+                        count: SLIDER_ITEM_COUNT,
                     });
 
                 if (isActive) {
@@ -943,12 +970,11 @@ function Main() {
 
 
                 {/* =====================================================
-                    ⭐ 이번 주 일정
+                    ⭐ 이번 달 일정 (게스트 일정 달력)
                 ===================================================== */}
                 <section className="schedule-box">
 
                     <div className="schedule-header">
-
 
                         <div className="schedule-title">
 
@@ -958,7 +984,7 @@ function Main() {
                             />
 
                             <h3>
-                                이번 주 일정
+                                이번 달 일정
                             </h3>
 
                         </div>
@@ -984,41 +1010,60 @@ function Main() {
                     </div>
 
 
+                    {/* ⭐ 월간 달력 (게스트 일정 = 분홍 점) */}
+                    <HomeCalendar
+                        selectedDate={selectedDate}
+                        onSelectDate={setSelectedDate}
+                        schedules={guestSchedules}
+                    />
 
-                    {isWeekScheduleLoading ? (
+
+                    {/* ⭐ 선택한 날짜의 게스트 일정 */}
+                    {isGuestScheduleLoading ? (
 
                         <p className="schedule-guest-empty">
                             일정을 불러오는 중이에요.
                         </p>
 
-                    ) : weekGuestSchedules.length > 0 ? (
+                    ) : selectedGuestSchedules.length > 0 ? (
 
-                        // ⭐ 이번 주 게스트 일정 목록
                         <ul className="schedule-guest-list">
 
-                            {weekGuestSchedules
-                                .slice(0, MAX_WEEK_GUEST_SCHEDULES)
-                                .map((event) => (
+                            {selectedGuestSchedules.map((event) => (
 
-                                    <li key={event.event_id}>
+                                <li key={event.event_id}>
 
-                                        <button
-                                            type="button"
-                                            className="schedule-guest-item"
-                                            onClick={() =>
-                                                navigate(
-                                                    `/guest-recruit/${event.event_id}`,
-                                                    {
-                                                        // ⭐ 모집이 마감돼도 상세 화면이
-                                                        //    바로 표시되도록 일정 데이터를 넘긴다
-                                                        state: {
-                                                            event,
-                                                            guestStatus: event.guest_status,
-                                                        },
-                                                    }
-                                                )
-                                            }
-                                        >
+                                    <button
+                                        type="button"
+                                        className="schedule-guest-item"
+                                        onClick={() =>
+                                            navigate(
+                                                `/guest-recruit/${event.event_id}`,
+                                                {
+                                                    // ⭐ 모집이 마감돼도 상세 화면이
+                                                    //    바로 표시되도록 일정 데이터를 넘긴다
+                                                    state: {
+                                                        event,
+                                                        guestStatus: event.guest_status,
+                                                    },
+                                                }
+                                            )
+                                        }
+                                    >
+
+                                        <img
+                                            className="schedule-guest-image"
+                                            src={event.image}
+                                            alt={event.club_name || event.title || "게스트 일정"}
+                                            onError={(e) => {
+                                                if (!e.currentTarget.dataset.fallback) {
+                                                    e.currentTarget.dataset.fallback = "1";
+                                                    e.currentTarget.src = calendarIcon;
+                                                }
+                                            }}
+                                        />
+
+                                        <span className="schedule-guest-text">
 
                                             <span className="schedule-guest-date">
                                                 {formatGuestSchedule(
@@ -1027,49 +1072,50 @@ function Main() {
                                                 )}
                                             </span>
 
-                                            <span className="schedule-guest-text">
 
-                                                <strong>
-                                                    {event.title}
-                                                </strong>
+                                            <strong>
+                                                <em className="schedule-guest-tag">게스트</em>
+                                                {event.title}
+                                            </strong>
 
-                                                <small>
-                                                    {event.club_name}
-                                                    {event.location
-                                                        ? ` · ${event.location}`
-                                                        : ""}
-                                                </small>
+                                            <small>
+                                                {event.club_name}
+                                                {event.location
+                                                    ? ` · ${event.location}`
+                                                    : ""}
+                                            </small>
 
-                                            </span>
+                                        </span>
 
-                                            <span
-                                                className={
-                                                    event.guest_status === "joined"
-                                                        ? "schedule-guest-status joined"
-                                                        : "schedule-guest-status"
-                                                }
-                                            >
-                                                {GUEST_STATUS_LABEL[event.guest_status] || "승인 대기"}
-                                            </span>
+                                        <span
+                                            className={
+                                                event.guest_status === "joined"
+                                                    ? "schedule-guest-status joined"
+                                                    : "schedule-guest-status"
+                                            }
+                                        >
+                                            {GUEST_STATUS_LABEL[event.guest_status] || "승인 대기"}
+                                        </span>
 
-                                        </button>
+                                    </button>
 
-                                    </li>
-
-                                ))}
-
-                            {weekGuestSchedules.length > MAX_WEEK_GUEST_SCHEDULES && (
-                                <li className="schedule-guest-more">
-                                    외 {weekGuestSchedules.length - MAX_WEEK_GUEST_SCHEDULES}개 일정
                                 </li>
-                            )}
+
+                            ))}
 
                         </ul>
 
+                    ) : guestSchedules.length > 0 ? (
+
+                        // ⭐ 다른 날에는 게스트 일정이 있음
+                        <p className="schedule-guest-empty">
+                            선택한 날짜에 일정이 없어요.
+                        </p>
+
                     ) : (
 
-                        <div className="schedule-content">
-
+                        // ⭐ 게스트 일정이 하나도 없음
+                        <div className="schedule-content schedule-content-compact">
 
                             <div className="schedule-image">
 
@@ -1084,7 +1130,7 @@ function Main() {
                             <div className="schedule-info">
 
                                 <h4>
-                                    이번 주 예정된 일정이 없어요
+                                    예정된 일정이 없어요
                                 </h4>
 
 
@@ -1103,10 +1149,10 @@ function Main() {
 
                                 <button
                                     onClick={() =>
-                                        navigate("/clubs")
+                                        navigate("/guest-recruit")
                                     }
                                 >
-                                    일정 둘러보기
+                                    게스트 일정 둘러보기
                                 </button>
 
                             </div>
@@ -1153,8 +1199,10 @@ function Main() {
 
                     </div>
 
-                    <div
-                        className="guest-list"
+                    {/* ⭐ 한 화면 3개, 좌우로 넘기기 */}
+                    <CardSlider
+                        className="guest-slider"
+                        ariaLabel="다른 동호회 게스트 모집"
                     >
 
                         {isGuestLoading ? (
@@ -1221,7 +1269,7 @@ function Main() {
 
                         )}
 
-                    </div>
+                    </CardSlider>
 
                 </section>
 
@@ -1269,8 +1317,10 @@ function Main() {
 
                     </div>
 
-                    <div
-                        className="recommendation-list"
+                    {/* ⭐ 한 화면 3개, 좌우로 넘기기 */}
+                    <CardSlider
+                        className="recommendation-slider"
+                        ariaLabel="이런 활동도 있어요"
                     >
 
                         {isActivityLoading ? (
@@ -1347,7 +1397,7 @@ function Main() {
 
                         )}
 
-                    </div>
+                    </CardSlider>
 
                 </section>
             

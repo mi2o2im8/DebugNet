@@ -1956,3 +1956,16 @@ body {
     background: #eeeeee;
     color: #555555;
 }
+
+/* ========================================
+   ⭐ 게스트 모집 - 3개씩 슬라이드
+   (슬라이드 동작은 components/CardSlider/CardSlider.css)
+======================================== */
+
+.guest-slider .guest-image {
+    height: 72px;
+}
+
+.guest-slider .guest-empty {
+    margin: 0;
+}

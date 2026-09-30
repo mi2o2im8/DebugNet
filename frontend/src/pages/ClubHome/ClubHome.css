@@ -840,14 +840,32 @@
 /* AI 캐릭터 */
 
 .ClubHome-ai-character {
-    width: 70px;
-    height: 70px;
+    width: 76px;
+    height: 76px;
+
+    flex-shrink: 0;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    font-size: 42px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(1, 161, 127, 0.15);
+
+    overflow: hidden;
+}
+
+/* ⭐ 챗봇 캐릭터 이미지
+   네모 아이콘이 동그란 배경 안에 온전히 들어가도록 64% (대각선 < 지름) */
+.ClubHome-ai-character img {
+    width: 64%;
+    height: 64%;
+
+    object-fit: contain;
+
+    -webkit-user-drag: none;
+    user-select: none;
 }
 
 /* ===================================== */

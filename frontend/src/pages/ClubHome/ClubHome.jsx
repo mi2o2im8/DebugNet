@@ -1,16 +1,22 @@
 import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import BottomNav from "../../components/BottomNav";
-import { Link, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ClubHome.css";
 import ClubSearchFilter from "../../components/common/ClubSearchFilter";
 import { buildApiUrl } from "../../api/apiClient";
 import { useNotifications } from "../../context/NotificationContext";
 import profileIcon from "../../assets/img/basic_profile_img.png";
+import chatbotIcon from "../../assets/img/chatbot/chatbot-icon.png";
+import ChatbotButton from "../../components/Chatbot/ChatbotButton";
+import Chatbot from "../Chatbot/Chatbot";
 import { supabase } from "../../../supabaseClient";
 
 function ClubHome() {
   const navigate = useNavigate();
+
+  // ⭐ 이용 도우미 챗봇 열림 여부 (Main / MainHome 과 같은 챗봇)
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   // =====================================================
   // 사용자 프로필
@@ -559,8 +565,13 @@ function ClubHome() {
 
           </div>
 
+          {/* ⭐ 이용 도우미 챗봇과 같은 캐릭터 이미지 */}
           <div className="ClubHome-ai-character">
-            🤖
+            <img
+              src={chatbotIcon}
+              alt=""
+              aria-hidden="true"
+            />
           </div>
 
         </section>
@@ -992,19 +1003,20 @@ function ClubHome() {
       )}
 
       {/* =====================================================
-          이용 도우미 챗봇 버튼
+          이용 도우미 챗봇 (실제 챗봇 연결)
+          - 예전 목업 버튼(🤖) 대신 Main / MainHome 과 같은 챗봇 사용
       ===================================================== */}
-      <button className="ClubHome-chatbot-button">
+      {!isChatbotOpen && (
+        <ChatbotButton
+          onClick={() => setIsChatbotOpen(true)}
+        />
+      )}
 
-        <span className="ClubHome-chatbot-icon">
-          🤖
-        </span>
-
-        <span className="ClubHome-chatbot-text">
-          이용 도우미
-        </span>
-
-      </button>
+      {isChatbotOpen && (
+        <Chatbot
+          onClose={() => setIsChatbotOpen(false)}
+        />
+      )}
 
       {/* =====================================================
           하단 네비게이션

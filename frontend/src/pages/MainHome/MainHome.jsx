@@ -53,6 +53,11 @@ const sportImages = {
 import ChatbotButton from "../../components/Chatbot/ChatbotButton";
 import { useNotifications } from "../../context/NotificationContext";
 import Chatbot from "../Chatbot/Chatbot";
+import CardSlider from "../../components/CardSlider/CardSlider";
+
+
+// ⭐ 게스트 모집 / 이런 활동도 있어요 카드 개수 (한 화면 3개 × 3페이지)
+const SLIDER_ITEM_COUNT = 9;
 
 
 // =========================================================
@@ -300,6 +305,23 @@ function MainHome() {
                     ...joinedClubList,
                 ];
 
+                // ⭐ 동호회별 설정 이미지 / 종목 (달력 일정 이미지용)
+                const clubInfoById = new Map(
+                    allClubs
+                        .map((club) => [
+                            String(club?.club_id || club?.id || club?.clubId || ""),
+                            {
+                                image:
+                                    safeImageUrl(club?.representative_image_url) ||
+                                    safeImageUrl(club?.club_image) ||
+                                    safeImageUrl(club?.image_url) ||
+                                    null,
+                                sport: club?.sport_name || "",
+                            },
+                        ])
+                        .filter(([id]) => id)
+                );
+
                 // ⭐ 실제 club_id만 추출
                 const clubIds = [
                     ...new Set(
@@ -379,7 +401,11 @@ function MainHome() {
                 // ⭐ 여러 동호회의 일정 하나로 합치기
                 const events = eventResults.flat();
 
-                const guestEvents = await guestEventsPromise;
+                // ⭐ 게스트 일정에는 동호회 이미지가 없어서 동호회 상세로 한 번 더 조회
+                //    (실패해도 일정은 그대로 보여준다)
+                const guestEvents =
+                    await attachClubInfoToEvents(await guestEventsPromise)
+                        .catch(() => guestEventsPromise);
 
                 console.log(
                     "⭐ MainHome 전체 일정 원본:",
@@ -423,10 +449,12 @@ function MainHome() {
                                       ).slice(0, 5)
                                     : "",
 
-                            // ⭐ 일정 관리 페이지에서 내려오는
-                            // event_image_url이 있으면 사용
+                            // ⭐ 이미지 우선순위
+                            // 동호회 설정 이미지 → 일정 이미지 → 종목 기본 이미지
                             image:
+                                clubInfoById.get(String(event?.club_id))?.image ||
                                 safeImageUrl(event?.event_image_url) ||
+                                sportImages[clubInfoById.get(String(event?.club_id))?.sport] ||
                                 badmintonImage,
 
                             alt:
@@ -474,8 +502,11 @@ function MainHome() {
                                 ? String(event.end_time).slice(0, 5)
                                 : "",
 
+                        // ⭐ 동호회 설정 이미지 → 일정 이미지 → 종목 기본 이미지
                         image:
+                            safeImageUrl(event?.club_image_url) ||
                             safeImageUrl(event?.event_image_url) ||
+                            sportImages[event?.club_sport] ||
                             badmintonImage,
 
                         alt:
@@ -661,7 +692,7 @@ function MainHome() {
                         (event) =>
                             !myClubIds.has(String(event?.club_id))
                     )
-                    .slice(0, 4);
+                    .slice(0, SLIDER_ITEM_COUNT);
 
                 // ⭐ 동호회 이미지 / 이름 붙이기
                 const eventsWithClub =
@@ -1271,7 +1302,7 @@ function MainHome() {
                     await buildRecommendedClubs({
                         clubs: clubList,
                         excludeIds: [...myClubIds],
-                        count: 4,
+                        count: SLIDER_ITEM_COUNT,
                     });
 
                 if (!isActive) {
@@ -1808,6 +1839,13 @@ function MainHome() {
                                                 alt={
                                                     schedule.alt
                                                 }
+                                                onError={(e) => {
+                                                    // 동호회 이미지 주소가 깨졌으면 기본 이미지
+                                                    if (!e.currentTarget.dataset.fallback) {
+                                                        e.currentTarget.dataset.fallback = "1";
+                                                        e.currentTarget.src = badmintonImage;
+                                                    }
+                                                }}
                                             />
 
 
@@ -1967,7 +2005,11 @@ function MainHome() {
                     </div>
 
 
-                    <div className="guest-list">
+                    {/* ⭐ 한 화면 3개, 좌우로 넘기기 */}
+                    <CardSlider
+                        className="guest-slider"
+                        ariaLabel="다른 동호회 게스트 모집"
+                    >
 
                         {isGuestLoading ? (
 
@@ -2030,7 +2072,7 @@ function MainHome() {
 
                         )}
 
-                    </div>
+                    </CardSlider>
 
                 </section>
 
@@ -2093,18 +2135,10 @@ function MainHome() {
                     </div>
 
 
-                    <div
-                        className="main-home-activity-list"
-                        style={{
-                            width: "100%",
-                            display: "flex",
-                            gap: "6px",
-                            overflowX: "auto",
-                            overflowY: "hidden",
-                            padding: "0 1px 5px",
-                            boxSizing: "border-box",
-                            scrollbarWidth: "none",
-                        }}
+                    {/* ⭐ 한 화면 3개, 좌우로 넘기기 */}
+                    <CardSlider
+                        className="main-home-activity-slider"
+                        ariaLabel="이런 활동도 있어요"
                     >
 
                         {activityClubs.map((club) => {
@@ -2121,9 +2155,6 @@ function MainHome() {
                                     to={`/clubs/${club.id}`}
                                     className="main-home-activity-card"
                                     style={{
-                                        flex: "0 0 calc((100% - 18px) / 4)",
-                                        width: "calc((100% - 18px) / 4)",
-                                        minWidth: "calc((100% - 18px) / 4)",
                                         display: "block",
                                         boxSizing: "border-box",
                                         border: "1px solid #ddd",
@@ -2140,7 +2171,7 @@ function MainHome() {
                                         style={{
                                             position: "relative",
                                             width: "100%",
-                                            height: "58px",
+                                            height: "72px",
                                             overflow: "hidden",
                                         }}
                                     >
@@ -2158,7 +2189,7 @@ function MainHome() {
                                                     borderRadius: "4px",
                                                     background: club.badge.color,
                                                     color: "#fff",
-                                                    fontSize: "7px",
+                                                    fontSize: "8px",
                                                     lineHeight: 1.2,
                                                 }}
                                             >
@@ -2187,7 +2218,7 @@ function MainHome() {
                                     <h4
                                         style={{
                                             margin: "6px 5px 4px",
-                                            fontSize: "9px",
+                                            fontSize: "11px",
                                             fontWeight: 700,
                                             whiteSpace: "nowrap",
                                             overflow: "hidden",
@@ -2201,7 +2232,7 @@ function MainHome() {
                                     <p
                                         style={{
                                             margin: "3px 5px",
-                                            fontSize: "7px",
+                                            fontSize: "9px",
                                             color: "#888",
                                             whiteSpace: "nowrap",
                                             overflow: "hidden",
@@ -2223,7 +2254,7 @@ function MainHome() {
                                             background: "#fff",
                                             color: "#01A17F",
                                             textAlign: "center",
-                                            fontSize: "7px",
+                                            fontSize: "9px",
                                         }}
                                     >
                                         자세히 보기
@@ -2235,7 +2266,7 @@ function MainHome() {
 
                         })}
 
-                    </div>
+                    </CardSlider>
 
                 </section>
 

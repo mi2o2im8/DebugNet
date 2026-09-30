@@ -1,0 +1,107 @@
+/* ========================================
+   ⭐ 카드 가로 슬라이더 (공용)
+======================================== */
+
+.card-slider {
+    width: 100%;
+}
+
+.card-slider-track {
+    width: 100%;
+
+    display: flex;
+    gap: var(--card-slider-gap, 8px);
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    /* 3개 단위로 딱 맞춰 멈춤 */
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+
+    padding: 1px 1px 2px;
+    box-sizing: border-box;
+
+    scrollbar-width: none;
+    cursor: grab;
+}
+
+.card-slider-track::-webkit-scrollbar {
+    display: none;
+}
+
+/* 마우스로 끄는 중에는 스냅/부드러운 이동을 잠시 끈다 */
+.card-slider-track.dragging {
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+    cursor: grabbing;
+    user-select: none;
+}
+
+.card-slider-track.dragging * {
+    pointer-events: none;
+}
+
+/* ⭐ 카드: 한 화면에 3개 */
+.card-slider-track > * {
+    flex: 0 0 calc(
+        (100% - (var(--card-slider-per-page, 3) - 1) * var(--card-slider-gap, 8px))
+        / var(--card-slider-per-page, 3)
+    );
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* ⭐ 3개마다 한 페이지 시작점 */
+.card-slider-track > :nth-child(3n + 1) {
+    scroll-snap-align: start;
+}
+
+.card-slider-track > :last-child {
+    scroll-snap-align: end;
+}
+
+/* ⭐ 안내 문구(불러오는 중 / 데이터 없음)는 한 줄 전체 */
+.card-slider-track > p {
+    flex: 0 0 100%;
+}
+
+.card-slider-track img {
+    -webkit-user-drag: none;
+    user-select: none;
+}
+
+/* ========================================
+   ⭐ 페이지 점
+======================================== */
+
+.card-slider-dots {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+
+    margin-top: 8px;
+}
+
+.card-slider-dot {
+    width: 6px;
+    height: 6px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 999px;
+
+    background: #d6dedb;
+
+    cursor: pointer;
+
+    transition: width 0.2s ease, background-color 0.2s ease;
+}
+
+.card-slider-dot.active {
+    width: 16px;
+    background: #01A17F;
+}
