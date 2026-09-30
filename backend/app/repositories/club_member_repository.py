@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from app.core.supabase import (
     get_supabase_admin_client,
 )
@@ -1336,6 +1338,43 @@ class ClubMemberRepository:
         except Exception as e:
             print("가입 알림 생성 실패:", e)
             return None
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 로그인 사용자의 동호회 탈퇴
+    # -----------------------------------------------------
+    def withdraw_my_membership(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_members")
+            .update(
+                {
+                    "role": "member",
+                    "status": "withdrawn",
+                    "withdrawn_at": datetime.now(
+                        timezone.utc
+                    ).isoformat(),
+                }
+            )
+            .eq(
+                "club_id",
+                club_id,
+            )
+            .eq(
+                "user_id",
+                user_id,
+            )
+            .execute()
+        )
 
         if not response.data:
             return None

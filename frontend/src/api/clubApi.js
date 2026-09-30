@@ -795,6 +795,20 @@ export async function removeClubMember(
 }
 
 // ---------------------------------------------------------
+// 내가 가입한 동호회 탈퇴
+// ---------------------------------------------------------
+export async function withdrawMyClub(
+    clubId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/members/me`,
+        {
+            method: "DELETE"
+        }
+    );
+}
+
+// ---------------------------------------------------------
 // 회원 경고 부여
 // ---------------------------------------------------------
 export async function createClubMemberWarning(

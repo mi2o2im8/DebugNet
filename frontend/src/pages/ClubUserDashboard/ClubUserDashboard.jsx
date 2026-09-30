@@ -39,6 +39,7 @@ import {
     updateClubScheduleAttendance,
     createEventReview,
     getMyEventReview,
+    withdrawMyClub,
 } from "../../api/clubApi";
 
 import "./ClubUserDashboard.css";
@@ -105,6 +106,17 @@ function ClubUserDashboard() {
     // 일정별 내 출석 투표 상태
     const [eventAttendance, setEventAttendance] = useState({});
 
+    // -----------------------------------------------------
+    // 동호회 탈퇴 메뉴 / 팝업 상태
+    // -----------------------------------------------------
+    const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+
+    const [withdrawModalOpen, setWithdrawModalOpen] =
+        useState(false);
+
+    const [withdrawSubmitting, setWithdrawSubmitting] =
+        useState(false);
+
     // 출석 투표 처리 중인 일정
     const [votingEventId, setVotingEventId] = useState(null);
 
@@ -147,7 +159,6 @@ function ClubUserDashboard() {
 
     // 참석 여부 (현재 화면에서만 유지되는 임시 상태)
     const [attendanceVotes, setAttendanceVotes] = useState({});
-
 
         // 대시보드 API 조회
         useEffect(() => {
@@ -769,6 +780,52 @@ function ClubUserDashboard() {
         }
     };
 
+    // ---------------------------------------------------------
+    // 동호회 탈퇴 확인 팝업 열기
+    // ---------------------------------------------------------
+    const handleOpenWithdrawModal = () => {
+        setMoreMenuOpen(false);
+        setWithdrawModalOpen(true);
+    };
+
+
+    // ---------------------------------------------------------
+    // 동호회 탈퇴
+    // ---------------------------------------------------------
+    const handleWithdrawClub = async () => {
+        if (!clubId) {
+            return;
+        }
+
+        setWithdrawSubmitting(true);
+
+        try {
+            await withdrawMyClub(clubId);
+
+            alert("동호회에서 탈퇴했습니다.");
+
+            setWithdrawModalOpen(false);
+
+            // 탈퇴한 동호회의 상세 페이지로 이동
+            // 상세 페이지에서는 더 이상 가입 회원이 아니므로
+            // 가입하기 상태가 표시되도록 한다.
+            navigate(`/clubs/${clubId}`);
+
+        } catch (error) {
+            console.error(
+                "동호회 탈퇴 실패:",
+                error
+            );
+
+            alert(
+                error?.message ||
+                "동호회 탈퇴에 실패했습니다."
+            );
+        } finally {
+            setWithdrawSubmitting(false);
+        }
+    };
+
     // 바로가기 메뉴
     const handleQuickMenu = (menuName) => {
         if (menuName === "공지사항") {
@@ -889,13 +946,56 @@ function ClubUserDashboard() {
                             <FiBell />
                         </button>
 
-                        <button
-                            type="button"
-                            aria-label="더보기"
-                            onClick={() => handleQuickMenu("더보기")}
+                        <div
+                            style={{
+                                position: "relative",
+                            }}
                         >
-                            <FiMoreHorizontal />
-                        </button>
+                            <button
+                                type="button"
+                                aria-label="더보기"
+                                onClick={() =>
+                                    setMoreMenuOpen((prev) => !prev)
+                                }
+                            >
+                                <FiMoreHorizontal />
+                            </button>
+
+                            {moreMenuOpen && (
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        top: "42px",
+                                        right: "0",
+                                        zIndex: 1000,
+                                        minWidth: "140px",
+                                        background: "#ffffff",
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: "10px",
+                                        boxShadow:
+                                            "0 6px 20px rgba(0, 0, 0, 0.12)",
+                                        overflow: "hidden",
+                                    }}
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={handleOpenWithdrawModal}
+                                        style={{
+                                            width: "100%",
+                                            padding: "12px 16px",
+                                            border: "none",
+                                            background: "#ffffff",
+                                            color: "#ef4444",
+                                            fontSize: "14px",
+                                            textAlign: "left",
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        동호회 탈퇴
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </header>
 
@@ -1534,6 +1634,89 @@ function ClubUserDashboard() {
                                     {reviewSubmitting
                                         ? "등록 중..."
                                         : "후기 등록"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* -------------------------------------------------
+                    동호회 탈퇴 확인 팝업
+                ------------------------------------------------- */}
+                {withdrawModalOpen && (
+                    <div
+                        className="club-user-review-overlay"
+                        onClick={() => {
+                            if (!withdrawSubmitting) {
+                                setWithdrawModalOpen(false);
+                            }
+                        }}
+                    >
+                        <div
+                            className="club-user-review-modal"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="club-user-review-header">
+                                <h3>동호회 탈퇴</h3>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!withdrawSubmitting) {
+                                            setWithdrawModalOpen(false);
+                                        }
+                                    }}
+                                >
+                                    <FiX />
+                                </button>
+                            </div>
+
+                            <div className="club-user-review-event">
+                                <strong>
+                                    {dashboard.club_name}
+                                </strong>
+
+                                <span>
+                                    정말 이 동호회에서 탈퇴하시겠습니까?
+                                </span>
+                            </div>
+
+                            <div
+                                style={{
+                                    marginTop: "16px",
+                                    padding: "14px",
+                                    borderRadius: "10px",
+                                    background: "#f8fafc",
+                                    fontSize: "13px",
+                                    lineHeight: "1.6",
+                                    color: "#64748b",
+                                }}
+                            >
+                                동호회 탈퇴 후에도 기존에 참여한 활동 기록과
+                                작성한 후기는 삭제되지 않습니다.
+                            </div>
+
+                            <div className="club-user-review-actions">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!withdrawSubmitting) {
+                                            setWithdrawModalOpen(false);
+                                        }
+                                    }}
+                                    disabled={withdrawSubmitting}
+                                >
+                                    취소
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={handleWithdrawClub}
+                                    disabled={withdrawSubmitting}
+                                >
+                                    {withdrawSubmitting
+                                        ? "탈퇴 처리 중..."
+                                        : "탈퇴하기"}
                                 </button>
                             </div>
                         </div>

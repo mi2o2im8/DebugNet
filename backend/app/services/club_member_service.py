@@ -1666,6 +1666,80 @@ class ClubMemberService:
         )
 
     # -----------------------------------------------------
+    # 로그인 사용자의 동호회 탈퇴
+    # -----------------------------------------------------
+    def withdraw_my_membership(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> dict:
+
+        # -------------------------------------------------
+        # 1. 현재 사용자의 동호회 회원 정보 조회
+        # -------------------------------------------------
+        membership = self.member_repository.find_membership(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        if membership is None:
+            raise LookupError(
+                "해당 동호회의 회원 정보를 찾을 수 없습니다."
+            )
+
+        # -------------------------------------------------
+        # 2. 현재 가입 상태 확인
+        # -------------------------------------------------
+        if membership.get("status") != "active":
+            raise ValueError(
+                "현재 가입 중인 동호회가 아닙니다."
+            )
+
+        # -------------------------------------------------
+        # 3. 동호회 탈퇴 처리
+        #
+        # club_members의 status만 withdrawn으로 변경한다.
+        #
+        # 활동 기록:
+        # - event_participants
+        # - event_votes
+        # - event_vote_responses
+        # - event_reviews
+        #
+        # 위 데이터는 삭제하지 않는다.
+        # -------------------------------------------------
+        withdrawn_member = (
+            self.member_repository.withdraw_my_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if withdrawn_member is None:
+            raise ValueError(
+                "동호회 탈퇴 처리에 실패했습니다."
+            )
+
+        # -------------------------------------------------
+        # 4. 현재 활동 회원 수 다시 계산
+        # -------------------------------------------------
+        current_members = (
+            self.member_repository.count_active_members(
+                club_id=club_id,
+            )
+        )
+
+        # -------------------------------------------------
+        # 5. clubs.current_members 동기화
+        # -------------------------------------------------
+        self.member_repository.update_current_member_count(
+            club_id=club_id,
+            current_members=current_members,
+        )
+
+        return withdrawn_member
+
+    # -----------------------------------------------------
     # 경고 관리 대상 및 운영자 권한 확인
     # -----------------------------------------------------
     def _get_warning_target(

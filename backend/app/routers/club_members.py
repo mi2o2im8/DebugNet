@@ -279,6 +279,58 @@ def delete_club_member_warning(
         ) from error
 
 # ---------------------------------------------------------
+# 내가 가입한 동호회 탈퇴
+#
+# DELETE /api/clubs/{club_id}/members/me
+# ---------------------------------------------------------
+@router.delete(
+    "/members/me",
+    status_code=status.HTTP_200_OK,
+)
+def withdraw_my_club(
+    club_id: int,
+
+    user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    member_service = ClubMemberService()
+
+    try:
+        return member_service.withdraw_my_membership(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        print(
+            "동호회 탈퇴 실제 오류:",
+            repr(error),
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail=(
+                "동호회 탈퇴 중 "
+                "오류가 발생했습니다."
+            ),
+        ) from error
+
+# ---------------------------------------------------------
 # 동호회 회원 내보내기
 #
 # DELETE /api/clubs/{club_id}/members/{club_member_id}
