@@ -225,6 +225,13 @@ class ClubParticipationRiskItemResponse(BaseModel):
     operator_action: str | None = None
     operator_summary: str | None = None
     management_priority: int | None = None
+
+    overall_attendance_rate: float | None = Field(
+        default=None,
+        ge=0,
+        le=1,
+    )
+
     previous_attendance_rate: float | None = None
     recent_attendance_rate: float | None = None
     attendance_rate_delta: float | None = None

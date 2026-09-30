@@ -1316,6 +1316,54 @@ class ClubMemberService:
             )
         )
 
+        # 화면 표시용 전체 활동 참석률 계산
+        # H4 분석용 최근 8개 기록과 별도로 전체 기록을 조회한다.
+        all_event_rows = (
+            self.member_repository.find_recent_past_events(
+                club_id=club_id,
+                before_date=date.today().isoformat(),
+                limit=None,
+            )
+        )
+
+        all_result_rows = (
+            self.member_repository.find_activity_results(
+                event_ids=[
+                    int(row["event_id"])
+                    for row in all_event_rows
+                ],
+                user_ids=user_ids,
+            )
+        )
+
+        overall_counts_by_user = {
+            member_user_id: {
+                "eligible": 0,
+                "attended": 0,
+            }
+            for member_user_id in user_ids
+        }
+
+        for row in all_result_rows:
+            # 참여 대상이 아니었던 일정은 분모에서도 제외
+            if row.get("result") == "not_eligible":
+                continue
+
+            member_user_id = str(row["user_id"])
+
+            counts = overall_counts_by_user.setdefault(
+                member_user_id,
+                {
+                    "eligible": 0,
+                    "attended": 0,
+                },
+            )
+
+            counts["eligible"] += 1
+
+            if row.get("result") == "attended":
+                counts["attended"] += 1
+
         result_count_by_user = {
             member_user_id: 0
             for member_user_id in user_ids
@@ -1365,6 +1413,22 @@ class ClubMemberService:
             member_user_id = str(member["user_id"])
             profile = user_map.get(member_user_id, {})
             analysis = analyses.get(member_user_id)
+
+            overall_counts = overall_counts_by_user.get(
+                member_user_id,
+                {
+                    "eligible": 0,
+                    "attended": 0,
+                },
+            )
+
+            overall_attendance_rate = (
+                overall_counts["attended"]
+                / overall_counts["eligible"]
+                if overall_counts["eligible"] > 0
+                else None
+            )
+
             shared = {
                 "club_member_id": int(
                     member["club_member_id"]
@@ -1382,6 +1446,15 @@ class ClubMemberService:
                         member_user_id,
                         0,
                     )
+                ),
+                "eligible_result_count": (
+                    result_count_by_user.get(
+                        member_user_id,
+                        0,
+                    )
+                ),
+                "overall_attendance_rate": (
+                    overall_attendance_rate
                 ),
             }
             if analysis is None:

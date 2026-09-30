@@ -1136,10 +1136,10 @@ class ClubMemberRepository:
         self,
         club_id: int,
         before_date: str,
-        limit: int = 8,
+        limit: int | None = 8,
     ) -> list[dict]:
 
-        response = (
+        query = (
             self.admin_client
             .table("club_events")
             .select(
@@ -1152,9 +1152,12 @@ class ClubMemberRepository:
             .lt("event_date", before_date)
             .neq("status", "cancelled")
             .order("event_date", desc=True)
-            .limit(limit)
-            .execute()
         )
+
+        if limit is not None:
+            query = query.limit(limit)
+
+        response = query.execute()
 
         return response.data or []
 
