@@ -654,7 +654,7 @@ function ClubDashboard() {
                     <button
                         type="button"
                         aria-label="이전 화면"
-                        onClick={() => navigate("/main")}
+                        onClick={() => navigate("/mainhome")}
                     >
                         <FiArrowLeft />
                     </button>
