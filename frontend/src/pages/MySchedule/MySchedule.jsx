@@ -7,7 +7,7 @@ import {
     FiChevronRight,
 } from "react-icons/fi";
 
-import BackButton from "../../components/BackButton/BackButton";
+import PageHeader from "../../components/PageHeader/PageHeader";
 import BottomNav from "../../components/BottomNav";
 
 // ⭐ API
@@ -330,18 +330,7 @@ function MySchedule() {
                ⭐ 상단 헤더
                ======================================== */}
 
-            <div className="MySchedule-header">
-
-                <BackButton
-                    className="MySchedule-back-btn"
-                    aria-label="뒤로가기"
-                />
-
-                <h2 className="MySchedule-title">
-                    내 동호회 일정
-                </h2>
-
-            </div>
+            <PageHeader title="내 동호회 일정" />
 
 
             {/* ========================================

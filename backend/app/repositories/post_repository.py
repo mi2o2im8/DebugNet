@@ -1154,3 +1154,32 @@ class PostRepository:
         )
 
         return bool(response.data)
+
+
+    # -----------------------------------------------------
+    # 동호회 이름 여러 개 한 번에 조회
+    #
+    # 내가 쓴 글 / 댓글 페이지에서 동호회 커뮤니티 글에
+    # 동호회 이름을 붙일 때 사용
+    # 반환 예: {9: "강서 FC"}
+    # -----------------------------------------------------
+    def find_club_names_by_ids(
+        self,
+        club_ids: list[int],
+    ) -> dict[int, str]:
+
+        if not club_ids:
+            return {}
+
+        response = (
+            self.admin_client
+            .table("clubs")
+            .select("club_id, club_name")
+            .in_("club_id", club_ids)
+            .execute()
+        )
+
+        return {
+            int(row["club_id"]): row["club_name"]
+            for row in (response.data or [])
+        }

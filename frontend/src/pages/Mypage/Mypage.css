@@ -18,7 +18,7 @@
     min-height: 100vh;
     margin: 0 auto;
 
-    padding: 15px 20px 90px;
+    padding: 8px 20px 90px;
 
     box-sizing: border-box;
 
@@ -196,6 +196,15 @@
 }
 
 .profile-edit-button {
+    /* Link 라서 기본 밑줄 제거 + 가운데 정렬 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    text-decoration: none;
+
+    box-sizing: border-box;
+
     grid-column: 3;
     grid-row: 1 / 4;
 
@@ -817,7 +826,7 @@
     .mypage-container {
         width: 100%;
 
-        padding: 15px 20px 85px;
+        padding: 8px 20px 85px;
     }
 
     .mypage-back-btn {
@@ -914,4 +923,180 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
+}
+
+
+/* ========================================
+   ⭐ 설정(톱니바퀴) 버튼 - 상단 제목 오른쪽
+   ======================================== */
+
+.mypage-setting-btn {
+    width: 38px;
+    height: 38px;
+
+    margin-right: -6px;
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 10px;
+
+    background: transparent;
+
+    cursor: pointer;
+}
+
+.mypage-setting-btn svg {
+    width: 24px;
+    height: 24px;
+
+    color: #3d4b5c;
+}
+
+.mypage-setting-btn:active {
+    background: #f1f6f5;
+}
+
+.mypage-setting-btn:focus-visible,
+.profile-edit-button:focus-visible {
+    outline: 2px solid #01a17f;
+    outline-offset: 2px;
+}
+
+
+/* ========================================
+   ⭐ 다크모드 (설정 > 다크모드, html.dark-mode)
+   색은 설정 페이지 다크모드와 같은 팔레트
+     바탕 #12161c / 카드 #1b2129 / 선 #303844
+     글자 #f1f4f8 / 보조 글자 #9ba7b7
+   ======================================== */
+
+.dark-mode .mypage-container {
+    background: #12161c;
+    color: #f1f4f8;
+}
+
+/* 상단 제목 (공용 PageHeader) - 내 정보 페이지만 어둡게 */
+.dark-mode .mypage-container .page-header {
+    background: #12161c;
+}
+
+.dark-mode .mypage-container .page-header-title {
+    color: #f1f4f8;
+}
+
+.dark-mode .mypage-setting-btn svg {
+    color: #e9edf2;
+}
+
+.dark-mode .mypage-setting-btn:active {
+    background: #242b34;
+}
+
+/* 프로필 카드 */
+.dark-mode .profile-card,
+.dark-mode .club-card > button,
+.dark-mode .my-club-slide,
+.dark-mode .activity-list,
+.dark-mode .activity-item {
+    background: #1b2129;
+    border-color: #303844;
+}
+
+.dark-mode .profile-image {
+    background: #1f3a33;
+}
+
+.dark-mode .profile-name,
+.dark-mode .club-info p,
+.dark-mode .my-club-info p,
+.dark-mode .activity-item > p {
+    color: #f1f4f8;
+}
+
+.dark-mode .profile-sports,
+.dark-mode .profile-region,
+.dark-mode .club-info span,
+.dark-mode .my-club-info span,
+.dark-mode .section-header > button {
+    color: #9ba7b7;
+}
+
+.dark-mode .profile-edit-button {
+    background: #242b34;
+    border-color: #303844;
+    color: #e9edf2;
+}
+
+/* 섹션 제목 */
+.dark-mode .section-header h3,
+.dark-mode .section-title {
+    color: #f1f4f8;
+}
+
+/* 내 동호회 슬라이드 */
+.dark-mode .my-club-slider-box,
+.dark-mode .club-empty {
+    background: #172521;
+    border-color: #26443c;
+}
+
+.dark-mode .my-club-badge {
+    background: #242b34;
+    border-color: #303844;
+    color: #9ba7b7;
+}
+
+.dark-mode .my-club-badge.operator {
+    background: #173a31;
+    color: #4fd1b0;
+}
+
+.dark-mode .my-club-arrow:disabled,
+.dark-mode .my-club-dot {
+    color: #3a4452;
+    background-color: transparent;
+}
+
+.dark-mode .my-club-dot {
+    background: #3a4452;
+}
+
+.dark-mode .my-club-dot.active {
+    background: #01a17f;
+}
+
+/* 내 활동 메뉴 */
+.dark-mode .activity-item {
+    border-bottom-color: #303844;
+}
+
+.dark-mode .activity-item:active {
+    background: #242b34;
+}
+
+/* 신뢰점수 카드 */
+.dark-mode .trust-score-card {
+    background: #172521;
+    border-color: #26443c;
+}
+
+.dark-mode .trust-score-card h2 {
+    color: #4fd1b0;
+}
+
+.dark-mode .trust-score-card p:first-of-type {
+    color: #9ba7b7;
+}
+
+.dark-mode .trust-score-card p:nth-of-type(2) {
+    background: #173a31;
+    color: #4fd1b0;
+}
+
+.dark-mode .trust-progress {
+    background: #26443c;
+}

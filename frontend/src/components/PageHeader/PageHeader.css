@@ -1,0 +1,120 @@
+/* =========================================================
+   ⭐ 내 정보 영역 공용 상단 제목
+
+   위치: "내 정보" 페이지처럼 뒤로가기 바로 옆 왼쪽 정렬
+   글씨: "내 활동" 페이지처럼 18px / 굵게 / 남색
+========================================================= */
+
+.page-header {
+    position: sticky;
+    top: 0;
+
+    z-index: 50;
+
+    width: 100%;
+    height: 52px;
+
+    margin-bottom: 8px;
+
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    box-sizing: border-box;
+
+    /* 스크롤할 때 아래 내용이 비치지 않도록 */
+    background: #ffffff;
+}
+
+
+/* ⭐ 공용 BackButton 은 기본이 "화면 맨 위 고정 바" 라서
+      여기서는 제목 옆 작은 버튼으로 바꾼다 */
+.page-header .Back-btn.page-header-back {
+    position: static;
+
+    transform: none;
+
+    flex-shrink: 0;
+
+    width: 34px;
+    height: 34px;
+
+    margin-left: -6px;
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: transparent;
+
+    z-index: auto;
+}
+
+.page-header .Back-btn.page-header-back:active {
+    transform: none;
+}
+
+.page-header .Back-btn.page-header-back img {
+    width: 24px;
+    height: 24px;
+
+    margin: 0;
+
+    /* 회원가입 CSS(Signup.css)의 전역 규칙
+       .Back-btn img { transform: translateY(10px) } 때문에
+       화살표가 제목보다 아래로 내려가던 문제 방지 */
+    transform: none;
+}
+
+
+/* ⭐ 제목 */
+.page-header-title {
+    flex: 1;
+    min-width: 0;
+
+    margin: 0;
+
+    overflow: hidden;
+
+    color: #082d63;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: left;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
+/* ⭐ 오른쪽 버튼 영역 */
+.page-header-right {
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+
+/* ⭐ 다크모드
+   다크 디자인이 있는 페이지(현재: 내 정보)만 그 페이지 CSS 에서
+   .page-header 색을 바꾼다.
+   여기서 전체를 어둡게 하면 밝은 페이지에 검은 띠가 생김.
+
+   BackButton.css 의 ".dark-mode .Back-btn img" (화살표 흰색) 도
+   밝은 페이지에서는 화살표가 안 보이므로 초록 화살표로 유지 */
+.dark-mode .page-header .Back-btn.page-header-back {
+    background: transparent;
+}
+
+.dark-mode .page-header .Back-btn.page-header-back img {
+    filter:
+        brightness(0)
+        saturate(100%)
+        invert(45%)
+        sepia(90%)
+        saturate(900%)
+        hue-rotate(120deg)
+        brightness(90%);
+}

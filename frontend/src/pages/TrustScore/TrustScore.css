@@ -9,7 +9,7 @@
     min-height: 100vh;
 
     margin: 0 auto;
-    padding: 10px 20px 90px;
+    padding: 8px 20px 90px;
 
     box-sizing: border-box;
 
@@ -436,4 +436,4 @@
     .trust-data-row strong {
         font-size: 14px;
     }
-}
+}

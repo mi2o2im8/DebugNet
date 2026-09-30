@@ -884,11 +884,51 @@ class PostService:
         )
 
         # -------------------------------------------------
-        # 6. Frontend용 데이터 생성
+        # 6. 동호회 커뮤니티 글 정리
+        #
+        # - 지금은 탈퇴한 동호회의 글은 제외
+        #   (동호회 게시판은 회원만 열 수 있어서 눌러도 못 봄.
+        #    내가 쓴 댓글 목록도 같은 기준)
+        # - 동호회 이름 붙이기
+        # -------------------------------------------------
+        club_ids = {
+            int(post["club_id"])
+            for post in posts
+            if post.get("board_type") == "club"
+            and post.get("club_id") is not None
+        }
+
+        active_club_ids = {
+            club_id
+            for club_id in club_ids
+            if self.post_repository.is_active_club_member(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        }
+
+        club_name_by_id = (
+            self.post_repository.find_club_names_by_ids(
+                list(active_club_ids)
+            )
+        )
+
+        # -------------------------------------------------
+        # 7. Frontend용 데이터 생성
         # -------------------------------------------------
         items = []
 
         for post in posts:
+            is_club_post = post.get("board_type") == "club"
+            club_id = (
+                int(post["club_id"])
+                if is_club_post and post.get("club_id") is not None
+                else None
+            )
+
+            if is_club_post and club_id not in active_club_ids:
+                continue
+
             items.append(
                 {
                     "id": post["post_id"],
@@ -899,11 +939,18 @@ class PostService:
                         0,
                     ),
                     "createdAt": post["created_at"],
+                    "boardType": post.get("board_type"),
+                    "clubId": club_id,
+                    "clubName": (
+                        club_name_by_id.get(club_id)
+                        if club_id is not None
+                        else None
+                    ),
                 }
             )
 
         # -------------------------------------------------
-        # 7. 최종 Response
+        # 8. 최종 Response
         # -------------------------------------------------
         return {
             "items": items
@@ -2008,4 +2055,4 @@ class PostService:
                 "Z",
                 "+00:00",
             )
-        )
+        )

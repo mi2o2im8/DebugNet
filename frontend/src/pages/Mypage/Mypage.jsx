@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
-import BackButton from "../../components/BackButton/BackButton";
+import PageHeader from "../../components/PageHeader/PageHeader";
+import { FiSettings } from "react-icons/fi";
 
 // ⭐ API
 import { authenticatedRequest } from "../../api/apiClient";
@@ -15,7 +16,6 @@ import { getMyClubShared } from "../../api/myClubCache";
 import { calculateTrustScore } from "../../utils/trustScore";
 
 // ⭐ 마이페이지 이미지
-import settingIcon from "../../assets/img/mypage/setting_icon.png";
 import profileIcon from "../../assets/img/basic_profile_img.png";
 import clubHeartIcon from "../../assets/img/mypage/club_heart.png";
 
@@ -340,38 +340,25 @@ function Mypage() {
     return (
         <>
 
-            {/* ⭐ 마이페이지 전용 className props */}
-            <BackButton className="mypage-back-btn" />
-
-
             <div className="mypage-container">
 
 
                 {/* =================================================
-                    ⭐ 헤더
+                    ⭐ 상단 제목 (공용) + 설정
                 ================================================= */}
-                <div className="mypage-header">
-
-                    <h2>
-                        내 정보
-                    </h2>
-
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            navigate("/mypage/settings")
-                        }
-                    >
-
-                        <img
-                            src={settingIcon}
-                            alt="설정"
-                        />
-
-                    </button>
-
-                </div>
+                <PageHeader
+                    title="내 정보"
+                    right={
+                        <button
+                            type="button"
+                            className="mypage-setting-btn"
+                            aria-label="설정"
+                            onClick={() => navigate("/mypage/settings")}
+                        >
+                            <FiSettings aria-hidden="true" />
+                        </button>
+                    }
+                />
 
 
                 {/* =================================================

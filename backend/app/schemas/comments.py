@@ -147,6 +147,13 @@ class MyCommentItem(BaseModel):
     content: str
     createdAt: datetime
 
+    # 어느 게시판 글에 단 댓글인지 (free / sports / recruit / notice / club)
+    boardType: str | None = None
+
+    # 동호회 커뮤니티 글이면 동호회 정보 (아니면 None)
+    clubId: int | None = None
+    clubName: str | None = None
+
 
 class MyCommentListResponse(BaseModel):
-    items: list[MyCommentItem]
+    items: list[MyCommentItem]

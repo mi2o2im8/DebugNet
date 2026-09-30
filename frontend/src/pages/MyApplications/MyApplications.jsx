@@ -11,7 +11,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import BackButton from "../../components/BackButton/BackButton";
+import PageHeader from "../../components/PageHeader/PageHeader";
 import BottomNav from "../../components/BottomNav";
 
 import {
@@ -981,16 +981,7 @@ function MyApplications() {
         <div className="my-apps-page">
 
             {/* ⭐ 헤더 */}
-            <div className="my-apps-header">
-                <BackButton
-                    className="my-apps-back-btn"
-                    aria-label="뒤로가기"
-                />
-
-                <h2 className="my-apps-title">
-                    신청 현황
-                </h2>
-            </div>
+            <PageHeader title="신청 현황" />
 
 
             {/* ⭐ 탭

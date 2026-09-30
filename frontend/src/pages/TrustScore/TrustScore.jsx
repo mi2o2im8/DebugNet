@@ -5,7 +5,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import BackButton from "../../components/BackButton/BackButton";
+import PageHeader from "../../components/PageHeader/PageHeader";
 import BottomNav from "../../components/BottomNav";
 
 // ⭐ API
@@ -91,10 +91,7 @@ function TrustScore() {
             <div className="trust-score-container">
 
                 {/* ⭐ 헤더 */}
-                <div className="trust-score-header">
-                    <BackButton className="trust-score-back-btn" />
-                    <h2>신뢰점수</h2>
-                </div>
+                <PageHeader title="신뢰점수" />
 
 
                 {loading ? (

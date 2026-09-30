@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import BackButton from "../../components/BackButton/BackButton";
+import PageHeader from "../../components/PageHeader/PageHeader";
 
 import profileIcon from "../../assets/img/basic_profile_img.png";
 
@@ -379,6 +379,7 @@ function MyInfoEdit() {
     if (loading) {
         return (
             <div className="my-info-edit-page">
+                <PageHeader title="정보 수정" />
                 <p className="edit-status-text">정보를 불러오는 중...</p>
             </div>
         );
@@ -387,10 +388,7 @@ function MyInfoEdit() {
     if (loadError) {
         return (
             <div className="my-info-edit-page">
-                <header className="my-info-edit-header">
-                    <BackButton />
-                    <h1>내 정보 수정</h1>
-                </header>
+                <PageHeader title="정보 수정" />
                 <p className="edit-status-text">
                     내 정보를 불러오지 못했습니다.
                     <br />
@@ -405,10 +403,7 @@ function MyInfoEdit() {
         <div className="my-info-edit-page">
 
             {/* ⭐ 상단 */}
-            <header className="my-info-edit-header">
-                <BackButton />
-                <h1>내 정보 수정</h1>
-            </header>
+            <PageHeader title="정보 수정" />
 
             {/* ⭐ 프로필 */}
             <section className="edit-profile-section">

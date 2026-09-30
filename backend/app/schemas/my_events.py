@@ -87,6 +87,11 @@ class MyActivityItemResponse(BaseModel):
     # 팀매칭 경기 여부 (참석 투표가 없는 일정)
     is_match: bool
 
+    # 게스트로 참여한 다른 동호회 경기인지
+    # (참석 투표 대상이 아니라서 vote_eligible 은 항상 False
+    #  → 신뢰점수 / 참여율 계산에는 들어가지 않고 참여 경기 수에만 포함)
+    is_guest: bool = False
+
     # 투표 참여율 / 참석 현황 집계 대상인지
     #
     # 팀원 멤버 상세 통계(club_member_service)와 같은 기준:
