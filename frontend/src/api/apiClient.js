@@ -1,12 +1,72 @@
 import { supabase } from "../../supabaseClient";
 
+// =========================================================
+// ⭐ 로그아웃 / API 요청 상태 관리
+// =========================================================
+
+// 현재 실행 중인 API 요청의 AbortController
+const pendingControllers = new Set();
+
+// 로그아웃 진행 중인지 여부
+let logoutInProgress = false;
+
+// ---------------------------------------------------------
+// 로그아웃 시작
+// 1. 앞으로 새로운 인증 요청 막기
+// 2. 현재 실행 중인 fetch 전부 취소
+// ---------------------------------------------------------
+export const startLogout = () => {
+    logoutInProgress = true;
+
+    pendingControllers.forEach((controller) => {
+        try {
+            controller.abort();
+        } catch (error) {
+            console.error("API 요청 취소 오류:", error);
+        }
+    });
+
+    pendingControllers.clear();
+};
+
+// ---------------------------------------------------------
+// 로그인 성공 후 로그아웃 상태 해제
+// ---------------------------------------------------------
+export const finishLogin = () => {
+    logoutInProgress = false;
+};
+
+// ---------------------------------------------------------
+// 진행 중인 API 요청만 취소
+// ---------------------------------------------------------
+export const abortAllApiRequests = () => {
+    pendingControllers.forEach((controller) => {
+        try {
+            controller.abort();
+        } catch (error) {
+            console.error("API 요청 취소 오류:", error);
+        }
+    });
+
+    pendingControllers.clear();
+};
+
+// =========================================================
+// API 주소
+// =========================================================
+
 const API_BASE_URL = (
     import.meta.env.DEV
         ? import.meta.env.VITE_API_BASE_URL
         : import.meta.env.VITE_API_BASE_URL_PROD
 )?.replace(/\/$/, "") ?? "";
 
-export const buildApiUrl = (path) => `${API_BASE_URL}${path}`;
+export const buildApiUrl = (path) =>
+    `${API_BASE_URL}${path}`;
+
+// =========================================================
+// 에러 메시지
+// =========================================================
 
 const getErrorMessage = (status, data) => {
     if (Array.isArray(data?.detail)) {
@@ -25,9 +85,9 @@ const getErrorMessage = (status, data) => {
     // FastAPI HTTPException에서
     // detail이 객체 형태로 오는 경우
     if (
-    typeof data?.detail?.message === "string"
+        typeof data?.detail?.message === "string"
     ) {
-    return data.detail.message;
+        return data.detail.message;
     }
 
     if (typeof data?.message === "string") {
@@ -62,17 +122,18 @@ const getErrorMessage = (status, data) => {
 };
 
 // =========================================================
-// ⭐ 토큰 갱신 (여러 요청이 동시에 와도 한 번만)
-//
-// 자동 로그인으로 예전 세션을 그대로 쓰면 access token이
-// 이미 만료된 상태일 수 있다 (기본 1시간).
-// Supabase가 앱 시작 직후 백그라운드에서 갱신하는데,
-// 그 전에 여러 API가 한꺼번에 나가면 일부만 401이 난다.
-// → 만료가 가까우면 먼저 갱신하고, 401이면 한 번 갱신 후 재시도
+// ⭐ 토큰 갱신
+// 여러 요청이 동시에 401이어도 refresh는 한 번만 실행
 // =========================================================
+
 let refreshPromise = null;
 
 const refreshSessionOnce = async () => {
+    // 로그아웃 중이면 refresh하지 않음
+    if (logoutInProgress) {
+        throw new Error("로그아웃 중입니다.");
+    }
+
     if (!refreshPromise) {
         refreshPromise = supabase.auth
             .refreshSession()
@@ -83,20 +144,33 @@ const refreshSessionOnce = async () => {
 
     const { data, error } = await refreshPromise;
 
-    if (error || !data?.session?.access_token) {
-        throw new Error("로그인이 만료되었습니다. 다시 로그인해주세요.");
+    if (
+        error ||
+        !data?.session?.access_token
+    ) {
+        throw new Error(
+            "로그인이 만료되었습니다. 다시 로그인해주세요."
+        );
     }
 
     return data.session;
 };
 
-// 만료 60초 전부터는 미리 갱신
-const TOKEN_REFRESH_MARGIN_MS = 60 * 1000;
+// =========================================================
+// 현재 인증 세션 가져오기
+// =========================================================
 
 export const getAuthenticatedSession = async () => {
+    // 로그아웃 중이면 요청 자체 차단
+    if (logoutInProgress) {
+        const error = new Error("로그아웃 중입니다.");
+        error.name = "AbortError";
+        throw error;
+    }
+
     const {
         data,
-        error
+        error,
     } = await supabase.auth.getSession();
 
     if (error) {
@@ -109,17 +183,19 @@ export const getAuthenticatedSession = async () => {
         throw new Error("로그인이 필요합니다.");
     }
 
-    const expiresAtMs = (data.session.expires_at || 0) * 1000;
-
-    if (
-        expiresAtMs &&
-        expiresAtMs - Date.now() < TOKEN_REFRESH_MARGIN_MS
-    ) {
-        return refreshSessionOnce();
+    // getSession() 기다리는 동안 로그아웃했을 수도 있음
+    if (logoutInProgress) {
+        const error = new Error("로그아웃 중입니다.");
+        error.name = "AbortError";
+        throw error;
     }
 
     return data.session;
 };
+
+// =========================================================
+// 인증 API 요청
+// =========================================================
 
 export const authenticatedRequest = async (
     path,
@@ -129,10 +205,37 @@ export const authenticatedRequest = async (
         ...options
     } = {}
 ) => {
+    // 로그아웃 중이면 새로운 요청을 만들지 않음
+    if (logoutInProgress) {
+        const error = new Error("로그아웃 중입니다.");
+        error.name = "AbortError";
+        throw error;
+    }
+
     const session = await getAuthenticatedSession();
 
-    return sendRequest(path, { body, headers, ...options }, session, false);
+    // 세션을 가져오는 동안 로그아웃했을 경우
+    if (logoutInProgress) {
+        const error = new Error("로그아웃 중입니다.");
+        error.name = "AbortError";
+        throw error;
+    }
+
+    return sendRequest(
+        path,
+        {
+            body,
+            headers,
+            ...options,
+        },
+        session,
+        false
+    );
 };
+
+// =========================================================
+// 실제 fetch
+// =========================================================
 
 const sendRequest = async (
     path,
@@ -144,6 +247,13 @@ const sendRequest = async (
     session,
     isRetry
 ) => {
+    // 로그아웃 중이면 fetch 실행하지 않음
+    if (logoutInProgress) {
+        const error = new Error("로그아웃 중입니다.");
+        error.name = "AbortError";
+        throw error;
+    }
+
     const requestHeaders = new Headers(headers);
 
     requestHeaders.set(
@@ -169,54 +279,133 @@ const sendRequest = async (
                 : JSON.stringify(body);
     }
 
-    const response = await fetch(
-        `${API_BASE_URL}${path}`,
-        {
-            ...options,
-            headers: requestHeaders,
-            body: requestBody
-        }
-    );
+    // =====================================================
+    // ⭐ 요청별 AbortController
+    // =====================================================
 
-    // ⭐ 토큰이 만료돼서 401이면 한 번만 갱신 후 다시 요청
-    if (response.status === 401 && !isRetry) {
+    const controller = new AbortController();
+
+    pendingControllers.add(controller);
+
+    let requestSignal = controller.signal;
+
+    // 기존 호출에서 signal을 직접 넘긴 경우
+    // 기존 signal + 로그아웃 signal 둘 다 반영
+    if (options.signal) {
+        if (typeof AbortSignal !== "undefined" &&
+            typeof AbortSignal.any === "function") {
+            requestSignal = AbortSignal.any([
+                options.signal,
+                controller.signal,
+            ]);
+        }
+    }
+
+    let response;
+
+    try {
+        response = await fetch(
+            `${API_BASE_URL}${path}`,
+            {
+                ...options,
+                headers: requestHeaders,
+                body: requestBody,
+                signal: requestSignal,
+            }
+        );
+    } catch (error) {
+        // 로그아웃 등에 의해 취소된 요청
+        if (error?.name === "AbortError") {
+            throw error;
+        }
+
+        throw error;
+    } finally {
+        // 성공 / 실패 / 취소 모두 제거
+        pendingControllers.delete(controller);
+    }
+
+    // =====================================================
+    // ⭐ 401이면 현재 세션 확인 후 한 번만 재시도
+    // 로그아웃 중에는 절대 재시도하지 않음
+    // =====================================================
+
+    if (
+        response.status === 401 &&
+        !isRetry &&
+        !logoutInProgress
+    ) {
         try {
-            const newSession = await refreshSessionOnce();
+            const {
+                data: sessionData,
+            } = await supabase.auth.getSession();
+
+            let currentSession =
+                sessionData?.session;
+
+            // 현재 세션이 없으면 refresh
+            if (
+                !currentSession?.access_token &&
+                !logoutInProgress
+            ) {
+                currentSession =
+                    await refreshSessionOnce();
+            }
+
+            // 로그아웃 시작했으면 재시도하지 않음
+            if (logoutInProgress) {
+                const error = new Error("로그아웃 중입니다.");
+                error.name = "AbortError";
+                throw error;
+            }
 
             return sendRequest(
                 path,
-                { body, headers, ...options },
-                newSession,
+                {
+                    body,
+                    headers,
+                    ...options,
+                },
+                currentSession,
                 true
             );
-        } catch {
-            // 갱신도 실패하면 아래에서 원래 401 에러를 그대로 던진다
+        } catch (error) {
+            // 로그아웃 중 취소라면 그대로 전달
+            if (error?.name === "AbortError") {
+                throw error;
+            }
+
+            // refresh 실패 시 아래에서 원래 401 처리
         }
     }
+
+    // =====================================================
+    // 응답 데이터 읽기
+    // =====================================================
 
     const contentType =
         response.headers.get("content-type") || "";
 
     let data = null;
 
-    if (contentType.includes("application/json")) {
+    if (
+        contentType.includes("application/json")
+    ) {
         data = await response.json();
     } else {
         const text = await response.text();
         data = text || null;
     }
 
+    // =====================================================
+    // HTTP 에러 처리
+    // =====================================================
+
     if (!response.ok) {
-        // ========================================
-        // HTTP 에러 정보 보존
-        // ========================================
-        // 단순 message만 던지면
-        // 409인지, 404인지 구분할 수 없으므로
-        // status와 실제 응답 data도 같이 보관한다.
         const error = new Error(
             getErrorMessage(
-            response.status,
-            data
+                response.status,
+                data
             )
         );
 
@@ -227,7 +416,7 @@ const sendRequest = async (
             data;
 
         throw error;
-        }
+    }
 
     return data;
 };

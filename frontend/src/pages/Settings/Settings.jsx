@@ -5,6 +5,7 @@ import BackButton from "../../components/BackButton/BackButton";
 
 import { supabase } from "../../../supabaseClient";
 import { clearMyClubCache } from "../../api/myClubCache";
+import { startLogout } from "../../api/apiClient";
 
 import "./Settings.css";
 
@@ -15,37 +16,44 @@ function Settings() {
         localStorage.getItem("darkMode") === "true"
     );
 
-    // const [chatNotification, setChatNotification] = useState(
-    //     localStorage.getItem("chatNotification") !== "false"
-    // );
-
     // ⭐ 로그아웃 모달
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     // ⭐ 다크모드 전체 적용
     useEffect(() => {
-        document.documentElement.classList.toggle("dark-mode", darkMode);
-        localStorage.setItem("darkMode", darkMode);
+        document.documentElement.classList.toggle(
+            "dark-mode",
+            darkMode
+        );
+
+        localStorage.setItem(
+            "darkMode",
+            String(darkMode)
+        );
     }, [darkMode]);
 
-    // // ⭐ 채팅 알림 저장 --- 추후 채팅 기능이 생긴다면
-    // useEffect(() => {
-    //     localStorage.setItem("chatNotification", chatNotification);
-    // }, [chatNotification]);
+    // =====================================================
+    // ⭐ 로그아웃
+    // =====================================================
 
-    // ⭐ 로그아웃 확인
     const handleLogout = async () => {
+        // 새로운 API 요청 차단 + 현재 요청 취소
+        startLogout();
+
         try {
-            // Supabase 로그인 정보 삭제 (진짜 로그아웃)
+            // Supabase 실제 로그아웃
             await supabase.auth.signOut();
         } catch (error) {
             console.error("로그아웃 오류:", error);
         }
 
-        // 이전 계정의 동호회 정보가 남지 않게 비우기
+        // 이전 계정의 동호회 캐시 제거
         clearMyClubCache();
 
-        navigate("/login", { replace: true });
+        // 로그인 페이지로 이동
+        navigate("/login", {
+            replace: true,
+        });
     };
 
     return (
@@ -72,9 +80,12 @@ function Settings() {
                                     type="checkbox"
                                     checked={darkMode}
                                     onChange={(e) =>
-                                        setDarkMode(e.target.checked)
+                                        setDarkMode(
+                                            e.target.checked
+                                        )
                                     }
                                 />
+
                                 <span className="switch-slider"></span>
                             </label>
                         </div>
@@ -90,17 +101,19 @@ function Settings() {
                         <button
                             type="button"
                             className="settings-row settings-button"
-                            onClick={() => navigate("/notification-settings")}
+                            onClick={() =>
+                                navigate(
+                                    "/notification-settings"
+                                )
+                            }
                         >
                             <span>알림 설정</span>
                             <span className="row-arrow">›</span>
                         </button>
 
-                        
-
                     </div>
                 </section>
-  
+
                 {/* 계정 및 안전 */}
                 <section className="settings-section">
                     <h3>계정 및 안전</h3>
@@ -110,7 +123,9 @@ function Settings() {
                         <button
                             type="button"
                             className="settings-row settings-button"
-                            onClick={() => navigate("/myinfoedit")}
+                            onClick={() =>
+                                navigate("/myinfoedit")
+                            }
                         >
                             <span>계정 정보</span>
                             <span className="row-arrow">›</span>
@@ -121,7 +136,9 @@ function Settings() {
                         <button
                             type="button"
                             className="settings-row settings-button"
-                            onClick={() => navigate("/privacy")}
+                            onClick={() =>
+                                navigate("/privacy")
+                            }
                         >
                             <span>개인정보 관리</span>
                             <span className="row-arrow">›</span>
@@ -132,7 +149,9 @@ function Settings() {
                         <button
                             type="button"
                             className="settings-row settings-button"
-                            onClick={() => navigate("/blocked-users")}
+                            onClick={() =>
+                                navigate("/blocked-users")
+                            }
                         >
                             <span>차단회원 관리</span>
                             <span className="row-arrow">›</span>
@@ -150,7 +169,9 @@ function Settings() {
                         <button
                             type="button"
                             className="settings-row settings-button"
-                            onClick={() => navigate("/faq")}
+                            onClick={() =>
+                                navigate("/faq")
+                            }
                         >
                             <span>FAQ</span>
                             <span className="row-arrow">›</span>
@@ -161,7 +182,9 @@ function Settings() {
                         <button
                             type="button"
                             className="settings-row settings-button"
-                            onClick={() => navigate("/inquiry")}
+                            onClick={() =>
+                                navigate("/inquiry")
+                            }
                         >
                             <span>문의하기</span>
                             <span className="row-arrow">›</span>
@@ -172,7 +195,9 @@ function Settings() {
                         <button
                             type="button"
                             className="settings-row settings-button"
-                            onClick={() => navigate("/report")}
+                            onClick={() =>
+                                navigate("/report")
+                            }
                         >
                             <span>오류 신고</span>
                             <span className="row-arrow">›</span>
@@ -185,7 +210,9 @@ function Settings() {
                 <button
                     type="button"
                     className="logout-button"
-                    onClick={() => setShowLogoutModal(true)}
+                    onClick={() =>
+                        setShowLogoutModal(true)
+                    }
                 >
                     로그아웃
                 </button>
@@ -195,19 +222,25 @@ function Settings() {
             {/* ⭐ 로그아웃 확인 모달 */}
             {showLogoutModal && (
                 <div className="logout-modal-overlay">
+
                     <div className="logout-modal">
 
-                        <h3>로그아웃 하시겠어요?</h3>
+                        <h3>
+                            로그아웃 하시겠어요?
+                        </h3>
 
                         <p>
                             로그아웃하시면 로그인 화면으로 이동합니다.
                         </p>
 
                         <div className="logout-modal-buttons">
+
                             <button
                                 type="button"
                                 className="logout-cancel"
-                                onClick={() => setShowLogoutModal(false)}
+                                onClick={() =>
+                                    setShowLogoutModal(false)
+                                }
                             >
                                 취소
                             </button>
@@ -219,9 +252,11 @@ function Settings() {
                             >
                                 로그아웃
                             </button>
+
                         </div>
 
                     </div>
+
                 </div>
             )}
 
