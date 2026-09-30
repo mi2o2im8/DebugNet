@@ -892,3 +892,28 @@ export async function deleteClubMemberWarning(
         }
     );
 }
+
+// ---------------------------------------------------------
+// 맞춤 동호회 추천 기본값
+// 로그인 사용자가 회원가입/내 정보에 저장한 값을 그대로 사용한다.
+// ---------------------------------------------------------
+export async function getClubRecommendationDefaults() {
+    return authenticatedRequest(
+        "/api/clubs/recommend/defaults",
+        { method: "GET" }
+    );
+}
+
+// ---------------------------------------------------------
+// 맞춤 동호회 추천 실행
+// 화면에서 바꾼 조건은 이번 추천에만 사용하며 내 정보는 수정하지 않는다.
+// ---------------------------------------------------------
+export async function recommendClubs(requestData) {
+    return authenticatedRequest(
+        "/api/clubs/recommend",
+        {
+            method: "POST",
+            body: requestData,
+        }
+    );
+}

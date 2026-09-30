@@ -2,7 +2,7 @@
 .club-home-chatbot-button {
     position: fixed;
     right: 20px;
-    bottom: 85px;
+    bottom: calc(85px + env(safe-area-inset-bottom, 0px));
 
     width: auto;
     height: 54px;

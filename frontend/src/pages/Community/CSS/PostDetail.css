@@ -20,7 +20,7 @@
 
 .post-detail-header {
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   z-index: 40;
 
   display: flex;

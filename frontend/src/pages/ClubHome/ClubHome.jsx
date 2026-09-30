@@ -548,7 +548,11 @@ function ClubHome() {
               딱 맞는 동호회를 추천해 드려요!
             </p>
 
-            <button className="ClubHome-ai-button">
+            <button
+              type="button"
+              className="ClubHome-ai-button"
+              onClick={() => navigate("/clubs/recommend")}
+            >
               맞춤 동호회 보러가기 →
             </button>
 

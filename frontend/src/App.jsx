@@ -1,4 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 import Home from './pages/LoginPage/Home'
 import Login from './pages/LoginPage/Login';
@@ -39,6 +43,8 @@ import MainHome from "./pages/MainHome/MainHome";
 import ClubCreate from './pages/ClubCreate/ClubCreate';
 import AllClub from "./pages/AllClub/AllClub";
 import ClubRecruit from "./pages/ClubRecruit/ClubRecruit";
+import ClubRecommend from "./pages/ClubRecommend/ClubRecommend";
+import ClubRecommendResult from "./pages/ClubRecommend/ClubRecommendResult";
 import GuestRecruit from "./pages/GuestRecruit/GuestRecruit";
 import GuestRecruitDetail from "./pages/GuestRecruitDetail/GuestRecruitDetail";
 import ClubUserDashboard from "./pages/ClubUserDashboard/ClubUserDashboard";
@@ -130,9 +136,55 @@ import PageTransition from "./components/PageTransition";
 
 import './App.css'
 
+function AndroidBackButtonHandler() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (Capacitor.getPlatform() !== 'android') {
+      return;
+    }
+
+    let listener = null;
+    let disposed = false;
+
+    const registerBackButton = async () => {
+      const handle = await CapacitorApp.addListener(
+        'backButton',
+        () => {
+          const historyIndex = window.history.state?.idx ?? 0;
+
+          if (historyIndex > 0) {
+            navigate(-1);
+            return;
+          }
+
+          CapacitorApp.exitApp();
+        }
+      );
+
+      if (disposed) {
+        handle.remove();
+      } else {
+        listener = handle;
+      }
+    };
+
+    registerBackButton();
+
+    return () => {
+      disposed = true;
+      listener?.remove();
+    };
+  }, [navigate]);
+
+  return null;
+}
+
 function App() {
   return (
     <BrowserRouter>
+
+      <AndroidBackButtonHandler />
 
       {/* ⭐ 알림 데이터를 앱 전체에서 공유하기 위해 최상단에서 감싸줌 */}
       <NotificationProvider>
@@ -453,7 +505,19 @@ function App() {
                   element={<PostDetail />}
                 />
 
-                {/* =================================================
+                  {/* 맞춤 동호회 추천 조건 입력 */}
+                <Route
+                  path="/clubs/recommend"
+                  element={<ClubRecommend />}
+                />
+
+                {/* 맞춤 동호회 추천 결과 */}
+                <Route
+                  path="/clubs/recommend/result"
+                  element={<ClubRecommendResult />}
+                />
+
+              {/* =================================================
                     ⭐ 팀 매칭
                 ================================================= */}
 

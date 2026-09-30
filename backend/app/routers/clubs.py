@@ -20,9 +20,13 @@ from app.schemas.clubs import (
     ClubSettingsUpdateResponse,
     ClubDeleteRequest,
     ClubDeleteResponse,
+    ClubRecommendationRequest,
+    ClubRecommendationDefaultsResponse,
+    ClubRecommendationResponse,
 )
 
 from app.services.club_service import ClubService
+from app.services.club_recommendation_service import ClubRecommendationService
 
 
 # =========================================================
@@ -317,6 +321,77 @@ def delete_club(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="동호회 삭제 중 오류가 발생했습니다.",
         ) from error
+
+# =========================================================
+# 맞춤 동호회 추천 기본값
+#
+# 로그인 사용자가 회원가입/내 정보에서 저장한 값을
+# 추천 조건의 초기값으로 반환한다.
+# =========================================================
+@router.get(
+    "/recommend/defaults",
+    response_model=ClubRecommendationDefaultsResponse,
+)
+def get_club_recommendation_defaults(
+    user_id: str = Depends(get_current_user_id),
+):
+    service = ClubRecommendationService()
+
+    try:
+        return service.get_defaults(user_id=user_id)
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+    except Exception as error:
+        print("동호회 추천 기본값 조회 실제 오류:", repr(error))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="동호회 추천 정보를 불러오는 중 오류가 발생했습니다.",
+        ) from error
+
+
+# =========================================================
+# 맞춤 동호회 추천 실행
+# =========================================================
+@router.post(
+    "/recommend",
+    response_model=ClubRecommendationResponse,
+)
+def recommend_clubs(
+    request_data: ClubRecommendationRequest,
+    user_id: str = Depends(get_current_user_id),
+):
+    service = ClubRecommendationService()
+
+    try:
+        return service.recommend(
+            user_id=user_id,
+            request_data=request_data,
+        )
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+    except Exception as error:
+        print("맞춤 동호회 추천 실제 오류:", repr(error))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="동호회를 추천하는 중 오류가 발생했습니다.",
+        ) from error
+
 
 # =========================================================
 # 게스트 모집 중인 행사 조회

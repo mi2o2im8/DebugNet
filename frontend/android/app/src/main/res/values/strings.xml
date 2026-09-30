@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">PlayBridge</string>
+    <string name="title_activity_main">PlayBridge</string>
+    <string name="package_name">com.playbridge.app</string>
+    <string name="custom_url_scheme">com.playbridge.app</string>
+</resources>

@@ -558,3 +558,44 @@ class ClubDashboardResponse(BaseModel):
     schedules: list[ClubDashboardSchedule] = Field(
         default_factory=list
     )
+
+# =========================================================
+# 맞춤 동호회 추천
+# =========================================================
+class ClubRecommendationTime(BaseModel):
+    day_of_week: str
+    start_time: time
+    end_time: time
+
+
+class ClubRecommendationRequest(BaseModel):
+    # None이면 종목 상관없이 지원 종목 전체를 추천 후보로 사용한다.
+    sport_id: int | None = Field(default=None, gt=0)
+    sport_level: str | None = None
+    regions: list[str] = Field(default_factory=list)
+    available_times: list[ClubRecommendationTime] = Field(default_factory=list)
+    atmospheres: list[str] = Field(default_factory=list)
+    activity_frequency: str | None = None
+    max_monthly_fee: int | None = Field(default=None, ge=0)
+    limit: int = Field(default=10, ge=1, le=30)
+
+
+class ClubRecommendationDefaultsResponse(BaseModel):
+    sports: list[dict]
+    selected_sport_id: int | None = None
+    selected_sport_level: str | None = None
+    regions: list[str]
+    available_times: list[dict]
+    atmospheres: list[str]
+    activity_frequency: str | None = None
+    max_monthly_fee: int | None = None
+    travel_distance_km: int | None = None
+    region_options: list[str]
+    skill_level_options: list[str]
+    atmosphere_options: list[str]
+    activity_frequency_options: list[str]
+
+
+class ClubRecommendationResponse(BaseModel):
+    recommendations: list[dict]
+    total_candidates: int
