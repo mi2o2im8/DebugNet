@@ -686,6 +686,90 @@ export async function getClubApplications(
 
 
 // ---------------------------------------------------------
+// H1 운영자용 모집 대상 추천
+// ---------------------------------------------------------
+export async function getClubRecruitmentRecommendations(
+    clubId,
+    limit = 10
+) {
+    const query = new URLSearchParams({
+        limit: String(limit)
+    });
+
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/recruitment-recommendations`
+            + `?${query.toString()}`
+        ),
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// H4 실제 활동 결과 입력 화면 데이터
+// ---------------------------------------------------------
+export async function getClubActivityResults(
+    clubId,
+    limit = 8
+) {
+    const query = new URLSearchParams({
+        limit: String(limit)
+    });
+
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/activity-results`
+            + `?${query.toString()}`
+        ),
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// H4 일정별 실제 활동 결과 저장
+// ---------------------------------------------------------
+export async function saveClubActivityResults(
+    clubId,
+    eventId,
+    results
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/${eventId}`
+            + "/activity-results"
+        ),
+        {
+            method: "PUT",
+            body: {
+                results
+            }
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// H4 회원 참여 저하 위험 조회
+// ---------------------------------------------------------
+export async function getClubParticipationRisks(
+    clubId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/participation-risks`,
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
 // 동호회 가입 신청 승인·거절
 // ---------------------------------------------------------
 export async function decideClubApplication(

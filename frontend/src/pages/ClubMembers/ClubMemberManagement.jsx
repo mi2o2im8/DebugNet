@@ -12,6 +12,7 @@ import {
 } from "react-router-dom";
 
 import {
+    FiActivity,
     FiCheck,
     FiChevronDown,
     FiChevronRight,
@@ -19,6 +20,7 @@ import {
     FiClock,
     FiSearch,
     FiShield,
+    FiTarget,
     FiUser,
     FiUsers,
     FiX
@@ -29,6 +31,9 @@ import {
     getClubApplications,
     getClubMembers,
 } from "../../api/clubApi";
+
+import ClubRecruitmentRecommendations from "./ClubRecruitmentRecommendations";
+import ClubParticipationRisk from "./ClubParticipationRisk";
 
 import "./ClubMemberManagement.css";
 
@@ -562,7 +567,7 @@ function ClubMemberManagement() {
                     <h1>회원 관리</h1>
 
                     <p>
-                        가입 신청과 현재 회원을
+                        모집 추천, 가입 신청과 현재 회원을
                         관리할 수 있습니다.
                     </p>
                 </div>
@@ -611,6 +616,42 @@ function ClubMemberManagement() {
                         {memberCounts.total}
                     </strong>
                 </button>
+
+                <button
+                    type="button"
+                    className={
+                        activeSection === "recommendations"
+                            ? "active"
+                            : ""
+                    }
+                    onClick={() =>
+                        setActiveSection("recommendations")
+                    }
+                >
+                    <FiTarget />
+
+                    <span>모집 추천</span>
+
+                    <strong>AI</strong>
+                </button>
+
+                <button
+                    type="button"
+                    className={
+                        activeSection === "participationRisk"
+                            ? "active"
+                            : ""
+                    }
+                    onClick={() =>
+                        setActiveSection("participationRisk")
+                    }
+                >
+                    <FiActivity />
+
+                    <span>참여 분석</span>
+
+                    <strong>AI</strong>
+                </button>
             </nav>
 
             {errorMessage && (
@@ -619,7 +660,7 @@ function ClubMemberManagement() {
                 </p>
             )}
 
-            {activeSection === "applications" ? (
+            {activeSection === "applications" && (
                 <>
                     <section className="club-member-summary">
                         <div>
@@ -1136,7 +1177,9 @@ function ClubMemberManagement() {
                         }
                     </section>
                 </>
-            ) : (
+            )}
+
+            {activeSection === "members" && (
                 <>
                     <section className="club-member-summary">
                         <div>
@@ -1524,6 +1567,18 @@ function ClubMemberManagement() {
                         )}
                     </section>
                 </>
+            )}
+
+            {activeSection === "recommendations" && (
+                <ClubRecruitmentRecommendations
+                    clubId={clubId}
+                />
+            )}
+
+            {activeSection === "participationRisk" && (
+                <ClubParticipationRisk
+                    clubId={clubId}
+                />
             )}
         </main>
     );

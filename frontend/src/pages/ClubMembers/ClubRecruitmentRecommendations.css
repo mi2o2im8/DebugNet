@@ -1,0 +1,310 @@
+.club-recruitment-section {
+    display: grid;
+    gap: 14px;
+    padding: 18px 20px 28px;
+}
+
+.club-recruitment-intro {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 17px;
+    border: 1px solid #cee4d5;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #f7fffa, #edf8f1);
+}
+
+.club-recruitment-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #008f35;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.club-recruitment-intro h2 {
+    margin: 8px 0 5px;
+    font-size: 17px;
+}
+
+.club-recruitment-intro p,
+.club-recruitment-notice p,
+.club-recruitment-empty p,
+.club-recruitment-state p {
+    margin: 0;
+    color: #6d786f;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.club-recruitment-refresh {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 5px;
+    padding: 8px 10px;
+    border: 1px solid #bedbc8;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #008f35;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.club-recruitment-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    overflow: hidden;
+    border: 1px solid #dfe8e2;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.club-recruitment-summary > div {
+    padding: 14px 7px;
+    text-align: center;
+}
+
+.club-recruitment-summary > div + div {
+    border-left: 1px solid #e7ede9;
+}
+
+.club-recruitment-summary span {
+    display: block;
+    margin-bottom: 4px;
+    color: #77827a;
+    font-size: 10px;
+}
+
+.club-recruitment-summary strong {
+    color: #008f35;
+    font-size: 20px;
+}
+
+.club-recruitment-summary small {
+    margin-left: 2px;
+    color: #7b867e;
+    font-size: 10px;
+}
+
+.club-recruitment-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 13px;
+    border-radius: 11px;
+    background: #f3f6f4;
+}
+
+.club-recruitment-notice svg {
+    flex: 0 0 auto;
+    margin-top: 2px;
+    color: #78837b;
+}
+
+.club-recruitment-list {
+    display: grid;
+    gap: 13px;
+}
+
+.club-recruitment-card {
+    padding: 15px;
+    border: 1px solid #dce6df;
+    border-radius: 15px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(25, 52, 34, 0.04);
+}
+
+.club-recruitment-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.club-recruitment-rank {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    background: #e4f5ea;
+    color: #008f35;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.club-recruitment-avatar {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 42px;
+    height: 42px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #e7f5ec;
+    color: #008f35;
+    font-weight: 700;
+}
+
+.club-recruitment-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.club-recruitment-name {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+    gap: 3px;
+}
+
+.club-recruitment-name strong {
+    overflow: hidden;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.club-recruitment-name span {
+    color: #849087;
+    font-size: 10px;
+}
+
+.club-recruitment-score {
+    display: flex;
+    align-items: baseline;
+    color: #008f35;
+}
+
+.club-recruitment-score strong {
+    font-size: 22px;
+}
+
+.club-recruitment-score span {
+    font-size: 10px;
+}
+
+.club-recruitment-result-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 13px;
+}
+
+.club-recruitment-result-row small {
+    overflow: hidden;
+    color: #8a6b22;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.club-recruitment-action {
+    padding: 5px 8px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.club-recruitment-action.highest {
+    background: #dff5e7;
+    color: #007d2e;
+}
+
+.club-recruitment-action.priority {
+    background: #e7f2ff;
+    color: #2569ad;
+}
+
+.club-recruitment-action.general {
+    background: #f1f4f2;
+    color: #667069;
+}
+
+.club-recruitment-action.trial {
+    background: #fff3d9;
+    color: #9a6900;
+}
+
+.club-recruitment-action.low {
+    background: #f5eeee;
+    color: #916464;
+}
+
+.club-recruitment-axes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.club-recruitment-axes > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    padding: 7px 8px;
+    border-radius: 8px;
+    background: #f5f8f6;
+}
+
+.club-recruitment-axes span {
+    color: #707b73;
+    font-size: 9px;
+}
+
+.club-recruitment-axes strong {
+    font-size: 11px;
+}
+
+.club-recruitment-missing {
+    margin: 10px 0 0;
+    color: #929b95;
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+.club-recruitment-empty,
+.club-recruitment-state {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    margin: 18px 20px;
+    padding: 46px 20px;
+    border: 1px dashed #cad8ce;
+    border-radius: 14px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.club-recruitment-state svg,
+.club-recruitment-empty svg {
+    color: #7aab8a;
+    font-size: 28px;
+}
+
+.club-recruitment-state strong,
+.club-recruitment-empty strong {
+    font-size: 13px;
+}
+
+.club-recruitment-state.error svg,
+.club-recruitment-state.error strong {
+    color: #bd4545;
+}
+
+.club-recruitment-state button {
+    padding: 8px 13px;
+    border: 0;
+    border-radius: 8px;
+    background: #008f35;
+    color: #ffffff;
+    font-size: 11px;
+    cursor: pointer;
+}
