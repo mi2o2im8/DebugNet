@@ -10,7 +10,7 @@
     margin: 0 auto;
 
     /* 아래 100px: 하단 네비게이션(68px)에 버튼이 가리지 않도록 */
-    padding: 8px 20px 100px;
+    padding: 8px 20px calc(100px + env(safe-area-inset-bottom, 0px));
 
     box-sizing: border-box;
 
@@ -842,7 +842,7 @@
 @media (max-width: 400px) {
 
     .MySchedule-page {
-        padding: 8px 20px 100px;
+        padding: 8px 20px calc(100px + env(safe-area-inset-bottom, 0px));
     }
 
 

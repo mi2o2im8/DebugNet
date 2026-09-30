@@ -219,3 +219,98 @@
         hue-rotate(120deg)
         brightness(90%) !important;
 }
+
+/* ========================================
+   인라인 뒤로가기 버튼 외형 통일
+   - 실제 아이콘은 모두 BackButtonIcon(back.png) 사용
+   - "내 정보" PageHeader 기준: 투명 배경 / 테두리 없음 / 34px
+   - 각 페이지의 position/top/left는 건드리지 않음
+   ======================================== */
+:where(
+    .ClubList-back-button,
+    .club-application-header > button:first-child,
+    .club-create-back-button,
+    .club-dashboard-header > button:first-child,
+    .club-detail-header-btn,
+    .club-attendance-back-button,
+    .club-event-detail-header > button:first-child,
+    .club-event-form-header > button:first-child,
+    .club-events-page > header > button:first-child,
+    .event-participants-page > header > button:first-child,
+    .club-member-detail-header > button:first-child,
+    .club-member-back-button,
+    .club-settings-back-button,
+    .club-user-header > button:first-child,
+    .club-community-back-btn,
+    .post-back-btn,
+    .post-write-back,
+    .GuestRecruitDetail-back-button,
+    .match-management-back-btn,
+    .match-management-detail-header > button:first-child,
+    .match-management-detail-back,
+    .match-management-list-back,
+    .match-record-write-back,
+    .match-review-detail-back,
+    .match-review-back
+) {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+:where(
+    .ClubList-back-button,
+    .club-application-header > button:first-child,
+    .club-create-back-button,
+    .club-dashboard-header > button:first-child,
+    .club-detail-header-btn,
+    .club-attendance-back-button,
+    .club-event-detail-header > button:first-child,
+    .club-event-form-header > button:first-child,
+    .club-events-page > header > button:first-child,
+    .event-participants-page > header > button:first-child,
+    .club-member-detail-header > button:first-child,
+    .club-member-back-button,
+    .club-settings-back-button,
+    .club-user-header > button:first-child,
+    .club-community-back-btn,
+    .post-back-btn,
+    .post-write-back,
+    .GuestRecruitDetail-back-button,
+    .match-management-back-btn,
+    .match-management-detail-header > button:first-child,
+    .match-management-detail-back,
+    .match-management-list-back,
+    .match-record-write-back,
+    .match-review-detail-back,
+    .match-review-back
+):active .BackButton-icon {
+    opacity: 0.7;
+}
+
+/* 오류/검색 결과처럼 설명 문구와 같이 쓰는 뒤로가기 */
+.pb-back-text-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.pb-back-text-button .BackButton-icon {
+    flex: 0 0 auto;
+}

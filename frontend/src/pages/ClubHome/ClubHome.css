@@ -1450,3 +1450,18 @@
     white-space: nowrap;
     cursor: pointer;
 }
+
+/* 검색 결과에서 동호회 찾기 화면으로 돌아가기 */
+.ClubHome-search-result-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+}
+
+.ClubHome-search-back {
+    border: 0;
+    background: transparent;
+    color: #1d3557;
+    font: inherit;
+    cursor: pointer;
+}

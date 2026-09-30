@@ -382,13 +382,15 @@ function ClubEventDetail() {
 
                 <button
                     type="button"
+                    className="pb-back-text-button"
                     onClick={() =>
                         navigate(
                             `/clubs/${clubId}/manage/events`
                         )
                     }
                 >
-                    일정 목록으로 돌아가기
+                    <BackButtonIcon />
+                    <span>일정 목록으로 돌아가기</span>
                 </button>
             </main>
         );

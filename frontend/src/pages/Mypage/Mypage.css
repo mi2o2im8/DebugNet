@@ -849,7 +849,7 @@
     .mypage-container {
         width: 100%;
 
-        padding: 8px 20px 85px;
+        padding: 8px 20px calc(90px + env(safe-area-inset-bottom, 0px));
     }
 
     .mypage-back-btn {

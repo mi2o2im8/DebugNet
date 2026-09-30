@@ -1299,7 +1299,7 @@ body {
 @media (max-width: 500px) {
 
     .main-home-main {
-        padding: 12px 18px 80px;
+        padding: 12px 18px calc(80px + env(safe-area-inset-bottom, 0px));
     }
 
     .main-welcome-content {

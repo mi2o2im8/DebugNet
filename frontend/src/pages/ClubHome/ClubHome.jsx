@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import BottomNav from "../../components/BottomNav";
 import { Link, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -962,7 +963,8 @@ function ClubHome() {
         <div className="ClubHome-search-result-header">
 
           <button
-            className="ClubHome-search-back"
+            type="button"
+            className="ClubHome-search-back pb-back-text-button"
             onClick={() => {
 
               // 검색 결과 화면 닫기
@@ -982,7 +984,8 @@ function ClubHome() {
 
             }}
           >
-            ← 동호회 찾기로
+            <BackButtonIcon />
+            <span>동호회 찾기로</span>
           </button>
 
         </div>

@@ -238,9 +238,12 @@ function GuestRecruitDetail() {
       <div className="GuestRecruitDetail-container">
         <button
           type="button"
+          className="pb-back-text-button"
+          aria-label="뒤로가기"
           onClick={() => navigate(-1)}
         >
-          ← 뒤로가기
+          <BackButtonIcon />
+          <span>뒤로가기</span>
         </button>
 
         <p>

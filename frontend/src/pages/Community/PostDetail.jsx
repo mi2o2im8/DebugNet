@@ -936,11 +936,13 @@ function PostDetail() {
 
           <button
             type="button"
+            className="pb-back-text-button"
             onClick={() =>
               navigate(communityBasePath)
             }
           >
-            커뮤니티로 돌아가기
+            <BackButtonIcon />
+            <span>커뮤니티로 돌아가기</span>
           </button>
 
         </main>

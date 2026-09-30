@@ -476,9 +476,11 @@ function ClubMemberDetail() {
 
                 <button
                     type="button"
+                    className="pb-back-text-button"
                     onClick={() => navigate(-1)}
                 >
-                    이전 화면으로
+                    <BackButtonIcon />
+                    <span>이전 화면으로</span>
                 </button>
             </main>
         );

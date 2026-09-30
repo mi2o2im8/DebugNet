@@ -585,14 +585,14 @@
 }
 
 /* ---------------------------------------------------------
-   회원 관리 상단 메뉴
+   가입 신청 / 현재 회원 전환
 --------------------------------------------------------- */
 
 .club-member-primary-tabs {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 5px;
-    margin: 18px 12px 0;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin: 18px 20px 0;
     padding: 5px;
     border-radius: 13px;
     background: #e8efea;
@@ -602,16 +602,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    min-width: 0;
+    gap: 7px;
     min-height: 43px;
-    padding: 8px 2px;
+    padding: 8px 10px;
     border: 0;
     border-radius: 10px;
     background: transparent;
     color: #6d786f;
-    font-size: 10px;
-    white-space: nowrap;
+    font-size: 13px;
     cursor: pointer;
 }
 
@@ -623,60 +621,24 @@
 }
 
 .club-member-primary-tabs button svg {
-    flex: 0 0 auto;
-    width: 14px;
-    height: 14px;
-    font-size: 14px;
-}
-
-.club-member-primary-tabs button span {
-    flex: 0 1 auto;
-    min-width: 0;
-    line-height: 1;
-    letter-spacing: -0.3px;
-    white-space: nowrap;
-    word-break: keep-all;
+    font-size: 16px;
 }
 
 .club-member-primary-tabs button strong {
     display: grid;
-    flex: 0 0 auto;
     place-items: center;
-    box-sizing: border-box;
-    min-width: 19px;
-    height: 19px;
-    padding: 0 4px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
     border-radius: 10px;
     background: #dbe5de;
     color: #566159;
-    font-size: 9px;
-    line-height: 1;
-    white-space: nowrap;
+    font-size: 10px;
 }
 
 .club-member-primary-tabs button.active strong {
     background: #dff5e7;
     color: #008f35;
-}
-
-/* 폭이 매우 좁은 기기에서는 아이콘을 생략 */
-@media (max-width: 380px) {
-    .club-member-primary-tabs {
-        gap: 4px;
-        margin-right: 10px;
-        margin-left: 10px;
-    }
-
-    .club-member-primary-tabs button {
-        gap: 3px;
-        padding-right: 2px;
-        padding-left: 2px;
-        font-size: 9.5px;
-    }
-
-    .club-member-primary-tabs button svg {
-        display: none;
-    }
 }
 
 /* ---------------------------------------------------------
