@@ -1,4 +1,5 @@
 from __future__ import annotations
+from app.services.club_service import ClubService
 
 import re
 from datetime import time
@@ -377,24 +378,9 @@ def _build_available_times(
     days = _find_days(text)
     day_part = _find_day_part(text)
 
-    # 자연어에 시간/요일 조건이 없으면
-    # 기존 사용자 프로필의 가능 시간을 그대로 사용한다.
+    # 사용자가 시간/요일을 말하지 않으면 시간 조건 없음
     if not days and not day_part:
-        return [
-            ClubRecommendationTime(
-                day_of_week=str(item.get("day_of_week")),
-                start_time=time.fromisoformat(
-                    str(item.get("start_time"))[:8]
-                ),
-                end_time=time.fromisoformat(
-                    str(item.get("end_time"))[:8]
-                ),
-            )
-            for item in default_times
-            if item.get("day_of_week")
-            and item.get("start_time")
-            and item.get("end_time")
-        ]
+        return []
 
     # 요일이 없고 시간만 있으면
     # 기존 사용자 가능 요일을 유지한다.
@@ -508,31 +494,31 @@ def build_recommendation_request(
     selected_skill_level = (
         skill_level
         if skill_level is not None
-        else defaults.get("selected_sport_level")
+        else None
     )
 
     selected_regions = (
         [region]
         if region
-        else list(defaults.get("regions") or [])
+        else []
     )
 
     selected_atmospheres = (
         atmospheres
         if atmospheres
-        else list(defaults.get("atmospheres") or [])
+        else []
     )
 
     selected_frequency = (
         activity_frequency
         if activity_frequency is not None
-        else defaults.get("activity_frequency")
+        else None
     )
-
+    
     selected_fee = (
         max_monthly_fee
         if max_monthly_fee is not None
-        else defaults.get("max_monthly_fee")
+        else None
     )
 
     return ClubRecommendationRequest(
@@ -558,32 +544,190 @@ def recommend_from_text(
     limit: int = 5,
 ) -> dict:
 
-    service = ClubRecommendationService()
+    recommendation_service = ClubRecommendationService()
 
-    # 사용자 프로필에 저장된 추천 기본값을 먼저 가져온다.
-    defaults = service.get_defaults(
+    # 사용자 기본 정보
+    defaults = recommendation_service.get_defaults(
         user_id=user_id
     )
 
+    # -----------------------------------------------------
+    # 1차: 기존 맞춤 추천 알고리즘
+    # -----------------------------------------------------
     request_data = build_recommendation_request(
         text=text,
         defaults=defaults,
         limit=limit,
     )
 
-    result = service.recommend(
+    result = recommendation_service.recommend(
         user_id=user_id,
         request_data=request_data,
     )
 
+    recommendations = result.get(
+        "recommendations",
+        [],
+    )
+
+    if recommendations:
+        return {
+            "request": request_data.model_dump(mode="json"),
+            "recommendations": recommendations,
+            "total_candidates": result.get(
+                "total_candidates",
+                len(recommendations),
+            ),
+        }
+
+    # -----------------------------------------------------
+    # 2차: 맞춤 추천 결과가 없으면
+    # 기존 동호회 검색 기능으로 종목부터 바로 검색
+    # -----------------------------------------------------
+    if request_data.sport_id is not None:
+
+        sport_name = None
+
+        for sport in defaults.get("sports") or []:
+            if int(sport.get("sport_id") or 0) == int(request_data.sport_id):
+                sport_name = sport.get("sport_name")
+                break
+
+        if sport_name:
+
+            club_service = ClubService()
+
+            # 사용자의 기존 활동 지역
+            user_regions = list(
+                defaults.get("regions") or []
+            )
+
+            # ---------------------------------------------
+            # 2-1. 같은 지역 + 같은 종목 우선 검색
+            # ---------------------------------------------
+            search_result = club_service.search_clubs(
+                sport_name=[sport_name],
+                region=user_regions,
+            )
+
+            # ---------------------------------------------
+            # 2-2. 같은 지역에도 없으면
+            # 같은 종목 전체 검색
+            # ---------------------------------------------
+            if not search_result:
+                search_result = club_service.search_clubs(
+                    sport_name=[sport_name],
+                )
+
+                user_regions = []
+
+            # 검색 결과 형식 대응
+            if isinstance(search_result, dict):
+                fallback_items = (
+                    search_result.get("clubs")
+                    or search_result.get("results")
+                    or search_result.get("data")
+                    or []
+                )
+            elif isinstance(search_result, list):
+                fallback_items = search_result
+            else:
+                fallback_items = []
+
+            # ---------------------------------------------
+            # 검색 결과를 챗봇 추천 형식으로 정리
+            # ---------------------------------------------
+            fallback_recommendations = []
+
+            for club in fallback_items:
+
+                if not isinstance(club, dict):
+                    continue
+
+                club_id = (
+                    club.get("club_id")
+                    or club.get("id")
+                )
+
+                club_name = (
+                    club.get("club_name")
+                    or club.get("name")
+                )
+
+                if not club_id or not club_name:
+                    continue
+
+                regions = club.get("regions") or []
+
+                if not regions and club.get("region"):
+                    regions = [club.get("region")]
+
+                fallback_recommendations.append({
+                    "club_id": club_id,
+                    "club_name": club_name,
+                    "club_intro": club.get("club_intro"),
+                    "image_url": club.get("image_url"),
+                    "sport_id": (
+                        club.get("sport_id")
+                        or request_data.sport_id
+                    ),
+                    "sport_name": (
+                        club.get("sport_name")
+                        or sport_name
+                    ),
+                    "sports": club.get("sports") or [],
+                    "regions": regions,
+                    "schedules": club.get("schedules") or [],
+                    "sport_levels": club.get("sport_levels") or [],
+                    "atmospheres": (
+                        club.get("atmospheres")
+                        or club.get("traits")
+                        or []
+                    ),
+                    "activity_frequency": club.get(
+                        "activity_frequency"
+                    ),
+                    "monthly_fee": club.get(
+                        "monthly_fee"
+                    ),
+                    "current_members": club.get(
+                        "current_members"
+                    ),
+                    "max_members": club.get(
+                        "max_members"
+                    ),
+                    "reasons": [
+                        "희망 종목의 동호회를 찾았어요."
+                    ],
+                })
+
+                if len(fallback_recommendations) >= limit:
+                    break
+
+            if fallback_recommendations:
+                fallback_request = request_data.model_copy(
+                    update={
+                        "regions": user_regions
+                    }
+                )
+
+                return {
+                    "request": fallback_request.model_dump(
+                        mode="json"
+                    ),
+                    "recommendations": fallback_recommendations,
+                    "total_candidates": len(
+                        fallback_recommendations
+                    ),
+                }
+
+    # -----------------------------------------------------
+    # 최종적으로도 없으면 빈 결과 반환
+    # -----------------------------------------------------
     return {
-        "request": request_data.model_dump(mode="json"),
-        "recommendations": result.get(
-            "recommendations",
-            [],
+        "request": request_data.model_dump(
+            mode="json"
         ),
-        "total_candidates": result.get(
-            "total_candidates",
-            0,
-        ),
+        "recommendations": [],
+        "total_candidates": 0,
     }

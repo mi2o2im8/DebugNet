@@ -10,45 +10,33 @@
 // - 직접 입력한 질문: 백엔드 /api/chatbot → LLM 답변
 //   LLM이 실패하면 chatbotData.js 키워드 검색으로 대신 답한다.
 
-import {
-    useEffect,
-    useRef,
-    useState,
-} from "react";
+import {useEffect, useRef, useState,} from "react";
 
 import { useNavigate } from "react-router-dom";
-
 import ChatMessage from "../../components/Chatbot/ChatMessage";
-
 import { askChatbot } from "../../api/chatbotApi";
-
 import {
     FAQ_ITEMS,
     WELCOME_QUESTION_IDS,
     findFaqByText,
     getFaqById,
 } from "./chatbotData";
-
 import "./Chatbot.css";
 import chatbotIcon from "../../assets/img/chatbot/chatbot-icon.png";
-
 
 const WELCOME_QUESTIONS = WELCOME_QUESTION_IDS
     .map(getFaqById)
     .filter(Boolean);
 
-
-// ⭐ 메시지 고유 id
+// 메시지 고유 id
 let messageSeq = 0;
 const createMessageId = () => {
     messageSeq += 1;
     return `msg-${Date.now()}-${messageSeq}`;
 };
 
-
 // =========================================================
 // ⭐ 답변 만들기
-//
 // 모든 답변은 같은 모양으로 맞춘다.
 // { kind, text, steps, actions, related }
 //   kind: "answer" (답 찾음) / "fallback" (답 못 찾음)
@@ -57,7 +45,7 @@ const createMessageId = () => {
 const FALLBACK_TEXT =
     "아직 그 질문에는 답을 준비하지 못했어요. 아래 질문 중에 궁금한 내용이 있는지 확인해주세요.";
 
-// ⭐ chatbotData.js 항목 → 답변
+// chatbotData.js 항목 → 답변
 const replyFromFaq = (faq) => ({
     kind: "answer",
     text: faq.answer,
@@ -90,7 +78,7 @@ const replyFromLocal = (text, prefix = "") => {
 };
 
 
-const getBotReply = async ({ faqId, text }) => {
+const getBotReply = async ({ faqId, text, history = [] }) => {
 
     // 1. 자주 묻는 질문 버튼 → 바로 답변
     if (faqId) {
@@ -104,7 +92,17 @@ const getBotReply = async ({ faqId, text }) => {
     // 2. 직접 입력 → LLM
     try {
 
-        const data = await askChatbot(text);
+        const userHistory = history
+            .filter((message) => message.type === "user")
+            .slice(-5)
+            .map((message) => `사용자: ${message.text}`)
+            .join("\n");
+
+        const contextText = userHistory
+            ? `${userHistory}\n사용자: ${text}`
+            : text;
+
+        const data = await askChatbot(contextText);
 
         if (!data?.found) {
             return {
@@ -154,22 +152,40 @@ function Chatbot({ onClose }) {
 
     const navigate = useNavigate();
 
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState(() => {
+        try {
+            const savedMessages = sessionStorage.getItem("playbridge_chatbot_messages");
+            return savedMessages ? JSON.parse(savedMessages) : [];
+        } catch (error) {
+            console.error("챗봇 대화 불러오기 오류:", error);
+            return [];
+        }
+    });
 
-    // ⭐ 직접 입력
+    // 챗봇 대화 내용 저장
+    useEffect(() => {
+        try {
+            sessionStorage.setItem(
+                "playbridge_chatbot_messages",
+                JSON.stringify(messages)
+            );
+        } catch (error) {
+            console.error("챗봇 대화 저장 오류:", error);
+        }
+    }, [messages]);
+
+    // 직접 입력
     const [input, setInput] = useState("");
 
-    // ⭐ 답변 준비 중 (AI 연결 후 로딩 표시용)
+    // 답변 준비 중 (AI 연결 후 로딩 표시용)
     const [isReplying, setIsReplying] = useState(false);
 
-    // ⭐ 자동 스크롤 기준점
+    // 자동 스크롤 기준점
     const bottomRef = useRef(null);
 
 
     // =========================================================
     // ⭐ 새 메시지가 오면 맨 아래로 스크롤
-    // =========================================================
-
     useEffect(() => {
 
         bottomRef.current?.scrollIntoView({
@@ -203,7 +219,11 @@ function Chatbot({ onClose }) {
 
         try {
 
-            const reply = await getBotReply({ faqId, text });
+            const reply = await getBotReply({
+                faqId,
+                text,
+                history: messages,
+            });
 
             setMessages((prev) => [
                 ...prev,

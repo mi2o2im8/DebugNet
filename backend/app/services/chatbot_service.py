@@ -69,9 +69,6 @@ def _is_recommendation_question(question: str) -> bool:
     if not text:
         return False
 
-    # -----------------------------------------------------
-    # 추천/선정 의도가 비교적 명확한 표현
-    # -----------------------------------------------------
     recommendation_keywords = [
         "추천해줘",
         "추천해 줘",
@@ -96,9 +93,6 @@ def _is_recommendation_question(question: str) -> bool:
     if not any(keyword in text for keyword in recommendation_keywords):
         return False
 
-    # -----------------------------------------------------
-    # 단순 이용 방법 질문은 추천으로 처리하지 않는다.
-    # -----------------------------------------------------
     method_keywords = [
         "찾는 방법",
         "찾는법",
@@ -217,13 +211,58 @@ def _build_recommendation_context(
 
 
 # =========================================================
+# ⭐ 실제 추천 동호회 바로가기 생성
+# =========================================================
+
+def _build_recommendation_actions(
+    recommendation_result: dict | None,
+) -> list[dict]:
+    """
+    실제 추천 결과의 club_id를 이용해
+    동호회 상세 페이지 바로가기 버튼을 만든다.
+
+    실제 club_id를 백엔드에서 직접 사용하므로
+    LLM이 임의의 URL을 만들 필요가 없다.
+    """
+
+    if not recommendation_result:
+        return []
+
+    recommendations = recommendation_result.get(
+        "recommendations",
+        [],
+    )
+
+    actions = []
+
+    for index, club in enumerate(recommendations[:3], start=1):
+
+        club_id = club.get("club_id")
+        club_name = str(
+            club.get("club_name") or "동호회"
+        ).strip()
+
+        if club_id is None:
+            continue
+
+        actions.append(
+            {
+                "label": f"{index}. {club_name} 보기",
+                "path": f"/clubs/{int(club_id)}",
+            }
+        )
+
+    return actions
+
+
+# =========================================================
 # ⭐ LLM에 전달할 사용자 메시지 만들기
 # =========================================================
 
 def _build_llm_message(
     user_id: str,
     question: str,
-) -> str:
+) -> tuple[str, dict | None]:
 
     # -----------------------------------------------------
     # 1. ML1 자연어 요구 분석
@@ -329,8 +368,7 @@ ML1 결과만으로 사용자의 의도나 사실을 단정하지 마세요.
             f"{recommendation_context}"
         )
 
-    return base_message
-
+    return base_message, recommendation_result
 
 
 class ChatbotService:
@@ -351,8 +389,8 @@ class ChatbotService:
 
         _check_rate_limit(user_id)
 
-        # ⭐ 사용자 ID를 직접 전달해서 추천 실행
-        llm_message = _build_llm_message(
+        # ⭐ ML1 + 실제 추천 결과 생성
+        llm_message, recommendation_result = _build_llm_message(
             user_id=user_id,
             question=question,
         )
@@ -380,6 +418,14 @@ class ChatbotService:
             )
 
         reply = parse_llm_reply(raw_reply)
+
+        # ⭐ 실제 추천 동호회별 상세 페이지 버튼 추가
+        recommendation_actions = _build_recommendation_actions(
+            recommendation_result
+        )
+
+        if recommendation_actions:
+            reply["actions"] = recommendation_actions
 
         if reply == FALLBACK_REPLY:
 
