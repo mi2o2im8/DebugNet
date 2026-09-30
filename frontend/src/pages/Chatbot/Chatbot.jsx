@@ -92,17 +92,15 @@ const getBotReply = async ({ faqId, text, history = [] }) => {
     // 2. 직접 입력 → LLM
     try {
 
+        // ⭐ 현재 질문(text)과 이전 질문(history)을 따로 보낸다.
+        //    이어 붙이면 이전 "추천해줘" 때문에 매번 추천이 실행되고,
+        //    300자를 넘으면 서버에서 422 오류가 난다.
         const userHistory = history
             .filter((message) => message.type === "user")
             .slice(-5)
-            .map((message) => `사용자: ${message.text}`)
-            .join("\n");
+            .map((message) => message.text);
 
-        const contextText = userHistory
-            ? `${userHistory}\n사용자: ${text}`
-            : text;
-
-        const data = await askChatbot(contextText);
+        const data = await askChatbot(text, userHistory);
 
         if (!data?.found) {
             return {

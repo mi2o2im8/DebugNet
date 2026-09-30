@@ -18,7 +18,7 @@ export const FAQ_ITEMS = [
     {
         id: "find-club",
         label: "🔎 동호회 찾는 방법",
-        keywords: ["동호회 찾", "동호회 검색", "동호회 추천", "찾기", "검색", "가입"],
+        keywords: ["동호회 찾", "동호회 검색", "동호회 추천", "찾기", "검색", "가입 방법", "가입하려"],
         answer: "원하는 종목과 지역으로 나에게 맞는 동호회를 찾아볼 수 있어요.",
         steps: [
             "하단 메뉴에서 '동호회찾기'를 눌러요.",
@@ -64,7 +64,7 @@ export const FAQ_ITEMS = [
     {
         id: "schedule",
         label: "🗓 일정 등록 방법",
-        keywords: ["일정", "모임", "스케줄", "등록"],
+        keywords: ["일정 등록", "일정 만들", "일정 관리", "정모", "모임 등록"],
         answer: "동호회장과 운영진은 동호회 관리에서 일정을 만들 수 있어요.",
         steps: [
             "내 동호회의 관리 화면으로 들어가요.",
@@ -74,7 +74,7 @@ export const FAQ_ITEMS = [
         actions: [
             { label: "내 일정 보기", path: "/myschedule" },
         ],
-        related: ["guest", "match"],
+        related: ["op-participants", "guest"],
     },
     {
         id: "guest",
@@ -103,6 +103,62 @@ export const FAQ_ITEMS = [
             { label: "소통하기 바로가기", path: "/community" },
         ],
         related: ["block", "find-club"],
+    },
+    {
+        id: "op-applications",
+        label: "📥 가입 신청 확인·승인",
+        keywords: ["가입 신청 확인", "가입신청 확인", "가입 신청 승인", "가입신청 승인", "가입신청은 어디", "가입 신청은 어디", "받은 신청", "신청자", "가입 승인", "가입 거절"],
+        answer: "들어온 가입 신청은 운영 홈 > '회원 관리'의 '가입 신청' 탭에서 확인하고 승인·거절할 수 있어요.",
+        steps: [
+            "'활동' 탭에서 '운영' 배지가 있는 동호회를 눌러요.",
+            "'회원 관리' > '가입 신청'을 눌러요.",
+            "'승인 대기'에서 신청서를 보고 승인 또는 승인 거절을 눌러요.",
+        ],
+        actions: [
+            { label: "받은 신청 모아보기", path: "/my-applications" },
+        ],
+        related: ["op-manager", "op-participants"],
+    },
+    {
+        id: "op-manager",
+        label: "🛡 운영진 지정 방법",
+        keywords: ["운영진 지정", "운영진 임명", "운영진 추가", "운영진 해제", "운영진 권한", "부회장"],
+        answer: "운영진 지정·해제는 동호회장만 할 수 있어요. 회원 관리에서 회원을 누르고 '운영진으로 지정'을 눌러요.",
+        steps: [
+            "운영 홈 > '회원 관리' > '현재 회원'을 열어요.",
+            "지정할 회원을 눌러 회원 상세로 가요.",
+            "'운영진으로 지정'을 눌러요.",
+        ],
+        actions: [
+            { label: "활동 홈", path: "/mainhome" },
+        ],
+        related: ["op-applications", "schedule"],
+    },
+    {
+        id: "op-participants",
+        label: "✅ 참가자·게스트 승인",
+        keywords: ["참가자 승인", "참가자 관리", "게스트 승인", "참석자 확인", "참여 승인"],
+        answer: "일정 상세의 '참가자 관리'에서 승인 대기 중인 참가자(게스트 포함)를 승인·거절할 수 있어요.",
+        steps: [
+            "운영 홈 > '일정 관리'에서 일정을 눌러요.",
+            "'참가자 관리'를 눌러요.",
+            "'승인 대기'에서 승인 또는 거절을 눌러요.",
+        ],
+        actions: [
+            { label: "활동 홈", path: "/mainhome" },
+        ],
+        related: ["schedule", "op-applications"],
+    },
+    {
+        id: "my-applications",
+        label: "📄 내 신청 현황",
+        keywords: ["신청 결과", "신청 현황", "신청 내역", "신청 취소", "승인 언제", "내 신청"],
+        answer: "내가 보낸 가입·게스트 신청은 내 정보 > '가입 / 게스트 신청 현황'에서 확인하고, 승인 대기 중이면 취소할 수 있어요.",
+        steps: [],
+        actions: [
+            { label: "내 신청 현황", path: "/my-applications" },
+        ],
+        related: ["find-club", "guest"],
     },
     {
         id: "block",
@@ -136,8 +192,9 @@ export const FAQ_ITEMS = [
 // ⭐ 처음 화면에 보여줄 질문 (순서대로)
 export const WELCOME_QUESTION_IDS = [
     "find-club",
-    "match",
+    "op-applications",
     "schedule",
+    "match",
     "community",
     "settings",
 ];

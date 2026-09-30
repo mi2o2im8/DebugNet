@@ -14,16 +14,25 @@ import { authenticatedRequest } from "./apiClient";
 // 챗봇에게 질문
 //
 // POST /api/chatbot
-// body: { message }
+// body: { message, history }
+//   message : 현재 질문만 (최대 300자)
+//   history : 최근 사용자 질문 (맥락 참고용, 최대 5개)
 // 응답: { answer, steps, actions: [{ label, path }], found }
+//
+// ⚠ 이전 질문을 message에 이어 붙이지 않는다.
+//   (이전 추천 질문 때문에 매번 동호회 추천이 실행되던 원인)
 // =========================================================
-export const askChatbot = async (message) => {
+export const askChatbot = async (message, history = []) => {
     return authenticatedRequest(
         "/api/chatbot",
         {
             method: "POST",
             body: {
-                message
+                message: String(message || "").slice(0, 300),
+                history: history
+                    .map((item) => String(item || "").slice(0, 300))
+                    .filter(Boolean)
+                    .slice(-5),
             }
         }
     );

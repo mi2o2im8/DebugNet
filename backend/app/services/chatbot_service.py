@@ -4,11 +4,14 @@ from collections import defaultdict, deque
 
 from fastapi import HTTPException, status
 
+from app.core.chatbot_knowledge import match_intent
 from app.core.chatbot_prompt import (
     FALLBACK_REPLY,
     build_system_prompt,
+    is_allowed_path,
     parse_llm_reply,
 )
+from app.core.supabase import get_supabase_admin_client
 from app.core.llm_client import LLMError, ask_llm
 from app.ml.chatbot_ml1 import analyze_needs
 from app.schemas.chatbot import ChatbotResponse
@@ -105,6 +108,23 @@ def _is_recommendation_question(question: str) -> bool:
     ]
 
     if any(keyword in text for keyword in method_keywords):
+        return False
+
+    # ⭐ 운영진 질문은 동호회 추천이 아니다.
+    # 예) "우리 동호회에 맞는 회원 찾아줘", "상대 팀 찾아줘"
+    compact = text.replace(" ", "")
+
+    operator_keywords = [
+        "우리동호회",
+        "회원",
+        "상대",
+        "운영진",
+        "신청자",
+        "매칭",
+        "경기",
+    ]
+
+    if any(keyword in compact for keyword in operator_keywords):
         return False
 
     return True
@@ -256,12 +276,218 @@ def _build_recommendation_actions(
 
 
 # =========================================================
+# ⭐ 이전 대화 (맥락 참고용)
+# =========================================================
+
+def _build_history_text(history: list[str] | None) -> str:
+
+    items = [
+        str(item).strip()
+        for item in (history or [])
+        if str(item or "").strip()
+    ][-5:]
+
+    if not items:
+        return ""
+
+    lines = ["[이전 대화 - 맥락 참고용, 여기에 답하지 마세요]"]
+    lines.extend(f"- 사용자: {item}" for item in items)
+
+    return "\n".join(lines) + "\n\n"
+
+
+# =========================================================
+# ⭐ 내 동호회 조회 (운영진 바로가기용)
+# =========================================================
+
+OPERATOR_ROLES = {"owner", "manager", "동호회장", "운영진"}
+OWNER_ROLES = {"owner", "동호회장"}
+
+
+def _get_my_clubs(user_id: str) -> list[dict]:
+    """
+    로그인 사용자가 활동 중인 동호회 목록
+    [{"club_id": 1, "club_name": "...", "role": "owner"}, ...]
+
+    실패해도 챗봇은 계속 동작해야 하므로 빈 목록을 돌려준다.
+    """
+
+    try:
+
+        supabase = get_supabase_admin_client()
+
+        member_response = (
+            supabase
+            .table("club_members")
+            .select("club_id, role")
+            .eq("user_id", user_id)
+            .eq("status", "active")
+            .execute()
+        )
+
+        members = member_response.data or []
+
+        if not members:
+            return []
+
+        club_ids = list({member["club_id"] for member in members})
+
+        club_response = (
+            supabase
+            .table("clubs")
+            .select("club_id, club_name, status")
+            .in_("club_id", club_ids)
+            .execute()
+        )
+
+        clubs = {
+            club["club_id"]: club
+            for club in (club_response.data or [])
+            if club.get("status") is True
+        }
+
+        result = []
+
+        for member in members:
+
+            club = clubs.get(member["club_id"])
+
+            if not club:
+                continue
+
+            result.append(
+                {
+                    "club_id": club["club_id"],
+                    "club_name": str(club.get("club_name") or "내 동호회").strip(),
+                    "role": member.get("role"),
+                }
+            )
+
+        return result
+
+    except Exception as error:
+
+        logger.exception("챗봇 내 동호회 조회 실패: %s", error)
+        return []
+
+
+# =========================================================
+# ⭐ 규칙(의도) 기반 답변
+# =========================================================
+
+MAX_ACTIONS = 3
+
+
+def _build_intent_reply(user_id: str, intent: dict) -> dict:
+    """
+    지식베이스(chatbot_knowledge)의 답변을 화면 응답으로 만든다.
+
+    운영진 질문이면 실제 운영 중인 동호회의 관리 화면 바로가기를 붙인다.
+    예) "누가 물개냐 가입 신청 보기" → /clubs/26/manage/members
+    """
+
+    answer = intent["answer"]
+    steps = list(intent.get("steps") or [])
+    actions: list[dict] = []
+
+    if intent.get("role") == "operator":
+
+        my_clubs = _get_my_clubs(user_id)
+
+        operating_clubs = [
+            club for club in my_clubs
+            if club.get("role") in OPERATOR_ROLES
+        ]
+
+        if intent.get("owner_only"):
+            target_clubs = [
+                club for club in operating_clubs
+                if club.get("role") in OWNER_ROLES
+            ]
+        else:
+            target_clubs = operating_clubs
+
+        if not operating_clubs:
+
+            answer = (
+                f"{answer}\n\n"
+                "지금은 운영 중인 동호회가 없어서 이 메뉴가 보이지 않아요. "
+                "동호회장이나 운영진만 사용할 수 있는 기능이에요."
+            )
+
+            actions.append(
+                {"label": "동호회 만들기", "path": "/clubs/create"}
+            )
+
+        elif intent.get("owner_only") and not target_clubs:
+
+            answer = (
+                f"{answer}\n\n"
+                "지금은 운영진으로 참여 중이라 이 기능은 동호회장에게 요청해주세요."
+            )
+
+        templates = intent.get("club_actions") or []
+
+        # 운영 동호회가 여러 개면 동호회별로, 템플릿이 여러 개면 첫 동호회 기준으로
+        if len(target_clubs) > 1 and templates:
+            pairs = [(templates[0], club) for club in target_clubs]
+        else:
+            pairs = [
+                (template, club)
+                for club in target_clubs[:1]
+                for template in templates
+            ]
+
+        for template, club in pairs:
+
+            path = template["path"].format(club_id=int(club["club_id"]))
+
+            if not is_allowed_path(path):
+                continue
+
+            actions.append(
+                {
+                    "label": template["label"].format(club_name=club["club_name"]),
+                    "path": path,
+                }
+            )
+
+    # 고정 경로 바로가기
+    for action in intent.get("actions") or []:
+        if is_allowed_path(action.get("path")):
+            actions.append(dict(action))
+
+    # 중복 제거 + 개수 제한
+    unique_actions = []
+    seen_paths = set()
+
+    for action in actions:
+
+        if action["path"] in seen_paths:
+            continue
+
+        seen_paths.add(action["path"])
+        unique_actions.append(action)
+
+        if len(unique_actions) == MAX_ACTIONS:
+            break
+
+    return {
+        "answer": answer,
+        "steps": steps[:4],
+        "actions": unique_actions,
+        "found": True,
+    }
+
+
+# =========================================================
 # ⭐ LLM에 전달할 사용자 메시지 만들기
 # =========================================================
 
 def _build_llm_message(
     user_id: str,
     question: str,
+    history: list[str] | None = None,
 ) -> tuple[str, dict | None]:
 
     # -----------------------------------------------------
@@ -308,10 +534,12 @@ def _build_llm_message(
     # 3. ML1을 사용할 수 없는 경우
     # -----------------------------------------------------
 
+    history_text = _build_history_text(history)
+
     if not ml1_result.get("available"):
 
         base_message = f"""
-사용자 질문:
+{history_text}[현재 질문]
 {question}
 """.strip()
 
@@ -340,7 +568,7 @@ def _build_llm_message(
         )
 
         base_message = f"""
-사용자 질문:
+{history_text}[현재 질문]
 {question}
 
 [내부 ML1 자연어 요구 분석]
@@ -371,12 +599,18 @@ ML1 결과만으로 사용자의 의도나 사실을 단정하지 마세요.
     return base_message, recommendation_result
 
 
+# 이 점수 이상이면 LLM 없이 규칙 답변을 바로 쓴다.
+# (낮은 점수는 LLM 답변이 실패했을 때 대신 쓴다.)
+INTENT_DIRECT_SCORE = 4
+
+
 class ChatbotService:
 
     def ask(
         self,
         user_id: str,
         message: str,
+        history: list[str] | None = None,
     ) -> ChatbotResponse:
 
         question = message.strip()
@@ -389,10 +623,39 @@ class ChatbotService:
 
         _check_rate_limit(user_id)
 
-        # ⭐ ML1 + 실제 추천 결과 생성
+        # -------------------------------------------------
+        # 1. 실제 동호회 추천 요청 → 추천 + LLM
+        #    (현재 질문만 보고 판단한다. 이전 대화는 보지 않는다.)
+        # -------------------------------------------------
+        is_recommendation = _is_recommendation_question(question)
+
+        # -------------------------------------------------
+        # 2. 앱 이용 / 운영진 질문 → 규칙 답변 (빠르고 정확함)
+        # -------------------------------------------------
+        intent, intent_score = (None, 0)
+
+        if not is_recommendation:
+
+            intent, intent_score = match_intent(question)
+
+            logger.info(
+                "챗봇 의도 매칭: %s (%s)",
+                intent["id"] if intent else None,
+                intent_score,
+            )
+
+            if intent and intent_score >= INTENT_DIRECT_SCORE:
+                return ChatbotResponse(
+                    **_build_intent_reply(user_id, intent)
+                )
+
+        # -------------------------------------------------
+        # 3. 그 외 질문 → LLM
+        # -------------------------------------------------
         llm_message, recommendation_result = _build_llm_message(
             user_id=user_id,
             question=question,
+            history=history,
         )
 
         try:
@@ -409,6 +672,12 @@ class ChatbotService:
                 error,
             )
 
+            # LLM이 안 돼도 비슷한 규칙 답변이 있으면 그걸로 답한다.
+            if intent:
+                return ChatbotResponse(
+                    **_build_intent_reply(user_id, intent)
+                )
+
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=(
@@ -419,6 +688,18 @@ class ChatbotService:
 
         reply = parse_llm_reply(raw_reply)
 
+        if reply == FALLBACK_REPLY:
+
+            logger.warning(
+                "챗봇 응답 형식 오류: %s",
+                raw_reply[:300],
+            )
+
+            if intent:
+                return ChatbotResponse(
+                    **_build_intent_reply(user_id, intent)
+                )
+
         # ⭐ 실제 추천 동호회별 상세 페이지 버튼 추가
         recommendation_actions = _build_recommendation_actions(
             recommendation_result
@@ -426,12 +707,5 @@ class ChatbotService:
 
         if recommendation_actions:
             reply["actions"] = recommendation_actions
-
-        if reply == FALLBACK_REPLY:
-
-            logger.warning(
-                "챗봇 응답 형식 오류: %s",
-                raw_reply[:300],
-            )
 
         return ChatbotResponse(**reply)
