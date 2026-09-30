@@ -79,7 +79,9 @@ function ClubDetail() {
         setMemberStatus(data.status);
 
         if (data.status === "active") {
-          navigate(`/clubs/${clubId}/home`);
+          // ⭐ replace: 상세 페이지를 방문 기록에 남기지 않는다.
+          //   (남기면 동호회 홈에서 뒤로가기 → 상세 → 다시 홈으로 튕김)
+          navigate(`/clubs/${clubId}/home`, { replace: true });
           return;
         }
       } catch (error) {

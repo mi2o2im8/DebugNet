@@ -298,12 +298,6 @@ function App() {
                 element={<ClubDetail />}
               />
 
-              {/* 동호회 이용자용 대시보드 */}
-              <Route
-                path="/clubs/:clubId/home"
-                element={<ClubUserDashboard />}
-              />
-
               {/* 동호회 가입 페이지 */}
               <Route
                 path="/clubs/:clubId/application"
@@ -356,6 +350,12 @@ function App() {
 
               {/* 동호회 운영 화면에 BottomNav 공통 적용 */}
               <Route element={<ClubManageLayout />}>
+
+                {/* 동호회 이용자용 대시보드 (BottomNav 표시를 위해 레이아웃 안으로 이동) */}
+                <Route
+                  path="/clubs/:clubId/home"
+                  element={<ClubUserDashboard />}
+                />
 
                 {/* 동호회 운영 관리 홈 */}
                 <Route

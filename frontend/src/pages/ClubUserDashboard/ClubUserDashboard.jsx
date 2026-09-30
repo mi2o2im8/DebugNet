@@ -26,7 +26,6 @@ import {
 import {
     useNavigate,
     useParams,
-    useLocation,
 } from "react-router-dom";
 
 import { supabase } from "../../../supabaseClient";
@@ -96,7 +95,6 @@ function getNextDate(dayOfWeek, baseDate = new Date()) {
 function ClubUserDashboard() {
     const { clubId } = useParams();
     const navigate = useNavigate();
-    const location = useLocation();
 
     const [dashboard, setDashboard] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -390,45 +388,6 @@ function ClubUserDashboard() {
                 cancelled = true;
             };
         }, [clubId, clubEvents]);
-
-    // ---------------------------------------------------------
-    // MainHome에서 전달받은 활동 리뷰 팝업 자동 열기
-    // ---------------------------------------------------------
-    useEffect(() => {
-        const openReviewEventId =
-            location.state?.openReviewEventId;
-
-        if (
-            !openReviewEventId ||
-            clubEvents.length === 0
-        ) {
-            return;
-        }
-
-        const event = clubEvents.find(
-            (item) =>
-                Number(item.event_id) ===
-                Number(openReviewEventId)
-        );
-
-        if (!event) {
-            return;
-        }
-
-        handleOpenReview(event);
-
-        // 같은 상태로 다시 열리지 않도록 제거
-        navigate(
-            `/clubs/${clubId}/home`,
-            {
-                replace: true,
-                state: {},
-            }
-        );
-    }, [
-        location.state,
-        clubEvents,
-    ]);
 
     // ---------------------------------------------------------
     // 활동 후기 팝업 열기
@@ -996,6 +955,20 @@ function ClubUserDashboard() {
 
     const profileImage = dashboard.representative_image_url;
 
+    // ⭐ 뒤로가기
+    // 챗봇·알림·새로고침·주소 직접 입력으로 들어오면 돌아갈 기록이 없어서
+    // navigate(-1)이 아무 동작도 하지 않는다. 그럴 땐 활동 홈으로 보낸다.
+    const handleBack = () => {
+        const historyIndex = window.history.state?.idx ?? 0;
+
+        if (historyIndex > 0) {
+            navigate(-1);
+            return;
+        }
+
+        navigate("/mainhome", { replace: true });
+    };
+
 
     return (
         <main className="club-user-page">
@@ -1006,7 +979,7 @@ function ClubUserDashboard() {
                     <button
                         type="button"
                         aria-label="뒤로가기"
-                        onClick={() => navigate(-1)}
+                        onClick={handleBack}
                     >
                         <BackButtonIcon />
                     </button>
