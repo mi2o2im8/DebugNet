@@ -1,7 +1,6 @@
 
 from pathlib import Path
 import json
-import math
 
 import joblib
 import numpy as np
@@ -789,6 +788,16 @@ def route_h3_prior(
         "탁구",
     }
 
+    if normalized_sport in existing_four and (not region or not frequency):
+        return {
+            "sport": normalized_sport,
+            "verified": False,
+            "source": "global_missing_context",
+            "strength": "weak",
+            "usage": "fallback_only",
+            "prior": H3_GLOBAL_PRIOR.copy(),
+        }
+
 
     if normalized_sport in existing_four:
 
@@ -1063,14 +1072,18 @@ def run_h3_schedule(
         )
 
 
+        # 후보 시간은 동호회 정기 일정에서 올 수 있다. 장소 자체의
+        # 가용 시간이 확인되지 않은 경우에도 이를 구분해 전달한다.
+        slot_source = venue.get("available_slots")
+        if slot_source is None:
+            slot_source = venue.get("candidate_slots")
+
         venue_slots = [
             normalize_schedule_slot(
                 x
             )
             for x in _as_list(
-                venue.get(
-                    "available_slots"
-                )
+                slot_source
             )
         ]
 
@@ -1103,33 +1116,15 @@ def run_h3_schedule(
                     continue
 
 
-                max_travel = float(
-                    member.get(
-                        "max_travel_minutes",
-                        math.inf
-                    )
-                )
+                max_travel = member.get("max_travel_minutes")
+                travel_map = member.get("travel_minutes_by_venue") or {}
+                travel = travel_map.get(venue_id)
 
-
-                travel_map = (
-                    member.get(
-                        "travel_minutes_by_venue",
-                        {}
-                    )
-                )
-
-
-                travel = float(
-                    travel_map.get(
-                        venue_id,
-                        math.inf
-                    )
-                )
-
-
-                # travel hard constraint
-                if travel > max_travel:
-                    continue
+                # 이동 데이터가 없으면 제약을 적용하지 않는다.
+                # 상위 응답은 이때 이동 미적용을 명시해야 한다.
+                if max_travel is not None and travel is not None:
+                    if float(travel) > float(max_travel):
+                        continue
 
 
                 reachable_members.append(

@@ -287,6 +287,19 @@ export async function createClubEvent(
     );
 }
 
+export async function getClubEventRecommendations(
+    clubId,
+    requestData
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/recommendations`,
+        {
+            method: "POST",
+            body: requestData
+        }
+    );
+}
+
 export async function getClubEvent(
     clubId,
     eventId

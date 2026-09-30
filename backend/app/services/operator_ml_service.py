@@ -1,4 +1,4 @@
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 
 
 
@@ -621,3 +621,239 @@ class OperatorMlService:
             ),
             "missing_axes": unique_missing_axes,
         }
+
+    @classmethod
+    def _h3_slot(cls, event_date: date, start_time: str) -> str | None:
+        start = cls._to_minutes(start_time)
+        bands = (
+            (360, 480, "아침/새벽(6~8시)"),
+            (480, 720, "오전(8~12시)"),
+            (720, 840, "점심(12~14시)"),
+            (840, 1080, "오후(14~18시)"),
+            (1080, 1320, "저녁(18~22시)"),
+        )
+        for lower, upper, label in bands:
+            if lower <= start < upper:
+                day_type = "평일" if event_date.weekday() < 5 else "휴일"
+                return f"{day_type} | {label}"
+        return None
+
+    @classmethod
+    def _h3_member_available(
+        cls,
+        day: str,
+        start: int,
+        end: int,
+        availability: list[dict],
+    ) -> bool:
+        for row in availability:
+            if cls._normalize_day(row.get("day_of_week")) != day:
+                continue
+            member_start = cls._to_minutes(row.get("start_time"))
+            member_end = cls._to_minutes(row.get("end_time"))
+            if member_start is None or member_end is None:
+                continue
+            if member_end <= member_start:
+                member_end += 1440
+            if max(start, member_start) < min(end, member_end):
+                return True
+        return False
+
+    @classmethod
+    def _h3_event_conflict(
+        cls,
+        event_date: date,
+        start: int,
+        end: int,
+        existing_events: list[dict],
+    ) -> bool:
+        for event in existing_events:
+            if event.get("status") == "cancelled":
+                continue
+            if str(event.get("event_date"))[:10] != event_date.isoformat():
+                continue
+            event_start = cls._to_minutes(event.get("start_time"))
+            event_end = cls._to_minutes(event.get("end_time"))
+            if event_start is None:
+                continue
+            if event_end is None:
+                return True
+            if event_end <= event_start:
+                event_end += 1440
+            if max(start, event_start) < min(end, event_end):
+                return True
+        return False
+
+    def recommend_h3_schedules(
+        self,
+        context: dict,
+        start_date: date,
+        end_date: date,
+        minimum_participants: int,
+        guest_allowed: bool,
+        max_guests: int = 0,
+    ) -> dict:
+        """실제 DB 시간 구간을 H3 후보 슬롯으로 변환한다."""
+        day_names = ("월", "화", "수", "목", "금", "토", "일")
+        schedules = context.get("schedules") or []
+        members = context.get("members") or []
+        raw_times = context.get("available_times") or []
+        venues = context.get("venues") or []
+        existing_events = context.get("existing_events") or []
+        times_by_user: dict[str, list[dict]] = {}
+        for row in raw_times:
+            times_by_user.setdefault(str(row.get("user_id")), []).append(row)
+        users_with_times = sum(
+            bool(times_by_user.get(str(member.get("user_id"))))
+            for member in members
+        )
+        coverage = {
+            "active_members": len(members),
+            "members_with_availability": users_with_times,
+            "member_availability_percent": round(
+                users_with_times / len(members) * 100
+            ) if members else 0,
+            "candidate_schedules": 0,
+        }
+        missing = ["venue_availability", "venue_coordinates", "travel_minutes"]
+        club = context.get("club") or {}
+        if not context.get("sport"):
+            missing.append("club_sport")
+        if not context.get("region"):
+            missing.append("club_region")
+        if not club.get("activity_frequency"):
+            missing.append("club_activity_frequency")
+        if not schedules:
+            missing.append("club_schedules")
+        if not members:
+            missing.append("active_members")
+        if users_with_times < len(members):
+            missing.append("member_availability")
+        if not venues:
+            missing.append("club_venue")
+        elif len(venues) > 1:
+            missing.append("venue_selection")
+
+        response = {
+            "recommendations": [],
+            "data_coverage": coverage,
+            "missing_fields": missing,
+            "venue_availability_applied": False,
+            "travel_applied": False,
+            "candidate_time_source": "club_schedules",
+        }
+        if not schedules or not users_with_times:
+            return response
+
+        # 같은 엔진 슬롯에 속하는 실제 일정 중 시간 일치 회원이
+        # 가장 많은 날짜를 대표 후보로 사용한다.
+        best_by_slot: dict[str, dict] = {}
+        candidate_count = 0
+        overnight_schedule_seen = False
+        current_date = start_date
+        while current_date <= end_date:
+            day = day_names[current_date.weekday()]
+            for schedule in schedules:
+                if self._normalize_day(schedule.get("day_of_week")) != day:
+                    continue
+                start = self._to_minutes(schedule.get("start_time"))
+                end = self._to_minutes(schedule.get("end_time"))
+                if start is None or end is None:
+                    continue
+                if end <= start:
+                    overnight_schedule_seen = True
+                    continue  # 생성 폼은 익일 종료를 지원하지 않는다.
+                slot = self._h3_slot(current_date, schedule.get("start_time"))
+                if slot is None or self._h3_event_conflict(
+                    current_date, start, end, existing_events
+                ):
+                    continue
+                matching = {
+                    str(member["user_id"])
+                    for member in members
+                    if member.get("user_id")
+                    and self._h3_member_available(
+                        day, start, end,
+                        times_by_user.get(str(member["user_id"]), []),
+                    )
+                }
+                candidate_count += 1
+                candidate = {
+                    "slot": slot,
+                    "event_date": current_date,
+                    "start_time": str(schedule["start_time"])[:5],
+                    "end_time": str(schedule["end_time"])[:5],
+                    "matching": matching,
+                }
+                previous = best_by_slot.get(slot)
+                if previous is None or len(matching) > len(previous["matching"]):
+                    best_by_slot[slot] = candidate
+            current_date += timedelta(days=1)
+        coverage["candidate_schedules"] = candidate_count
+        if overnight_schedule_seen:
+            missing.append("overnight_schedule_unsupported")
+        if not best_by_slot:
+            missing.append("supported_candidate_time")
+            return response
+
+        venue = venues[0] if len(venues) == 1 else {}
+        venue_id = venue.get("venue_id", venue.get("club_venue_id"))
+        engine_members = [
+            {
+                "member_id": member.get("club_member_id"),
+                "available_slots": [
+                    slot for slot, candidate in best_by_slot.items()
+                    if str(member.get("user_id")) in candidate["matching"]
+                ],
+            }
+            for member in members
+        ]
+        # 엔진은 요청 시점에만 import한다.
+        from app.ml.operator_poc.engines.h3_schedule import run_h3_schedule
+
+        ranked = run_h3_schedule(
+            club={
+                "sport": context.get("sport"),
+                "region": context.get("region"),
+                "activity_frequency": self.OFFICIAL_FREQUENCY.get(
+                    club.get("activity_frequency"),
+                    club.get("activity_frequency"),
+                ),
+                "minimum_participants": minimum_participants,
+                "guest_allowed": guest_allowed,
+            },
+            members=engine_members,
+            venues=[{
+                "venue_id": venue_id,
+                "candidate_slots": list(best_by_slot),
+            }],
+            top_k=len(best_by_slot),
+        )
+        for row in ranked.to_dict(orient="records"):
+            if int(row["guest_needed"]) > max_guests:
+                continue
+            candidate = best_by_slot[row["schedule"]]
+            response["recommendations"].append({
+                "rank": len(response["recommendations"]) + 1,
+                "schedule_slot": row["schedule"],
+                "event_date": candidate["event_date"],
+                "start_time": candidate["start_time"],
+                "end_time": candidate["end_time"],
+                "venue_id": venue_id,
+                "venue_name": venue.get("venue_name"),
+                "venue_address": venue.get("address"),
+                "matching_member_count": int(row["reachable_count"]),
+                "total_members": int(row["total_members"]),
+                "availability_ratio": float(row["availability_ratio"]),
+                "guest_needed": int(row["guest_needed"]),
+                "operation_status": row["operation_status"],
+                "prior_rank": int(row["prior_rank"]),
+                "prior_score": float(row["prior_score"]),
+                "source": row["source"],
+                "strength": row["strength"],
+                "usage": row["usage"],
+                "verified": bool(row["verified"]),
+            })
+            if len(response["recommendations"]) == 3:
+                break
+        return response

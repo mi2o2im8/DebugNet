@@ -24,6 +24,7 @@ import ClubEventPlacePicker
 
 import {
     createClubEvent,
+    getClubEventRecommendations,
     getClubEvent,
     updateClubEvent
 } from "../../api/clubApi";
@@ -100,6 +101,29 @@ const PARTICIPATION_METHOD_LABELS = {
     approval: "운영자 승인"
 };
 
+const H3_MISSING_LABELS = {
+    venue_availability: "장소 이용 가능 시간",
+    venue_coordinates: "장소 좌표",
+    travel_minutes: "회원별 이동시간",
+    club_sport: "동호회 종목",
+    club_region: "동호회 지역",
+    club_activity_frequency: "활동 빈도",
+    club_schedules: "정기 일정",
+    active_members: "활성 회원",
+    member_availability: "일부 회원의 가능 시간",
+    club_venue: "동호회 장소",
+    venue_selection: "복수 장소 중 선택",
+    supported_candidate_time: "추천 가능한 시간대",
+    overnight_schedule_unsupported: "자정을 넘기는 정기 일정"
+};
+
+function localDateString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
 
 function toDatetimeLocal(value) {
     if (!value) {
@@ -134,6 +158,35 @@ function ClubEventForm() {
 
     const [activeStep, setActiveStep] =
         useState(1);
+
+    const [recommendationWindow, setRecommendationWindow] =
+        useState(() => {
+            const start = new Date();
+            const end = new Date(start);
+            end.setDate(end.getDate() + 13);
+            return {
+                startDate: localDateString(start),
+                endDate: localDateString(end),
+                minimumParticipants: ""
+            };
+        });
+    const [recommendationData, setRecommendationData] =
+        useState(null);
+    const [recommendationError, setRecommendationError] =
+        useState("");
+    const [isRecommending, setIsRecommending] =
+        useState(false);
+
+    useEffect(() => {
+        setRecommendationData(null);
+    }, [
+        recommendationWindow.startDate,
+        recommendationWindow.endDate,
+        recommendationWindow.minimumParticipants,
+        formData.guestAllowed,
+        formData.maxGuests,
+        formData.maxParticipants
+    ]);
 
     // -----------------------------------------------------
     // 수정 화면인 경우 기존 일정 조회
@@ -297,6 +350,66 @@ function ClubEventForm() {
                     : "0"
             })
         );
+    };
+
+    const handleRecommend = async () => {
+        setRecommendationError("");
+        setRecommendationData(null);
+        if (!recommendationWindow.minimumParticipants) {
+            setRecommendationError(
+                "추천에 필요한 최소 참여 인원을 입력해주세요."
+            );
+            return;
+        }
+        if (
+            formData.maxParticipants !== ""
+            && Number(recommendationWindow.minimumParticipants)
+                > Number(formData.maxParticipants)
+        ) {
+            setRecommendationError(
+                "최소 참여 인원은 전체 정원을 넘을 수 없습니다."
+            );
+            return;
+        }
+        setIsRecommending(true);
+        try {
+            const result = await getClubEventRecommendations(
+                clubId,
+                {
+                    start_date: recommendationWindow.startDate,
+                    end_date: recommendationWindow.endDate,
+                    minimum_participants: Number(
+                        recommendationWindow.minimumParticipants
+                    ),
+                    guest_allowed: formData.guestAllowed,
+                    max_guests: formData.guestAllowed
+                        ? Number(formData.maxGuests)
+                        : 0
+                }
+            );
+            setRecommendationData(result);
+        } catch (error) {
+            setRecommendationError(
+                error.message || "일정 추천을 불러오지 못했습니다."
+            );
+        } finally {
+            setIsRecommending(false);
+        }
+    };
+
+    const applyRecommendation = (recommendation) => {
+        setFormData((current) => ({
+            ...current,
+            eventDate: recommendation.event_date,
+            startTime: recommendation.start_time.slice(0, 5),
+            endTime: recommendation.end_time.slice(0, 5),
+            ...(recommendation.venue_name ? {
+                location: recommendation.venue_name,
+                locationAddress: recommendation.venue_address || "",
+                latitude: null,
+                longitude: null
+            } : {})
+        }));
     };
 
 
@@ -760,6 +873,161 @@ function ClubEventForm() {
                                 </p>
                             </div>
                         </div>
+
+                        {!isEditMode && (
+                            <div className="club-event-h3">
+                                <div className="club-event-h3-heading">
+                                    <strong>AI 일정 추천</strong>
+                                    <p>
+                                        정기 일정과 회원 가능 시간을 바탕으로
+                                        최대 3개를 제안합니다.
+                                    </p>
+                                </div>
+                                <div className="club-event-h3-inputs">
+                                    <label>
+                                        <span>시작 날짜</span>
+                                        <input
+                                            type="date"
+                                            value={recommendationWindow.startDate}
+                                            onChange={(event) =>
+                                                setRecommendationWindow(
+                                                    (current) => ({
+                                                        ...current,
+                                                        startDate: event.target.value
+                                                    })
+                                                )
+                                            }
+                                        />
+                                    </label>
+                                    <label>
+                                        <span>종료 날짜</span>
+                                        <input
+                                            type="date"
+                                            value={recommendationWindow.endDate}
+                                            onChange={(event) =>
+                                                setRecommendationWindow(
+                                                    (current) => ({
+                                                        ...current,
+                                                        endDate: event.target.value
+                                                    })
+                                                )
+                                            }
+                                        />
+                                    </label>
+                                    <label>
+                                        <span>최소 참여 인원</span>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="1000"
+                                            placeholder="직접 입력"
+                                            value={recommendationWindow.minimumParticipants}
+                                            onChange={(event) =>
+                                                setRecommendationWindow(
+                                                    (current) => ({
+                                                        ...current,
+                                                        minimumParticipants: event.target.value
+                                                    })
+                                                )
+                                            }
+                                        />
+                                    </label>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="club-event-h3-request"
+                                    disabled={isRecommending}
+                                    onClick={handleRecommend}
+                                >
+                                    {isRecommending
+                                        ? "추천 계산 중..."
+                                        : "추천 보기"}
+                                </button>
+                                {recommendationError && (
+                                    <p className="club-event-h3-error">
+                                        {recommendationError}
+                                    </p>
+                                )}
+                                {recommendationData && (
+                                    <div className="club-event-h3-results">
+                                        <p className="club-event-h3-coverage">
+                                            가능 시간 데이터가 있는 회원
+                                            {" "}
+                                            {recommendationData.data_coverage
+                                                .members_with_availability}
+                                            /{recommendationData.data_coverage
+                                                .active_members}명
+                                        </p>
+                                        {recommendationData.recommendations
+                                            .length === 0 && (
+                                            <p>
+                                                조건에 맞는 추천이 없습니다.
+                                                기간이나 최소 인원을 조정해보세요.
+                                            </p>
+                                        )}
+                                        {recommendationData.recommendations.map(
+                                            (item) => (
+                                                <div
+                                                    className="club-event-h3-card"
+                                                    key={`${item.event_date}-${item.start_time}`}
+                                                >
+                                                    <strong>
+                                                        {item.rank}. {item.event_date}
+                                                        {" "}
+                                                        {item.start_time.slice(0, 5)}~
+                                                        {item.end_time.slice(0, 5)}
+                                                    </strong>
+                                                    <span>
+                                                        시간대 일치 회원
+                                                        {" "}
+                                                        {item.matching_member_count}
+                                                        /{item.total_members}명
+                                                    </span>
+                                                    {item.guest_needed > 0 && (
+                                                        <span>
+                                                            게스트 {item.guest_needed}명 필요
+                                                        </span>
+                                                    )}
+                                                    {item.venue_name && (
+                                                        <span>
+                                                            장소: {item.venue_name}
+                                                        </span>
+                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            applyRecommendation(item)
+                                                        }
+                                                    >
+                                                        폼에 적용
+                                                    </button>
+                                                </div>
+                                            )
+                                        )}
+                                        <p className="club-event-h3-missing">
+                                            장소 이용 가능 시간·이동시간은
+                                            추천에 미적용입니다.
+                                            {recommendationData.missing_fields
+                                                .length > 0 && (
+                                                <>
+                                                    {" "}누락: {recommendationData
+                                                        .missing_fields
+                                                        .map((field) =>
+                                                            H3_MISSING_LABELS[field]
+                                                            || field
+                                                        ).join(", ")}
+                                                </>
+                                            )}
+                                        </p>
+                                        <p className="club-event-h3-missing">
+                                            추천을 적용해도 등록되지 않습니다.
+                                            입력 내용을 확인한 뒤 기존 등록
+                                            버튼을 눌러주세요.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         <label>
                             <span>

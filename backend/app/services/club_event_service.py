@@ -30,6 +30,8 @@ from app.schemas.club_events import (
     ClubEventGuestDecisionResponse,
     ClubEventGuestApplyResponse,
     ClubEventParticipantCancelResponse,
+    ClubEventRecommendationRequest,
+    ClubEventRecommendationResponse,
 )
 
 KST = ZoneInfo("Asia/Seoul")
@@ -91,6 +93,30 @@ class ClubEventService:
                 "동호회장 또는 운영진만 "
                 "일정을 관리할 수 있습니다."
             )
+
+    def recommend_events(
+        self,
+        club_id: int,
+        user_id: str,
+        request_data: ClubEventRecommendationRequest,
+    ) -> ClubEventRecommendationResponse:
+        self.validate_management_permission(club_id, user_id)
+        context = self.event_repository.find_h3_recommendation_context(
+            club_id,
+            request_data.start_date.isoformat(),
+            request_data.end_date.isoformat(),
+        )
+        from app.services.operator_ml_service import OperatorMlService
+
+        result = OperatorMlService().recommend_h3_schedules(
+            context=context,
+            start_date=request_data.start_date,
+            end_date=request_data.end_date,
+            minimum_participants=request_data.minimum_participants,
+            guest_allowed=request_data.guest_allowed,
+            max_guests=request_data.max_guests,
+        )
+        return ClubEventRecommendationResponse(**result)
 
     # -----------------------------------------------------
     # 동호회 일정 조회 권한 확인
