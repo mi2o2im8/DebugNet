@@ -1,4 +1,5 @@
 from datetime import (
+    date,
     datetime,
     timezone,
 )
@@ -13,6 +14,12 @@ from app.schemas.club_members import (
     ClubApplicationListItemResponse,
     ClubApplicationListResponse,
     ClubRecruitmentRecommendationResponse,
+    ClubActivityResultMutationResponse,
+    ClubActivityResultMemberResponse,
+    ClubActivityResultEventResponse,
+    ClubActivityResultWorkspaceResponse,
+    ClubParticipationRiskItemResponse,
+    ClubParticipationRiskResponse,
     ClubMemberListItemResponse,
     ClubMemberListResponse,
     ClubMemberUpdateResponse,
@@ -1069,6 +1076,364 @@ class ClubMemberService:
 
         return ClubRecruitmentRecommendationResponse(
             **result
+        )
+
+    # -----------------------------------------------------
+    # H4 실제 활동 결과 입력 화면 데이터
+    # -----------------------------------------------------
+    def get_activity_result_workspace(
+        self,
+        club_id: int,
+        user_id: str,
+        limit: int = 8,
+    ) -> ClubActivityResultWorkspaceResponse:
+
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        member_rows = [
+            row
+            for row in self.member_repository.find_members(
+                club_id
+            )
+            if row.get("status") == "active"
+        ]
+        user_ids = [
+            str(row["user_id"])
+            for row in member_rows
+        ]
+        user_rows = self.member_repository.find_users(
+            user_ids
+        )
+        user_map = {
+            str(row["user_id"]): row
+            for row in user_rows
+        }
+
+        event_rows = (
+            self.member_repository.find_recent_past_events(
+                club_id=club_id,
+                before_date=date.today().isoformat(),
+                limit=limit,
+            )
+        )
+        event_ids = [
+            int(row["event_id"])
+            for row in event_rows
+        ]
+        result_rows = (
+            self.member_repository.find_activity_results(
+                event_ids=event_ids,
+                user_ids=user_ids,
+            )
+        )
+
+        results_by_event: dict[int, dict[str, str]] = {}
+        for row in result_rows:
+            results_by_event.setdefault(
+                int(row["event_id"]),
+                {},
+            )[str(row["user_id"])] = str(row["result"])
+
+        members = []
+        for member in member_rows:
+            member_user_id = str(member["user_id"])
+            profile = user_map.get(member_user_id, {})
+            members.append(
+                ClubActivityResultMemberResponse(
+                    club_member_id=int(
+                        member["club_member_id"]
+                    ),
+                    user_id=member_user_id,
+                    name=profile.get("name") or "이름 없음",
+                    nickname=(
+                        profile.get("nickname")
+                        or "닉네임 없음"
+                    ),
+                    profile_image=profile.get(
+                        "profile_image"
+                    ),
+                    role=member["role"],
+                )
+            )
+
+        events = [
+            ClubActivityResultEventResponse(
+                event_id=int(event["event_id"]),
+                title=event.get("title") or "제목 없는 일정",
+                event_date=event["event_date"],
+                results=results_by_event.get(
+                    int(event["event_id"]),
+                    {},
+                ),
+            )
+            for event in event_rows
+        ]
+
+        return ClubActivityResultWorkspaceResponse(
+            members=members,
+            events=events,
+        )
+
+    # -----------------------------------------------------
+    # H4 일정별 실제 활동 결과 저장
+    # -----------------------------------------------------
+    def save_activity_results(
+        self,
+        club_id: int,
+        event_id: int,
+        manager_user_id: str,
+        results: list,
+    ) -> ClubActivityResultMutationResponse:
+
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=manager_user_id,
+        )
+
+        event = next(
+            (
+                row
+                for row in self.member_repository.find_club_events(
+                    club_id
+                )
+                if int(row["event_id"]) == event_id
+            ),
+            None,
+        )
+        if event is None:
+            raise LookupError(
+                "이 동호회의 일정을 찾을 수 없습니다."
+            )
+        if str(event.get("status")) == "cancelled":
+            raise ValueError(
+                "취소된 일정에는 활동 결과를 기록할 수 없습니다."
+            )
+        if str(event.get("event_date")) >= date.today().isoformat():
+            raise ValueError(
+                "종료된 일정에만 활동 결과를 기록할 수 있습니다."
+            )
+
+        active_user_ids = {
+            str(row["user_id"])
+            for row in self.member_repository.find_members(
+                club_id
+            )
+            if row.get("status") == "active"
+        }
+        requested_user_ids = [
+            str(item.user_id)
+            for item in results
+        ]
+        if len(requested_user_ids) != len(
+            set(requested_user_ids)
+        ):
+            raise ValueError(
+                "같은 회원의 활동 결과가 중복되었습니다."
+            )
+        if not set(requested_user_ids).issubset(
+            active_user_ids
+        ):
+            raise ValueError(
+                "현재 활동 중인 회원만 기록할 수 있습니다."
+            )
+
+        saved_rows = (
+            self.member_repository.upsert_activity_results(
+                event_id=event_id,
+                result_rows=[
+                    {
+                        "user_id": str(item.user_id),
+                        "result": item.result,
+                    }
+                    for item in results
+                ],
+                recorded_by_user_id=manager_user_id,
+            )
+        )
+
+        return ClubActivityResultMutationResponse(
+            event_id=event_id,
+            saved_count=(
+                len(saved_rows)
+                if saved_rows
+                else len(results)
+            ),
+            message="실제 활동 결과를 저장했습니다.",
+        )
+
+    # -----------------------------------------------------
+    # H4 회원 참여 저하 위험 조회
+    # -----------------------------------------------------
+    def get_participation_risks(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> ClubParticipationRiskResponse:
+
+        self.validate_management_permission(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        minimum_results = 4
+        member_rows = [
+            row
+            for row in self.member_repository.find_members(
+                club_id
+            )
+            if row.get("status") == "active"
+        ]
+        user_ids = [
+            str(row["user_id"])
+            for row in member_rows
+        ]
+        user_rows = self.member_repository.find_users(
+            user_ids
+        )
+        user_map = {
+            str(row["user_id"]): row
+            for row in user_rows
+        }
+
+        event_rows = (
+            self.member_repository.find_recent_past_events(
+                club_id=club_id,
+                before_date=date.today().isoformat(),
+                limit=8,
+            )
+        )
+        event_map = {
+            int(row["event_id"]): row
+            for row in event_rows
+        }
+        result_rows = (
+            self.member_repository.find_activity_results(
+                event_ids=list(event_map),
+                user_ids=user_ids,
+            )
+        )
+
+        result_count_by_user = {
+            member_user_id: 0
+            for member_user_id in user_ids
+        }
+        enriched_results = []
+        for row in result_rows:
+            event = event_map.get(int(row["event_id"]))
+            if event is None:
+                continue
+            member_user_id = str(row["user_id"])
+            enriched_results.append({
+                **row,
+                "user_id": member_user_id,
+                "event_date": event["event_date"],
+            })
+            if row.get("result") != "not_eligible":
+                result_count_by_user[member_user_id] = (
+                    result_count_by_user.get(
+                        member_user_id,
+                        0,
+                    ) + 1
+                )
+
+        analyzable_profiles = {
+            member_user_id: user_map.get(
+                member_user_id,
+                {},
+            )
+            for member_user_id in user_ids
+            if result_count_by_user.get(
+                member_user_id,
+                0,
+            ) >= minimum_results
+        }
+        analyses = (
+            self.operator_ml_service
+            .analyze_h4_participation(
+                result_rows=enriched_results,
+                member_profiles=analyzable_profiles,
+            )
+            if analyzable_profiles
+            else {}
+        )
+
+        risks = []
+        for member in member_rows:
+            member_user_id = str(member["user_id"])
+            profile = user_map.get(member_user_id, {})
+            analysis = analyses.get(member_user_id)
+            shared = {
+                "club_member_id": int(
+                    member["club_member_id"]
+                ),
+                "user_id": member_user_id,
+                "name": profile.get("name") or "이름 없음",
+                "nickname": (
+                    profile.get("nickname")
+                    or "닉네임 없음"
+                ),
+                "profile_image": profile.get("profile_image"),
+                "role": member["role"],
+                "eligible_result_count": (
+                    result_count_by_user.get(
+                        member_user_id,
+                        0,
+                    )
+                ),
+            }
+            if analysis is None:
+                risks.append(
+                    ClubParticipationRiskItemResponse(
+                        **shared,
+                        analysis_status="insufficient_data",
+                    )
+                )
+            else:
+                risks.append(
+                    ClubParticipationRiskItemResponse(
+                        **shared,
+                        analysis_status="analyzed",
+                        **analysis,
+                    )
+                )
+
+        risks.sort(
+            key=lambda item: (
+                item.management_priority
+                if item.management_priority is not None
+                else 99,
+                -(item.risk_score or 0),
+                item.nickname,
+            )
+        )
+
+        return ClubParticipationRiskResponse(
+            risks=risks,
+            total=len(risks),
+            analyzed_count=sum(
+                item.analysis_status == "analyzed"
+                for item in risks
+            ),
+            insufficient_data_count=sum(
+                item.analysis_status == "insufficient_data"
+                for item in risks
+            ),
+            observe_count=sum(
+                item.risk_grade == "관찰"
+                for item in risks
+            ),
+            management_required_count=sum(
+                item.risk_grade == "관리 필요"
+                for item in risks
+            ),
+            high_risk_count=sum(
+                item.risk_grade == "고위험"
+                for item in risks
+            ),
+            minimum_eligible_results=minimum_results,
         )
 
     # -----------------------------------------------------

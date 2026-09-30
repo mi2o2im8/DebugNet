@@ -117,6 +117,135 @@ class ClubRecruitmentRecommendationResponse(BaseModel):
         "region_proxy"
     ] = "region_proxy"
 
+
+# ---------------------------------------------------------
+# H4 실제 활동 결과 및 참여 저하 분석
+#
+# attendance_status(일정 전 참석 의사)와 구분되는
+# 일정 종료 후 실제 활동 결과다.
+# ---------------------------------------------------------
+ClubActivityResult = Literal[
+    "attended",
+    "cancelled",
+    "no_show",
+    "not_eligible",
+]
+
+
+class ClubActivityResultInput(BaseModel):
+    user_id: str
+    result: ClubActivityResult
+
+
+class ClubActivityResultBulkRequest(BaseModel):
+    results: list[ClubActivityResultInput] = Field(
+        min_length=1
+    )
+
+
+class ClubActivityResultMutationResponse(BaseModel):
+    event_id: int
+    saved_count: int = Field(ge=0)
+    message: str
+
+
+class ClubActivityResultMemberResponse(BaseModel):
+    club_member_id: int
+    user_id: str
+    name: str
+    nickname: str
+    profile_image: str | None = None
+    role: Literal[
+        "owner",
+        "manager",
+        "member",
+    ]
+
+
+class ClubActivityResultEventResponse(BaseModel):
+    event_id: int
+    title: str
+    event_date: date
+    results: dict[str, ClubActivityResult] = Field(
+        default_factory=dict
+    )
+
+
+class ClubActivityResultWorkspaceResponse(BaseModel):
+    members: list[
+        ClubActivityResultMemberResponse
+    ] = Field(default_factory=list)
+    events: list[
+        ClubActivityResultEventResponse
+    ] = Field(default_factory=list)
+    result_options: list[ClubActivityResult] = Field(
+        default_factory=lambda: [
+            "attended",
+            "cancelled",
+            "no_show",
+            "not_eligible",
+        ]
+    )
+
+
+class ClubParticipationRiskItemResponse(BaseModel):
+    club_member_id: int
+    user_id: str
+    name: str
+    nickname: str
+    profile_image: str | None = None
+    role: Literal[
+        "owner",
+        "manager",
+        "member",
+    ]
+    analysis_status: Literal[
+        "analyzed",
+        "insufficient_data",
+    ]
+    eligible_result_count: int = Field(ge=0)
+    risk_score: float | None = Field(
+        default=None,
+        ge=0,
+        le=100,
+    )
+    risk_grade: Literal[
+        "정상",
+        "관찰",
+        "관리 필요",
+        "고위험",
+    ] | None = None
+    detected_risk: str | None = None
+    reason_candidates: list[str] = Field(
+        default_factory=list
+    )
+    confirmation_questions: list[str] = Field(
+        default_factory=list
+    )
+    operator_action: str | None = None
+    operator_summary: str | None = None
+    management_priority: int | None = None
+    previous_attendance_rate: float | None = None
+    recent_attendance_rate: float | None = None
+    attendance_rate_delta: float | None = None
+    recent_cancel_rate: float | None = None
+    recent_no_show_rate: float | None = None
+    consecutive_nonparticipation: int | None = None
+    missed_opportunities: int | None = None
+
+
+class ClubParticipationRiskResponse(BaseModel):
+    risks: list[
+        ClubParticipationRiskItemResponse
+    ] = Field(default_factory=list)
+    total: int = Field(ge=0)
+    analyzed_count: int = Field(ge=0)
+    insufficient_data_count: int = Field(ge=0)
+    observe_count: int = Field(ge=0)
+    management_required_count: int = Field(ge=0)
+    high_risk_count: int = Field(ge=0)
+    minimum_eligible_results: int = Field(default=4, ge=1)
+
 # ---------------------------------------------------------
 # 가입 신청자 목록 항목
 # ---------------------------------------------------------

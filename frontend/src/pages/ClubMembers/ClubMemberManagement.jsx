@@ -11,6 +11,7 @@ import {
 } from "react-router-dom";
 
 import {
+    FiActivity,
     FiArrowLeft,
     FiCheck,
     FiChevronDown,
@@ -32,6 +33,7 @@ import {
 } from "../../api/clubApi";
 
 import ClubRecruitmentRecommendations from "./ClubRecruitmentRecommendations";
+import ClubParticipationRisk from "./ClubParticipationRisk";
 
 import "./ClubMemberManagement.css";
 
@@ -629,6 +631,24 @@ function ClubMemberManagement() {
                     <FiTarget />
 
                     <span>모집 추천</span>
+
+                    <strong>AI</strong>
+                </button>
+
+                <button
+                    type="button"
+                    className={
+                        activeSection === "participationRisk"
+                            ? "active"
+                            : ""
+                    }
+                    onClick={() =>
+                        setActiveSection("participationRisk")
+                    }
+                >
+                    <FiActivity />
+
+                    <span>참여 분석</span>
 
                     <strong>AI</strong>
                 </button>
@@ -1551,6 +1571,12 @@ function ClubMemberManagement() {
 
             {activeSection === "recommendations" && (
                 <ClubRecruitmentRecommendations
+                    clubId={clubId}
+                />
+            )}
+
+            {activeSection === "participationRisk" && (
+                <ClubParticipationRisk
                     clubId={clubId}
                 />
             )}

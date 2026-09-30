@@ -1338,3 +1338,111 @@ class OperatorMlService:
             if len(response["recommendations"]) == 3:
                 break
         return response
+
+    def analyze_h4_participation(
+        self,
+        result_rows: list[dict],
+        member_profiles: dict[str, dict],
+    ) -> dict[str, dict]:
+        """실제 활동 결과를 H4 엔진 입력으로 변환한다.
+
+        일정 전 참석 의사(attendance_status)는 사용하지 않는다.
+        result_rows에는 운영자가 일정 종료 후 기록한 실제 결과만
+        전달되어야 한다.
+        """
+        import pandas as pd
+
+        from app.ml.operator_poc.engines.h4_participation import (
+            run_h4_participation_risk,
+        )
+
+        event_log = pd.DataFrame(
+            [
+                {
+                    "회원_ID": str(row["user_id"]),
+                    "week": row["event_date"],
+                    "event_status": row["result"],
+                }
+                for row in result_rows
+            ],
+            columns=[
+                "회원_ID",
+                "week",
+                "event_status",
+            ],
+        )
+
+        engine_profiles = {}
+        for user_id, profile in member_profiles.items():
+            weekly_frequency = self.USER_FREQUENCY_VALUE.get(
+                self._normalize_text(
+                    profile.get("activity_frequency")
+                )
+            )
+            desired_monthly = (
+                float(weekly_frequency) * 4
+                if weekly_frequency is not None
+                else 4.0
+            )
+            engine_profiles[str(user_id)] = {
+                "희망월활동횟수": desired_monthly,
+            }
+
+        output = run_h4_participation_risk(
+            event_log=event_log,
+            member_profiles=engine_profiles,
+        )
+
+        def split_values(value, separator=","):
+            text = str(value or "").strip()
+            if not text or text == "-":
+                return []
+            return [
+                item.strip()
+                for item in text.split(separator)
+                if item.strip()
+            ]
+
+        analyses = {}
+        for row in output.to_dict(orient="records"):
+            user_id = str(row["회원_ID"])
+            analyses[user_id] = {
+                "risk_score": float(row["Risk_Score"]),
+                "risk_grade": str(row["Risk_Grade"]),
+                "detected_risk": str(row["Detected_Risk"]),
+                "reason_candidates": split_values(
+                    row.get("Reason_Candidates")
+                ),
+                "confirmation_questions": split_values(
+                    row.get("Confirmation_Question"),
+                    separator="/",
+                ),
+                "operator_action": str(row["Operator_Action"]),
+                "operator_summary": str(row["Operator_Summary"]),
+                "management_priority": int(
+                    row["관리우선순위"]
+                ),
+                "previous_attendance_rate": float(
+                    row["이전4주_참석률"]
+                ),
+                "recent_attendance_rate": float(
+                    row["최근4주_참석률"]
+                ),
+                "attendance_rate_delta": float(
+                    row["참석률_변화폭"]
+                ),
+                "recent_cancel_rate": float(
+                    row["최근4주_취소율"]
+                ),
+                "recent_no_show_rate": float(
+                    row["최근4주_노쇼율"]
+                ),
+                "consecutive_nonparticipation": int(
+                    row["연속미참여횟수"]
+                ),
+                "missed_opportunities": int(
+                    row["마지막참석후_미참여기회"]
+                ),
+            }
+
+        return analyses

@@ -17,6 +17,10 @@ from app.schemas.club_members import (
     ClubApplicationDecisionResponse,
     ClubApplicationListResponse,
     ClubRecruitmentRecommendationResponse,
+    ClubActivityResultBulkRequest,
+    ClubActivityResultMutationResponse,
+    ClubActivityResultWorkspaceResponse,
+    ClubParticipationRiskResponse,
     ClubMemberListResponse,
     ClubMemberRoleUpdateRequest,
     ClubMemberStatusUpdateRequest,
@@ -38,6 +42,140 @@ router = APIRouter(
     prefix="/api/clubs/{club_id}",
     tags=["Club Members"],
 )
+
+
+# ---------------------------------------------------------
+# H4 실제 활동 결과 입력 화면 데이터
+#
+# GET /api/clubs/{club_id}/activity-results
+# ---------------------------------------------------------
+@router.get(
+    "/activity-results",
+    response_model=ClubActivityResultWorkspaceResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_club_activity_results(
+    club_id: int,
+    limit: int = Query(default=8, ge=1, le=12),
+    manager_user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    member_service = ClubMemberService()
+
+    try:
+        return member_service.get_activity_result_workspace(
+            club_id=club_id,
+            user_id=manager_user_id,
+            limit=limit,
+        )
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+    except Exception as error:
+        print("H4 활동 결과 조회 실제 오류:", repr(error))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="실제 활동 결과를 불러오지 못했습니다.",
+        ) from error
+
+
+# ---------------------------------------------------------
+# H4 일정별 실제 활동 결과 저장
+#
+# PUT /api/clubs/{club_id}/events/{event_id}/activity-results
+# ---------------------------------------------------------
+@router.put(
+    "/events/{event_id}/activity-results",
+    response_model=ClubActivityResultMutationResponse,
+    status_code=status.HTTP_200_OK,
+)
+def save_club_activity_results(
+    club_id: int,
+    event_id: int,
+    request_data: ClubActivityResultBulkRequest,
+    manager_user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    member_service = ClubMemberService()
+
+    try:
+        return member_service.save_activity_results(
+            club_id=club_id,
+            event_id=event_id,
+            manager_user_id=manager_user_id,
+            results=request_data.results,
+        )
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+    except Exception as error:
+        print("H4 활동 결과 저장 실제 오류:", repr(error))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="실제 활동 결과를 저장하지 못했습니다.",
+        ) from error
+
+
+# ---------------------------------------------------------
+# H4 회원 참여 저하 위험 조회
+#
+# GET /api/clubs/{club_id}/participation-risks
+# ---------------------------------------------------------
+@router.get(
+    "/participation-risks",
+    response_model=ClubParticipationRiskResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_club_participation_risks(
+    club_id: int,
+    manager_user_id: str = Depends(
+        get_current_user_id
+    ),
+):
+    member_service = ClubMemberService()
+
+    try:
+        return member_service.get_participation_risks(
+            club_id=club_id,
+            user_id=manager_user_id,
+        )
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+    except Exception as error:
+        print("H4 참여 위험 조회 실제 오류:", repr(error))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="참여 위험 분석을 현재 사용할 수 없습니다.",
+        ) from error
 
 
 # ---------------------------------------------------------

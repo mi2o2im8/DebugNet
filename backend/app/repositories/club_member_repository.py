@@ -73,7 +73,8 @@ class ClubMemberRepository:
                 "email, "
                 "profile_image, "
                 "phone, "
-                "bio"
+                "bio, "
+                "activity_frequency"
             )
             .in_(
                 "user_id",
@@ -1122,6 +1123,104 @@ class ClubMemberRepository:
             .order(
                 "event_date",
                 desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # H4 결과 입력 대상으로 사용할 종료 일정 조회
+    # -----------------------------------------------------
+    def find_recent_past_events(
+        self,
+        club_id: int,
+        before_date: str,
+        limit: int = 8,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("club_events")
+            .select(
+                "event_id, "
+                "title, "
+                "event_date, "
+                "status"
+            )
+            .eq("club_id", club_id)
+            .lt("event_date", before_date)
+            .neq("status", "cancelled")
+            .order("event_date", desc=True)
+            .limit(limit)
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # H4 실제 활동 결과 조회
+    # -----------------------------------------------------
+    def find_activity_results(
+        self,
+        event_ids: list[int],
+        user_ids: list[str],
+    ) -> list[dict]:
+
+        if not event_ids or not user_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("club_event_activity_results")
+            .select(
+                "activity_result_id, "
+                "event_id, "
+                "user_id, "
+                "result, "
+                "recorded_at, "
+                "recorded_by_user_id"
+            )
+            .in_("event_id", event_ids)
+            .in_("user_id", user_ids)
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # H4 일정별 실제 활동 결과 저장
+    # -----------------------------------------------------
+    def upsert_activity_results(
+        self,
+        event_id: int,
+        result_rows: list[dict],
+        recorded_by_user_id: str,
+    ) -> list[dict]:
+
+        if not result_rows:
+            return []
+
+        now = datetime.now(timezone.utc).isoformat()
+        payload = [
+            {
+                "event_id": event_id,
+                "user_id": row["user_id"],
+                "result": row["result"],
+                "recorded_by_user_id": (
+                    recorded_by_user_id
+                ),
+                "recorded_at": now,
+            }
+            for row in result_rows
+        ]
+
+        response = (
+            self.admin_client
+            .table("club_event_activity_results")
+            .upsert(
+                payload,
+                on_conflict="event_id,user_id",
             )
             .execute()
         )

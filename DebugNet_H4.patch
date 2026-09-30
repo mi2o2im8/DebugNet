@@ -1,0 +1,2353 @@
+diff --git a/backend/app/repositories/club_member_repository.py b/backend/app/repositories/club_member_repository.py
+index 96f2e9a..4ce04f2 100644
+--- a/backend/app/repositories/club_member_repository.py
++++ b/backend/app/repositories/club_member_repository.py
+@@ -73,7 +73,8 @@ class ClubMemberRepository:
+                 "email, "
+                 "profile_image, "
+                 "phone, "
+-                "bio"
++                "bio, "
++                "activity_frequency"
+             )
+             .in_(
+                 "user_id",
+@@ -1128,6 +1129,104 @@ class ClubMemberRepository:
+ 
+         return response.data or []
+ 
++    # -----------------------------------------------------
++    # H4 결과 입력 대상으로 사용할 종료 일정 조회
++    # -----------------------------------------------------
++    def find_recent_past_events(
++        self,
++        club_id: int,
++        before_date: str,
++        limit: int = 8,
++    ) -> list[dict]:
++
++        response = (
++            self.admin_client
++            .table("club_events")
++            .select(
++                "event_id, "
++                "title, "
++                "event_date, "
++                "status"
++            )
++            .eq("club_id", club_id)
++            .lt("event_date", before_date)
++            .neq("status", "cancelled")
++            .order("event_date", desc=True)
++            .limit(limit)
++            .execute()
++        )
++
++        return response.data or []
++
++    # -----------------------------------------------------
++    # H4 실제 활동 결과 조회
++    # -----------------------------------------------------
++    def find_activity_results(
++        self,
++        event_ids: list[int],
++        user_ids: list[str],
++    ) -> list[dict]:
++
++        if not event_ids or not user_ids:
++            return []
++
++        response = (
++            self.admin_client
++            .table("club_event_activity_results")
++            .select(
++                "activity_result_id, "
++                "event_id, "
++                "user_id, "
++                "result, "
++                "recorded_at, "
++                "recorded_by_user_id"
++            )
++            .in_("event_id", event_ids)
++            .in_("user_id", user_ids)
++            .execute()
++        )
++
++        return response.data or []
++
++    # -----------------------------------------------------
++    # H4 일정별 실제 활동 결과 저장
++    # -----------------------------------------------------
++    def upsert_activity_results(
++        self,
++        event_id: int,
++        result_rows: list[dict],
++        recorded_by_user_id: str,
++    ) -> list[dict]:
++
++        if not result_rows:
++            return []
++
++        now = datetime.now(timezone.utc).isoformat()
++        payload = [
++            {
++                "event_id": event_id,
++                "user_id": row["user_id"],
++                "result": row["result"],
++                "recorded_by_user_id": (
++                    recorded_by_user_id
++                ),
++                "recorded_at": now,
++            }
++            for row in result_rows
++        ]
++
++        response = (
++            self.admin_client
++            .table("club_event_activity_results")
++            .upsert(
++                payload,
++                on_conflict="event_id,user_id",
++            )
++            .execute()
++        )
++
++        return response.data or []
++
+     # -----------------------------------------------------
+     # 동호회 일정에 연결된 투표 조회
+     # -----------------------------------------------------
+diff --git a/backend/app/routers/club_members.py b/backend/app/routers/club_members.py
+index c6ffa2c..3167dd8 100644
+--- a/backend/app/routers/club_members.py
++++ b/backend/app/routers/club_members.py
+@@ -17,6 +17,10 @@ from app.schemas.club_members import (
+     ClubApplicationDecisionResponse,
+     ClubApplicationListResponse,
+     ClubRecruitmentRecommendationResponse,
++    ClubActivityResultBulkRequest,
++    ClubActivityResultMutationResponse,
++    ClubActivityResultWorkspaceResponse,
++    ClubParticipationRiskResponse,
+     ClubMemberListResponse,
+     ClubMemberRoleUpdateRequest,
+     ClubMemberStatusUpdateRequest,
+@@ -40,6 +44,140 @@ router = APIRouter(
+ )
+ 
+ 
++# ---------------------------------------------------------
++# H4 실제 활동 결과 입력 화면 데이터
++#
++# GET /api/clubs/{club_id}/activity-results
++# ---------------------------------------------------------
++@router.get(
++    "/activity-results",
++    response_model=ClubActivityResultWorkspaceResponse,
++    status_code=status.HTTP_200_OK,
++)
++def get_club_activity_results(
++    club_id: int,
++    limit: int = Query(default=8, ge=1, le=12),
++    manager_user_id: str = Depends(
++        get_current_user_id
++    ),
++):
++    member_service = ClubMemberService()
++
++    try:
++        return member_service.get_activity_result_workspace(
++            club_id=club_id,
++            user_id=manager_user_id,
++            limit=limit,
++        )
++    except LookupError as error:
++        raise HTTPException(
++            status_code=status.HTTP_404_NOT_FOUND,
++            detail=str(error),
++        ) from error
++    except PermissionError as error:
++        raise HTTPException(
++            status_code=status.HTTP_403_FORBIDDEN,
++            detail=str(error),
++        ) from error
++    except Exception as error:
++        print("H4 활동 결과 조회 실제 오류:", repr(error))
++        raise HTTPException(
++            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
++            detail="실제 활동 결과를 불러오지 못했습니다.",
++        ) from error
++
++
++# ---------------------------------------------------------
++# H4 일정별 실제 활동 결과 저장
++#
++# PUT /api/clubs/{club_id}/events/{event_id}/activity-results
++# ---------------------------------------------------------
++@router.put(
++    "/events/{event_id}/activity-results",
++    response_model=ClubActivityResultMutationResponse,
++    status_code=status.HTTP_200_OK,
++)
++def save_club_activity_results(
++    club_id: int,
++    event_id: int,
++    request_data: ClubActivityResultBulkRequest,
++    manager_user_id: str = Depends(
++        get_current_user_id
++    ),
++):
++    member_service = ClubMemberService()
++
++    try:
++        return member_service.save_activity_results(
++            club_id=club_id,
++            event_id=event_id,
++            manager_user_id=manager_user_id,
++            results=request_data.results,
++        )
++    except LookupError as error:
++        raise HTTPException(
++            status_code=status.HTTP_404_NOT_FOUND,
++            detail=str(error),
++        ) from error
++    except PermissionError as error:
++        raise HTTPException(
++            status_code=status.HTTP_403_FORBIDDEN,
++            detail=str(error),
++        ) from error
++    except ValueError as error:
++        raise HTTPException(
++            status_code=status.HTTP_400_BAD_REQUEST,
++            detail=str(error),
++        ) from error
++    except Exception as error:
++        print("H4 활동 결과 저장 실제 오류:", repr(error))
++        raise HTTPException(
++            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
++            detail="실제 활동 결과를 저장하지 못했습니다.",
++        ) from error
++
++
++# ---------------------------------------------------------
++# H4 회원 참여 저하 위험 조회
++#
++# GET /api/clubs/{club_id}/participation-risks
++# ---------------------------------------------------------
++@router.get(
++    "/participation-risks",
++    response_model=ClubParticipationRiskResponse,
++    status_code=status.HTTP_200_OK,
++)
++def get_club_participation_risks(
++    club_id: int,
++    manager_user_id: str = Depends(
++        get_current_user_id
++    ),
++):
++    member_service = ClubMemberService()
++
++    try:
++        return member_service.get_participation_risks(
++            club_id=club_id,
++            user_id=manager_user_id,
++        )
++    except LookupError as error:
++        raise HTTPException(
++            status_code=status.HTTP_404_NOT_FOUND,
++            detail=str(error),
++        ) from error
++    except PermissionError as error:
++        raise HTTPException(
++            status_code=status.HTTP_403_FORBIDDEN,
++            detail=str(error),
++        ) from error
++    except Exception as error:
++        print("H4 참여 위험 조회 실제 오류:", repr(error))
++        raise HTTPException(
++            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
++            detail="참여 위험 분석을 현재 사용할 수 없습니다.",
++        ) from error
++
++
+ # ---------------------------------------------------------
+ # 현재 동호회 회원 목록 조회
+ #
+diff --git a/backend/app/schemas/club_members.py b/backend/app/schemas/club_members.py
+index 949ccfe..4b8d153 100644
+--- a/backend/app/schemas/club_members.py
++++ b/backend/app/schemas/club_members.py
+@@ -117,6 +117,135 @@ class ClubRecruitmentRecommendationResponse(BaseModel):
+         "region_proxy"
+     ] = "region_proxy"
+ 
++
++# ---------------------------------------------------------
++# H4 실제 활동 결과 및 참여 저하 분석
++#
++# attendance_status(일정 전 참석 의사)와 구분되는
++# 일정 종료 후 실제 활동 결과다.
++# ---------------------------------------------------------
++ClubActivityResult = Literal[
++    "attended",
++    "cancelled",
++    "no_show",
++    "not_eligible",
++]
++
++
++class ClubActivityResultInput(BaseModel):
++    user_id: str
++    result: ClubActivityResult
++
++
++class ClubActivityResultBulkRequest(BaseModel):
++    results: list[ClubActivityResultInput] = Field(
++        min_length=1
++    )
++
++
++class ClubActivityResultMutationResponse(BaseModel):
++    event_id: int
++    saved_count: int = Field(ge=0)
++    message: str
++
++
++class ClubActivityResultMemberResponse(BaseModel):
++    club_member_id: int
++    user_id: str
++    name: str
++    nickname: str
++    profile_image: str | None = None
++    role: Literal[
++        "owner",
++        "manager",
++        "member",
++    ]
++
++
++class ClubActivityResultEventResponse(BaseModel):
++    event_id: int
++    title: str
++    event_date: date
++    results: dict[str, ClubActivityResult] = Field(
++        default_factory=dict
++    )
++
++
++class ClubActivityResultWorkspaceResponse(BaseModel):
++    members: list[
++        ClubActivityResultMemberResponse
++    ] = Field(default_factory=list)
++    events: list[
++        ClubActivityResultEventResponse
++    ] = Field(default_factory=list)
++    result_options: list[ClubActivityResult] = Field(
++        default_factory=lambda: [
++            "attended",
++            "cancelled",
++            "no_show",
++            "not_eligible",
++        ]
++    )
++
++
++class ClubParticipationRiskItemResponse(BaseModel):
++    club_member_id: int
++    user_id: str
++    name: str
++    nickname: str
++    profile_image: str | None = None
++    role: Literal[
++        "owner",
++        "manager",
++        "member",
++    ]
++    analysis_status: Literal[
++        "analyzed",
++        "insufficient_data",
++    ]
++    eligible_result_count: int = Field(ge=0)
++    risk_score: float | None = Field(
++        default=None,
++        ge=0,
++        le=100,
++    )
++    risk_grade: Literal[
++        "정상",
++        "관찰",
++        "관리 필요",
++        "고위험",
++    ] | None = None
++    detected_risk: str | None = None
++    reason_candidates: list[str] = Field(
++        default_factory=list
++    )
++    confirmation_questions: list[str] = Field(
++        default_factory=list
++    )
++    operator_action: str | None = None
++    operator_summary: str | None = None
++    management_priority: int | None = None
++    previous_attendance_rate: float | None = None
++    recent_attendance_rate: float | None = None
++    attendance_rate_delta: float | None = None
++    recent_cancel_rate: float | None = None
++    recent_no_show_rate: float | None = None
++    consecutive_nonparticipation: int | None = None
++    missed_opportunities: int | None = None
++
++
++class ClubParticipationRiskResponse(BaseModel):
++    risks: list[
++        ClubParticipationRiskItemResponse
++    ] = Field(default_factory=list)
++    total: int = Field(ge=0)
++    analyzed_count: int = Field(ge=0)
++    insufficient_data_count: int = Field(ge=0)
++    observe_count: int = Field(ge=0)
++    management_required_count: int = Field(ge=0)
++    high_risk_count: int = Field(ge=0)
++    minimum_eligible_results: int = Field(default=4, ge=1)
++
+ # ---------------------------------------------------------
+ # 가입 신청자 목록 항목
+ # ---------------------------------------------------------
+diff --git a/backend/app/services/club_member_service.py b/backend/app/services/club_member_service.py
+index 99a0d75..b063338 100644
+--- a/backend/app/services/club_member_service.py
++++ b/backend/app/services/club_member_service.py
+@@ -1,4 +1,5 @@
+ from datetime import (
++    date,
+     datetime,
+     timezone,
+ )
+@@ -13,6 +14,12 @@ from app.schemas.club_members import (
+     ClubApplicationListItemResponse,
+     ClubApplicationListResponse,
+     ClubRecruitmentRecommendationResponse,
++    ClubActivityResultMutationResponse,
++    ClubActivityResultMemberResponse,
++    ClubActivityResultEventResponse,
++    ClubActivityResultWorkspaceResponse,
++    ClubParticipationRiskItemResponse,
++    ClubParticipationRiskResponse,
+     ClubMemberListItemResponse,
+     ClubMemberListResponse,
+     ClubMemberUpdateResponse,
+@@ -1071,6 +1078,364 @@ class ClubMemberService:
+             **result
+         )
+ 
++    # -----------------------------------------------------
++    # H4 실제 활동 결과 입력 화면 데이터
++    # -----------------------------------------------------
++    def get_activity_result_workspace(
++        self,
++        club_id: int,
++        user_id: str,
++        limit: int = 8,
++    ) -> ClubActivityResultWorkspaceResponse:
++
++        self.validate_management_permission(
++            club_id=club_id,
++            user_id=user_id,
++        )
++
++        member_rows = [
++            row
++            for row in self.member_repository.find_members(
++                club_id
++            )
++            if row.get("status") == "active"
++        ]
++        user_ids = [
++            str(row["user_id"])
++            for row in member_rows
++        ]
++        user_rows = self.member_repository.find_users(
++            user_ids
++        )
++        user_map = {
++            str(row["user_id"]): row
++            for row in user_rows
++        }
++
++        event_rows = (
++            self.member_repository.find_recent_past_events(
++                club_id=club_id,
++                before_date=date.today().isoformat(),
++                limit=limit,
++            )
++        )
++        event_ids = [
++            int(row["event_id"])
++            for row in event_rows
++        ]
++        result_rows = (
++            self.member_repository.find_activity_results(
++                event_ids=event_ids,
++                user_ids=user_ids,
++            )
++        )
++
++        results_by_event: dict[int, dict[str, str]] = {}
++        for row in result_rows:
++            results_by_event.setdefault(
++                int(row["event_id"]),
++                {},
++            )[str(row["user_id"])] = str(row["result"])
++
++        members = []
++        for member in member_rows:
++            member_user_id = str(member["user_id"])
++            profile = user_map.get(member_user_id, {})
++            members.append(
++                ClubActivityResultMemberResponse(
++                    club_member_id=int(
++                        member["club_member_id"]
++                    ),
++                    user_id=member_user_id,
++                    name=profile.get("name") or "이름 없음",
++                    nickname=(
++                        profile.get("nickname")
++                        or "닉네임 없음"
++                    ),
++                    profile_image=profile.get(
++                        "profile_image"
++                    ),
++                    role=member["role"],
++                )
++            )
++
++        events = [
++            ClubActivityResultEventResponse(
++                event_id=int(event["event_id"]),
++                title=event.get("title") or "제목 없는 일정",
++                event_date=event["event_date"],
++                results=results_by_event.get(
++                    int(event["event_id"]),
++                    {},
++                ),
++            )
++            for event in event_rows
++        ]
++
++        return ClubActivityResultWorkspaceResponse(
++            members=members,
++            events=events,
++        )
++
++    # -----------------------------------------------------
++    # H4 일정별 실제 활동 결과 저장
++    # -----------------------------------------------------
++    def save_activity_results(
++        self,
++        club_id: int,
++        event_id: int,
++        manager_user_id: str,
++        results: list,
++    ) -> ClubActivityResultMutationResponse:
++
++        self.validate_management_permission(
++            club_id=club_id,
++            user_id=manager_user_id,
++        )
++
++        event = next(
++            (
++                row
++                for row in self.member_repository.find_club_events(
++                    club_id
++                )
++                if int(row["event_id"]) == event_id
++            ),
++            None,
++        )
++        if event is None:
++            raise LookupError(
++                "이 동호회의 일정을 찾을 수 없습니다."
++            )
++        if str(event.get("status")) == "cancelled":
++            raise ValueError(
++                "취소된 일정에는 활동 결과를 기록할 수 없습니다."
++            )
++        if str(event.get("event_date")) >= date.today().isoformat():
++            raise ValueError(
++                "종료된 일정에만 활동 결과를 기록할 수 있습니다."
++            )
++
++        active_user_ids = {
++            str(row["user_id"])
++            for row in self.member_repository.find_members(
++                club_id
++            )
++            if row.get("status") == "active"
++        }
++        requested_user_ids = [
++            str(item.user_id)
++            for item in results
++        ]
++        if len(requested_user_ids) != len(
++            set(requested_user_ids)
++        ):
++            raise ValueError(
++                "같은 회원의 활동 결과가 중복되었습니다."
++            )
++        if not set(requested_user_ids).issubset(
++            active_user_ids
++        ):
++            raise ValueError(
++                "현재 활동 중인 회원만 기록할 수 있습니다."
++            )
++
++        saved_rows = (
++            self.member_repository.upsert_activity_results(
++                event_id=event_id,
++                result_rows=[
++                    {
++                        "user_id": str(item.user_id),
++                        "result": item.result,
++                    }
++                    for item in results
++                ],
++                recorded_by_user_id=manager_user_id,
++            )
++        )
++
++        return ClubActivityResultMutationResponse(
++            event_id=event_id,
++            saved_count=(
++                len(saved_rows)
++                if saved_rows
++                else len(results)
++            ),
++            message="실제 활동 결과를 저장했습니다.",
++        )
++
++    # -----------------------------------------------------
++    # H4 회원 참여 저하 위험 조회
++    # -----------------------------------------------------
++    def get_participation_risks(
++        self,
++        club_id: int,
++        user_id: str,
++    ) -> ClubParticipationRiskResponse:
++
++        self.validate_management_permission(
++            club_id=club_id,
++            user_id=user_id,
++        )
++
++        minimum_results = 4
++        member_rows = [
++            row
++            for row in self.member_repository.find_members(
++                club_id
++            )
++            if row.get("status") == "active"
++        ]
++        user_ids = [
++            str(row["user_id"])
++            for row in member_rows
++        ]
++        user_rows = self.member_repository.find_users(
++            user_ids
++        )
++        user_map = {
++            str(row["user_id"]): row
++            for row in user_rows
++        }
++
++        event_rows = (
++            self.member_repository.find_recent_past_events(
++                club_id=club_id,
++                before_date=date.today().isoformat(),
++                limit=8,
++            )
++        )
++        event_map = {
++            int(row["event_id"]): row
++            for row in event_rows
++        }
++        result_rows = (
++            self.member_repository.find_activity_results(
++                event_ids=list(event_map),
++                user_ids=user_ids,
++            )
++        )
++
++        result_count_by_user = {
++            member_user_id: 0
++            for member_user_id in user_ids
++        }
++        enriched_results = []
++        for row in result_rows:
++            event = event_map.get(int(row["event_id"]))
++            if event is None:
++                continue
++            member_user_id = str(row["user_id"])
++            enriched_results.append({
++                **row,
++                "user_id": member_user_id,
++                "event_date": event["event_date"],
++            })
++            if row.get("result") != "not_eligible":
++                result_count_by_user[member_user_id] = (
++                    result_count_by_user.get(
++                        member_user_id,
++                        0,
++                    ) + 1
++                )
++
++        analyzable_profiles = {
++            member_user_id: user_map.get(
++                member_user_id,
++                {},
++            )
++            for member_user_id in user_ids
++            if result_count_by_user.get(
++                member_user_id,
++                0,
++            ) >= minimum_results
++        }
++        analyses = (
++            self.operator_ml_service
++            .analyze_h4_participation(
++                result_rows=enriched_results,
++                member_profiles=analyzable_profiles,
++            )
++            if analyzable_profiles
++            else {}
++        )
++
++        risks = []
++        for member in member_rows:
++            member_user_id = str(member["user_id"])
++            profile = user_map.get(member_user_id, {})
++            analysis = analyses.get(member_user_id)
++            shared = {
++                "club_member_id": int(
++                    member["club_member_id"]
++                ),
++                "user_id": member_user_id,
++                "name": profile.get("name") or "이름 없음",
++                "nickname": (
++                    profile.get("nickname")
++                    or "닉네임 없음"
++                ),
++                "profile_image": profile.get("profile_image"),
++                "role": member["role"],
++                "eligible_result_count": (
++                    result_count_by_user.get(
++                        member_user_id,
++                        0,
++                    )
++                ),
++            }
++            if analysis is None:
++                risks.append(
++                    ClubParticipationRiskItemResponse(
++                        **shared,
++                        analysis_status="insufficient_data",
++                    )
++                )
++            else:
++                risks.append(
++                    ClubParticipationRiskItemResponse(
++                        **shared,
++                        analysis_status="analyzed",
++                        **analysis,
++                    )
++                )
++
++        risks.sort(
++            key=lambda item: (
++                item.management_priority
++                if item.management_priority is not None
++                else 99,
++                -(item.risk_score or 0),
++                item.nickname,
++            )
++        )
++
++        return ClubParticipationRiskResponse(
++            risks=risks,
++            total=len(risks),
++            analyzed_count=sum(
++                item.analysis_status == "analyzed"
++                for item in risks
++            ),
++            insufficient_data_count=sum(
++                item.analysis_status == "insufficient_data"
++                for item in risks
++            ),
++            observe_count=sum(
++                item.risk_grade == "관찰"
++                for item in risks
++            ),
++            management_required_count=sum(
++                item.risk_grade == "관리 필요"
++                for item in risks
++            ),
++            high_risk_count=sum(
++                item.risk_grade == "고위험"
++                for item in risks
++            ),
++            minimum_eligible_results=minimum_results,
++        )
++
+     # -----------------------------------------------------
+     # 가입 신청 승인 또는 거절
+     # -----------------------------------------------------
+diff --git a/backend/app/services/operator_ml_service.py b/backend/app/services/operator_ml_service.py
+index bb1c188..5f00012 100644
+--- a/backend/app/services/operator_ml_service.py
++++ b/backend/app/services/operator_ml_service.py
+@@ -1338,3 +1338,111 @@ class OperatorMlService:
+             if len(response["recommendations"]) == 3:
+                 break
+         return response
++
++    def analyze_h4_participation(
++        self,
++        result_rows: list[dict],
++        member_profiles: dict[str, dict],
++    ) -> dict[str, dict]:
++        """실제 활동 결과를 H4 엔진 입력으로 변환한다.
++
++        일정 전 참석 의사(attendance_status)는 사용하지 않는다.
++        result_rows에는 운영자가 일정 종료 후 기록한 실제 결과만
++        전달되어야 한다.
++        """
++        import pandas as pd
++
++        from app.ml.operator_poc.engines.h4_participation import (
++            run_h4_participation_risk,
++        )
++
++        event_log = pd.DataFrame(
++            [
++                {
++                    "회원_ID": str(row["user_id"]),
++                    "week": row["event_date"],
++                    "event_status": row["result"],
++                }
++                for row in result_rows
++            ],
++            columns=[
++                "회원_ID",
++                "week",
++                "event_status",
++            ],
++        )
++
++        engine_profiles = {}
++        for user_id, profile in member_profiles.items():
++            weekly_frequency = self.USER_FREQUENCY_VALUE.get(
++                self._normalize_text(
++                    profile.get("activity_frequency")
++                )
++            )
++            desired_monthly = (
++                float(weekly_frequency) * 4
++                if weekly_frequency is not None
++                else 4.0
++            )
++            engine_profiles[str(user_id)] = {
++                "희망월활동횟수": desired_monthly,
++            }
++
++        output = run_h4_participation_risk(
++            event_log=event_log,
++            member_profiles=engine_profiles,
++        )
++
++        def split_values(value, separator=","):
++            text = str(value or "").strip()
++            if not text or text == "-":
++                return []
++            return [
++                item.strip()
++                for item in text.split(separator)
++                if item.strip()
++            ]
++
++        analyses = {}
++        for row in output.to_dict(orient="records"):
++            user_id = str(row["회원_ID"])
++            analyses[user_id] = {
++                "risk_score": float(row["Risk_Score"]),
++                "risk_grade": str(row["Risk_Grade"]),
++                "detected_risk": str(row["Detected_Risk"]),
++                "reason_candidates": split_values(
++                    row.get("Reason_Candidates")
++                ),
++                "confirmation_questions": split_values(
++                    row.get("Confirmation_Question"),
++                    separator="/",
++                ),
++                "operator_action": str(row["Operator_Action"]),
++                "operator_summary": str(row["Operator_Summary"]),
++                "management_priority": int(
++                    row["관리우선순위"]
++                ),
++                "previous_attendance_rate": float(
++                    row["이전4주_참석률"]
++                ),
++                "recent_attendance_rate": float(
++                    row["최근4주_참석률"]
++                ),
++                "attendance_rate_delta": float(
++                    row["참석률_변화폭"]
++                ),
++                "recent_cancel_rate": float(
++                    row["최근4주_취소율"]
++                ),
++                "recent_no_show_rate": float(
++                    row["최근4주_노쇼율"]
++                ),
++                "consecutive_nonparticipation": int(
++                    row["연속미참여횟수"]
++                ),
++                "missed_opportunities": int(
++                    row["마지막참석후_미참여기회"]
++                ),
++            }
++
++        return analyses
+diff --git a/backend/tests/test_operator_h4.py b/backend/tests/test_operator_h4.py
+new file mode 100644
+index 0000000..af120f8
+--- /dev/null
++++ b/backend/tests/test_operator_h4.py
+@@ -0,0 +1,82 @@
++import unittest
++
++from app.services.operator_ml_service import OperatorMlService
++
++
++class OperatorH4Tests(unittest.TestCase):
++    @staticmethod
++    def _rows(user_id, statuses):
++        return [
++            {
++                "user_id": user_id,
++                "event_date": f"2026-08-{index:02d}",
++                "result": status,
++            }
++            for index, status in enumerate(statuses, 1)
++        ]
++
++    def test_stable_attendance_is_normal(self):
++        result = OperatorMlService().analyze_h4_participation(
++            result_rows=self._rows(
++                "stable",
++                ["attended"] * 8,
++            ),
++            member_profiles={
++                "stable": {
++                    "activity_frequency": "주 1회 이하",
++                }
++            },
++        )
++
++        self.assertEqual(result["stable"]["risk_grade"], "정상")
++        self.assertEqual(result["stable"]["risk_score"], 0.0)
++        self.assertEqual(
++            result["stable"]["recent_attendance_rate"],
++            1.0,
++        )
++
++    def test_recent_no_show_streak_is_high_risk(self):
++        statuses = ["attended"] * 4 + ["no_show"] * 4
++        result = OperatorMlService().analyze_h4_participation(
++            result_rows=self._rows("risk", statuses),
++            member_profiles={
++                "risk": {
++                    "activity_frequency": "주 1회 이하",
++                }
++            },
++        )
++
++        self.assertEqual(result["risk"]["risk_grade"], "고위험")
++        self.assertGreaterEqual(result["risk"]["risk_score"], 80)
++        self.assertEqual(
++            result["risk"]["consecutive_nonparticipation"],
++            4,
++        )
++
++    def test_not_eligible_is_excluded_from_rates(self):
++        result = OperatorMlService().analyze_h4_participation(
++            result_rows=self._rows(
++                "member",
++                [
++                    "not_eligible",
++                    "not_eligible",
++                    "attended",
++                    "attended",
++                ],
++            ),
++            member_profiles={
++                "member": {
++                    "activity_frequency": "주 1회 이하",
++                }
++            },
++        )
++
++        self.assertEqual(
++            result["member"]["recent_attendance_rate"],
++            1.0,
++        )
++        self.assertEqual(result["member"]["recent_no_show_rate"], 0.0)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/frontend/src/api/clubApi.js b/frontend/src/api/clubApi.js
+index 27b8f8a..2a2628e 100644
+--- a/frontend/src/api/clubApi.js
++++ b/frontend/src/api/clubApi.js
+@@ -708,6 +708,67 @@ export async function getClubRecruitmentRecommendations(
+ }
+ 
+ 
++// ---------------------------------------------------------
++// H4 실제 활동 결과 입력 화면 데이터
++// ---------------------------------------------------------
++export async function getClubActivityResults(
++    clubId,
++    limit = 8
++) {
++    const query = new URLSearchParams({
++        limit: String(limit)
++    });
++
++    return authenticatedRequest(
++        (
++            `/api/clubs/${clubId}/activity-results`
++            + `?${query.toString()}`
++        ),
++        {
++            method: "GET"
++        }
++    );
++}
++
++
++// ---------------------------------------------------------
++// H4 일정별 실제 활동 결과 저장
++// ---------------------------------------------------------
++export async function saveClubActivityResults(
++    clubId,
++    eventId,
++    results
++) {
++    return authenticatedRequest(
++        (
++            `/api/clubs/${clubId}/events/${eventId}`
++            + "/activity-results"
++        ),
++        {
++            method: "PUT",
++            body: {
++                results
++            }
++        }
++    );
++}
++
++
++// ---------------------------------------------------------
++// H4 회원 참여 저하 위험 조회
++// ---------------------------------------------------------
++export async function getClubParticipationRisks(
++    clubId
++) {
++    return authenticatedRequest(
++        `/api/clubs/${clubId}/participation-risks`,
++        {
++            method: "GET"
++        }
++    );
++}
++
++
+ // ---------------------------------------------------------
+ // 동호회 가입 신청 승인·거절
+ // ---------------------------------------------------------
+@@ -939,4 +1000,4 @@ export async function recommendClubs(requestData) {
+             body: requestData,
+         }
+     );
+-}
+\ No newline at end of file
++}
+diff --git a/frontend/src/pages/ClubMembers/ClubMemberManagement.css b/frontend/src/pages/ClubMembers/ClubMemberManagement.css
+index f4ffb41..44e4f5d 100644
+--- a/frontend/src/pages/ClubMembers/ClubMemberManagement.css
++++ b/frontend/src/pages/ClubMembers/ClubMemberManagement.css
+@@ -590,7 +590,7 @@
+ 
+ .club-member-primary-tabs {
+     display: grid;
+-    grid-template-columns: repeat(3, 1fr);
++    grid-template-columns: repeat(4, 1fr);
+     gap: 6px;
+     margin: 18px 20px 0;
+     padding: 5px;
+@@ -609,7 +609,7 @@
+     border-radius: 10px;
+     background: transparent;
+     color: #6d786f;
+-    font-size: 11px;
++    font-size: 10px;
+     cursor: pointer;
+ }
+ 
+diff --git a/frontend/src/pages/ClubMembers/ClubMemberManagement.jsx b/frontend/src/pages/ClubMembers/ClubMemberManagement.jsx
+index 16489f9..eeb112b 100644
+--- a/frontend/src/pages/ClubMembers/ClubMemberManagement.jsx
++++ b/frontend/src/pages/ClubMembers/ClubMemberManagement.jsx
+@@ -11,6 +11,7 @@ import {
+ } from "react-router-dom";
+ 
+ import {
++    FiActivity,
+     FiArrowLeft,
+     FiCheck,
+     FiChevronDown,
+@@ -32,6 +33,7 @@ import {
+ } from "../../api/clubApi";
+ 
+ import ClubRecruitmentRecommendations from "./ClubRecruitmentRecommendations";
++import ClubParticipationRisk from "./ClubParticipationRisk";
+ 
+ import "./ClubMemberManagement.css";
+ 
+@@ -632,6 +634,24 @@ function ClubMemberManagement() {
+ 
+                     <strong>AI</strong>
+                 </button>
++
++                <button
++                    type="button"
++                    className={
++                        activeSection === "participationRisk"
++                            ? "active"
++                            : ""
++                    }
++                    onClick={() =>
++                        setActiveSection("participationRisk")
++                    }
++                >
++                    <FiActivity />
++
++                    <span>참여 분석</span>
++
++                    <strong>AI</strong>
++                </button>
+             </nav>
+ 
+             {errorMessage && (
+@@ -1554,6 +1574,12 @@ function ClubMemberManagement() {
+                     clubId={clubId}
+                 />
+             )}
++
++            {activeSection === "participationRisk" && (
++                <ClubParticipationRisk
++                    clubId={clubId}
++                />
++            )}
+         </main>
+     );
+ }
+diff --git a/frontend/src/pages/ClubMembers/ClubParticipationRisk.css b/frontend/src/pages/ClubMembers/ClubParticipationRisk.css
+new file mode 100644
+index 0000000..68e5974
+--- /dev/null
++++ b/frontend/src/pages/ClubMembers/ClubParticipationRisk.css
+@@ -0,0 +1,502 @@
++.club-risk-page {
++    display: grid;
++    gap: 16px;
++    padding: 18px 20px 28px;
++}
++
++.club-risk-intro,
++.club-risk-section-heading > div,
++.club-risk-card-profile,
++.club-risk-result-row,
++.club-risk-recorder-toolbar {
++    display: flex;
++    align-items: center;
++}
++
++.club-risk-intro {
++    justify-content: space-between;
++    gap: 14px;
++}
++
++.club-risk-eyebrow {
++    color: #2673d9;
++    font-size: 10px;
++    font-weight: 800;
++    letter-spacing: .04em;
++}
++
++.club-risk-intro h2,
++.club-risk-section-heading h3 {
++    margin: 4px 0 0;
++    color: #17233c;
++}
++
++.club-risk-intro h2 {
++    font-size: 19px;
++}
++
++.club-risk-intro p,
++.club-risk-section-heading p {
++    margin: 5px 0 0;
++    color: #71809a;
++    font-size: 11px;
++    line-height: 1.55;
++}
++
++.club-risk-intro > button,
++.club-risk-save,
++.club-risk-recorder-toolbar button {
++    border: 0;
++    cursor: pointer;
++}
++
++.club-risk-intro > button {
++    display: flex;
++    align-items: center;
++    gap: 5px;
++    flex: 0 0 auto;
++    padding: 9px 11px;
++    border: 1px solid #d5e2f5;
++    border-radius: 9px;
++    background: #f3f7fd;
++    color: #2767ba;
++    font-size: 10px;
++    font-weight: 700;
++}
++
++.club-risk-error {
++    margin: 0;
++    padding: 12px 14px;
++    border-radius: 10px;
++    background: #fff0f0;
++    color: #c54040;
++    font-size: 12px;
++}
++
++.club-risk-summary {
++    display: grid;
++    grid-template-columns: repeat(3, 1fr);
++    overflow: hidden;
++    border: 1px solid #dbe5f2;
++    border-radius: 14px;
++    background: #fff;
++}
++
++.club-risk-summary > div {
++    display: grid;
++    grid-template-columns: 1fr auto auto;
++    align-items: baseline;
++    gap: 3px;
++    padding: 14px 12px;
++}
++
++.club-risk-summary > div + div {
++    border-left: 1px solid #e8eef6;
++}
++
++.club-risk-summary span,
++.club-risk-summary small {
++    color: #7c899e;
++    font-size: 9px;
++}
++
++.club-risk-summary strong {
++    color: #2767ba;
++    font-size: 19px;
++}
++
++.club-risk-summary strong.observe {
++    color: #b37600;
++}
++
++.club-risk-summary strong.high {
++    color: #d44040;
++}
++
++.club-risk-recorder,
++.club-risk-analysis {
++    display: grid;
++    gap: 14px;
++    padding: 16px;
++    border: 1px solid #dfe7f2;
++    border-radius: 15px;
++    background: #fff;
++    box-shadow: 0 5px 16px rgba(37, 73, 124, .05);
++}
++
++.club-risk-section-heading > div {
++    gap: 10px;
++}
++
++.club-risk-section-heading svg {
++    flex: 0 0 auto;
++    color: #2772d3;
++    font-size: 21px;
++}
++
++.club-risk-section-heading h3 {
++    font-size: 14px;
++}
++
++.club-risk-event-select {
++    display: grid;
++    gap: 6px;
++}
++
++.club-risk-event-select span {
++    color: #66758d;
++    font-size: 10px;
++    font-weight: 700;
++}
++
++.club-risk-event-select select,
++.club-risk-result-row select {
++    border: 1px solid #d7e1ef;
++    border-radius: 9px;
++    background: #fff;
++    color: #24334b;
++    font: inherit;
++}
++
++.club-risk-event-select select {
++    width: 100%;
++    height: 40px;
++    padding: 0 11px;
++    font-size: 11px;
++}
++
++.club-risk-recorder-toolbar {
++    justify-content: space-between;
++    gap: 8px;
++}
++
++.club-risk-recorder-toolbar > span {
++    color: #6e7c90;
++    font-size: 10px;
++}
++
++.club-risk-recorder-toolbar > div {
++    display: flex;
++    gap: 5px;
++}
++
++.club-risk-recorder-toolbar button {
++    padding: 6px 8px;
++    border-radius: 7px;
++    background: #eef4fc;
++    color: #3971ba;
++    font-size: 9px;
++}
++
++.club-risk-result-list,
++.club-risk-card-list {
++    display: grid;
++    gap: 9px;
++}
++
++.club-risk-result-row {
++    gap: 9px;
++    padding: 10px;
++    border: 1px solid #e5ebf3;
++    border-radius: 10px;
++    background: #fbfcfe;
++}
++
++.club-risk-avatar {
++    display: grid;
++    place-items: center;
++    flex: 0 0 auto;
++    width: 38px;
++    height: 38px;
++    overflow: hidden;
++    border-radius: 50%;
++    background: #e7f0fc;
++    color: #2f6dbd;
++    font-size: 13px;
++    font-weight: 800;
++}
++
++.club-risk-avatar img {
++    width: 100%;
++    height: 100%;
++    object-fit: cover;
++}
++
++.club-risk-member-name,
++.club-risk-card-profile > div:nth-child(2) {
++    display: grid;
++    min-width: 0;
++    gap: 2px;
++}
++
++.club-risk-member-name {
++    flex: 1 1 auto;
++}
++
++.club-risk-member-name strong,
++.club-risk-card-profile > div:nth-child(2) strong {
++    color: #20304a;
++    font-size: 12px;
++}
++
++.club-risk-member-name span,
++.club-risk-card-profile > div:nth-child(2) span {
++    color: #8490a2;
++    font-size: 9px;
++}
++
++.club-risk-result-row select {
++    flex: 0 0 112px;
++    width: 112px;
++    height: 34px;
++    padding: 0 7px;
++    font-size: 10px;
++}
++
++.club-risk-save {
++    display: flex;
++    align-items: center;
++    justify-content: center;
++    gap: 6px;
++    width: 100%;
++    min-height: 42px;
++    border-radius: 10px;
++    background: #256ed0;
++    color: #fff;
++    font-size: 12px;
++    font-weight: 800;
++}
++
++.club-risk-save:disabled {
++    opacity: .55;
++    cursor: wait;
++}
++
++.club-risk-card {
++    display: grid;
++    gap: 12px;
++    padding: 14px;
++    border: 1px solid #dfe7f2;
++    border-left: 4px solid #7c8ba2;
++    border-radius: 12px;
++    background: #fff;
++}
++
++.club-risk-card.normal {
++    border-left-color: #2ca866;
++}
++
++.club-risk-card.observe {
++    border-left-color: #d39a27;
++}
++
++.club-risk-card.manage {
++    border-left-color: #e1762f;
++}
++
++.club-risk-card.high {
++    border-left-color: #d84444;
++}
++
++.club-risk-card.waiting {
++    border-left-color: #91a0b5;
++    background: #fafbfd;
++}
++
++.club-risk-card-profile {
++    gap: 10px;
++}
++
++.club-risk-card-profile > div:nth-child(2) {
++    flex: 1 1 auto;
++}
++
++.club-risk-grade {
++    flex: 0 0 auto;
++    padding: 5px 8px;
++    border-radius: 999px;
++    background: #edf2f8;
++    color: #697890;
++    font-size: 9px;
++    font-weight: 800;
++}
++
++.normal .club-risk-grade {
++    background: #e4f6eb;
++    color: #16874b;
++}
++
++.observe .club-risk-grade {
++    background: #fff3d9;
++    color: #a87300;
++}
++
++.manage .club-risk-grade {
++    background: #fff0e4;
++    color: #bd5b18;
++}
++
++.high .club-risk-grade {
++    background: #ffe6e6;
++    color: #c33131;
++}
++
++.club-risk-score-row {
++    display: grid;
++    grid-template-columns: repeat(3, 1fr);
++    overflow: hidden;
++    border: 1px solid #e4eaf3;
++    border-radius: 9px;
++    background: #f7f9fc;
++}
++
++.club-risk-score-row > div {
++    display: grid;
++    gap: 4px;
++    padding: 10px;
++    text-align: center;
++}
++
++.club-risk-score-row > div + div {
++    border-left: 1px solid #e4eaf3;
++}
++
++.club-risk-score-row span {
++    color: #7c899e;
++    font-size: 9px;
++}
++
++.club-risk-score-row strong {
++    color: #263750;
++    font-size: 15px;
++}
++
++.club-risk-score-row small {
++    color: #8b97a8;
++    font-size: 8px;
++}
++
++.club-risk-detected,
++.club-risk-action,
++.club-risk-normal-note,
++.club-risk-waiting,
++.club-risk-questions {
++    margin: 0;
++    font-size: 10px;
++    line-height: 1.55;
++}
++
++.club-risk-detected,
++.club-risk-normal-note,
++.club-risk-waiting {
++    display: flex;
++    align-items: flex-start;
++    gap: 6px;
++}
++
++.club-risk-detected {
++    color: #45546a;
++}
++
++.club-risk-detected svg,
++.club-risk-waiting svg {
++    margin-top: 2px;
++    flex: 0 0 auto;
++}
++
++.club-risk-action {
++    padding: 10px;
++    border-radius: 8px;
++    background: #eef4fc;
++    color: #315f9c;
++}
++
++.club-risk-questions {
++    display: grid;
++    gap: 4px;
++    padding-top: 10px;
++    border-top: 1px dashed #dde5ef;
++}
++
++.club-risk-questions strong {
++    color: #5d6a7d;
++}
++
++.club-risk-questions p {
++    margin: 0;
++    color: #718096;
++}
++
++.club-risk-normal-note {
++    color: #278754;
++}
++
++.club-risk-waiting {
++    color: #718096;
++}
++
++.club-risk-waiting p {
++    margin: 0;
++}
++
++.club-risk-state,
++.club-risk-empty {
++    display: grid;
++    justify-items: center;
++    gap: 7px;
++    padding: 42px 18px;
++    color: #758297;
++    text-align: center;
++}
++
++.club-risk-state svg,
++.club-risk-empty svg {
++    color: #5f84b8;
++    font-size: 26px;
++}
++
++.club-risk-state strong,
++.club-risk-empty strong {
++    font-size: 12px;
++}
++
++.club-risk-empty.compact {
++    padding: 25px 14px;
++    border: 1px dashed #d6e0ed;
++    border-radius: 10px;
++    background: #fafcff;
++}
++
++.club-risk-empty p {
++    margin: 0;
++    font-size: 10px;
++    line-height: 1.5;
++}
++
++.club-risk-disclaimer {
++    margin: 0;
++    color: #8995a7;
++    font-size: 9px;
++    line-height: 1.5;
++    text-align: center;
++}
++
++@media (max-width: 380px) {
++    .club-risk-page {
++        padding-right: 14px;
++        padding-left: 14px;
++    }
++
++    .club-risk-intro {
++        align-items: flex-start;
++    }
++
++    .club-risk-result-row {
++        flex-wrap: wrap;
++    }
++
++    .club-risk-result-row select {
++        flex: 1 0 100%;
++        width: 100%;
++    }
++}
+diff --git a/frontend/src/pages/ClubMembers/ClubParticipationRisk.jsx b/frontend/src/pages/ClubMembers/ClubParticipationRisk.jsx
+new file mode 100644
+index 0000000..0823c79
+--- /dev/null
++++ b/frontend/src/pages/ClubMembers/ClubParticipationRisk.jsx
+@@ -0,0 +1,585 @@
++import {
++    useCallback,
++    useEffect,
++    useMemo,
++    useState
++} from "react";
++
++import {
++    FiActivity,
++    FiAlertCircle,
++    FiBarChart2,
++    FiCheckCircle,
++    FiClipboard,
++    FiRefreshCw,
++    FiSave,
++    FiUser
++} from "react-icons/fi";
++
++import {
++    getClubActivityResults,
++    getClubParticipationRisks,
++    saveClubActivityResults
++} from "../../api/clubApi";
++
++import "./ClubParticipationRisk.css";
++
++
++const RESULT_LABELS = {
++    attended: "실제 참석",
++    cancelled: "사전 취소",
++    no_show: "노쇼",
++    not_eligible: "참여 대상 아님"
++};
++
++
++const GRADE_CLASS_NAMES = {
++    정상: "normal",
++    관찰: "observe",
++    "관리 필요": "manage",
++    고위험: "high"
++};
++
++
++function formatDate(value) {
++    if (!value) {
++        return "";
++    }
++
++    const parsed = new Date(`${value}T00:00:00`);
++
++    if (Number.isNaN(parsed.getTime())) {
++        return value;
++    }
++
++    return new Intl.DateTimeFormat(
++        "ko-KR",
++        {
++            year: "numeric",
++            month: "short",
++            day: "numeric",
++            weekday: "short"
++        }
++    ).format(parsed);
++}
++
++
++function formatPercent(value) {
++    if (value === null || value === undefined) {
++        return "-";
++    }
++
++    return `${Math.round(Number(value) * 100)}%`;
++}
++
++
++function getInitial(person) {
++    return (
++        person.nickname
++        || person.name
++        || "?"
++    ).slice(0, 1);
++}
++
++
++function ClubParticipationRisk({ clubId }) {
++    const [workspace, setWorkspace] = useState({
++        members: [],
++        events: []
++    });
++    const [riskResult, setRiskResult] = useState({
++        risks: [],
++        total: 0,
++        analyzed_count: 0,
++        insufficient_data_count: 0,
++        observe_count: 0,
++        management_required_count: 0,
++        high_risk_count: 0,
++        minimum_eligible_results: 4
++    });
++    const [selectedEventId, setSelectedEventId] =
++        useState("");
++    const [draftResults, setDraftResults] =
++        useState({});
++    const [isLoading, setIsLoading] = useState(true);
++    const [isSaving, setIsSaving] = useState(false);
++    const [errorMessage, setErrorMessage] = useState("");
++
++    const loadData = useCallback(async () => {
++        setIsLoading(true);
++        setErrorMessage("");
++
++        try {
++            const [workspaceResponse, riskResponse] =
++                await Promise.all([
++                    getClubActivityResults(clubId),
++                    getClubParticipationRisks(clubId)
++                ]);
++
++            const nextWorkspace = {
++                members: workspaceResponse.members || [],
++                events: workspaceResponse.events || []
++            };
++
++            setWorkspace(nextWorkspace);
++            setRiskResult(riskResponse);
++
++            setSelectedEventId((currentValue) => {
++                const stillExists = nextWorkspace.events.some(
++                    (event) =>
++                        String(event.event_id)
++                        === String(currentValue)
++                );
++
++                if (stillExists) {
++                    return currentValue;
++                }
++
++                return nextWorkspace.events[0]
++                    ? String(nextWorkspace.events[0].event_id)
++                    : "";
++            });
++        } catch (error) {
++            setErrorMessage(
++                error.message
++                || "참여 분석 정보를 불러오지 못했습니다."
++            );
++        } finally {
++            setIsLoading(false);
++        }
++    }, [clubId]);
++
++
++    useEffect(() => {
++        // 최초 진입 시 서버 상태와 동기화한다.
++        // eslint-disable-next-line react-hooks/set-state-in-effect
++        loadData();
++    }, [loadData]);
++
++
++    const selectedEvent = useMemo(
++        () => workspace.events.find(
++            (event) =>
++                String(event.event_id)
++                === String(selectedEventId)
++        ) || null,
++        [workspace.events, selectedEventId]
++    );
++
++
++    useEffect(() => {
++        // 일정 전환 시 해당 일정의 저장값으로 입력 폼을 초기화한다.
++        // eslint-disable-next-line react-hooks/set-state-in-effect
++        setDraftResults(
++            selectedEvent?.results || {}
++        );
++    }, [selectedEvent]);
++
++
++    const recordedCount = useMemo(
++        () => workspace.members.filter(
++            (member) => Boolean(
++                draftResults[member.user_id]
++            )
++        ).length,
++        [workspace.members, draftResults]
++    );
++
++
++    const fillAll = (result) => {
++        setDraftResults(
++            Object.fromEntries(
++                workspace.members.map(
++                    (member) => [
++                        member.user_id,
++                        result
++                    ]
++                )
++            )
++        );
++    };
++
++
++    const handleSave = async () => {
++        if (!selectedEvent) {
++            return;
++        }
++
++        const results = workspace.members
++            .filter((member) =>
++                Boolean(draftResults[member.user_id])
++            )
++            .map((member) => ({
++                user_id: member.user_id,
++                result: draftResults[member.user_id]
++            }));
++
++        if (results.length === 0) {
++            window.alert("저장할 활동 결과를 선택해주세요.");
++            return;
++        }
++
++        setIsSaving(true);
++        setErrorMessage("");
++
++        try {
++            const response = await saveClubActivityResults(
++                clubId,
++                selectedEvent.event_id,
++                results
++            );
++
++            window.alert(response.message);
++            await loadData();
++        } catch (error) {
++            setErrorMessage(
++                error.message
++                || "활동 결과를 저장하지 못했습니다."
++            );
++        } finally {
++            setIsSaving(false);
++        }
++    };
++
++
++    if (isLoading) {
++        return (
++            <section className="club-risk-state">
++                <FiActivity />
++                <strong>참여 데이터를 분석하고 있습니다.</strong>
++            </section>
++        );
++    }
++
++
++    return (
++        <section className="club-risk-page">
++            <div className="club-risk-intro">
++                <div>
++                    <span className="club-risk-eyebrow">
++                        H4 참여 저하 조기 탐지
++                    </span>
++
++                    <h2>회원 참여 위험 분석</h2>
++
++                    <p>
++                        실제 참석·취소·노쇼 기록을 바탕으로
++                        운영자가 먼저 살펴볼 회원을 안내합니다.
++                    </p>
++                </div>
++
++                <button
++                    type="button"
++                    onClick={loadData}
++                    aria-label="참여 분석 새로고침"
++                >
++                    <FiRefreshCw />
++                    새로고침
++                </button>
++            </div>
++
++            {errorMessage && (
++                <p className="club-risk-error">
++                    {errorMessage}
++                </p>
++            )}
++
++            <div className="club-risk-summary">
++                <div>
++                    <span>분석 완료</span>
++                    <strong>{riskResult.analyzed_count}</strong>
++                    <small>명</small>
++                </div>
++                <div>
++                    <span>관찰·관리</span>
++                    <strong className="observe">
++                        {
++                            riskResult.observe_count
++                            + riskResult.management_required_count
++                        }
++                    </strong>
++                    <small>명</small>
++                </div>
++                <div>
++                    <span>고위험</span>
++                    <strong className="high">
++                        {riskResult.high_risk_count}
++                    </strong>
++                    <small>명</small>
++                </div>
++            </div>
++
++            <section className="club-risk-recorder">
++                <div className="club-risk-section-heading">
++                    <div>
++                        <FiClipboard />
++                        <div>
++                            <h3>지난 일정 결과 기록</h3>
++                            <p>
++                                참석 의사와 별개인 실제 결과를
++                                일정 종료 후 기록해주세요.
++                            </p>
++                        </div>
++                    </div>
++                </div>
++
++                {workspace.events.length === 0 ? (
++                    <div className="club-risk-empty compact">
++                        <FiClipboard />
++                        <strong>기록할 지난 일정이 없습니다.</strong>
++                        <p>
++                            종료된 일정이 생기면 이곳에서
++                            실제 활동 결과를 입력할 수 있습니다.
++                        </p>
++                    </div>
++                ) : (
++                    <>
++                        <label className="club-risk-event-select">
++                            <span>일정 선택</span>
++                            <select
++                                value={selectedEventId}
++                                onChange={(event) =>
++                                    setSelectedEventId(
++                                        event.target.value
++                                    )
++                                }
++                            >
++                                {workspace.events.map((event) => (
++                                    <option
++                                        key={event.event_id}
++                                        value={event.event_id}
++                                    >
++                                        {formatDate(event.event_date)} · {event.title}
++                                    </option>
++                                ))}
++                            </select>
++                        </label>
++
++                        <div className="club-risk-recorder-toolbar">
++                            <span>
++                                {recordedCount}/{workspace.members.length}명 기록
++                            </span>
++
++                            <div>
++                                <button
++                                    type="button"
++                                    onClick={() => fillAll("attended")}
++                                >
++                                    전체 참석
++                                </button>
++                                <button
++                                    type="button"
++                                    onClick={() => fillAll("not_eligible")}
++                                >
++                                    전체 대상 아님
++                                </button>
++                            </div>
++                        </div>
++
++                        <div className="club-risk-result-list">
++                            {workspace.members.map((member) => (
++                                <div
++                                    key={member.user_id}
++                                    className="club-risk-result-row"
++                                >
++                                    <div className="club-risk-avatar">
++                                        {member.profile_image ? (
++                                            <img
++                                                src={member.profile_image}
++                                                alt=""
++                                            />
++                                        ) : (
++                                            <span>{getInitial(member)}</span>
++                                        )}
++                                    </div>
++
++                                    <div className="club-risk-member-name">
++                                        <strong>{member.nickname}</strong>
++                                        <span>{member.name}</span>
++                                    </div>
++
++                                    <select
++                                        value={
++                                            draftResults[member.user_id]
++                                            || ""
++                                        }
++                                        aria-label={`${member.nickname} 활동 결과`}
++                                        onChange={(event) =>
++                                            setDraftResults(
++                                                (current) => ({
++                                                    ...current,
++                                                    [member.user_id]:
++                                                        event.target.value
++                                                })
++                                            )
++                                        }
++                                    >
++                                        <option value="">미기록</option>
++                                        {Object.entries(RESULT_LABELS).map(
++                                            ([value, label]) => (
++                                                <option
++                                                    key={value}
++                                                    value={value}
++                                                >
++                                                    {label}
++                                                </option>
++                                            )
++                                        )}
++                                    </select>
++                                </div>
++                            ))}
++                        </div>
++
++                        <button
++                            type="button"
++                            className="club-risk-save"
++                            disabled={isSaving}
++                            onClick={handleSave}
++                        >
++                            <FiSave />
++                            {isSaving ? "저장 중" : "활동 결과 저장"}
++                        </button>
++                    </>
++                )}
++            </section>
++
++            <section className="club-risk-analysis">
++                <div className="club-risk-section-heading">
++                    <div>
++                        <FiBarChart2 />
++                        <div>
++                            <h3>AI 분석 결과</h3>
++                            <p>
++                                최소 {riskResult.minimum_eligible_results}회의
++                                참여 대상 기록부터 분석합니다.
++                            </p>
++                        </div>
++                    </div>
++                </div>
++
++                {riskResult.risks.length === 0 ? (
++                    <div className="club-risk-empty">
++                        <FiUser />
++                        <strong>분석할 활동 회원이 없습니다.</strong>
++                    </div>
++                ) : (
++                    <div className="club-risk-card-list">
++                        {riskResult.risks.map((risk) => {
++                            const isAnalyzed =
++                                risk.analysis_status === "analyzed";
++                            const gradeClass = isAnalyzed
++                                ? GRADE_CLASS_NAMES[risk.risk_grade]
++                                : "waiting";
++
++                            return (
++                                <article
++                                    key={risk.user_id}
++                                    className={`club-risk-card ${gradeClass}`}
++                                >
++                                    <div className="club-risk-card-profile">
++                                        <div className="club-risk-avatar">
++                                            {risk.profile_image ? (
++                                                <img
++                                                    src={risk.profile_image}
++                                                    alt=""
++                                                />
++                                            ) : (
++                                                <span>{getInitial(risk)}</span>
++                                            )}
++                                        </div>
++
++                                        <div>
++                                            <strong>{risk.nickname}</strong>
++                                            <span>{risk.name}</span>
++                                        </div>
++
++                                        <span className="club-risk-grade">
++                                            {isAnalyzed
++                                                ? risk.risk_grade
++                                                : "분석 대기"}
++                                        </span>
++                                    </div>
++
++                                    {!isAnalyzed ? (
++                                        <div className="club-risk-waiting">
++                                            <FiAlertCircle />
++                                            <p>
++                                                참여 대상 기록 {risk.eligible_result_count}회 ·
++                                                {" "}{riskResult.minimum_eligible_results - risk.eligible_result_count}회 더 필요
++                                            </p>
++                                        </div>
++                                    ) : (
++                                        <>
++                                            <div className="club-risk-score-row">
++                                                <div>
++                                                    <span>위험 지수</span>
++                                                    <strong>
++                                                        {Math.round(risk.risk_score)}
++                                                        <small>/100</small>
++                                                    </strong>
++                                                </div>
++                                                <div>
++                                                    <span>이전 4회</span>
++                                                    <strong>
++                                                        {formatPercent(
++                                                            risk.previous_attendance_rate
++                                                        )}
++                                                    </strong>
++                                                </div>
++                                                <div>
++                                                    <span>최근 4회</span>
++                                                    <strong>
++                                                        {formatPercent(
++                                                            risk.recent_attendance_rate
++                                                        )}
++                                                    </strong>
++                                                </div>
++                                            </div>
++
++                                            <p className="club-risk-detected">
++                                                <FiActivity />
++                                                {risk.detected_risk}
++                                            </p>
++
++                                            <p className="club-risk-action">
++                                                {risk.operator_action}
++                                            </p>
++
++                                            {risk.confirmation_questions.length > 0 && (
++                                                <div className="club-risk-questions">
++                                                    <strong>확인 질문</strong>
++                                                    {risk.confirmation_questions.map(
++                                                        (question) => (
++                                                            <p key={question}>
++                                                                {question}
++                                                            </p>
++                                                        )
++                                                    )}
++                                                </div>
++                                            )}
++
++                                            {risk.risk_grade === "정상" && (
++                                                <p className="club-risk-normal-note">
++                                                    <FiCheckCircle />
++                                                    현재 우선 개입이 필요한 신호가 없습니다.
++                                                </p>
++                                            )}
++                                        </>
++                                    )}
++                                </article>
++                            );
++                        })}
++                    </div>
++                )}
++            </section>
++
++            <p className="club-risk-disclaimer">
++                위험 지수는 이탈 확률이 아니라 운영 우선순위를 위한
++                설명 가능한 참고 지표입니다.
++            </p>
++        </section>
++    );
++}
++
++
++export default ClubParticipationRisk;
+diff --git a/supabase/migrations/20260930123000_add_club_event_activity_results.sql b/supabase/migrations/20260930123000_add_club_event_activity_results.sql
+new file mode 100644
+index 0000000..12ef5ea
+--- /dev/null
++++ b/supabase/migrations/20260930123000_add_club_event_activity_results.sql
+@@ -0,0 +1,82 @@
++-- =========================================================
++-- H4 회원 참여 저하 분석용 실제 활동 결과
++--
++-- event_participants.attendance_status는 일정 전 참석 의사이며,
++-- 실제 출석 결과와 의미가 다르다. 두 값을 섞지 않도록
++-- 운영자가 일정 종료 후 기록하는 별도 테이블을 사용한다.
++-- =========================================================
++
++CREATE TABLE IF NOT EXISTS
++    public.club_event_activity_results
++(
++    activity_result_id bigint
++        GENERATED BY DEFAULT AS IDENTITY
++        PRIMARY KEY,
++
++    event_id bigint NOT NULL,
++    user_id uuid NOT NULL,
++
++    result text NOT NULL,
++
++    recorded_by_user_id uuid,
++    recorded_at timestamp with time zone
++        NOT NULL
++        DEFAULT now(),
++
++    created_at timestamp with time zone
++        NOT NULL
++        DEFAULT now(),
++
++    CONSTRAINT
++        club_event_activity_results_event_fkey
++        FOREIGN KEY (event_id)
++        REFERENCES public.club_events(event_id)
++        ON DELETE CASCADE,
++
++    CONSTRAINT
++        club_event_activity_results_user_fkey
++        FOREIGN KEY (user_id)
++        REFERENCES public.users(user_id)
++        ON DELETE CASCADE,
++
++    CONSTRAINT
++        club_event_activity_results_recorded_by_fkey
++        FOREIGN KEY (recorded_by_user_id)
++        REFERENCES public.users(user_id)
++        ON DELETE SET NULL,
++
++    CONSTRAINT
++        club_event_activity_results_result_check
++        CHECK (
++            result IN (
++                'attended',
++                'cancelled',
++                'no_show',
++                'not_eligible'
++            )
++        ),
++
++    CONSTRAINT
++        club_event_activity_results_event_user_key
++        UNIQUE (event_id, user_id)
++);
++
++ALTER TABLE public.club_event_activity_results
++ENABLE ROW LEVEL SECURITY;
++
++CREATE INDEX IF NOT EXISTS
++    club_event_activity_results_user_event_idx
++ON public.club_event_activity_results (
++    user_id,
++    event_id
++);
++
++COMMENT ON TABLE
++    public.club_event_activity_results
++IS
++    '일정 종료 후 운영자가 기록하는 회원별 실제 활동 결과';
++
++COMMENT ON COLUMN
++    public.club_event_activity_results.result
++IS
++    'attended=실제 참석, cancelled=사전 취소, no_show=노쇼, not_eligible=참여 대상 아님';
