@@ -7,7 +7,7 @@ import BackButton from "../../components/BackButton/BackButton";
 
 // ⭐ API
 import { authenticatedRequest } from "../../api/apiClient";
-import { getMyApplications, getMyProfile } from "../../api/userApi";
+import { getMyProfile, getMyReceivedApplications } from "../../api/userApi";
 // ⭐ 내 동호회: 메인/하단 메뉴에서 이미 받아둔 결과가 있으면 재사용
 import { getMyClubShared } from "../../api/myClubCache";
 
@@ -108,8 +108,8 @@ function Mypage() {
     const [clubIndex, setClubIndex] = useState(0);
     const sliderRef = useRef(null);
 
-    // ⭐ 결과를 기다리는 신청 수 (동호회 가입 + 게스트)
-    const [waitingApplications, setWaitingApplications] = useState(0);
+    // ⭐ 처리할 받은 신청 수 (운영자만, 동호회 가입 + 게스트)
+    const [receivedCount, setReceivedCount] = useState(0);
 
     // ⭐ 신뢰점수 (null = 아직 못 불러옴)
     const [trust, setTrust] = useState(null);
@@ -135,7 +135,11 @@ function Mypage() {
     // ⭐ 내 정보 + 내 동호회 한 번에 조회
     // =========================================================
     // =========================================================
-    // ⭐ 승인 대기 중인 신청 수 (내 활동 > 신청 현황 옆에 표시)
+    // ⭐ 처리할 받은 신청 수 (내 활동 > 신청 현황 옆 숫자)
+    //
+    // 동호회장·운영진에게만 표시
+    // 운영하는 동호회에 들어온 승인 대기 가입 신청 + 게스트 신청
+    // (신청 현황 > 받은 신청 탭 숫자와 같은 기준)
     //
     // 실패해도 마이페이지 다른 영역에는 영향 없음 → 표시만 안 함
     // =========================================================
@@ -143,36 +147,37 @@ function Mypage() {
 
         let ignore = false;
 
-        getMyApplications()
+        getMyReceivedApplications()
             .then((data) => {
 
                 if (ignore) return;
 
-                const now = Date.now();
+                const isOperator = Boolean(data?.is_operator);
 
-                const clubWaiting = (data?.club_applications ?? [])
-                    .filter((item) => item.status === "pending")
-                    .length;
+                setReceivedCount(
+                    isOperator
+                        ? (data?.club_applications?.length ?? 0) +
+                          (data?.guest_applications?.length ?? 0)
+                        : 0
+                );
 
-                // 게스트: 승인 대기 + 아직 시작 전 + 일정 취소 안 됨
-                const guestWaiting = (data?.guest_applications ?? [])
-                    .filter((item) => {
-                        if (item.guest_status !== "pending") return false;
-                        if (item.event_status === "cancelled") return false;
-
-                        const [y, m, d] = String(item.event_date)
-                            .slice(0, 10).split("-").map(Number);
-                        const [hh, mm] = String(item.start_time || "00:00")
-                            .split(":").map(Number);
-
-                        return now < new Date(y, m - 1, d, hh, mm).getTime();
-                    })
-                    .length;
-
-                setWaitingApplications(clubWaiting + guestWaiting);
+                // 신청 현황 페이지가 탭을 출렁임 없이 그리도록
+                // 운영자 여부를 같이 기억해둔다 (MyApplications.jsx 와 같은 형식)
+                try {
+                    localStorage.setItem(
+                        "playbridge_is_operator",
+                        JSON.stringify({
+                            nickname:
+                                localStorage.getItem("playbridge_user_nickname") || "",
+                            isOperator,
+                        })
+                    );
+                } catch {
+                    // 저장 실패해도 문제 없음
+                }
             })
             .catch((error) => {
-                console.error("신청 현황 개수 조회 실패:", error);
+                console.error("받은 신청 개수 조회 실패:", error);
             });
 
         return () => {
@@ -592,16 +597,26 @@ function Mypage() {
                             key={key}
                             type="button"
                             className="activity-item"
-                            onClick={() => navigate(path)}
+                            onClick={() =>
+                                navigate(
+                                    // 처리할 신청이 있으면 받은 신청 탭으로 바로
+                                    key === "applications" && receivedCount > 0
+                                        ? `${path}?tab=received`
+                                        : path
+                                )
+                            }
                         >
                             <ActivityIcon type={key} />
 
                             <p>{label}</p>
 
-                            {/* 신청 현황: 결과 기다리는 신청이 있을 때만 */}
-                            {key === "applications" && waitingApplications > 0 && (
-                                <span className="activity-badge">
-                                    승인 대기 {waitingApplications}
+                            {/* 신청 현황: 운영자에게 처리할 신청이 있을 때만 숫자 */}
+                            {key === "applications" && receivedCount > 0 && (
+                                <span
+                                    className="activity-badge"
+                                    aria-label={`처리할 신청 ${receivedCount}개`}
+                                >
+                                    {receivedCount > 99 ? "99+" : receivedCount}
                                 </span>
                             )}
                         </button>
