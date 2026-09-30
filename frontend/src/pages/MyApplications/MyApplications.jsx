@@ -43,6 +43,53 @@ const RECEIVED_TAB = { key: "received", label: "받은 신청" };
 
 
 /* ========================================
+   ⭐ 운영자 여부 기억해두기
+   
+   페이지를 열 때 운영자인지 서버 응답 전에는 모르므로
+   지난번 결과를 저장해두고 처음부터 그 탭 수로 그린다.
+   (탭이 2개 → 3개로 늘어나며 출렁이는 문제 방지)
+
+   같은 브라우저에서 다른 계정으로 로그인한 경우를 구분하려고
+   닉네임도 같이 저장해서, 닉네임이 다르면 기억한 값을 쓰지 않는다.
+   탭 표시에만 쓰는 값이고, 실제 목록은 항상 서버 응답 기준.
+   ======================================== */
+
+const OPERATOR_CACHE_KEY = "playbridge_is_operator";
+const NICKNAME_CACHE_KEY = "playbridge_user_nickname";
+
+// true / false / null(모름)
+const readCachedOperator = () => {
+    try {
+        const cached = JSON.parse(
+            localStorage.getItem(OPERATOR_CACHE_KEY) || "null"
+        );
+
+        const nickname = localStorage.getItem(NICKNAME_CACHE_KEY) || "";
+
+        if (!cached || cached.nickname !== nickname) return null;
+
+        return Boolean(cached.isOperator);
+    } catch {
+        return null;
+    }
+};
+
+const saveCachedOperator = (isOperator) => {
+    try {
+        localStorage.setItem(
+            OPERATOR_CACHE_KEY,
+            JSON.stringify({
+                nickname: localStorage.getItem(NICKNAME_CACHE_KEY) || "",
+                isOperator,
+            })
+        );
+    } catch {
+        // 저장 실패해도 화면 동작에는 문제 없음
+    }
+};
+
+
+/* ========================================
    ⭐ 날짜 / 시간 표시
    ======================================== */
 
@@ -252,9 +299,13 @@ function MyApplications() {
     const [clubApplications, setClubApplications] = useState([]);
     const [guestApplications, setGuestApplications] = useState([]);
 
+    // 지난번에 저장해둔 운영자 여부 (true / false / null=처음 방문)
+    const [cachedOperator] = useState(readCachedOperator);
+
     // 받은 신청 (운영자용)
+    // 서버 응답 전에는 기억해둔 값으로 탭을 먼저 그린다
     const [received, setReceived] = useState({
-        isOperator: false,
+        isOperator: cachedOperator === true,
         club: [],
         guest: [],
     });
@@ -314,11 +365,17 @@ function MyApplications() {
                 setGuestApplications(data?.guest_applications ?? []);
 
                 if (receivedResult.ok) {
+                    const isOperator = Boolean(
+                        receivedResult.value?.is_operator
+                    );
+
                     setReceived({
-                        isOperator: Boolean(receivedResult.value?.is_operator),
+                        isOperator,
                         club: receivedResult.value?.club_applications ?? [],
                         guest: receivedResult.value?.guest_applications ?? [],
                     });
+
+                    saveCachedOperator(isOperator);
                 } else {
                     console.error("받은 신청 조회 오류:", receivedResult.error);
                     setReceivedErrorMessage(
@@ -936,9 +993,11 @@ function MyApplications() {
             </div>
 
 
-            {/* ⭐ 탭 */}
+            {/* ⭐ 탭
+                - 운영자 여부를 기억해둔 값이 있으면: 처음부터 그 탭 수로 표시
+                - 처음 방문(기억한 값 없음)이면: 불러오는 동안 탭 자리만 비워둠 */}
             <div className="my-apps-tabs" role="tablist">
-                {tabs.map((tab) => (
+                {(!loading || cachedOperator !== null) && tabs.map((tab) => (
                     <button
                         key={tab.key}
                         type="button"
