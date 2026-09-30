@@ -651,8 +651,15 @@ class ClubMemberRepository:
         application_rows = (
             self.admin_client
             .table("club_applications")
-            .select("user_id")
+            .select("user_id, status")
             .eq("club_id", club_id)
+            .in_(
+                "status",
+                [
+                    "pending",
+                    "approved",
+                ],
+            )
             .execute()
             .data
             or []
