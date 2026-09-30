@@ -3,8 +3,10 @@ import { FiBell, FiChevronLeft } from "react-icons/fi";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
+import ChatbotButton from "../../components/Chatbot/ChatbotButton";
 import CustomSelect from "../../components/common/CustomSelect";
 import { useNotifications } from "../../context/NotificationContext";
+import Chatbot from "../Chatbot/Chatbot";
 import { supabase } from "../../../supabaseClient";
 import "./CSS/Community.css";
 import { buildApiUrl } from "../../api/apiClient";
@@ -65,6 +67,10 @@ const POSTS_PER_PAGE = 10;
 function Community() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // 이용 도우미 열림 여부
+  const [isChatbotOpen, setIsChatbotOpen] =
+    useState(false);
 
   // 공통 알림 Context의 안 읽은 알림 개수
   const { unreadCount: unreadNotificationCount } = useNotifications();
@@ -780,7 +786,32 @@ function Community() {
             </div>
           )}
         </section>
+
+        {!isClubCommunity && (
+          <div
+            aria-hidden="true"
+            style={{
+              height: "100px",
+            }}
+          />
+        )}
       </main>
+
+      {!isClubCommunity && !isChatbotOpen && (
+        <ChatbotButton
+          onClick={() =>
+            setIsChatbotOpen(true)
+          }
+        />
+      )}
+
+      {!isClubCommunity && isChatbotOpen && (
+        <Chatbot
+          onClose={() =>
+            setIsChatbotOpen(false)
+          }
+        />
+      )}
 
       {!isClubCommunity && <BottomNav />}
     </div>
