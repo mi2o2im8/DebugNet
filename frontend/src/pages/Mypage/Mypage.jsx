@@ -153,8 +153,12 @@ function Mypage() {
                 );
             })
             .catch((error) => {
+                // ⭐ 로그아웃 때문에 요청이 취소된 경우는 정상 동작이므로 무시
+                if (error?.name === "AbortError") {
+                    return;
+                }
+
                 console.error("⭐ 신뢰점수 API 오류:", error);
-                if (isActive) setTrust(null);
             });
 
         return () => {
