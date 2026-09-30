@@ -121,3 +121,31 @@ export const getMyEvents = async (year, month) => {
         }
     );
 };
+
+// =========================================================
+// 내 게스트 일정 (다른 동호회 일정에 게스트로 신청 / 참여)
+//
+// GET /api/users/me/guest-events
+// GET /api/users/me/guest-events?from_date=2026-09-01&to_date=2026-09-30
+// 응답: { events: [{ event_id, club_id, club_name, title,
+//                    event_date, start_time, end_time,
+//                    location, event_image_url, event_type, status,
+//                    guest_status("pending" | "joined"), ... }],
+//         total }
+// 기간을 안 보내면 전체
+// =========================================================
+export const getMyGuestEvents = async (fromDate, toDate) => {
+    const params = new URLSearchParams();
+
+    if (fromDate) params.set("from_date", fromDate);
+    if (toDate) params.set("to_date", toDate);
+
+    const query = params.toString();
+
+    return authenticatedRequest(
+        `/api/users/me/guest-events${query ? `?${query}` : ""}`,
+        {
+            method: "GET"
+        }
+    );
+};

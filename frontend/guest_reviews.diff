@@ -1,0 +1,1002 @@
+diff -ru src2_orig/src/api/userApi.js src2/src/api/userApi.js
+--- src2_orig/src/api/userApi.js	2026-09-30 02:00:23.445265592 +0000
++++ src2/src/api/userApi.js	2026-09-30 02:02:00.124233251 +0000
+@@ -120,4 +120,32 @@
+             method: "GET"
+         }
+     );
+-};
+\ No newline at end of file
++};
++
++// =========================================================
++// 내 게스트 일정 (다른 동호회 일정에 게스트로 신청 / 참여)
++//
++// GET /api/users/me/guest-events
++// GET /api/users/me/guest-events?from_date=2026-09-01&to_date=2026-09-30
++// 응답: { events: [{ event_id, club_id, club_name, title,
++//                    event_date, start_time, end_time,
++//                    location, event_image_url, event_type, status,
++//                    guest_status("pending" | "joined"), ... }],
++//         total }
++// 기간을 안 보내면 전체
++// =========================================================
++export const getMyGuestEvents = async (fromDate, toDate) => {
++    const params = new URLSearchParams();
++
++    if (fromDate) params.set("from_date", fromDate);
++    if (toDate) params.set("to_date", toDate);
++
++    const query = params.toString();
++
++    return authenticatedRequest(
++        `/api/users/me/guest-events${query ? `?${query}` : ""}`,
++        {
++            method: "GET"
++        }
++    );
++};
+diff -ru src2_orig/src/pages/MyReviews/MyReviews.css src2/src/pages/MyReviews/MyReviews.css
+--- src2_orig/src/pages/MyReviews/MyReviews.css	2026-09-30 02:00:23.453913468 +0000
++++ src2/src/pages/MyReviews/MyReviews.css	2026-09-30 02:02:00.127386476 +0000
+@@ -402,4 +402,342 @@
+     font-size: 12px;
+ 
+     color: #8a9a9a;
+-}
+\ No newline at end of file
++}
++
++/* ========================================
++   ⭐ 게스트 영역
++   ======================================== */
++
++.my-reviews-guest {
++    margin-top: 28px;
++}
++
++/* 운영 동호회가 없으면 게스트 영역이 맨 위에 오므로 간격 줄이기 */
++.my-reviews-header + .my-reviews-guest {
++    margin-top: 8px;
++}
++
++.my-reviews-guest-title {
++    display: flex;
++    align-items: center;
++    gap: 6px;
++
++    margin: 0;
++
++    font-size: 15px;
++    font-weight: 700;
++
++    color: #263b52;
++}
++
++.my-reviews-guest-count {
++    padding: 2px 7px;
++
++    border-radius: 9px;
++
++    background: #5b8def;
++
++    font-size: 11px;
++    font-weight: 700;
++
++    color: #ffffff;
++}
++
++.my-reviews-guest-desc {
++    margin: 6px 0 0;
++
++    font-size: 12px;
++    line-height: 1.5;
++
++    color: #7a8a8a;
++}
++
++/* 게스트 카드는 파란 계열로 구분 */
++.my-reviews-card.guest {
++    border-left-color: #5b8def;
++}
++
++.my-reviews-thumb.placeholder.guest {
++    background: #eaf1fd;
++
++    color: #5b8def;
++}
++
++.my-reviews-club.guest {
++    display: flex;
++    align-items: center;
++    gap: 5px;
++
++    overflow: hidden;
++
++    white-space: nowrap;
++    text-overflow: ellipsis;
++
++    color: #5b8def;
++}
++
++.my-reviews-guest-badge {
++    flex-shrink: 0;
++
++    padding: 1px 6px;
++
++    border-radius: 6px;
++
++    background: #eaf1fd;
++
++    font-size: 10px;
++    font-weight: 700;
++
++    color: #3f6fd1;
++}
++
++
++/* ========================================
++   ⭐ 게스트 후기 팝업
++   ======================================== */
++
++.my-reviews-modal-overlay {
++    position: fixed;
++    inset: 0;
++    z-index: 2000;
++
++    display: flex;
++    align-items: center;
++    justify-content: center;
++
++    padding: 20px;
++
++    box-sizing: border-box;
++
++    background: rgba(0, 0, 0, 0.45);
++}
++
++.my-reviews-modal {
++    width: 100%;
++    max-width: 360px;
++    max-height: calc(100vh - 40px);
++
++    overflow-y: auto;
++
++    padding: 20px;
++
++    box-sizing: border-box;
++
++    border-radius: 16px;
++
++    background: #ffffff;
++
++    font-family: "Maplestory", sans-serif;
++}
++
++.my-reviews-modal-header {
++    display: flex;
++    align-items: center;
++    justify-content: space-between;
++}
++
++.my-reviews-modal-header h3 {
++    margin: 0;
++
++    font-size: 17px;
++    font-weight: 700;
++
++    color: #222;
++}
++
++.my-reviews-modal-close {
++    width: 32px;
++    height: 32px;
++
++    border: none;
++
++    background: transparent;
++
++    font-size: 24px;
++    line-height: 1;
++
++    color: #8a9a9a;
++
++    cursor: pointer;
++}
++
++.my-reviews-modal-event {
++    display: flex;
++    flex-direction: column;
++    gap: 4px;
++
++    margin-top: 14px;
++    padding: 12px;
++
++    border-radius: 10px;
++
++    background: #f6f9f9;
++}
++
++.my-reviews-modal-event strong {
++    font-size: 14px;
++
++    color: #263b52;
++}
++
++.my-reviews-modal-event span {
++    font-size: 12px;
++
++    color: #7a8a8a;
++}
++
++.my-reviews-modal-rating {
++    display: flex;
++    flex-direction: column;
++    align-items: center;
++    gap: 6px;
++
++    margin-top: 18px;
++}
++
++.my-reviews-modal-rating p {
++    margin: 0;
++
++    font-size: 14px;
++
++    color: #263b52;
++}
++
++.my-reviews-modal-rating > span {
++    font-size: 12px;
++
++    color: #7a8a8a;
++}
++
++.my-reviews-stars {
++    display: flex;
++    gap: 4px;
++}
++
++.my-reviews-stars button,
++.my-reviews-stars span {
++    padding: 0 2px;
++
++    border: none;
++
++    background: transparent;
++
++    font-size: 30px;
++    line-height: 1;
++
++    color: #dfe5e5;
++}
++
++.my-reviews-stars button {
++    cursor: pointer;
++}
++
++.my-reviews-stars .active {
++    color: #f5b301;
++}
++
++.my-reviews-modal-text {
++    position: relative;
++
++    margin-top: 16px;
++}
++
++.my-reviews-modal-text textarea {
++    width: 100%;
++    height: 120px;
++
++    padding: 12px;
++
++    box-sizing: border-box;
++
++    border: 1px solid #dfe5e5;
++    border-radius: 10px;
++
++    font-family: inherit;
++    font-size: 13px;
++    line-height: 1.5;
++
++    resize: none;
++}
++
++.my-reviews-modal-text textarea:focus {
++    outline: none;
++
++    border-color: #01a17f;
++}
++
++.my-reviews-modal-text small {
++    display: block;
++
++    margin-top: 4px;
++
++    text-align: right;
++
++    font-size: 11px;
++
++    color: #8a9a9a;
++}
++
++.my-reviews-modal-review {
++    margin: 16px 0 0;
++    padding: 12px;
++
++    border-radius: 10px;
++
++    background: #f6f9f9;
++
++    font-size: 13px;
++    line-height: 1.6;
++
++    white-space: pre-wrap;
++    word-break: break-word;
++
++    color: #263b52;
++}
++
++.my-reviews-modal-actions {
++    display: flex;
++    gap: 8px;
++
++    margin-top: 18px;
++}
++
++.my-reviews-modal-actions button {
++    flex: 1;
++
++    padding: 12px 0;
++
++    border: 1px solid #dfe5e5;
++    border-radius: 10px;
++
++    background: #ffffff;
++
++    font-family: inherit;
++    font-size: 14px;
++    font-weight: 700;
++
++    color: #6b7c7c;
++
++    cursor: pointer;
++}
++
++.my-reviews-modal-actions button.primary {
++    border-color: #01a17f;
++
++    background: #01a17f;
++
++    color: #ffffff;
++}
++
++.my-reviews-modal-actions button:disabled {
++    opacity: 0.6;
++
++    cursor: default;
++}
++
++.my-reviews-stars button:focus-visible,
++.my-reviews-modal-close:focus-visible,
++.my-reviews-modal-actions button:focus-visible {
++    outline: 2px solid #01a17f;
++    outline-offset: 2px;
++}
+diff -ru src2_orig/src/pages/MyReviews/MyReviews.jsx src2/src/pages/MyReviews/MyReviews.jsx
+--- src2_orig/src/pages/MyReviews/MyReviews.jsx	2026-09-30 02:00:23.453925301 +0000
++++ src2/src/pages/MyReviews/MyReviews.jsx	2026-09-30 02:02:00.125956033 +0000
+@@ -3,6 +3,8 @@
+ // 운영자: 내가 운영하는 모든 동호회의 팀매칭 후기를 한곳에서 확인
+ //         (작성할 후기 / 작성한 후기 / 받은 후기)
+ // 멤버:   후기는 운영진 전용이라 안내만 표시
++// 게스트: 다른 동호회 일정에 게스트로 참여(확정)한 경기의
++//         활동 후기를 이 페이지에서 바로 작성 / 확인
+ //
+ // ※ 팀원이 만든 팀매칭 API(getMatchManagementMatches)를
+ //   import만 해서 사용한다. matchApi.js는 수정하지 않음.
+@@ -16,6 +18,11 @@
+ // ⭐ API
+ import { authenticatedRequest } from "../../api/apiClient";
+ import { getMatchManagementMatches } from "../Match/api/matchApi";
++import { getMyGuestEvents } from "../../api/userApi";
++import {
++    createEventReview,
++    getMyEventReview,
++} from "../../api/clubApi";
+ 
+ import "./MyReviews.css";
+ 
+@@ -165,6 +172,86 @@
+ };
+ 
+ 
++/* ========================================
++   ⭐ 게스트 경기: 활동이 끝났는지
++   (서버 EventReviewService.is_event_finished 와 같은 기준:
++    종료 시간이 지나야 후기 작성 가능)
++   ======================================== */
++
++const isGuestEventFinished = (event) => {
++
++    if (!event?.event_date || !event?.end_time) return false;
++
++    const [year, month, day] = String(event.event_date)
++        .slice(0, 10)
++        .split("-")
++        .map(Number);
++
++    const [hour, minute] = String(event.end_time)
++        .split(":")
++        .map(Number);
++
++    const endAt = new Date(year, month - 1, day, hour || 0, minute || 0);
++
++    return Date.now() >= endAt.getTime();
++};
++
++
++/* ========================================
++   ⭐ 게스트로 참여한 경기 + 내 후기 가져오기
++   ======================================== */
++
++const fetchGuestReviewData = async () => {
++
++    const data = await getMyGuestEvents();
++
++    // 참여 확정(joined) + 이미 끝난 경기만
++    const finishedEvents = (data?.events ?? []).filter(
++        (event) =>
++            event.guest_status === "joined" &&
++            isGuestEventFinished(event)
++    );
++
++    // 경기마다 내가 쓴 후기가 있는지 확인
++    // (하나가 실패해도 나머지는 보여준다 → 실패한 건 "작성 전"으로 표시)
++    const reviewResults = await Promise.allSettled(
++        finishedEvents.map((event) =>
++            getMyEventReview(event.club_id, event.event_id)
++        )
++    );
++
++    const items = finishedEvents.map((event, index) => {
++        const result = reviewResults[index];
++
++        return {
++            ...event,
++            myReview:
++                result.status === "fulfilled"
++                    ? result.value ?? null
++                    : null,
++        };
++    });
++
++    // 작성 전: 오래된 경기부터 / 작성 완료: 최신 경기부터
++    const todo = items
++        .filter((item) => !item.myReview)
++        .sort((a, b) =>
++            String(a.event_date).localeCompare(String(b.event_date))
++        );
++
++    const written = items
++        .filter((item) => item.myReview)
++        .sort((a, b) =>
++            String(b.event_date).localeCompare(String(a.event_date))
++        );
++
++    return [...todo, ...written];
++};
++
++
++const REVIEW_MAX_LENGTH = 500;
++
++
+ function MyReviews() {
+ 
+     const navigate = useNavigate();
+@@ -187,6 +274,16 @@
+     // 일부 동호회 조회가 실패했을 때 이름 표시용
+     const [failedClubNames, setFailedClubNames] = useState([]);
+ 
++    // 게스트로 참여한 (끝난) 경기
++    const [guestItems, setGuestItems] = useState([]);
++    const [guestErrorMessage, setGuestErrorMessage] = useState("");
++
++    // 게스트 후기 팝업 ("write" 작성 / "view" 내 후기 보기)
++    const [reviewModal, setReviewModal] = useState(null);
++    const [reviewRating, setReviewRating] = useState(5);
++    const [reviewText, setReviewText] = useState("");
++    const [reviewSubmitting, setReviewSubmitting] = useState(false);
++
+     const [loading, setLoading] = useState(true);
+     const [errorMessage, setErrorMessage] = useState("");
+ 
+@@ -204,15 +301,36 @@
+ 
+                 setLoading(true);
+                 setErrorMessage("");
++                setGuestErrorMessage("");
+ 
+-                // 1. 내 동호회 (운영 / 멤버)
+-                const clubData = await authenticatedRequest(
+-                    "/api/clubs/my",
+-                    { method: "GET" }
+-                );
++                // 1. 내 동호회 (운영 / 멤버) + 게스트 경기 (동시에)
++                //    게스트 조회가 실패해도 동호회 후기는 보여준다
++                const [clubData, guestResult] = await Promise.all([
++                    authenticatedRequest(
++                        "/api/clubs/my",
++                        { method: "GET" }
++                    ),
++                    fetchGuestReviewData().then(
++                        (value) => ({ status: "fulfilled", value }),
++                        (reason) => ({ status: "rejected", reason })
++                    ),
++                ]);
+ 
+                 if (ignore) return;
+ 
++                if (guestResult.status === "fulfilled") {
++                    setGuestItems(guestResult.value);
++                } else {
++                    console.error(
++                        "게스트 경기 후기 조회 실패:",
++                        guestResult.reason
++                    );
++                    setGuestItems([]);
++                    setGuestErrorMessage(
++                        "게스트로 참여한 경기를 불러오지 못했어요. 잠시 후 다시 시도해주세요."
++                    );
++                }
++
+                 const split = splitMyClubs(clubData);
+ 
+                 setOperatingClubs(split.operatingClubs);
+@@ -302,6 +420,96 @@
+     const isOperator = operatingClubs.length > 0;
+     const visibleItems = reviewData[activeTab] ?? [];
+ 
++    const hasGuestSection =
++        guestItems.length > 0 || Boolean(guestErrorMessage);
++
++    const guestTodoCount = guestItems.filter(
++        (item) => !item.myReview
++    ).length;
++
++
++    // =========================================================
++    // ⭐ 게스트 후기 팝업 열기 / 닫기
++    // =========================================================
++    const openGuestReview = (item) => {
++
++        if (item.myReview) {
++            setReviewModal({ mode: "view", item });
++            return;
++        }
++
++        setReviewRating(5);
++        setReviewText("");
++        setReviewModal({ mode: "write", item });
++    };
++
++    const closeGuestReview = () => {
++        if (reviewSubmitting) return;
++        setReviewModal(null);
++    };
++
++
++    // =========================================================
++    // ⭐ 게스트 후기 저장
++    // =========================================================
++    const handleSubmitGuestReview = async () => {
++
++        const item = reviewModal?.item;
++        if (!item) return;
++
++        const trimmedText = reviewText.trim();
++
++        if (!reviewRating) {
++            alert("별점을 선택해주세요.");
++            return;
++        }
++
++        if (!trimmedText) {
++            alert("후기 내용을 작성해주세요.");
++            return;
++        }
++
++        setReviewSubmitting(true);
++
++        try {
++
++            const savedReview = await createEventReview(
++                item.club_id,
++                item.event_id,
++                reviewRating,
++                trimmedText
++            );
++
++            // 목록에서 "작성 완료"로 바꾸기
++            setGuestItems((current) =>
++                current.map((guestItem) =>
++                    guestItem.event_id === item.event_id
++                        ? {
++                            ...guestItem,
++                            myReview: savedReview ?? {
++                                rating: reviewRating,
++                                review_text: trimmedText,
++                            },
++                        }
++                        : guestItem
++                )
++            );
++
++            alert("후기가 등록되었습니다.");
++            setReviewModal(null);
++
++        } catch (error) {
++
++            console.error("게스트 후기 등록 실패:", error);
++            alert(error?.message || "후기 등록에 실패했습니다.");
++
++        } finally {
++
++            setReviewSubmitting(false);
++
++        }
++    };
++
+ 
+     // =========================================================
+     // ⭐ 화면
+@@ -461,6 +669,97 @@
+ 
+ 
+                     {/* ========================================
++                       ⭐ 게스트 영역
++                       ======================================== */}
++
++                    {hasGuestSection && (
++                        <section className="my-reviews-guest">
++
++                            <h3 className="my-reviews-guest-title">
++                                게스트로 참여한 경기
++                                {guestTodoCount > 0 && (
++                                    <span className="my-reviews-guest-count">
++                                        작성 전 {guestTodoCount}
++                                    </span>
++                                )}
++                            </h3>
++
++                            <p className="my-reviews-guest-desc">
++                                다른 동호회 일정에 게스트로 참여한 경기는 활동 후기를 남길 수 있어요.
++                            </p>
++
++                            {guestErrorMessage && (
++                                <p className="my-reviews-warning">
++                                    {guestErrorMessage}
++                                </p>
++                            )}
++
++                            {guestItems.length > 0 && (
++                                <ul className="my-reviews-list">
++                                    {guestItems.map((item) => (
++                                        <li key={`guest-${item.event_id}`}>
++                                            <button
++                                                type="button"
++                                                className="my-reviews-card guest"
++                                                onClick={() => openGuestReview(item)}
++                                            >
++
++                                                {item.event_image_url ? (
++                                                    <img
++                                                        className="my-reviews-thumb"
++                                                        src={item.event_image_url}
++                                                        alt=""
++                                                    />
++                                                ) : (
++                                                    <span
++                                                        className="my-reviews-thumb placeholder guest"
++                                                        aria-hidden="true"
++                                                    >
++                                                        {item.club_name?.slice(0, 1)}
++                                                    </span>
++                                                )}
++
++                                                <span className="my-reviews-info">
++
++                                                    <span className="my-reviews-opponent">
++                                                        {item.title}
++                                                    </span>
++
++                                                    <span className="my-reviews-meta">
++                                                        {formatDateLabel(item.event_date)}
++                                                        {item.location && `, ${item.location}`}
++                                                    </span>
++
++                                                    <span className="my-reviews-club guest">
++                                                        <span className="my-reviews-guest-badge">
++                                                            게스트
++                                                        </span>
++                                                        {item.club_name}
++                                                    </span>
++
++                                                </span>
++
++                                                <span
++                                                    className={
++                                                        item.myReview
++                                                            ? "my-reviews-action view"
++                                                            : "my-reviews-action write"
++                                                    }
++                                                >
++                                                    {item.myReview ? "내 후기" : "후기 쓰기"}
++                                                </span>
++
++                                            </button>
++                                        </li>
++                                    ))}
++                                </ul>
++                            )}
++
++                        </section>
++                    )}
++
++
++                    {/* ========================================
+                        ⭐ 멤버 영역
+                        ======================================== */}
+ 
+@@ -495,12 +794,14 @@
+                     )}
+ 
+ 
+-                    {/* ⭐ 가입한 동호회가 하나도 없을 때 */}
+-                    {!isOperator && memberClubs.length === 0 && (
++                    {/* ⭐ 가입한 동호회도, 게스트로 참여한 경기도 없을 때 */}
++                    {!isOperator && memberClubs.length === 0 && !hasGuestSection && (
+                         <p className="my-reviews-message">
+-                            가입한 동호회가 없어요.
++                            아직 확인할 경기 후기가 없어요.
+                             <br />
+-                            동호회에 가입하면 팀매칭 후기를 확인할 수 있어요.
++                            동호회에 가입하거나 게스트로 경기에 참여하면
++                            <br />
++                            후기를 남기고 확인할 수 있어요.
+                         </p>
+                     )}
+                 </>
+@@ -508,6 +809,152 @@
+             )}
+ 
+ 
++            {/* ========================================
++               ⭐ 게스트 후기 팝업 (작성 / 내 후기 보기)
++               ======================================== */}
++
++            {reviewModal && (
++                <div
++                    className="my-reviews-modal-overlay"
++                    onClick={closeGuestReview}
++                >
++                    <div
++                        className="my-reviews-modal"
++                        role="dialog"
++                        aria-modal="true"
++                        aria-labelledby="my-reviews-modal-title"
++                        onClick={(e) => e.stopPropagation()}
++                    >
++
++                        <div className="my-reviews-modal-header">
++                            <h3 id="my-reviews-modal-title">
++                                {reviewModal.mode === "write"
++                                    ? "활동 후기 작성"
++                                    : "내가 쓴 후기"}
++                            </h3>
++
++                            <button
++                                type="button"
++                                className="my-reviews-modal-close"
++                                aria-label="닫기"
++                                onClick={closeGuestReview}
++                                disabled={reviewSubmitting}
++                            >
++                                ×
++                            </button>
++                        </div>
++
++                        <div className="my-reviews-modal-event">
++                            <strong>{reviewModal.item.title}</strong>
++                            <span>
++                                {reviewModal.item.club_name}
++                                {" · "}
++                                {formatDateLabel(reviewModal.item.event_date)}
++                            </span>
++                        </div>
++
++                        {reviewModal.mode === "write" ? (
++                            <>
++                                <div className="my-reviews-modal-rating">
++                                    <p>이번 경기는 어땠나요?</p>
++
++                                    <div className="my-reviews-stars">
++                                        {[1, 2, 3, 4, 5].map((star) => (
++                                            <button
++                                                key={star}
++                                                type="button"
++                                                aria-label={`${star}점`}
++                                                className={
++                                                    star <= reviewRating
++                                                        ? "active"
++                                                        : ""
++                                                }
++                                                onClick={() => setReviewRating(star)}
++                                            >
++                                                ★
++                                            </button>
++                                        ))}
++                                    </div>
++
++                                    <span>{reviewRating}점</span>
++                                </div>
++
++                                <div className="my-reviews-modal-text">
++                                    <textarea
++                                        value={reviewText}
++                                        onChange={(e) => setReviewText(e.target.value)}
++                                        placeholder="게스트로 참여한 경기에 대한 후기를 남겨주세요."
++                                        maxLength={REVIEW_MAX_LENGTH}
++                                    />
++                                    <small>
++                                        {reviewText.length}/{REVIEW_MAX_LENGTH}
++                                    </small>
++                                </div>
++
++                                <div className="my-reviews-modal-actions">
++                                    <button
++                                        type="button"
++                                        onClick={closeGuestReview}
++                                        disabled={reviewSubmitting}
++                                    >
++                                        취소
++                                    </button>
++
++                                    <button
++                                        type="button"
++                                        className="primary"
++                                        onClick={handleSubmitGuestReview}
++                                        disabled={reviewSubmitting}
++                                    >
++                                        {reviewSubmitting ? "등록 중..." : "후기 등록"}
++                                    </button>
++                                </div>
++                            </>
++                        ) : (
++                            <>
++                                <div className="my-reviews-modal-rating">
++                                    <div
++                                        className="my-reviews-stars readonly"
++                                        aria-label={`${reviewModal.item.myReview.rating ?? 0}점`}
++                                    >
++                                        {[1, 2, 3, 4, 5].map((star) => (
++                                            <span
++                                                key={star}
++                                                className={
++                                                    star <= (reviewModal.item.myReview.rating ?? 0)
++                                                        ? "active"
++                                                        : ""
++                                                }
++                                            >
++                                                ★
++                                            </span>
++                                        ))}
++                                    </div>
++
++                                    <span>{reviewModal.item.myReview.rating ?? 0}점</span>
++                                </div>
++
++                                <p className="my-reviews-modal-review">
++                                    {reviewModal.item.myReview.review_text}
++                                </p>
++
++                                <div className="my-reviews-modal-actions">
++                                    <button
++                                        type="button"
++                                        className="primary"
++                                        onClick={closeGuestReview}
++                                    >
++                                        닫기
++                                    </button>
++                                </div>
++                            </>
++                        )}
++
++                    </div>
++                </div>
++            )}
++
++
+             {/* ⭐ 공통 하단 네비게이션 */}
+             <BottomNav />
+ 
+diff -ru -x __pycache__ app_orig/app/repositories/event_review_repository.py app/app/repositories/event_review_repository.py
+--- app_orig/app/repositories/event_review_repository.py	2026-09-30 02:00:23.456281582 +0000
++++ app/app/repositories/event_review_repository.py	2026-09-30 02:02:00.129900178 +0000
+@@ -109,4 +109,32 @@
+                 "동호회 활동 후기 작성에 실패했습니다."
+             )
+ 
+-        return response.data[0]
+\ No newline at end of file
++        return response.data[0]
++
++    # -----------------------------------------------------
++    # 게스트로 참여 확정(joined)됐는지 확인
++    #
++    # 같은 일정에 게스트 신청 기록이 여러 개면
++    # 가장 최근 신청 기준으로 판단한다.
++    # -----------------------------------------------------
++    def is_joined_guest(
++        self,
++        event_id: int,
++        user_id: str,
++    ) -> bool:
++        response = (
++            self.admin_client
++            .table("event_participants")
++            .select("event_participant_id, status")
++            .eq("event_id", event_id)
++            .eq("user_id", user_id)
++            .eq("participant_type", "guest")
++            .order("event_participant_id", desc=True)
++            .limit(1)
++            .execute()
++        )
++
++        if not response.data:
++            return False
++
++        return response.data[0].get("status") == "joined"
+diff -ru -x __pycache__ app_orig/app/services/event_review_service.py app/app/services/event_review_service.py
+--- app_orig/app/services/event_review_service.py	2026-09-30 02:00:23.457256652 +0000
++++ app/app/services/event_review_service.py	2026-09-30 02:02:00.128605260 +0000
+@@ -182,6 +182,8 @@
+             )
+ 
+         # 4. 참석 여부 확인
++        #    - 멤버: 참석 투표에서 "참석"
++        #    - 게스트: 게스트 신청이 참여 확정(joined)
+         attendance_status = (
+             self.get_user_attendance_status(
+                 event_id=event_id,
+@@ -189,7 +191,19 @@
+             )
+         )
+ 
+-        if attendance_status != "attending":
++        is_attending_member = (
++            attendance_status == "attending"
++        )
++
++        is_joined_guest = (
++            not is_attending_member
++            and self.review_repository.is_joined_guest(
++                event_id=event_id,
++                user_id=user_id,
++            )
++        )
++
++        if not (is_attending_member or is_joined_guest):
+             raise PermissionError(
+                 "활동에 참석한 이용자만 후기를 작성할 수 있습니다."
+             )
+@@ -247,4 +261,4 @@
+             .find_event_reviews(
+                 event_id=event_id,
+             )
+-        )
+\ No newline at end of file
++        )
+\ No newline at end of file
