@@ -294,7 +294,7 @@
    ======================================== */
 
 .dark-mode .settings-page {
-    background: #12161c;
+    background: #2f3744;
     color: #f1f4f8;
 }
 
@@ -320,9 +320,9 @@
 /* ⭐ 카드 */
 
 .dark-mode .settings-card {
-    background: #1b2129;
+    background: #24282e;
 
-    border-color: #303844;
+    border-color: #82b595;
 }
 
 
@@ -340,7 +340,7 @@
 }
 
 .dark-mode .settings-button:hover {
-    background: #242b34;
+    background: #313844;
 }
 
 
@@ -354,16 +354,16 @@
 /* ⭐ 구분선 */
 
 .dark-mode .settings-divider {
-    background: #303844;
+    background: #3d4552;
 }
 
 
 /* ⭐ 로그아웃 */
 
 .dark-mode .logout-button {
-    background: #291d1d;
+    background: #2b1f1f;
 
-    border-color: #713c3c;
+    border-color: #c55252;
 
     color: #ff8585;
 }

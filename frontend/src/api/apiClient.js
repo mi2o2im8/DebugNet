@@ -343,9 +343,14 @@ const sendRequest = async (
             let currentSession =
                 sessionData?.session;
 
-            // 현재 세션이 없으면 refresh
+            // 현재 세션이 없거나,
+            // 방금 거절당한 토큰과 같은 토큰이면 refresh
+            // (같은 토큰으로 다시 보내면 또 401이 나기 때문)
             if (
-                !currentSession?.access_token &&
+                (
+                    !currentSession?.access_token ||
+                    currentSession.access_token === session.access_token
+                ) &&
                 !logoutInProgress
             ) {
                 currentSession =

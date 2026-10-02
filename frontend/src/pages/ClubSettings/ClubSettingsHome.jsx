@@ -18,40 +18,47 @@ import {
 import "./ClubSettings.css";
 
 
-const SETTING_MENUS = [
+const createSettingMenus = (clubId) => [
     {
         id: "basic",
         label: "기본 정보 수정",
+        path: "basic",
         icon: FiEdit3
     },
     {
         id: "introduction",
         label: "동호회 소개 수정",
+        path: "introduction",
         icon: FiFileText
     },
     {
         id: "activity",
         label: "활동 지역·종목 수정",
-        icon: FiMapPin
+        icon: FiMapPin,
+        disabled: true
     },
     {
         id: "join",
         label: "가입 방식 설정",
+        path: "join",
         icon: FiUserCheck
     },
     {
         id: "questions",
         label: "가입 질문 관리",
-        icon: FiHelpCircle
+        icon: FiHelpCircle,
+        disabled: true
     },
     {
         id: "operators",
         label: "운영진 관리",
+        fullPath: `/clubs/${clubId}/manage/members`,
         icon: FiShield
     },
     {
         id: "delete",
         label: "동호회 삭제",
+        path: "delete",
         icon: FiTrash2,
         danger: true
     }
@@ -61,10 +68,20 @@ const SETTING_MENUS = [
 function ClubSettingsHome() {
     const { clubId } = useParams();
     const navigate = useNavigate();
+    const settingMenus = createSettingMenus(clubId);
 
-    const openSettingMenu = (menuId) => {
+    const openSettingMenu = (menu) => {
+        if (menu.disabled) {
+            return;
+        }
+
+        if (menu.fullPath) {
+            navigate(menu.fullPath);
+            return;
+        }
+
         navigate(
-            `/clubs/${clubId}/manage/settings/${menuId}`
+            `/clubs/${clubId}/manage/settings/${menu.path}`
         );
     };
 
@@ -92,7 +109,7 @@ function ClubSettingsHome() {
 
             <section className="club-settings-content">
                 <div className="club-settings-menu-card">
-                    {SETTING_MENUS.map((menu, index) => {
+                    {settingMenus.map((menu, index) => {
                         const Icon = menu.icon;
 
                         return (
@@ -105,12 +122,14 @@ function ClubSettingsHome() {
                                     type="button"
                                     className={[
                                         "club-settings-menu-button",
-                                        menu.danger ? "danger" : ""
+                                        menu.danger ? "danger" : "",
+                                        menu.disabled ? "disabled" : ""
                                     ]
                                         .filter(Boolean)
                                         .join(" ")}
+                                    disabled={menu.disabled}
                                     onClick={() =>
-                                        openSettingMenu(menu.id)
+                                        openSettingMenu(menu)
                                     }
                                 >
                                     <span className="club-settings-menu-icon">
@@ -121,7 +140,13 @@ function ClubSettingsHome() {
                                         {menu.label}
                                     </span>
 
-                                    <FiChevronRight className="club-settings-menu-arrow" />
+                                    {menu.disabled ? (
+                                        <span className="club-settings-menu-status">
+                                            준비 중
+                                        </span>
+                                    ) : (
+                                        <FiChevronRight className="club-settings-menu-arrow" />
+                                    )}
                                 </button>
                             </div>
                         );

@@ -309,3 +309,23 @@
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
   }
 }
+/* =====================================================
+   필터 버튼 아이콘 (☷ / ⌄ 글자 → SVG)
+===================================================== */
+.ClubSearch-filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ClubSearch-filter-label svg,
+.ClubSearch-filter-arrow svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.ClubSearch-filter-arrow {
+  display: inline-flex;
+  align-items: center;
+  color: #8a8f96;
+}
