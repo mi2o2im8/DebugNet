@@ -1,4 +1,4 @@
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 
 
 
@@ -62,6 +62,18 @@ class OperatorMlService:
         "주 2회": "일주일에 2번",
         "비정기 활동": "한 달에 3번 이하",
         "자유 참여": "한 달에 3번 이하",
+    }
+
+    H1_SKILL_BY_SCORE = {
+        1.0: "초보",
+        0.5: "중급",
+        0.0: "숙련",
+    }
+
+    H1_PURPOSE_BY_SCORE = {
+        1.0: "친목",
+        0.5: "운동",
+        0.0: "경쟁",
     }
 
     @staticmethod
@@ -621,3 +633,816 @@ class OperatorMlService:
             ),
             "missing_axes": unique_missing_axes,
         }
+
+    @classmethod
+    def _h1_age(cls, birth_date) -> int | None:
+        if not birth_date:
+            return None
+
+        try:
+            if isinstance(birth_date, datetime):
+                parsed = birth_date.date()
+            elif isinstance(birth_date, date):
+                parsed = birth_date
+            else:
+                parsed = date.fromisoformat(
+                    str(birth_date)[:10]
+                )
+        except (TypeError, ValueError):
+            return None
+
+        today = date.today()
+        return (
+            today.year
+            - parsed.year
+            - (
+                (today.month, today.day)
+                < (parsed.month, parsed.day)
+            )
+        )
+
+    @classmethod
+    def _h1_age_constraint(
+        cls,
+        age_groups: list[str],
+    ) -> list[int] | None:
+        ranges = {
+            "10대": (10, 19),
+            "20대": (20, 29),
+            "30대": (30, 39),
+            "40대": (40, 49),
+            "50대": (50, 59),
+            "60대 이상": (60, 120),
+        }
+        selected = [
+            ranges[value]
+            for value in age_groups
+            if value in ranges
+        ]
+        if not selected:
+            return None
+        return [
+            min(value[0] for value in selected),
+            max(value[1] for value in selected),
+        ]
+
+    @classmethod
+    def _h1_gender(cls, value) -> str | None:
+        aliases = {
+            "남성": "male",
+            "남자": "male",
+            "male": "male",
+            "여성": "female",
+            "여자": "female",
+            "female": "female",
+        }
+        return aliases.get(
+            cls._normalize_text(value).lower()
+        )
+
+    @classmethod
+    def _h1_gender_constraint(
+        cls,
+        value,
+    ) -> list[str] | None:
+        normalized = cls._normalize_text(value).lower()
+        if normalized == "male":
+            return ["male"]
+        if normalized == "female":
+            return ["female"]
+        return None
+
+    @classmethod
+    def _h1_monthly_frequency(
+        cls,
+        value,
+        is_club: bool,
+    ) -> float | None:
+        mapping = (
+            cls.CLUB_FREQUENCY_VALUE
+            if is_club
+            else cls.USER_FREQUENCY_VALUE
+        )
+        weekly = mapping.get(
+            cls._normalize_text(value)
+        )
+        if weekly is None:
+            return None
+        return round(float(weekly) * 4, 2)
+
+    @classmethod
+    def _h1_score_bucket(cls, value) -> float:
+        score = float(value)
+        if score >= 0.75:
+            return 1.0
+        if score >= 0.25:
+            return 0.5
+        return 0.0
+
+    @staticmethod
+    def _h1_split_axes(value) -> list[str]:
+        text = str(value or "").strip()
+        if not text or text == "-":
+            return []
+        return [
+            item.strip()
+            for item in text.split(",")
+            if item.strip()
+        ]
+
+    def recommend_h1_candidates(
+        self,
+        context_bundle: dict,
+        limit: int = 10,
+    ) -> dict:
+        """H1 엔진 입력을 실제 서비스 DB 문맥으로 변환한다."""
+        from app.ml.operator_poc.engines.h1_recruitment import (
+            run_h1_recruitment,
+        )
+
+        contexts = context_bundle.get("contexts") or {}
+        if not contexts:
+            return {
+                "recommendations": [],
+                "total_users_scanned": context_bundle.get(
+                    "total_users_scanned", 0
+                ),
+                "candidate_pool_count": context_bundle.get(
+                    "candidate_pool_count", 0
+                ),
+                "eligible_count": 0,
+                "returned_count": 0,
+                "excluded_member_count": context_bundle.get(
+                    "excluded_member_count", 0
+                ),
+                "excluded_application_count": context_bundle.get(
+                    "excluded_application_count", 0
+                ),
+                "excluded_summary": {},
+                "consent_filter_applied": False,
+                "travel_filter_mode": "region_proxy",
+            }
+
+        first_context = next(iter(contexts.values()))
+        club = first_context.get("club") or {}
+        club_schedules = club.get("schedules") or []
+        club_slots = [
+            f"club-schedule-{index}"
+            for index, _ in enumerate(club_schedules)
+        ]
+
+        engine_club = {
+            "운영종목": club.get("sport_name"),
+            "정기활동슬롯": club_slots,
+            # 실제 적합도는 아래에서 먼저 계산하고 H1 점수 구간으로
+            # 인코딩한다. 엔진의 가중치·판정 규칙은 그대로 사용한다.
+            "모집희망실력": ["초보"],
+            "운영목적": "친목",
+            "분위기점수": 5.0,
+            "월활동횟수": 4.0,
+            "월예상비용_원": float(
+                club.get("monthly_fee") or 0
+            ),
+            "모집연령조건": self._h1_age_constraint(
+                club.get("age_groups") or []
+            ),
+            "모집성별조건": self._h1_gender_constraint(
+                club.get("gender_rule")
+            ),
+            "체험가능여부": False,
+        }
+
+        engine_users = []
+        meta_by_user: dict[str, dict] = {}
+
+        club_traits = list(
+            dict.fromkeys(
+                (club.get("atmospheres") or [])
+                + (club.get("intro_keywords") or [])
+            )
+        )
+        club_frequency = self._h1_monthly_frequency(
+            club.get("activity_frequency"),
+            is_club=True,
+        )
+        engine_club["월활동횟수"] = (
+            club_frequency
+            if club_frequency is not None
+            else 4.0
+        )
+
+        for user_id, context in contexts.items():
+            applicant = context.get("applicant") or {}
+            profile = context.get("candidate_profile") or {}
+            missing_axes: list[str] = []
+
+            matching_slots = []
+            for index, schedule in enumerate(
+                club_schedules
+            ):
+                single_score = self._schedule_score(
+                    [schedule],
+                    applicant.get("available_times") or [],
+                )
+                if single_score and single_score > 0:
+                    matching_slots.append(
+                        f"club-schedule-{index}"
+                    )
+            if (
+                not club_schedules
+                or not applicant.get("available_times")
+            ):
+                missing_axes.append("일정")
+
+            club_sport_id = club.get("sport_id")
+            sport_ids = {
+                int(value)
+                for value in applicant.get("sport_ids") or []
+            }
+            sport_match = (
+                club_sport_id is not None
+                and int(club_sport_id) in sport_ids
+            )
+
+            user_level = (
+                applicant.get("sport_levels") or {}
+            ).get(str(club_sport_id))
+            if user_level is None:
+                user_level = (
+                    applicant.get("sport_levels") or {}
+                ).get(club_sport_id)
+            skill_score = self._skill_score(
+                club.get("sport_levels") or [],
+                user_level,
+            )
+            if skill_score is None:
+                missing_axes.append("실력")
+                skill_score = 0.5
+            skill_bucket = self._h1_score_bucket(
+                skill_score
+            )
+
+            user_traits = applicant.get("atmospheres") or []
+            purpose_score = self._purpose_score(
+                club_traits,
+                user_traits,
+            )
+            if purpose_score is None:
+                missing_axes.append("목적")
+                purpose_score = 0.5
+            purpose_bucket = self._h1_score_bucket(
+                purpose_score
+            )
+
+            atmosphere_score = self._atmosphere_score(
+                club_traits,
+                user_traits,
+            )
+            if atmosphere_score is None:
+                missing_axes.append("분위기")
+                atmosphere_score = 0.5
+
+            user_frequency = self._h1_monthly_frequency(
+                applicant.get("activity_frequency"),
+                is_club=False,
+            )
+            if (
+                club_frequency is None
+                or user_frequency is None
+            ):
+                missing_axes.append("활동빈도")
+                encoded_user_frequency = (
+                    engine_club["월활동횟수"] * 0.5
+                )
+            else:
+                frequency_score = min(
+                    club_frequency,
+                    user_frequency,
+                ) / max(
+                    club_frequency,
+                    user_frequency,
+                )
+                encoded_user_frequency = (
+                    engine_club["월활동횟수"]
+                    * frequency_score
+                )
+
+            monthly_fee = float(
+                club.get("monthly_fee") or 0
+            )
+            budget = applicant.get("max_monthly_fee")
+            if budget is None:
+                missing_axes.append("비용")
+                encoded_budget = (
+                    monthly_fee * 0.5
+                    if monthly_fee > 0
+                    else 0
+                )
+            else:
+                encoded_budget = float(budget)
+
+            region_result = self._region_pass(
+                club.get("region"),
+                applicant.get("regions") or [],
+            )
+            if region_result is None:
+                missing_axes.append("이동거리")
+
+            unique_missing = list(
+                dict.fromkeys(missing_axes)
+            )
+            covered_axes = 6 - len([
+                value
+                for value in unique_missing
+                if value in self.DIRECT_FIT_AXES
+            ])
+
+            engine_users.append({
+                "회원_ID": user_id,
+                # 현재 MVP는 초대 발송이 없는 내부 미리보기다.
+                # 동의 컬럼 도입 전까지 엔진 통과값만 주입하고
+                # 응답에 필터 미적용 사실을 명시한다.
+                "모집제안수신동의": True,
+                "희망종목": (
+                    club.get("sport_name")
+                    if sport_match
+                    else None
+                ),
+                "가능슬롯": matching_slots,
+                "예상이동시간_분": (
+                    2 if region_result is False else 0
+                ),
+                "이동가능시간_분": 1,
+                "나이": self._h1_age(
+                    applicant.get("birth_date")
+                ),
+                "성별": self._h1_gender(
+                    applicant.get("gender")
+                ),
+                "실력": self.H1_SKILL_BY_SCORE[
+                    skill_bucket
+                ],
+                "목적": self.H1_PURPOSE_BY_SCORE[
+                    purpose_bucket
+                ],
+                "분위기점수": round(
+                    1 + 4 * float(atmosphere_score),
+                    4,
+                ),
+                "희망월활동횟수": max(
+                    encoded_user_frequency,
+                    0.01,
+                ),
+                "월예산_원": encoded_budget,
+            })
+
+            meta_by_user[user_id] = {
+                "profile": profile,
+                "missing_axes": unique_missing,
+                "data_coverage": round(
+                    covered_axes / 6 * 100
+                ),
+            }
+
+        ranked = run_h1_recruitment(
+            club=engine_club,
+            users=engine_users,
+            return_all=True,
+        )
+
+        recommendations = []
+        excluded_summary: dict[str, int] = {}
+
+        for row in ranked.to_dict(orient="records"):
+            user_id = str(row["Candidate_ID"])
+            if not bool(row["Hard_Filter_Pass"]):
+                reason = str(
+                    row["Hard_Filter_Fail_Reason"]
+                )
+                excluded_summary[reason] = (
+                    excluded_summary.get(reason, 0) + 1
+                )
+                continue
+
+            meta = meta_by_user.get(user_id, {})
+            profile = meta.get("profile") or {}
+            recommendations.append({
+                "rank": int(row["Ranking"]),
+                "user_id": user_id,
+                "nickname": profile.get(
+                    "nickname"
+                ) or "이름 없는 사용자",
+                "profile_image": profile.get(
+                    "profile_image"
+                ),
+                "direct_match_score": float(
+                    row["Direct_Match_Score"]
+                ),
+                "action": str(row["Action"]),
+                "severe_mismatch_axes": (
+                    self._h1_split_axes(
+                        row.get("Severe_Mismatch")
+                    )
+                ),
+                "partial_mismatch_axes": (
+                    self._h1_split_axes(
+                        row.get("Partial_Mismatch")
+                    )
+                ),
+                "axis_scores": {
+                    "schedule": round(
+                        float(row["Match_schedule"]) * 100
+                    ),
+                    "skill": round(
+                        float(row["Match_skill"]) * 100
+                    ),
+                    "purpose": round(
+                        float(row["Match_purpose"]) * 100
+                    ),
+                    "atmosphere": round(
+                        float(row["Match_atmosphere"]) * 100
+                    ),
+                    "activity_frequency": round(
+                        float(
+                            row["Match_activity_frequency"]
+                        ) * 100
+                    ),
+                    "cost": round(
+                        float(row["Match_cost"]) * 100
+                    ),
+                },
+                "data_coverage": meta.get(
+                    "data_coverage", 0
+                ),
+                "missing_axes": meta.get(
+                    "missing_axes", []
+                ),
+            })
+
+        eligible_count = len(recommendations)
+        recommendations = recommendations[:limit]
+
+        return {
+            "recommendations": recommendations,
+            "total_users_scanned": context_bundle.get(
+                "total_users_scanned", 0
+            ),
+            "candidate_pool_count": context_bundle.get(
+                "candidate_pool_count", len(contexts)
+            ),
+            "eligible_count": eligible_count,
+            "returned_count": len(recommendations),
+            "excluded_member_count": context_bundle.get(
+                "excluded_member_count", 0
+            ),
+            "excluded_application_count": context_bundle.get(
+                "excluded_application_count", 0
+            ),
+            "excluded_summary": excluded_summary,
+            "consent_filter_applied": False,
+            "travel_filter_mode": "region_proxy",
+        }
+
+    @classmethod
+    def _h3_slot(cls, event_date: date, start_time: str) -> str | None:
+        start = cls._to_minutes(start_time)
+        bands = (
+            (360, 480, "아침/새벽(6~8시)"),
+            (480, 720, "오전(8~12시)"),
+            (720, 840, "점심(12~14시)"),
+            (840, 1080, "오후(14~18시)"),
+            (1080, 1320, "저녁(18~22시)"),
+        )
+        for lower, upper, label in bands:
+            if lower <= start < upper:
+                day_type = "평일" if event_date.weekday() < 5 else "휴일"
+                return f"{day_type} | {label}"
+        return None
+
+    @classmethod
+    def _h3_member_available(
+        cls,
+        day: str,
+        start: int,
+        end: int,
+        availability: list[dict],
+    ) -> bool:
+        for row in availability:
+            if cls._normalize_day(row.get("day_of_week")) != day:
+                continue
+            member_start = cls._to_minutes(row.get("start_time"))
+            member_end = cls._to_minutes(row.get("end_time"))
+            if member_start is None or member_end is None:
+                continue
+            if member_end <= member_start:
+                member_end += 1440
+            if max(start, member_start) < min(end, member_end):
+                return True
+        return False
+
+    @classmethod
+    def _h3_event_conflict(
+        cls,
+        event_date: date,
+        start: int,
+        end: int,
+        existing_events: list[dict],
+    ) -> bool:
+        for event in existing_events:
+            if event.get("status") == "cancelled":
+                continue
+            if str(event.get("event_date"))[:10] != event_date.isoformat():
+                continue
+            event_start = cls._to_minutes(event.get("start_time"))
+            event_end = cls._to_minutes(event.get("end_time"))
+            if event_start is None:
+                continue
+            if event_end is None:
+                return True
+            if event_end <= event_start:
+                event_end += 1440
+            if max(start, event_start) < min(end, event_end):
+                return True
+        return False
+
+    def recommend_h3_schedules(
+        self,
+        context: dict,
+        start_date: date,
+        end_date: date,
+        minimum_participants: int,
+        guest_allowed: bool,
+        max_guests: int = 0,
+    ) -> dict:
+        """실제 DB 시간 구간을 H3 후보 슬롯으로 변환한다."""
+        day_names = ("월", "화", "수", "목", "금", "토", "일")
+        schedules = context.get("schedules") or []
+        members = context.get("members") or []
+        raw_times = context.get("available_times") or []
+        venues = context.get("venues") or []
+        existing_events = context.get("existing_events") or []
+        times_by_user: dict[str, list[dict]] = {}
+        for row in raw_times:
+            times_by_user.setdefault(str(row.get("user_id")), []).append(row)
+        users_with_times = sum(
+            bool(times_by_user.get(str(member.get("user_id"))))
+            for member in members
+        )
+        coverage = {
+            "active_members": len(members),
+            "members_with_availability": users_with_times,
+            "member_availability_percent": round(
+                users_with_times / len(members) * 100
+            ) if members else 0,
+            "candidate_schedules": 0,
+        }
+        missing = ["venue_availability", "venue_coordinates", "travel_minutes"]
+        club = context.get("club") or {}
+        if not context.get("sport"):
+            missing.append("club_sport")
+        if not context.get("region"):
+            missing.append("club_region")
+        if not club.get("activity_frequency"):
+            missing.append("club_activity_frequency")
+        if not schedules:
+            missing.append("club_schedules")
+        if not members:
+            missing.append("active_members")
+        if users_with_times < len(members):
+            missing.append("member_availability")
+        if not venues:
+            missing.append("club_venue")
+        elif len(venues) > 1:
+            missing.append("venue_selection")
+
+        response = {
+            "recommendations": [],
+            "data_coverage": coverage,
+            "missing_fields": missing,
+            "venue_availability_applied": False,
+            "travel_applied": False,
+            "candidate_time_source": "club_schedules",
+        }
+        if not schedules or not users_with_times:
+            return response
+
+        # 같은 엔진 슬롯에 속하는 실제 일정 중 시간 일치 회원이
+        # 가장 많은 날짜를 대표 후보로 사용한다.
+        best_by_slot: dict[str, dict] = {}
+        candidate_count = 0
+        overnight_schedule_seen = False
+        current_date = start_date
+        while current_date <= end_date:
+            day = day_names[current_date.weekday()]
+            for schedule in schedules:
+                if self._normalize_day(schedule.get("day_of_week")) != day:
+                    continue
+                start = self._to_minutes(schedule.get("start_time"))
+                end = self._to_minutes(schedule.get("end_time"))
+                if start is None or end is None:
+                    continue
+                if end <= start:
+                    overnight_schedule_seen = True
+                    continue  # 생성 폼은 익일 종료를 지원하지 않는다.
+                slot = self._h3_slot(current_date, schedule.get("start_time"))
+                if slot is None or self._h3_event_conflict(
+                    current_date, start, end, existing_events
+                ):
+                    continue
+                matching = {
+                    str(member["user_id"])
+                    for member in members
+                    if member.get("user_id")
+                    and self._h3_member_available(
+                        day, start, end,
+                        times_by_user.get(str(member["user_id"]), []),
+                    )
+                }
+                candidate_count += 1
+                candidate = {
+                    "slot": slot,
+                    "event_date": current_date,
+                    "start_time": str(schedule["start_time"])[:5],
+                    "end_time": str(schedule["end_time"])[:5],
+                    "matching": matching,
+                }
+                previous = best_by_slot.get(slot)
+                if previous is None or len(matching) > len(previous["matching"]):
+                    best_by_slot[slot] = candidate
+            current_date += timedelta(days=1)
+        coverage["candidate_schedules"] = candidate_count
+        if overnight_schedule_seen:
+            missing.append("overnight_schedule_unsupported")
+        if not best_by_slot:
+            missing.append("supported_candidate_time")
+            return response
+
+        venue = venues[0] if len(venues) == 1 else {}
+        venue_id = venue.get("venue_id", venue.get("club_venue_id"))
+        engine_members = [
+            {
+                "member_id": member.get("club_member_id"),
+                "available_slots": [
+                    slot for slot, candidate in best_by_slot.items()
+                    if str(member.get("user_id")) in candidate["matching"]
+                ],
+            }
+            for member in members
+        ]
+        # 엔진은 요청 시점에만 import한다.
+        from app.ml.operator_poc.engines.h3_schedule import run_h3_schedule
+
+        ranked = run_h3_schedule(
+            club={
+                "sport": context.get("sport"),
+                "region": context.get("region"),
+                "activity_frequency": self.OFFICIAL_FREQUENCY.get(
+                    club.get("activity_frequency"),
+                    club.get("activity_frequency"),
+                ),
+                "minimum_participants": minimum_participants,
+                "guest_allowed": guest_allowed,
+            },
+            members=engine_members,
+            venues=[{
+                "venue_id": venue_id,
+                "candidate_slots": list(best_by_slot),
+            }],
+            top_k=len(best_by_slot),
+        )
+        for row in ranked.to_dict(orient="records"):
+            if int(row["guest_needed"]) > max_guests:
+                continue
+            candidate = best_by_slot[row["schedule"]]
+            response["recommendations"].append({
+                "rank": len(response["recommendations"]) + 1,
+                "schedule_slot": row["schedule"],
+                "event_date": candidate["event_date"],
+                "start_time": candidate["start_time"],
+                "end_time": candidate["end_time"],
+                "venue_id": venue_id,
+                "venue_name": venue.get("venue_name"),
+                "venue_address": venue.get("address"),
+                "matching_member_count": int(row["reachable_count"]),
+                "total_members": int(row["total_members"]),
+                "availability_ratio": float(row["availability_ratio"]),
+                "guest_needed": int(row["guest_needed"]),
+                "operation_status": row["operation_status"],
+                "prior_rank": int(row["prior_rank"]),
+                "prior_score": float(row["prior_score"]),
+                "source": row["source"],
+                "strength": row["strength"],
+                "usage": row["usage"],
+                "verified": bool(row["verified"]),
+            })
+            if len(response["recommendations"]) == 3:
+                break
+        return response
+
+    def analyze_h4_participation(
+        self,
+        result_rows: list[dict],
+        member_profiles: dict[str, dict],
+    ) -> dict[str, dict]:
+        """실제 활동 결과를 H4 엔진 입력으로 변환한다.
+
+        일정 전 참석 의사(attendance_status)는 사용하지 않는다.
+        result_rows에는 운영자가 일정 종료 후 기록한 실제 결과만
+        전달되어야 한다.
+        """
+        import pandas as pd
+
+        from app.ml.operator_poc.engines.h4_participation import (
+            run_h4_participation_risk,
+        )
+
+        event_log = pd.DataFrame(
+            [
+                {
+                    "회원_ID": str(row["user_id"]),
+                    "week": row["event_date"],
+                    "event_status": row["result"],
+                }
+                for row in result_rows
+            ],
+            columns=[
+                "회원_ID",
+                "week",
+                "event_status",
+            ],
+        )
+
+        engine_profiles = {}
+        for user_id, profile in member_profiles.items():
+            weekly_frequency = self.USER_FREQUENCY_VALUE.get(
+                self._normalize_text(
+                    profile.get("activity_frequency")
+                )
+            )
+            desired_monthly = (
+                float(weekly_frequency) * 4
+                if weekly_frequency is not None
+                else 4.0
+            )
+            engine_profiles[str(user_id)] = {
+                "희망월활동횟수": desired_monthly,
+            }
+
+        output = run_h4_participation_risk(
+            event_log=event_log,
+            member_profiles=engine_profiles,
+        )
+
+        def split_values(value, separator=","):
+            text = str(value or "").strip()
+            if not text or text == "-":
+                return []
+            return [
+                item.strip()
+                for item in text.split(separator)
+                if item.strip()
+            ]
+
+        analyses = {}
+        for row in output.to_dict(orient="records"):
+            user_id = str(row["회원_ID"])
+            analyses[user_id] = {
+                "risk_score": float(row["Risk_Score"]),
+                "risk_grade": str(row["Risk_Grade"]),
+                "detected_risk": str(row["Detected_Risk"]),
+                "reason_candidates": split_values(
+                    row.get("Reason_Candidates")
+                ),
+                "confirmation_questions": split_values(
+                    row.get("Confirmation_Question"),
+                    separator="/",
+                ),
+                "operator_action": str(row["Operator_Action"]),
+                "operator_summary": str(row["Operator_Summary"]),
+                "management_priority": int(
+                    row["관리우선순위"]
+                ),
+                "previous_attendance_rate": float(
+                    row["이전4주_참석률"]
+                ),
+                "recent_attendance_rate": float(
+                    row["최근4주_참석률"]
+                ),
+                "attendance_rate_delta": float(
+                    row["참석률_변화폭"]
+                ),
+                "recent_cancel_rate": float(
+                    row["최근4주_취소율"]
+                ),
+                "recent_no_show_rate": float(
+                    row["최근4주_노쇼율"]
+                ),
+                "consecutive_nonparticipation": int(
+                    row["연속미참여횟수"]
+                ),
+                "missed_opportunities": int(
+                    row["마지막참석후_미참여기회"]
+                ),
+            }
+
+        return analyses

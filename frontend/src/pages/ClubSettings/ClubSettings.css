@@ -73,6 +73,25 @@
     background: #f4fbf7;
 }
 
+.club-settings-menu-button.disabled {
+    cursor: default;
+    opacity: 0.55;
+}
+
+.club-settings-menu-button.disabled:hover {
+    background: transparent;
+}
+
+.club-settings-menu-status {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #f2f4f7;
+    color: #667085;
+    font-size: 10px;
+    font-weight: 700;
+}
+
 .club-settings-menu-icon {
     display: flex;
     align-items: center;
@@ -178,6 +197,51 @@
 .club-settings-input:focus {
     border-color: #0a9f5a;
     box-shadow: 0 0 0 3px rgba(10, 159, 90, 0.1);
+}
+
+.club-settings-textarea {
+    width: 100%;
+    min-height: 220px;
+    padding: 14px;
+    border: 1px solid #d0d5dd;
+    border-radius: 12px;
+    outline: none;
+    background: #ffffff;
+    color: #101828;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.7;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.club-settings-textarea:focus {
+    border-color: #0a9f5a;
+    box-shadow: 0 0 0 3px rgba(10, 159, 90, 0.1);
+}
+
+.club-settings-textarea::placeholder {
+    color: #98a2b3;
+}
+
+.club-settings-textarea-footer {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.club-settings-textarea-footer small {
+    color: #98a2b3;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.club-settings-textarea-footer span {
+    flex-shrink: 0;
+    color: #98a2b3;
+    font-size: 11px;
 }
 
 .club-settings-input.readonly {

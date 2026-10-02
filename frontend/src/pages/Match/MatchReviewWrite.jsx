@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
   useEffect,
   useState,
@@ -26,6 +27,7 @@ import {
 } from "../../api/clubApi";
 
 import "./CSS/MatchReview.css";
+import { goBack } from "../../utils/navigation";
 
 
 
@@ -345,7 +347,7 @@ function MatchReviewWrite() {
       );
 
 
-      navigate(-1);
+      goBack(navigate);
 
     } catch (error) {
 
@@ -382,11 +384,11 @@ function MatchReviewWrite() {
             type="button"
             className="match-review-back"
             onClick={() =>
-              navigate(-1)
+              goBack(navigate)
             }
             aria-label="뒤로가기"
           >
-            ‹
+            <BackButtonIcon />
           </button>
 
           <h1>
@@ -434,11 +436,11 @@ function MatchReviewWrite() {
             type="button"
             className="match-review-back"
             onClick={() =>
-              navigate(-1)
+              goBack(navigate)
             }
             aria-label="뒤로가기"
           >
-            ‹
+            <BackButtonIcon />
           </button>
 
           <h1>
@@ -492,7 +494,7 @@ function MatchReviewWrite() {
           }
           aria-label="뒤로가기"
         >
-          ‹
+          <BackButtonIcon />
         </button>
 
 

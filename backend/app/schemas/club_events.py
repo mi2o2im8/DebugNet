@@ -3,6 +3,7 @@ from datetime import (
     datetime,
     time,
 )
+from zoneinfo import ZoneInfo
 from typing import Literal
 
 from uuid import UUID
@@ -546,3 +547,55 @@ class ClubLeaveReviewResponse(BaseModel):
     review_text: str | None = None
     created_at: datetime | None = None
     nickname: str | None = None
+
+
+class ClubEventRecommendationRequest(BaseModel):
+    start_date: date
+    end_date: date
+    minimum_participants: int = Field(ge=1, le=1000)
+    guest_allowed: bool = False
+    max_guests: int = Field(default=0, ge=0)
+
+    @model_validator(mode="after")
+    def validate_window(self):
+        days = (self.end_date - self.start_date).days
+        if days < 0 or days > 27:
+            raise ValueError("추천 기간은 1일부터 최대 28일까지입니다.")
+        if self.start_date < datetime.now(ZoneInfo("Asia/Seoul")).date():
+            raise ValueError("지난 날짜에는 일정을 추천할 수 없습니다.")
+        if self.guest_allowed and self.max_guests < 1:
+            raise ValueError("게스트 허용 시 최대 게스트 인원이 필요합니다.")
+        return self
+
+
+class ClubEventRecommendationItem(BaseModel):
+    rank: int
+    schedule_slot: str
+    event_date: date
+    start_time: time
+    end_time: time
+    venue_id: int | str | None = None
+    venue_name: str | None = None
+    venue_address: str | None = None
+    matching_member_count: int
+    total_members: int
+    availability_ratio: float
+    guest_needed: int
+    operation_status: str
+    prior_rank: int
+    prior_score: float
+    source: str
+    strength: str
+    usage: str
+    verified: bool
+
+
+class ClubEventRecommendationResponse(BaseModel):
+    recommendations: list[ClubEventRecommendationItem] = Field(
+        default_factory=list
+    )
+    data_coverage: dict[str, int | float]
+    missing_fields: list[str] = Field(default_factory=list)
+    venue_availability_applied: bool = False
+    travel_applied: bool = False
+    candidate_time_source: str = "club_schedules"

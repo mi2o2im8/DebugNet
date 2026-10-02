@@ -2,7 +2,7 @@
 .club-home-chatbot-button {
     position: fixed;
     right: 20px;
-    bottom: 85px;
+    bottom: calc(85px + env(safe-area-inset-bottom, 0px));
 
     width: auto;
     height: 54px;
@@ -78,4 +78,66 @@
 
     color: #333333;
     white-space: nowrap;
+}
+
+
+/* =====================================================
+   ⭐ 세로형 (기본): 이미지 위 + "이용 도우미" 아래
+   동호회 찾기 목업 디자인과 같은 동그란 버튼
+===================================================== */
+
+.club-home-chatbot-button.stacked {
+    right: 14px;
+
+    width: 74px;
+    height: 74px;
+
+    padding: 0;
+
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+
+    border: 2px solid #01A17F;
+    border-radius: 50%;
+
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+
+    transition: transform 0.15s ease;
+}
+
+.club-home-chatbot-button.stacked:active {
+    transform: scale(0.95);
+}
+
+/* 이미지: 동그란 틀 없이 그대로 (아이콘 모서리가 잘리지 않게) */
+.club-home-chatbot-button.stacked .club-home-chatbot-image-wrap {
+    width: 34px !important;
+    height: 34px !important;
+
+    min-width: 34px !important;
+    min-height: 34px !important;
+    max-width: 34px !important;
+    max-height: 34px !important;
+
+    border: none;
+    border-radius: 0;
+
+    overflow: visible;
+
+    background: transparent;
+}
+
+.club-home-chatbot-button.stacked .club-home-chatbot-image {
+    object-fit: contain;
+}
+
+/* 글씨: 이미지 아래 */
+.club-home-chatbot-button.stacked .club-home-chatbot-text {
+    margin-left: 0;
+
+    font-size: 11px;
+    line-height: 1;
+
+    color: #01A17F;
 }

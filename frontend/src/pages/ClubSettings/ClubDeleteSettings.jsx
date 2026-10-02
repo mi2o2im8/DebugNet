@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useEffect,
     useState
@@ -10,7 +11,6 @@ import {
 
 import {
     FiAlertTriangle,
-    FiChevronLeft,
     FiTrash2
 } from "react-icons/fi";
 
@@ -163,7 +163,7 @@ function ClubDeleteSettings() {
                         )
                     }
                 >
-                    <FiChevronLeft />
+                    <BackButtonIcon />
                 </button>
 
                 <h1>동호회 삭제</h1>

@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useEffect,
     useState
@@ -10,7 +11,6 @@ import {
 
 import {
     FiCheck,
-    FiChevronLeft,
     FiLock,
     FiSave,
     FiShield,
@@ -166,7 +166,7 @@ function ClubJoinSettings() {
                         )
                     }
                 >
-                    <FiChevronLeft />
+                    <BackButtonIcon />
                 </button>
 
                 <h1>가입 방식 설정</h1>

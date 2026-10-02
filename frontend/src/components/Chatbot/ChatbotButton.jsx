@@ -3,12 +3,20 @@
 import chatbotIcon from "../../assets/img/chatbot/chatbot-icon.png";
 import "./ChatbotButton.css";
 
-const ChatbotButton = ({ onClick }) => {
+// variant
+//   "stacked" (기본) : 동그란 버튼 안에 이미지 + 아래 "이용 도우미" 글씨
+//   "pill"           : 예전 가로형 (이미지 옆에 글씨)
+const ChatbotButton = ({ onClick, variant = "stacked" }) => {
     return (
         <button
             type="button"
-            className="club-home-chatbot-button"
+            className={
+                variant === "pill"
+                    ? "club-home-chatbot-button"
+                    : "club-home-chatbot-button stacked"
+            }
             onClick={onClick}
+            aria-label="이용 도우미 열기"
         >
             {/* ⭐ 챗봇 이미지 원형 영역 */}
             <span className="club-home-chatbot-image-wrap">

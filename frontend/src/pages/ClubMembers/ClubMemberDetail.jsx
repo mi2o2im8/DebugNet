@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useCallback,
     useEffect,
@@ -11,7 +12,6 @@ import {
 
 import {
     FiAlertTriangle,
-    FiArrowLeft,
     FiCalendar,
     FiCheckCircle,
     FiClock,
@@ -32,6 +32,7 @@ import {
 } from "../../api/clubApi";
 
 import "./ClubMemberDetail.css";
+import { goBack } from "../../utils/navigation";
 
 
 const DETAIL_TABS = [
@@ -476,9 +477,11 @@ function ClubMemberDetail() {
 
                 <button
                     type="button"
-                    onClick={() => navigate(-1)}
+                    className="pb-back-text-button"
+                    onClick={() => goBack(navigate)}
                 >
-                    이전 화면으로
+                    <BackButtonIcon />
+                    <span>이전 화면으로</span>
                 </button>
             </main>
         );
@@ -491,9 +494,9 @@ function ClubMemberDetail() {
                 <button
                     type="button"
                     aria-label="이전 화면"
-                    onClick={() => navigate(-1)}
+                    onClick={() => goBack(navigate)}
                 >
-                    <FiArrowLeft />
+                    <BackButtonIcon />
                 </button>
 
                 <h1>회원 상세</h1>

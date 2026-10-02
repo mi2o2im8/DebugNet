@@ -5,7 +5,7 @@
 .Back-btn {
     position: fixed;
 
-    top: 0;
+    top: env(safe-area-inset-top, 0px);
     left: 50%;
 
     transform: translateX(-50%);
@@ -69,6 +69,41 @@
 }
 
 
+
+/* ========================================
+   공용 뒤로가기 아이콘
+   - 기존 BackButton 레이아웃은 그대로 두고
+   - 페이지별 헤더 버튼에서도 동일한 아이콘만 재사용
+   ======================================== */
+.BackButton-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    display: block;
+    flex: 0 0 auto;
+    pointer-events: none;
+
+    filter:
+        brightness(0)
+        saturate(100%)
+        invert(45%)
+        sepia(90%)
+        saturate(900%)
+        hue-rotate(120deg)
+        brightness(90%);
+}
+
+.dark-mode .BackButton-icon {
+    filter:
+        brightness(0)
+        saturate(100%)
+        invert(45%)
+        sepia(90%)
+        saturate(900%)
+        hue-rotate(120deg)
+        brightness(90%);
+}
+
 /* ========================================
    ⭐ 클릭 효과
    ======================================== */
@@ -89,7 +124,7 @@
 @media (max-width: 500px) {
 
     .Back-btn {
-        top: 0;
+        top: env(safe-area-inset-top, 0px);
         left: 0;
 
         transform: none;
@@ -119,4 +154,180 @@
     .Back-btn:active img {
         opacity: 0.7;
     }
+}
+
+/* ========================================
+   ⭐ 화살표만 눌리게
+   버튼은 위쪽 바 전체 크기지만,
+   바의 빈 곳 · 제목은 클릭이 통과하고
+   화살표 그림을 눌렀을 때만 뒤로가기
+   ======================================== */
+
+.Back-btn {
+    pointer-events: none;
+}
+
+.Back-btn img {
+    pointer-events: auto;
+
+    /* 손가락으로 누르기 쉽게 누를 수 있는 범위를 조금 넓힘 */
+    padding: 8px;
+    margin: -8px;
+
+    box-sizing: content-box;
+}
+
+/* ========================================
+   뒤로가기 아이콘 최종 공통 규격
+   - "내 정보" PageHeader의 아이콘 모양을 기준으로 통일
+   - 페이지별 .Back-btn img / button img 규칙이 있어도
+     아이콘 자체 크기·색·정렬은 동일하게 유지
+   ======================================== */
+.BackButton-icon,
+.Back-btn img.BackButton-icon {
+    width: 24px !important;
+    height: 24px !important;
+
+    padding: 8px !important;
+    margin: -8px !important;
+    box-sizing: content-box !important;
+
+    object-fit: contain !important;
+    display: block !important;
+    flex: 0 0 auto !important;
+
+    transform: none !important;
+
+    filter:
+        brightness(0)
+        saturate(100%)
+        invert(45%)
+        sepia(90%)
+        saturate(900%)
+        hue-rotate(120deg)
+        brightness(90%) !important;
+}
+
+.dark-mode .BackButton-icon,
+.dark-mode .Back-btn img.BackButton-icon {
+    filter:
+        brightness(0)
+        saturate(100%)
+        invert(45%)
+        sepia(90%)
+        saturate(900%)
+        hue-rotate(120deg)
+        brightness(90%) !important;
+}
+
+/* ========================================
+   인라인 뒤로가기 버튼 외형 통일
+   - 실제 아이콘은 모두 BackButtonIcon(back.png) 사용
+   - "내 정보" PageHeader 기준: 투명 배경 / 테두리 없음 / 34px
+   - 각 페이지의 position/top/left는 건드리지 않음
+   ======================================== */
+:where(
+    .ClubList-back-button,
+    .club-application-header > button:first-child,
+    .club-create-back-button,
+    .club-dashboard-header > button:first-child,
+    .club-detail-header-btn,
+    .club-attendance-back-button,
+    .club-event-detail-header > button:first-child,
+    .club-event-form-header > button:first-child,
+    .club-events-page > header > button:first-child,
+    .event-participants-page > header > button:first-child,
+    .club-member-detail-header > button:first-child,
+    .club-member-back-button,
+    .club-settings-back-button,
+    .club-user-header > button:first-child,
+    .club-community-back-btn,
+    .post-back-btn,
+    .post-write-back,
+    .GuestRecruitDetail-back-button,
+    .match-management-back-btn,
+    .match-management-detail-header > button:first-child,
+    .match-management-detail-back,
+    .match-management-list-back,
+    .match-record-write-back,
+    .match-review-detail-back,
+    .match-review-back
+) {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+:where(
+    .ClubList-back-button,
+    .club-application-header > button:first-child,
+    .club-create-back-button,
+    .club-dashboard-header > button:first-child,
+    .club-detail-header-btn,
+    .club-attendance-back-button,
+    .club-event-detail-header > button:first-child,
+    .club-event-form-header > button:first-child,
+    .club-events-page > header > button:first-child,
+    .event-participants-page > header > button:first-child,
+    .club-member-detail-header > button:first-child,
+    .club-member-back-button,
+    .club-settings-back-button,
+    .club-user-header > button:first-child,
+    .club-community-back-btn,
+    .post-back-btn,
+    .post-write-back,
+    .GuestRecruitDetail-back-button,
+    .match-management-back-btn,
+    .match-management-detail-header > button:first-child,
+    .match-management-detail-back,
+    .match-management-list-back,
+    .match-record-write-back,
+    .match-review-detail-back,
+    .match-review-back
+):active .BackButton-icon {
+    opacity: 0.7;
+}
+
+/* 오류/검색 결과처럼 설명 문구와 같이 쓰는 뒤로가기 */
+.pb-back-text-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.pb-back-text-button .BackButton-icon {
+    flex: 0 0 auto;
+}
+
+
+/* ========================================
+   ⭐ 다크모드 (다크모드 지원 페이지에서만)
+======================================== */
+html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) .bottom-nav {
+  background-color: #12161c;
+  border-top-color: #303844;
+}
+
+html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) .bottom-nav-item {
+  color: #9ba7b7;
+}
+
+html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) .bottom-nav-item.active {
+  color: #20b26b;
 }

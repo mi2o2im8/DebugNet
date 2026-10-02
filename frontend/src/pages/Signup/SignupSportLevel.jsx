@@ -4,7 +4,7 @@ import "./Signup.css";
 import { useNavigate } from "react-router-dom";
 import { useSignup } from "./SignupContext";
 // 뒤로가기 버튼 소환
-import backIcon from "../../assets/img/back.png";
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 
 function SignupSportLevel() {
     const navigate = useNavigate();
@@ -45,7 +45,7 @@ function SignupSportLevel() {
                 onClick={() => navigate("/signup/basic/sport")}
                 aria-label="뒤로가기"
             >
-                <img src={backIcon} alt="뒤로가기" />
+                <BackButtonIcon alt="뒤로가기" />
             </button>
             
             <div className="signup-header04">

@@ -19,6 +19,7 @@ import { supabase } from "../../../supabaseClient";
 
 import "./Settings.css";
 import "./AccountSettings.css";
+import { goBack } from "../../utils/navigation";
 
 
 // =========================================================
@@ -195,7 +196,7 @@ function ChangePassword() {
 
             alert("비밀번호가 변경되었어요!");
 
-            navigate(-1);
+            goBack(navigate);
 
         } catch (error) {
 

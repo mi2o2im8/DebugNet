@@ -287,6 +287,19 @@ export async function createClubEvent(
     );
 }
 
+export async function getClubEventRecommendations(
+    clubId,
+    requestData
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/events/recommendations`,
+        {
+            method: "POST",
+            body: requestData
+        }
+    );
+}
+
 export async function getClubEvent(
     clubId,
     eventId
@@ -673,6 +686,90 @@ export async function getClubApplications(
 
 
 // ---------------------------------------------------------
+// H1 운영자용 모집 대상 추천
+// ---------------------------------------------------------
+export async function getClubRecruitmentRecommendations(
+    clubId,
+    limit = 10
+) {
+    const query = new URLSearchParams({
+        limit: String(limit)
+    });
+
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/recruitment-recommendations`
+            + `?${query.toString()}`
+        ),
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// H4 실제 활동 결과 입력 화면 데이터
+// ---------------------------------------------------------
+export async function getClubActivityResults(
+    clubId,
+    limit = 8
+) {
+    const query = new URLSearchParams({
+        limit: String(limit)
+    });
+
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/activity-results`
+            + `?${query.toString()}`
+        ),
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// H4 일정별 실제 활동 결과 저장
+// ---------------------------------------------------------
+export async function saveClubActivityResults(
+    clubId,
+    eventId,
+    results
+) {
+    return authenticatedRequest(
+        (
+            `/api/clubs/${clubId}/events/${eventId}`
+            + "/activity-results"
+        ),
+        {
+            method: "PUT",
+            body: {
+                results
+            }
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// H4 회원 참여 저하 위험 조회
+// ---------------------------------------------------------
+export async function getClubParticipationRisks(
+    clubId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/participation-risks`,
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
 // 동호회 가입 신청 승인·거절
 // ---------------------------------------------------------
 export async function decideClubApplication(
@@ -876,6 +973,31 @@ export async function deleteClubMemberWarning(
         ),
         {
             method: "DELETE"
+        }
+    );
+}
+
+// ---------------------------------------------------------
+// 맞춤 동호회 추천 기본값
+// 로그인 사용자가 회원가입/내 정보에 저장한 값을 그대로 사용한다.
+// ---------------------------------------------------------
+export async function getClubRecommendationDefaults() {
+    return authenticatedRequest(
+        "/api/clubs/recommend/defaults",
+        { method: "GET" }
+    );
+}
+
+// ---------------------------------------------------------
+// 맞춤 동호회 추천 실행
+// 화면에서 바꾼 조건은 이번 추천에만 사용하며 내 정보는 수정하지 않는다.
+// ---------------------------------------------------------
+export async function recommendClubs(requestData) {
+    return authenticatedRequest(
+        "/api/clubs/recommend",
+        {
+            method: "POST",
+            body: requestData,
         }
     );
 }

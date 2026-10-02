@@ -1,9 +1,11 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { supabase } from "../../../supabaseClient";
 import "./GuestRecruitDetail.css";
 import { buildApiUrl } from "../../api/apiClient";
+import { goBack } from "../../utils/navigation";
 // =====================================================
 // 게스트 모집 상세 페이지
 // =====================================================
@@ -237,9 +239,12 @@ function GuestRecruitDetail() {
       <div className="GuestRecruitDetail-container">
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          className="pb-back-text-button"
+          aria-label="뒤로가기"
+          onClick={() => goBack(navigate)}
         >
-          ← 뒤로가기
+          <BackButtonIcon />
+          <span>뒤로가기</span>
         </button>
 
         <p>
@@ -263,10 +268,10 @@ function GuestRecruitDetail() {
         <button
           type="button"
           className="GuestRecruitDetail-back-button"
-          onClick={() => navigate(-1)}
+          onClick={() => goBack(navigate)}
           aria-label="뒤로 가기"
         >
-          ←
+          <BackButtonIcon />
         </button>
 
         <h2>게스트 모집 상세</h2>

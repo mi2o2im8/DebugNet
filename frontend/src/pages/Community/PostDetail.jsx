@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { useEffect, useRef, useState } from "react";
 import { FiMoreVertical, FiX } from "react-icons/fi";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -8,6 +9,7 @@ import { supabase } from "../../../supabaseClient";
 
 import "./CSS/PostDetail.css";
 import { buildApiUrl } from "../../api/apiClient";
+import { goBack } from "../../utils/navigation";
 
 
 const formatDateTime = (dateString) => {
@@ -935,11 +937,13 @@ function PostDetail() {
 
           <button
             type="button"
+            className="pb-back-text-button"
             onClick={() =>
               navigate(communityBasePath)
             }
           >
-            커뮤니티로 돌아가기
+            <BackButtonIcon />
+            <span>커뮤니티로 돌아가기</span>
           </button>
 
         </main>
@@ -957,9 +961,9 @@ function PostDetail() {
         <button
           type="button"
           className="post-back-btn"
-          onClick={() => navigate(-1)}
+          onClick={() => goBack(navigate)}
         >
-          ←
+          <BackButtonIcon />
         </button>
 
         <h1>

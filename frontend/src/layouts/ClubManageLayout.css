@@ -2,7 +2,7 @@
     position: relative;
     width: 100%;
     max-width: 412px;
-    height: 100dvh;
+    height: calc(100dvh - env(safe-area-inset-top, 0px));
     margin: 0 auto;
     overflow: hidden;
     background: #f4f7f6;
@@ -29,3 +29,45 @@
 .club-manage-layout-content::-webkit-scrollbar {
     display: none;
 }
+
+/* ========================================
+   Android safe area / BottomNav 보정
+   - 이 레이아웃 안에서는 이미 상단 safe area 아래에서 스크롤함
+   - 하위 Match 페이지가 자체 BottomNav를 렌더링해도 중복 표시하지 않음
+======================================== */
+
+/* Outlet 내부에서 중복 렌더링되는 BottomNav 숨김 */
+.club-manage-layout-content .bottom-nav {
+    display: none;
+}
+
+/* 일반 커뮤니티에서는 safe-top이 필요하지만,
+   이 레이아웃 안에서는 이미 safe area 아래이므로 중복 적용 제거 */
+.club-manage-layout-content .community-header,
+.club-manage-layout-content .post-detail-header,
+.club-manage-layout-content .post-write-header {
+    top: 0;
+}
+
+/* 운영자 대시보드 헤더도 레이아웃의 safe-top을 다시 더하지 않음 */
+.club-manage-layout-content .club-dashboard-header {
+    padding-top: 12px;
+}
+
+/* 운영자 대시보드 하단 safe area는 레이아웃에서 이미 확보함 */
+.club-manage-layout-content .club-dashboard-scroll {
+    padding-bottom: 28px;
+}
+
+/* 경기 결과/후기 하단 고정 버튼은 실제 BottomNav 높이만큼 위로 배치 */
+.club-manage-layout-content .match-management-detail-actions,
+.club-manage-layout-content .match-record-write-actions,
+.club-manage-layout-content .match-review-actions {
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+}
+
+/* 일정 작성 하단 액션도 BottomNav 위에서 고정 */
+.club-manage-layout-content .club-event-form-actions {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+

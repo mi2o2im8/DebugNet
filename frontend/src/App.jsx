@@ -1,4 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 import Home from './pages/LoginPage/Home'
 import Login from './pages/LoginPage/Login';
@@ -19,6 +23,7 @@ import SignupReview from './pages/Signup/SignupReview'
 import ClubDashboard from "./pages/ClubDashboard/ClubDashboard";
 import ClubSettingsHome from "./pages/ClubSettings/ClubSettingsHome";
 import ClubBasicSettings from "./pages/ClubSettings/ClubBasicSettings";
+import ClubIntroductionSettings from "./pages/ClubSettings/ClubIntroductionSettings";
 import ClubJoinSettings from "./pages/ClubSettings/ClubJoinSettings";
 import ClubDeleteSettings from "./pages/ClubSettings/ClubDeleteSettings";
 
@@ -39,6 +44,8 @@ import MainHome from "./pages/MainHome/MainHome";
 import ClubCreate from './pages/ClubCreate/ClubCreate';
 import AllClub from "./pages/AllClub/AllClub";
 import ClubRecruit from "./pages/ClubRecruit/ClubRecruit";
+import ClubRecommend from "./pages/ClubRecommend/ClubRecommend";
+import ClubRecommendResult from "./pages/ClubRecommend/ClubRecommendResult";
 import GuestRecruit from "./pages/GuestRecruit/GuestRecruit";
 import GuestRecruitDetail from "./pages/GuestRecruitDetail/GuestRecruitDetail";
 import ClubUserDashboard from "./pages/ClubUserDashboard/ClubUserDashboard";
@@ -128,11 +135,67 @@ import Chatbot from './pages/Chatbot/Chatbot';
 // 모든 페이지 화면이동시 애니메이션 적용
 import PageTransition from "./components/PageTransition";
 
+import { canGoBack, getBackFallback, isRootPath } from "./utils/navigation";
 import './App.css'
+
+function AndroidBackButtonHandler() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (Capacitor.getPlatform() !== 'android') {
+      return;
+    }
+
+    let listener = null;
+    let disposed = false;
+
+    const registerBackButton = async () => {
+      const handle = await CapacitorApp.addListener(
+        'backButton',
+        () => {
+          // 1) 방문 기록이 있으면 뒤로
+          if (canGoBack()) {
+            navigate(-1);
+            return;
+          }
+
+          // 2) 첫 화면이면 앱 종료
+          if (isRootPath(window.location.pathname)) {
+            CapacitorApp.exitApp();
+            return;
+          }
+
+          // 3) 알림·딥링크로 바로 들어온 화면이면 상위 화면으로
+          navigate(
+            getBackFallback(window.location.pathname),
+            { replace: true }
+          );
+        }
+      );
+
+      if (disposed) {
+        handle.remove();
+      } else {
+        listener = handle;
+      }
+    };
+
+    registerBackButton();
+
+    return () => {
+      disposed = true;
+      listener?.remove();
+    };
+  }, [navigate]);
+
+  return null;
+}
 
 function App() {
   return (
     <BrowserRouter>
+
+      <AndroidBackButtonHandler />
 
       {/* ⭐ 알림 데이터를 앱 전체에서 공유하기 위해 최상단에서 감싸줌 */}
       <NotificationProvider>
@@ -246,12 +309,6 @@ function App() {
                 element={<ClubDetail />}
               />
 
-              {/* 동호회 이용자용 대시보드 */}
-              <Route
-                path="/clubs/:clubId/home"
-                element={<ClubUserDashboard />}
-              />
-
               {/* 동호회 가입 페이지 */}
               <Route
                 path="/clubs/:clubId/application"
@@ -305,6 +362,12 @@ function App() {
               {/* 동호회 운영 화면에 BottomNav 공통 적용 */}
               <Route element={<ClubManageLayout />}>
 
+                {/* 동호회 이용자용 대시보드 (BottomNav 표시를 위해 레이아웃 안으로 이동) */}
+                <Route
+                  path="/clubs/:clubId/home"
+                  element={<ClubUserDashboard />}
+                />
+
                 {/* 동호회 운영 관리 홈 */}
                 <Route
                   path="/clubs/:clubId/manage"
@@ -321,6 +384,12 @@ function App() {
                 <Route
                   path="/clubs/:clubId/manage/settings/basic"
                   element={<ClubBasicSettings />}
+                />
+
+                {/* 동호회 소개 수정 */}
+                <Route
+                  path="/clubs/:clubId/manage/settings/introduction"
+                  element={<ClubIntroductionSettings />}
                 />
 
                 {/* 동호회 가입 방식 설정 */}
@@ -453,7 +522,19 @@ function App() {
                   element={<PostDetail />}
                 />
 
-                {/* =================================================
+                  {/* 맞춤 동호회 추천 조건 입력 */}
+                <Route
+                  path="/clubs/recommend"
+                  element={<ClubRecommend />}
+                />
+
+                {/* 맞춤 동호회 추천 결과 */}
+                <Route
+                  path="/clubs/recommend/result"
+                  element={<ClubRecommendResult />}
+                />
+
+              {/* =================================================
                     ⭐ 팀 매칭
                 ================================================= */}
 

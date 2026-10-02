@@ -1,5 +1,5 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
-    FiArrowLeft,
     FiBell,
     FiMoreHorizontal,
     FiCheckCircle,
@@ -43,6 +43,7 @@ import {
 } from "../../api/clubApi";
 
 import "./ClubUserDashboard.css";
+import { goBack } from "../../utils/navigation";
 import { buildApiUrl } from "../../api/apiClient";
 
 
@@ -955,6 +956,9 @@ function ClubUserDashboard() {
 
     const profileImage = dashboard.representative_image_url;
 
+    // ⭐ 뒤로가기 (기록이 없으면 활동 홈으로: utils/navigation.js)
+    const handleBack = () => goBack(navigate);
+
 
     return (
         <main className="club-user-page">
@@ -965,9 +969,9 @@ function ClubUserDashboard() {
                     <button
                         type="button"
                         aria-label="뒤로가기"
-                        onClick={() => navigate(-1)}
+                        onClick={handleBack}
                     >
-                        <FiArrowLeft />
+                        <BackButtonIcon />
                     </button>
 
                     <div className="club-user-header-actions">

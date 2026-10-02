@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -242,7 +243,7 @@ function AllClubs() {
           onClick={() => navigate("/clubs")}
           aria-label="뒤로 가기"
         >
-          ←
+          <BackButtonIcon />
         </button>
 
         <h2>전체 동호회</h2>

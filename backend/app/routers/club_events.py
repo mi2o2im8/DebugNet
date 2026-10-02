@@ -23,6 +23,8 @@ from app.schemas.club_events import (
     ClubEventReviewCreateRequest,
     ClubEventReviewResponse,
     ClubLeaveReviewResponse,
+    ClubEventRecommendationRequest,
+    ClubEventRecommendationResponse,
 )
 
 from app.services.club_event_service import (
@@ -225,6 +227,40 @@ def get_club_leave_reviews(
                 "오류가 발생했습니다."
             ),
         ) from error
+
+# ---------------------------------------------------------
+# 운영자용 H3 일정 추천 (DB 변경 없음)
+# ---------------------------------------------------------
+@router.post(
+    "/recommendations",
+    response_model=ClubEventRecommendationResponse,
+    status_code=status.HTTP_200_OK,
+)
+def recommend_club_events(
+    club_id: int,
+    request_data: ClubEventRecommendationRequest,
+    user_id: str = Depends(get_current_user_id),
+):
+    service = ClubEventService()
+    try:
+        return service.recommend_events(club_id, user_id, request_data)
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+    except Exception as error:
+        # 별도 추천 API만 실패시켜 일정 생성/조회 경로를 보호한다.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="일정 추천을 현재 사용할 수 없습니다.",
+        ) from error
+
 
 # ---------------------------------------------------------
 # 일정 단건 조회

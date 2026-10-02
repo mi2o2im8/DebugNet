@@ -34,7 +34,7 @@
 
     margin: 0 auto;
 
-    padding: 20px 20px 100px;
+    padding: 20px 20px calc(100px + env(safe-area-inset-bottom, 0px));
 
     box-sizing: border-box;
 }
@@ -788,7 +788,7 @@
     .basic-home-main {
         width: 100%;
 
-        padding: 20px 20px 100px;
+        padding: 20px 20px calc(100px + env(safe-area-inset-bottom, 0px));
     }
 
 
@@ -1056,4 +1056,97 @@
     font-size: 11px;
     color: #888;
     text-align: right;
+}
+
+
+/* ========================================
+   ⭐ 이번 달 일정 - 게스트 일정 달력
+   (달력 자체 스타일은 components/HomeCalendar/HomeCalendar.css)
+======================================== */
+
+/* schedule-box 에 이미 테두리가 있으므로 달력 테두리는 뺀다 */
+.schedule-box .home-calendar {
+    padding: 0;
+    border: none;
+}
+
+/* 달력 아래 목록 간격 */
+.schedule-box .home-calendar + .schedule-guest-list,
+.schedule-box .home-calendar + .schedule-guest-empty,
+.schedule-box .home-calendar + .schedule-content {
+    margin-top: 12px;
+}
+
+.schedule-box .home-calendar + .schedule-guest-empty {
+    margin-bottom: 0;
+    padding: 12px 10px;
+    border-radius: 8px;
+    background: #F4FBF9;
+}
+
+/* 일정 제목 앞 "게스트" 표시 */
+.schedule-guest-tag {
+    display: inline-block;
+    margin-right: 4px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background-color: #fbe3e8;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 700;
+    vertical-align: middle;
+    color: #c9485f;
+}
+
+/* 게스트 일정이 하나도 없을 때 안내 (달력 아래라 조금 작게) */
+.schedule-content-compact {
+    padding-top: 12px;
+    border-top: 1px dashed #eee;
+}
+
+
+/* ========================================
+   ⭐ 게스트 모집 / 이런 활동도 있어요 - 3개씩 슬라이드
+   (슬라이드 동작은 components/CardSlider/CardSlider.css)
+   카드가 4칸 → 3칸으로 넓어져서 이미지와 글씨를 조금 키운다.
+======================================== */
+
+.guest-slider .guest-item-image-link,
+.recommendation-slider .recommendation-image-link {
+    height: 72px;
+}
+
+.guest-slider .guest-item-title,
+.recommendation-slider .recommendation-title {
+    font-size: 11px;
+}
+
+.guest-slider .guest-item p,
+.recommendation-slider .recommendation-item p {
+    font-size: 9px !important;
+}
+
+.guest-slider .guest-item > span:last-child,
+.recommendation-slider .recommendation-item::after {
+    font-size: 9px;
+}
+
+.guest-slider .guest-item-image-link .image-popup,
+.recommendation-slider .recommendation-image-link .image-popup {
+    font-size: 8px;
+}
+
+
+/* ⭐ 게스트 일정 목록 - 동호회 이미지 */
+.schedule-guest-image {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 7px;
+    object-fit: cover;
+    background: #f4f7f6;
+}
+
+.schedule-guest-text .schedule-guest-date {
+    font-size: 10px;
 }

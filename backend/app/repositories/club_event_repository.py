@@ -10,6 +10,94 @@ class ClubEventRepository:
             get_supabase_admin_client()
         )
 
+    def find_h3_recommendation_context(
+        self,
+        club_id: int,
+        start_date: str,
+        end_date: str,
+    ) -> dict:
+        """추천 한 번에 필요한 DB 원본을 묶어서 조회한다."""
+        db = self.admin_client
+
+        club_rows = (
+            db.table("clubs")
+            .select("club_id, activity_frequency")
+            .eq("club_id", club_id)
+            .limit(1)
+            .execute().data or []
+        )
+        sport_rows = (
+            db.table("club_sports")
+            .select("sport_id")
+            .eq("club_id", club_id)
+            .limit(1)
+            .execute().data or []
+        )
+        sport_name = None
+        if sport_rows:
+            names = (
+                db.table("sports")
+                .select("sport_name")
+                .eq("sport_id", sport_rows[0]["sport_id"])
+                .limit(1)
+                .execute().data or []
+            )
+            if names:
+                sport_name = names[0].get("sport_name")
+
+        regions = (
+            db.table("club_regions")
+            .select("region")
+            .eq("club_id", club_id)
+            .limit(1)
+            .execute().data or []
+        )
+        schedules = (
+            db.table("club_schedules")
+            .select("club_schedule_id, day_of_week, start_time, end_time")
+            .eq("club_id", club_id)
+            .execute().data or []
+        )
+        venues = (
+            db.table("club_venues")
+            .select("*")
+            .eq("club_id", club_id)
+            .execute().data or []
+        )
+        members = (
+            db.table("club_members")
+            .select("club_member_id, user_id")
+            .eq("club_id", club_id)
+            .eq("status", "active")
+            .execute().data or []
+        )
+        user_ids = [row["user_id"] for row in members if row.get("user_id")]
+        available_times = (
+            db.table("user_available_times")
+            .select("user_id, day_of_week, start_time, end_time")
+            .in_("user_id", user_ids)
+            .execute().data or []
+        ) if user_ids else []
+        existing_events = (
+            db.table("club_events")
+            .select("event_date, start_time, end_time, status")
+            .eq("club_id", club_id)
+            .gte("event_date", start_date)
+            .lte("event_date", end_date)
+            .execute().data or []
+        )
+
+        return {
+            "club": club_rows[0] if club_rows else {},
+            "sport": sport_name,
+            "region": regions[0].get("region") if regions else None,
+            "schedules": schedules,
+            "venues": venues,
+            "members": members,
+            "available_times": available_times,
+            "existing_events": existing_events,
+        }
+
     # -----------------------------------------------------
     # 일정 생성
     # -----------------------------------------------------

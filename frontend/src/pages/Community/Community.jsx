@@ -1,5 +1,6 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { useEffect, useState } from "react";
-import { FiBell, FiChevronLeft } from "react-icons/fi";
+import { FiBell } from "react-icons/fi";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import BottomNav from "../../components/BottomNav";
@@ -430,7 +431,7 @@ function Community() {
                 navigate(clubDashboardPath)
               }
             >
-              <FiChevronLeft />
+              <BackButtonIcon />
             </button>
 
 

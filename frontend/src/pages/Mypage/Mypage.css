@@ -18,13 +18,31 @@
     min-height: 100vh;
     margin: 0 auto;
 
-    padding: 8px 20px 90px;
+    padding: 8px 20px calc(90px + env(safe-area-inset-bottom, 0px));
 
     box-sizing: border-box;
 
     font-family: "Maplestory", sans-serif;
     background: #fff;
     color: #222;
+}
+
+.mypage-container::before {
+    content: "";
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: env(safe-area-inset-top, 0px);
+
+    background: #fff;
+
+    z-index: 99;
+
+    pointer-events: none;
 }
 
 
@@ -35,7 +53,7 @@
 .mypage-back-btn {
     position: fixed;
 
-    top: 15px;
+    top: calc(env(safe-area-inset-top, 0px) + 15px);
     left: max(calc(50% - 180px), 20px);
 
     width: 30px;
@@ -64,6 +82,11 @@
    ======================================== */
 
 .mypage-header {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 90;
+    background: #fff;
+
     width: 100%;
     height: 35px;
 
@@ -826,11 +849,11 @@
     .mypage-container {
         width: 100%;
 
-        padding: 8px 20px 85px;
+        padding: 8px 20px calc(90px + env(safe-area-inset-bottom, 0px));
     }
 
     .mypage-back-btn {
-        top: 15px;
+        top: calc(env(safe-area-inset-top, 0px) + 15px);
         left: 20px;
     }
 
@@ -979,6 +1002,11 @@
     color: #f1f4f8;
 }
 
+/* 상태바 가림막 */
+.dark-mode .mypage-container::before {
+    background: #12161c;
+}
+
 /* 상단 제목 (공용 PageHeader) - 내 정보 페이지만 어둡게 */
 .dark-mode .mypage-container .page-header {
     background: #12161c;
@@ -988,115 +1016,115 @@
     color: #f1f4f8;
 }
 
-.dark-mode .mypage-setting-btn svg {
+.dark-mode .mypage-container .mypage-setting-btn svg {
     color: #e9edf2;
 }
 
-.dark-mode .mypage-setting-btn:active {
+.dark-mode .mypage-container .mypage-setting-btn:active {
     background: #242b34;
 }
 
 /* 프로필 카드 */
-.dark-mode .profile-card,
-.dark-mode .club-card > button,
-.dark-mode .my-club-slide,
-.dark-mode .activity-list,
-.dark-mode .activity-item {
+.dark-mode .mypage-container .profile-card,
+.dark-mode .mypage-container .club-card > button,
+.dark-mode .mypage-container .my-club-slide,
+.dark-mode .mypage-container .activity-list,
+.dark-mode .mypage-container .activity-item {
     background: #1b2129;
     border-color: #303844;
 }
 
-.dark-mode .profile-image {
+.dark-mode .mypage-container .profile-image {
     background: #1f3a33;
 }
 
-.dark-mode .profile-name,
-.dark-mode .club-info p,
-.dark-mode .my-club-info p,
-.dark-mode .activity-item > p {
+.dark-mode .mypage-container .profile-name,
+.dark-mode .mypage-container .club-info p,
+.dark-mode .mypage-container .my-club-info p,
+.dark-mode .mypage-container .activity-item > p {
     color: #f1f4f8;
 }
 
-.dark-mode .profile-sports,
-.dark-mode .profile-region,
-.dark-mode .club-info span,
-.dark-mode .my-club-info span,
-.dark-mode .section-header > button {
+.dark-mode .mypage-container .profile-sports,
+.dark-mode .mypage-container .profile-region,
+.dark-mode .mypage-container .club-info span,
+.dark-mode .mypage-container .my-club-info span,
+.dark-mode .mypage-container .section-header > button {
     color: #9ba7b7;
 }
 
-.dark-mode .profile-edit-button {
+.dark-mode .mypage-container .profile-edit-button {
     background: #242b34;
     border-color: #303844;
     color: #e9edf2;
 }
 
 /* 섹션 제목 */
-.dark-mode .section-header h3,
-.dark-mode .section-title {
+.dark-mode .mypage-container .section-header h3,
+.dark-mode .mypage-container .section-title {
     color: #f1f4f8;
 }
 
 /* 내 동호회 슬라이드 */
-.dark-mode .my-club-slider-box,
-.dark-mode .club-empty {
+.dark-mode .mypage-container .my-club-slider-box,
+.dark-mode .mypage-container .club-empty {
     background: #172521;
     border-color: #26443c;
 }
 
-.dark-mode .my-club-badge {
+.dark-mode .mypage-container .my-club-badge {
     background: #242b34;
     border-color: #303844;
     color: #9ba7b7;
 }
 
-.dark-mode .my-club-badge.operator {
+.dark-mode .mypage-container .my-club-badge.operator {
     background: #173a31;
     color: #4fd1b0;
 }
 
-.dark-mode .my-club-arrow:disabled,
-.dark-mode .my-club-dot {
+.dark-mode .mypage-container .my-club-arrow:disabled,
+.dark-mode .mypage-container .my-club-dot {
     color: #3a4452;
     background-color: transparent;
 }
 
-.dark-mode .my-club-dot {
+.dark-mode .mypage-container .my-club-dot {
     background: #3a4452;
 }
 
-.dark-mode .my-club-dot.active {
+.dark-mode .mypage-container .my-club-dot.active {
     background: #01a17f;
 }
 
 /* 내 활동 메뉴 */
-.dark-mode .activity-item {
+.dark-mode .mypage-container .activity-item {
     border-bottom-color: #303844;
 }
 
-.dark-mode .activity-item:active {
+.dark-mode .mypage-container .activity-item:active {
     background: #242b34;
 }
 
 /* 신뢰점수 카드 */
-.dark-mode .trust-score-card {
+.dark-mode .mypage-container .trust-score-card {
     background: #172521;
     border-color: #26443c;
 }
 
-.dark-mode .trust-score-card h2 {
+.dark-mode .mypage-container .trust-score-card h2 {
     color: #4fd1b0;
 }
 
-.dark-mode .trust-score-card p:first-of-type {
+.dark-mode .mypage-container .trust-score-card p:first-of-type {
     color: #9ba7b7;
 }
 
-.dark-mode .trust-score-card p:nth-of-type(2) {
+.dark-mode .mypage-container .trust-score-card p:nth-of-type(2) {
     background: #173a31;
     color: #4fd1b0;
 }
 
-.dark-mode .trust-progress {
+.dark-mode .mypage-container .trust-progress {
     background: #26443c;
 }

@@ -1,9 +1,9 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useEffect,
     useState
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiChevronLeft } from "react-icons/fi";
 import BasicInfoStep from "./BasicInfoStep";
 import ScheduleStep from "./ScheduleStep";
 import ConditionStep from "./ConditionStep";
@@ -14,6 +14,7 @@ import { createClub } from "../../api/clubApi";
 import { getMyGender, getMyProfile } from "../../api/userApi";
 
 import "./ClubCreate.css";
+import { goBack } from "../../utils/navigation";
 
 const STEP_TITLES = [
     "기본 정보 입력",
@@ -153,7 +154,7 @@ function ClubCreate() {
     // 이전 버튼
     const handlePrevious = () => {
         if (currentStep === 1) {
-            navigate(-1);
+            goBack(navigate);
             return;
         }
 
@@ -268,7 +269,7 @@ function ClubCreate() {
                         onClick={handlePrevious}
                         aria-label="이전 화면으로 이동"
                     >
-                        <FiChevronLeft />
+                        <BackButtonIcon />
                     </button>
 
                     <h1 className="club-create-header-title">동호회 만들기</h1>

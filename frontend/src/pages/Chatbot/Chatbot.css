@@ -298,7 +298,7 @@
 
     gap: 8px;
 
-    padding: 10px;
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
 
     border-top: 1px solid #e7ebee;
 

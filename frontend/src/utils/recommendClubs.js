@@ -6,11 +6,14 @@
 // 1. /api/clubs/search 결과에서 동호회를 랜덤으로 N개 고른다
 // 2. 고른 동호회만 /api/clubs/{id} 상세 조회
 //    → 실제 대표 이미지 / 종목 / 지역 / 생성일 / 회원 수
-// 3. 뱃지 결정
-//    - 추천 : 내 관심 종목 또는 활동 지역과 겹침
-//    - 신규 : 만들어진 지 NEW_CLUB_DAYS일 이내
-//    - HOT  : 회원이 많거나 정원이 거의 찬 동호회
-//    (여러 개 해당되면 추천 → 신규 → HOT 순으로 하나만)
+// 3. 뱃지 (fixedBadges = true, 기본값)
+//    한 화면(3개)마다 [추천, 신규, HOT] 카드가 항상 하나씩 나오게 고른다.
+//    - 추천 : 내 관심 종목 또는 활동 지역과 겹치는 동호회 (없으면 남은 것 중 랜덤)
+//    - 신규 : 남은 동호회 중 가장 최근에 만들어진 곳
+//    - HOT  : 남은 동호회 중 회원이 가장 많은(정원 대비 많이 찬) 곳
+//
+//    fixedBadges = false 이면 예전 방식:
+//    조건(NEW_CLUB_DAYS 등)을 만족할 때만 뱃지를 붙이고, 추천 → 신규 → HOT 순으로 하나만
 // =========================================================
 
 import { supabase } from "../../supabaseClient";
@@ -267,6 +270,7 @@ export const buildRecommendedClubs = async ({
     clubs = [],
     excludeIds = [],
     count = 4,
+    fixedBadges = true,
 } = {}) => {
 
     const excludeSet = new Set(
@@ -298,74 +302,169 @@ export const buildRecommendedClubs = async ({
         return true;
     });
 
-    // ⭐ 랜덤으로 N개
-    const picked = shuffle(candidates).slice(0, count);
+    // ⭐ 후보를 넉넉히 뽑아서 상세 조회 (뱃지별로 고르려면 여유가 필요)
+    const poolSize = fixedBadges
+        ? Math.max(count * 3, 24)
+        : count;
+
+    const pool = shuffle(candidates).slice(0, poolSize);
 
     // ⭐ 상세 조회 + 사용자 관심 정보 동시에
     const [details, preferences] = await Promise.all([
-        Promise.all(picked.map((club) => getClubDetail(getClubId(club)))),
+        Promise.all(pool.map((club) => getClubDetail(getClubId(club)))),
         getUserPreferences(),
     ]);
 
-    return picked.map((club, index) => {
+    const normalizedClubs = pool.map((club, index) =>
+        normalizeClub(club, details[index] || {})
+    );
 
-        const detail = details[index] || {};
+    // ---------------------------------------------------------
+    // 예전 방식: 조건을 만족할 때만 뱃지
+    // ---------------------------------------------------------
+    if (!fixedBadges) {
+        return normalizedClubs.slice(0, count).map((club) => ({
+            ...club,
+            badge: pickBadge(club, preferences),
+        }));
+    }
 
-        const sports = toList(detail.sports).length
-            ? toList(detail.sports)
-            : toList(club.sports ?? club.sport_name);
+    // ---------------------------------------------------------
+    // ⭐ 고정 방식: 3개마다 [추천, 신규, HOT]
+    // ---------------------------------------------------------
+    const remaining = [...normalizedClubs];
+    const result = [];
 
-        const regions = toList(detail.regions).length
-            ? toList(detail.regions)
-            : toList(club.regions ?? club.region);
+    const takeFrom = (list) => {
+        const club = list[0];
 
-        // 대표 이미지: 대표로 지정된 이미지 → 첫 번째 이미지 → 검색 결과 이미지
-        const images = Array.isArray(detail.images) ? detail.images : [];
+        if (!club) return null;
 
-        const mainImage =
-            images.find((img) =>
-                ["main", "representative", "thumbnail"].includes(
-                    img?.image_type
+        remaining.splice(remaining.indexOf(club), 1);
+        return club;
+    };
+
+    const pickers = {
+        // 관심 종목/지역이 겹치는 곳 우선, 없으면 랜덤(이미 섞여 있음)
+        recommend: () =>
+            takeFrom(remaining.filter((club) => matchesPreference(club, preferences)))
+            || takeFrom(remaining),
+
+        // 가장 최근에 만들어진 곳
+        new: () =>
+            takeFrom(
+                [...remaining].sort(
+                    (a, b) => toTime(b.createdAt) - toTime(a.createdAt)
                 )
-            ) || images[0];
+            ),
 
-        const image =
-            [
-                mainImage?.image_url,
-                detail.representative_image_url,
-                club.representative_image_url,
-                club.image_url,
-                club.club_image,
-            ]
-                .map(safeImageUrl)
-                .find(Boolean) || null;
+        // 회원이 가장 많은 곳 (같으면 정원 대비 많이 찬 곳)
+        hot: () =>
+            takeFrom(
+                [...remaining].sort(
+                    (a, b) =>
+                        (Number(b.memberCount) || 0) - (Number(a.memberCount) || 0)
+                        || fillRatio(b) - fillRatio(a)
+                )
+            ),
+    };
 
-        const normalized = {
-            id: getClubId(club),
-            name: detail.club_name || club.club_name || club.name || "동호회",
-            image,
-            sports,
-            regions,
-            intro: detail.club_intro || club.club_intro || "",
-            createdAt: detail.created_at || club.created_at || null,
-            memberCount:
-                detail.current_members ??
-                club.current_members ??
-                club.member_count ??
-                0,
-            maxMembers: detail.max_members ?? club.max_members ?? 0,
-        };
+    const SLOT_ORDER = ["recommend", "new", "hot"];
 
-        // 카드 아래 한 줄: "축구 · 강서구" / 없으면 소개글
-        const subText =
-            [sports[0], regions[0]].filter(Boolean).join(" · ") ||
-            normalized.intro ||
-            "동호회 소개가 없어요";
+    for (let index = 0; index < count && remaining.length > 0; index += 1) {
 
-        return {
-            ...normalized,
-            subText,
-            badge: pickBadge(normalized, preferences),
-        };
-    });
+        const slot = SLOT_ORDER[index % SLOT_ORDER.length];
+        const club = pickers[slot]();
+
+        if (!club) break;
+
+        result.push({
+            ...club,
+            badge: CLUB_BADGES[slot],
+        });
+    }
+
+    return result;
+};
+
+
+// ---------------------------------------------------------
+// 보조 함수
+// ---------------------------------------------------------
+
+const toTime = (value) => {
+    const time = value ? new Date(value).getTime() : 0;
+    return Number.isNaN(time) ? 0 : time;
+};
+
+const fillRatio = (club) => {
+    const max = Number(club.maxMembers) || 0;
+    return max > 0 ? (Number(club.memberCount) || 0) / max : 0;
+};
+
+const matchesPreference = (club, preferences) =>
+    club.sports.some((sport) =>
+        preferences.sports.some((mine) => isSameSport(sport, mine))
+    )
+    || club.regions.some((region) =>
+        preferences.regions.some((mine) => isSameRegion(region, mine))
+    );
+
+
+// 검색 결과 + 상세 조회 결과 → 화면용 데이터
+const normalizeClub = (club, detail) => {
+
+    const sports = toList(detail.sports).length
+        ? toList(detail.sports)
+        : toList(club.sports ?? club.sport_name);
+
+    const regions = toList(detail.regions).length
+        ? toList(detail.regions)
+        : toList(club.regions ?? club.region);
+
+    // 대표 이미지: 대표로 지정된 이미지 → 첫 번째 이미지 → 검색 결과 이미지
+    const images = Array.isArray(detail.images) ? detail.images : [];
+
+    const mainImage =
+        images.find((img) =>
+            ["main", "representative", "thumbnail"].includes(
+                img?.image_type
+            )
+        ) || images[0];
+
+    const image =
+        [
+            mainImage?.image_url,
+            detail.representative_image_url,
+            club.representative_image_url,
+            club.image_url,
+            club.club_image,
+        ]
+            .map(safeImageUrl)
+            .find(Boolean) || null;
+
+    const intro = detail.club_intro || club.club_intro || "";
+
+    // 카드 아래 한 줄: "축구 · 강서구" / 없으면 소개글
+    const subText =
+        [sports[0], regions[0]].filter(Boolean).join(" · ") ||
+        intro ||
+        "동호회 소개가 없어요";
+
+    return {
+        id: getClubId(club),
+        name: detail.club_name || club.club_name || club.name || "동호회",
+        image,
+        sports,
+        regions,
+        intro,
+        createdAt: detail.created_at || club.created_at || null,
+        memberCount:
+            detail.current_members ??
+            club.current_members ??
+            club.member_count ??
+            0,
+        maxMembers: detail.max_members ?? club.max_members ?? 0,
+        subText,
+    };
 };

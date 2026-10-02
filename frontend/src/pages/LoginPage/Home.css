@@ -67,7 +67,7 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    margin-top: calc(clamp(55px, 18vh, 90px) + 35px);
+    margin-top: calc(clamp(55px, 18vh, 90px) - 15px);
 }
 
 .Home-logo {
@@ -91,7 +91,7 @@
 /* ⭐ 서브타이틀이 상단 높이를 밀어내지 않도록 absolute 고정 */
 .Home-top .Home-subtitle {
     position: absolute;
-    top: calc(clamp(55px, 18vh, 90px) + 35px + clamp(55px, 14vw, 75px) + 2px);
+    top: calc(clamp(55px, 18vh, 90px) - 15px + clamp(55px, 14vw, 75px) + 2px);
     font-family: "Maplestory", sans-serif;
     font-size: clamp(13px, 4vw, 15px);
     font-weight: 400;

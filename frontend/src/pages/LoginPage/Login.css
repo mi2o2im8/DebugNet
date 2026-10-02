@@ -72,7 +72,7 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    margin-top: calc(clamp(55px, 18vh, 90px) + 35px);
+    margin-top: calc(clamp(55px, 18vh, 90px) - 15px);
 }
 
 .Home-logo {

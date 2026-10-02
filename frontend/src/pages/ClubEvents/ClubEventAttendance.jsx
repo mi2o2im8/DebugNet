@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useEffect,
     useState
@@ -11,7 +12,6 @@ import {
 
 import {
     FiCheck,
-    FiChevronLeft,
     FiClock,
     FiHelpCircle,
     FiX
@@ -25,6 +25,7 @@ import {
 } from "../../api/clubApi";
 
 import "./ClubEventAttendance.css";
+import { goBack } from "../../utils/navigation";
 
 
 const ATTENDANCE_OPTIONS = [
@@ -224,9 +225,9 @@ function ClubEventAttendance() {
                     type="button"
                     className="club-attendance-back-button"
                     aria-label="이전"
-                    onClick={() => navigate(-1)}
+                    onClick={() => goBack(navigate)}
                 >
-                    <FiChevronLeft />
+                    <BackButtonIcon />
                 </button>
 
                 <div className="club-attendance-header-text">

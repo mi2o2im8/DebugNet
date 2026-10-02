@@ -1,9 +1,9 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import { supabase } from "../../../supabaseClient";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import BottomNav from "../../components/BottomNav";
 import {
-  FiArrowLeft,
   FiShare2,
   FiHeart,
   FiMapPin,
@@ -18,6 +18,7 @@ import {
   getClubReviews,
   getClubLeaveReviews,
 } from "../../api/clubApi";
+import { goBack } from "../../utils/navigation";
 
 function ClubDetail() {
   const navigate = useNavigate();
@@ -79,7 +80,9 @@ function ClubDetail() {
         setMemberStatus(data.status);
 
         if (data.status === "active") {
-          navigate(`/clubs/${clubId}/home`);
+          // ⭐ replace: 상세 페이지를 방문 기록에 남기지 않는다.
+          //   (남기면 동호회 홈에서 뒤로가기 → 상세 → 다시 홈으로 튕김)
+          navigate(`/clubs/${clubId}/home`, { replace: true });
           return;
         }
       } catch (error) {
@@ -258,9 +261,9 @@ function ClubDetail() {
 
         <button
           className="club-detail-header-btn"
-          onClick={() => navigate(-1)}
+          onClick={() => goBack(navigate)}
         >
-          <FiArrowLeft />
+          <BackButtonIcon />
         </button>
 
         <h1>동호회 상세</h1>

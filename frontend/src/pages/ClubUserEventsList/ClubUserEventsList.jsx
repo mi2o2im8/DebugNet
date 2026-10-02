@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useEffect,
     useMemo,
@@ -906,9 +907,10 @@ function ClubEventList() {
             <header>
                 <button
                     type="button"
+                    aria-label="동호회 홈으로 돌아가기"
                     onClick={() => navigate(`/clubs/${clubId}/home`)}
                 >
-                    이전
+                    <BackButtonIcon />
                 </button>
 
                 <h1>일정 관리</h1>

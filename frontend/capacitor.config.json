@@ -1,0 +1,8 @@
+{
+  "appId": "com.playbridge.app",
+  "appName": "PlayBridge",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": true
+  }
+}

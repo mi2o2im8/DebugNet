@@ -56,4 +56,5 @@ def ask_chatbot(
     return chatbot_service.ask(
         user_id=user_id,
         message=request_data.message,
+        history=request_data.history,
     )

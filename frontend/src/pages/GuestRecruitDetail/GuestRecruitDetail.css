@@ -16,7 +16,7 @@
 
 .GuestRecruitDetail-header {
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   z-index: 100;
 
   height: 60px;

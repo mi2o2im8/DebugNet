@@ -73,7 +73,8 @@ class ClubMemberRepository:
                 "email, "
                 "profile_image, "
                 "phone, "
-                "bio"
+                "bio, "
+                "activity_frequency"
             )
             .in_(
                 "user_id",
@@ -287,7 +288,7 @@ class ClubMemberRepository:
             .table("clubs")
             .select(
                 "club_id, activity_frequency, "
-                "gender_rule"
+                "gender_rule, monthly_fee"
             )
             .eq("club_id", club_id)
             .limit(1)
@@ -405,6 +406,9 @@ class ClubMemberRepository:
             "sport_name": club_sport_name,
             "activity_frequency": club.get(
                 "activity_frequency"
+            ),
+            "monthly_fee": club.get(
+                "monthly_fee"
             ),
             "gender_rule": (
                 club.get("gender_rule") or "all"
@@ -610,6 +614,122 @@ class ClubMemberRepository:
             }
             for user_id, applicant
             in applicants.items()
+        }
+
+    # -----------------------------------------------------
+    # H1 모집 대상 추천용 후보군 및 적합도 문맥 조회
+    #
+    # 현재 회원과 가입 신청 이력이 있는 사용자는 제외한다.
+    # 연락처 등 민감정보는 조회하지 않는다.
+    # -----------------------------------------------------
+    def find_h1_recruitment_context(
+        self,
+        club_id: int,
+    ) -> dict:
+
+        user_rows = (
+            self.admin_client
+            .table("users")
+            .select(
+                "user_id, nickname, profile_image"
+            )
+            .limit(1000)
+            .execute()
+            .data
+            or []
+        )
+
+        member_rows = (
+            self.admin_client
+            .table("club_members")
+            .select("user_id")
+            .eq("club_id", club_id)
+            .execute()
+            .data
+            or []
+        )
+
+        application_rows = (
+            self.admin_client
+            .table("club_applications")
+            .select("user_id, status")
+            .eq("club_id", club_id)
+            .in_(
+                "status",
+                [
+                    "pending",
+                    "approved",
+                ],
+            )
+            .execute()
+            .data
+            or []
+        )
+
+        member_user_ids = {
+            str(row["user_id"])
+            for row in member_rows
+            if row.get("user_id")
+        }
+        application_user_ids = {
+            str(row["user_id"])
+            for row in application_rows
+            if row.get("user_id")
+        }
+        excluded_user_ids = (
+            member_user_ids
+            | application_user_ids
+        )
+
+        candidate_profiles = {
+            str(row["user_id"]): {
+                "user_id": str(row["user_id"]),
+                "nickname": (
+                    row.get("nickname")
+                    or "이름 없는 사용자"
+                ),
+                "profile_image": row.get(
+                    "profile_image"
+                ),
+            }
+            for row in user_rows
+            if (
+                row.get("user_id")
+                and str(row["user_id"])
+                not in excluded_user_ids
+            )
+        }
+
+        contexts = self.find_h2_application_contexts(
+            club_id=club_id,
+            user_ids=list(candidate_profiles),
+        )
+
+        for user_id, context in contexts.items():
+            context["candidate_profile"] = (
+                candidate_profiles.get(
+                    user_id,
+                    {
+                        "user_id": user_id,
+                        "nickname": "이름 없는 사용자",
+                        "profile_image": None,
+                    },
+                )
+            )
+
+        return {
+            "contexts": contexts,
+            "total_users_scanned": len(user_rows),
+            "candidate_pool_count": len(
+                candidate_profiles
+            ),
+            "excluded_member_count": len(
+                member_user_ids
+            ),
+            "excluded_application_count": len(
+                application_user_ids
+                - member_user_ids
+            ),
         }
 
     # -----------------------------------------------------
@@ -1003,6 +1123,107 @@ class ClubMemberRepository:
             .order(
                 "event_date",
                 desc=True,
+            )
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # H4 결과 입력 대상으로 사용할 종료 일정 조회
+    # -----------------------------------------------------
+    def find_recent_past_events(
+        self,
+        club_id: int,
+        before_date: str,
+        limit: int | None = 8,
+    ) -> list[dict]:
+
+        query = (
+            self.admin_client
+            .table("club_events")
+            .select(
+                "event_id, "
+                "title, "
+                "event_date, "
+                "status"
+            )
+            .eq("club_id", club_id)
+            .lt("event_date", before_date)
+            .neq("status", "cancelled")
+            .order("event_date", desc=True)
+        )
+
+        if limit is not None:
+            query = query.limit(limit)
+
+        response = query.execute()
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # H4 실제 활동 결과 조회
+    # -----------------------------------------------------
+    def find_activity_results(
+        self,
+        event_ids: list[int],
+        user_ids: list[str],
+    ) -> list[dict]:
+
+        if not event_ids or not user_ids:
+            return []
+
+        response = (
+            self.admin_client
+            .table("club_event_activity_results")
+            .select(
+                "activity_result_id, "
+                "event_id, "
+                "user_id, "
+                "result, "
+                "recorded_at, "
+                "recorded_by_user_id"
+            )
+            .in_("event_id", event_ids)
+            .in_("user_id", user_ids)
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # H4 일정별 실제 활동 결과 저장
+    # -----------------------------------------------------
+    def upsert_activity_results(
+        self,
+        event_id: int,
+        result_rows: list[dict],
+        recorded_by_user_id: str,
+    ) -> list[dict]:
+
+        if not result_rows:
+            return []
+
+        now = datetime.now(timezone.utc).isoformat()
+        payload = [
+            {
+                "event_id": event_id,
+                "user_id": row["user_id"],
+                "result": row["result"],
+                "recorded_by_user_id": (
+                    recorded_by_user_id
+                ),
+                "recorded_at": now,
+            }
+            for row in result_rows
+        ]
+
+        response = (
+            self.admin_client
+            .table("club_event_activity_results")
+            .upsert(
+                payload,
+                on_conflict="event_id,user_id",
             )
             .execute()
         )

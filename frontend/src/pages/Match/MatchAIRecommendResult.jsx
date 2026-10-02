@@ -14,6 +14,7 @@ import BackButton
 import "./CSS/MatchAvailability.css";
 import "./CSS/MatchCommon.css";
 import "./CSS/MatchAIRecommend.css";
+import { goBack } from "../../utils/navigation";
 
 
 // ========================================
@@ -232,7 +233,7 @@ function MatchAIRecommendResult() {
               <button
                 type="button"
                 className="match-ai-retry-button"
-                onClick={() => navigate(-1)}
+                onClick={() => goBack(navigate)}
               >
                 조건 다시 입력하기
               </button>
@@ -448,7 +449,7 @@ function MatchAIRecommendResult() {
             <button
               type="button"
               className="match-ai-retry-button"
-              onClick={() => navigate(-1)}
+              onClick={() => goBack(navigate)}
             >
               조건 다시 입력하기
             </button>

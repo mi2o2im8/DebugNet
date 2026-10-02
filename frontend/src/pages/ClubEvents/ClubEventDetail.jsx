@@ -1,3 +1,4 @@
+import { BackButtonIcon } from "../../components/BackButton/BackButton";
 import {
     useEffect,
     useRef,
@@ -10,7 +11,6 @@ import {
 } from "react-router-dom";
 
 import {
-    FiArrowLeft,
     FiCalendar,
     FiCheckCircle,
     FiClock,
@@ -382,13 +382,15 @@ function ClubEventDetail() {
 
                 <button
                     type="button"
+                    className="pb-back-text-button"
                     onClick={() =>
                         navigate(
                             `/clubs/${clubId}/manage/events`
                         )
                     }
                 >
-                    일정 목록으로 돌아가기
+                    <BackButtonIcon />
+                    <span>일정 목록으로 돌아가기</span>
                 </button>
             </main>
         );
@@ -431,7 +433,7 @@ function ClubEventDetail() {
                         )
                     }
                 >
-                    <FiArrowLeft />
+                    <BackButtonIcon />
                 </button>
 
                 <h1>일정 상세</h1>
