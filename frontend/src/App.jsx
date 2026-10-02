@@ -23,6 +23,7 @@ import SignupReview from './pages/Signup/SignupReview'
 import ClubDashboard from "./pages/ClubDashboard/ClubDashboard";
 import ClubSettingsHome from "./pages/ClubSettings/ClubSettingsHome";
 import ClubBasicSettings from "./pages/ClubSettings/ClubBasicSettings";
+import ClubIntroductionSettings from "./pages/ClubSettings/ClubIntroductionSettings";
 import ClubJoinSettings from "./pages/ClubSettings/ClubJoinSettings";
 import ClubDeleteSettings from "./pages/ClubSettings/ClubDeleteSettings";
 
@@ -383,6 +384,12 @@ function App() {
                 <Route
                   path="/clubs/:clubId/manage/settings/basic"
                   element={<ClubBasicSettings />}
+                />
+
+                {/* 동호회 소개 수정 */}
+                <Route
+                  path="/clubs/:clubId/manage/settings/introduction"
+                  element={<ClubIntroductionSettings />}
                 />
 
                 {/* 동호회 가입 방식 설정 */}
