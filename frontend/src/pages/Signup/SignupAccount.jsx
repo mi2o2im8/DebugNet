@@ -126,8 +126,12 @@ function Signup() {
     return (
         <div className="signup-container">
 
-            {/* ⭐ 공통 뒤로가기 버튼 */}
-            <BackButton />
+            {/* ⭐ 공통 뒤로가기 버튼
+                회원가입 첫 화면이라 방문 기록과 상관없이 항상 로그인으로.
+                replace: 로그인에서 다시 뒤로가기 했을 때 이 화면으로 안 돌아오게 */}
+            <BackButton
+                onClick={() => navigate("/Login", { replace: true })}
+            />
 
             <div className="signup-header">
                 <h2>계정을 생성해주세요</h2>
