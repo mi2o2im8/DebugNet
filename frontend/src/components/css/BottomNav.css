@@ -84,3 +84,19 @@
 .bottom-nav-item:active {
   transform: scale(0.95);
 }
+
+/* ========================================
+   ⭐ 다크모드 (다크모드 지원 페이지에서만)
+======================================== */
+html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) .bottom-nav {
+  background-color: #2f3744;
+  border-top-color: #3d4552;
+}
+
+html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) .bottom-nav-item {
+  color: #9ba7b7;
+}
+
+html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) .bottom-nav-item.active {
+  color: #20b26b;
+}

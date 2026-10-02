@@ -3,6 +3,9 @@ from datetime import datetime, timezone
 
 from app.repositories.comment_repository import CommentRepository
 from app.repositories.post_repository import PostRepository
+from app.repositories.notification_repository import (
+    NotificationRepository,
+)
 
 from app.schemas.comments import (
     CommentCreateRequest,
@@ -397,16 +400,49 @@ class CommentService:
                 if len(comment_preview) > 30:
                     comment_preview = comment_preview[:30] + "…"
 
-                self.comment_repository.create_comment_notification(
-                    user_id=post["author_id"],
-                    title="내 게시물에 새 댓글",
-                    content=(
-                        f"{author_profile['nickname']}님이 "
-                        f"'{post_title}'에 댓글을 남겼어요: "
-                        f"{comment_preview}"
-                    ),
-                    post_id=post_id,
-                )
+                # 동호회 커뮤니티 글 → 동호회 전용 알림
+                # (일반 커뮤니티가 아니라 동호회 게시글 화면으로 이동)
+                if (
+                    post.get("board_type") == "club"
+                    and post.get("club_id") is not None
+                ):
+                    club_id = int(post["club_id"])
+
+                    notification_repository = NotificationRepository()
+
+                    club_name = notification_repository.find_club_name(
+                        club_id
+                    )
+
+                    notification_repository.create_notifications(
+                        user_ids=[str(post["author_id"])],
+                        notification_type="club_community_comment",
+                        title="동호회 게시물에 새 댓글",
+                        content=(
+                            f"[{club_name}] "
+                            f"{author_profile['nickname']}님이 "
+                            f"'{post_title}'에 댓글을 남겼어요: "
+                            f"{comment_preview}"
+                        ),
+                        related_type="post",
+                        related_id=int(post_id),
+                        link_path=(
+                            f"/clubs/{club_id}/community/post/{post_id}"
+                        ),
+                    )
+
+                # 일반 커뮤니티 글 → 기존 알림 그대로
+                else:
+                    self.comment_repository.create_comment_notification(
+                        user_id=post["author_id"],
+                        title="내 게시물에 새 댓글",
+                        content=(
+                            f"{author_profile['nickname']}님이 "
+                            f"'{post_title}'에 댓글을 남겼어요: "
+                            f"{comment_preview}"
+                        ),
+                        post_id=post_id,
+                    )
             except Exception as e:
                 print("댓글 알림 생성 실패:", e)
 

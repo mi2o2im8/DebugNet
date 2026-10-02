@@ -32,6 +32,31 @@ export const NOTIFICATION_GROUPS = [
                 ],
             },
             {
+                key: "roleChanged",
+                label: "동호회 역할 변경",
+                description: "운영진으로 지정되거나 일반 회원으로 바뀌었을 때",
+                types: [
+                    "role_changed",
+                ],
+            },
+            {
+                key: "guest",
+                label: "게스트 신청 · 승인",
+                description: "게스트 신청이 들어오거나 내 신청이 승인됐을 때",
+                types: [
+                    "guest_application",
+                    "guest_approved",
+                ],
+            },
+            {
+                key: "clubCreated",
+                label: "새 동호회 개설",
+                description: "새로운 공개 동호회가 생겼을 때",
+                types: [
+                    "club_created",
+                ],
+            },
+            {
                 key: "activityReview",
                 label: "활동 후기 요청",
                 description: "참여한 활동의 후기를 남길 수 있을 때",
@@ -83,6 +108,15 @@ export const NOTIFICATION_GROUPS = [
                 description: "내가 쓴 글에 새 댓글이 달렸을 때",
                 types: [
                     "community_comment",
+                ],
+            },
+            {
+                key: "clubCommunity",
+                label: "동호회 공지 · 댓글",
+                description: "동호회에 공지가 올라오거나 내 동호회 글에 댓글이 달렸을 때",
+                types: [
+                    "club_notice_post",
+                    "club_community_comment",
                 ],
             },
         ],

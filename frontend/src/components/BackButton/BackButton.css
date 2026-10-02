@@ -35,7 +35,7 @@
    ======================================== */
 
 .dark-mode .Back-btn {
-    background-color: #12161c;
+    background-color: #2f3744;
 }
 
 .dark-mode .Back-btn img {
@@ -320,8 +320,8 @@
    ⭐ 다크모드 (다크모드 지원 페이지에서만)
 ======================================== */
 html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) .bottom-nav {
-  background-color: #12161c;
-  border-top-color: #303844;
+  background-color: #2f3744;
+  border-top-color: #3d4552;
 }
 
 html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) .bottom-nav-item {

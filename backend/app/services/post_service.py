@@ -4,6 +4,9 @@ from collections import Counter
 from datetime import datetime, timezone
 
 from app.repositories.post_repository import PostRepository
+from app.repositories.notification_repository import (
+    NotificationRepository,
+)
 from fastapi import HTTPException, status
 
 from app.schemas.posts import (
@@ -1875,6 +1878,53 @@ class PostService:
                 post_data=new_post,
             )
         )
+
+
+        # =================================================
+        # 동호회 공지 알림 (동호회 회원 전체)
+        #
+        # - 운영진이 동호회 커뮤니티에 공지를 올리면
+        #   작성자를 뺀 활동 회원 모두에게 알림
+        # - 알림 저장이 실패해도 글 작성은 정상 처리
+        # =================================================
+        if (
+            post_data.board_type == "club"
+            and is_club_notice
+            and club_id is not None
+        ):
+            try:
+                notification_repository = NotificationRepository()
+
+                club_name = notification_repository.find_club_name(
+                    int(club_id)
+                )
+
+                member_ids = [
+                    uid
+                    for uid in notification_repository
+                    .find_club_member_user_ids(int(club_id))
+                    if uid != user_id
+                ]
+
+                notice_title = title
+                if len(notice_title) > 30:
+                    notice_title = notice_title[:30] + "…"
+
+                notification_repository.create_notifications(
+                    user_ids=member_ids,
+                    notification_type="club_notice_post",
+                    title="새 공지가 올라왔어요",
+                    content=f"[{club_name}] {notice_title}",
+                    related_type="post",
+                    related_id=int(created_post["post_id"]),
+                    link_path=(
+                        f"/clubs/{club_id}/community/post/"
+                        f"{created_post['post_id']}"
+                    ),
+                )
+
+            except Exception as e:
+                print("동호회 공지 알림 실패:", e)
 
 
         # =================================================

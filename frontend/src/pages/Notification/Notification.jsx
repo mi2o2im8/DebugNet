@@ -78,6 +78,13 @@ function Notification() {
         team_matching_approved: GiSoccerBall,
         team_matching_rejected: GiSoccerBall,
         community_comment: FiMessageCircle,
+        // ⭐ 게스트 신청 / 동호회 개설 / 동호회 커뮤니티
+        guest_application: FiUsers,
+        guest_approved: FiUsers,
+        club_created: FiUsers,
+        club_notice_post: FiFileText,
+        club_community_comment: FiMessageCircle,
+        role_changed: FiUsers,
         activity_review: FiHeart,
         club_notice: FiFileText,
     };

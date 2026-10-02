@@ -993,23 +993,23 @@
 /* ========================================
    ⭐ 다크모드 (설정 > 다크모드, html.dark-mode)
    색은 설정 페이지 다크모드와 같은 팔레트
-     바탕 #12161c / 카드 #1b2129 / 선 #303844
+     바탕 #2f3744 / 카드 #24282e / 선 #3d4552 (설정 페이지 기준)
      글자 #f1f4f8 / 보조 글자 #9ba7b7
    ======================================== */
 
 .dark-mode .mypage-container {
-    background: #12161c;
+    background: #2f3744;
     color: #f1f4f8;
 }
 
 /* 상태바 가림막 */
 .dark-mode .mypage-container::before {
-    background: #12161c;
+    background: #2f3744;
 }
 
 /* 상단 제목 (공용 PageHeader) - 내 정보 페이지만 어둡게 */
 .dark-mode .mypage-container .page-header {
-    background: #12161c;
+    background: #2f3744;
 }
 
 .dark-mode .mypage-container .page-header-title {
@@ -1021,7 +1021,7 @@
 }
 
 .dark-mode .mypage-container .mypage-setting-btn:active {
-    background: #242b34;
+    background: #313844;
 }
 
 /* 프로필 카드 */
@@ -1030,12 +1030,12 @@
 .dark-mode .mypage-container .my-club-slide,
 .dark-mode .mypage-container .activity-list,
 .dark-mode .mypage-container .activity-item {
-    background: #1b2129;
-    border-color: #303844;
+    background: #24282e;
+    border-color: #3d4552;
 }
 
 .dark-mode .mypage-container .profile-image {
-    background: #1f3a33;
+    background: #284840;
 }
 
 .dark-mode .mypage-container .profile-name,
@@ -1054,8 +1054,8 @@
 }
 
 .dark-mode .mypage-container .profile-edit-button {
-    background: #242b34;
-    border-color: #303844;
+    background: #313844;
+    border-color: #3d4552;
     color: #e9edf2;
 }
 
@@ -1068,29 +1068,29 @@
 /* 내 동호회 슬라이드 */
 .dark-mode .mypage-container .my-club-slider-box,
 .dark-mode .mypage-container .club-empty {
-    background: #172521;
-    border-color: #26443c;
+    background: #1f302b;
+    border-color: #30524a;
 }
 
 .dark-mode .mypage-container .my-club-badge {
-    background: #242b34;
-    border-color: #303844;
+    background: #313844;
+    border-color: #3d4552;
     color: #9ba7b7;
 }
 
 .dark-mode .mypage-container .my-club-badge.operator {
-    background: #173a31;
+    background: #20443a;
     color: #4fd1b0;
 }
 
 .dark-mode .mypage-container .my-club-arrow:disabled,
 .dark-mode .mypage-container .my-club-dot {
-    color: #3a4452;
+    color: #48515f;
     background-color: transparent;
 }
 
 .dark-mode .mypage-container .my-club-dot {
-    background: #3a4452;
+    background: #48515f;
 }
 
 .dark-mode .mypage-container .my-club-dot.active {
@@ -1099,17 +1099,17 @@
 
 /* 내 활동 메뉴 */
 .dark-mode .mypage-container .activity-item {
-    border-bottom-color: #303844;
+    border-bottom-color: #3d4552;
 }
 
 .dark-mode .mypage-container .activity-item:active {
-    background: #242b34;
+    background: #313844;
 }
 
 /* 신뢰점수 카드 */
 .dark-mode .mypage-container .trust-score-card {
-    background: #172521;
-    border-color: #26443c;
+    background: #1f302b;
+    border-color: #30524a;
 }
 
 .dark-mode .mypage-container .trust-score-card h2 {
@@ -1121,10 +1121,10 @@
 }
 
 .dark-mode .mypage-container .trust-score-card p:nth-of-type(2) {
-    background: #173a31;
+    background: #20443a;
     color: #4fd1b0;
 }
 
 .dark-mode .mypage-container .trust-progress {
-    background: #26443c;
+    background: #30524a;
 }

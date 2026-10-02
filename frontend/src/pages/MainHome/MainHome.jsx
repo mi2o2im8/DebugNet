@@ -352,6 +352,11 @@ function MainHome() {
                         .then((result) => result?.events || [])
                         .catch((error) => {
 
+                            // 로그아웃 등으로 요청이 취소된 건 오류가 아님
+                            if (error?.name === "AbortError") {
+                                return [];
+                            }
+
                             console.error(
                                 "⭐ MainHome 게스트 일정 조회 실패:",
                                 error
@@ -386,6 +391,11 @@ function MainHome() {
                                     );
 
                                 } catch (error) {
+
+                                    // 로그아웃 등으로 요청이 취소된 건 오류가 아님
+                                    if (error?.name === "AbortError") {
+                                        return [];
+                                    }
 
                                     console.error(
                                         `⭐ 동호회 ${currentClubId} 일정 조회 실패:`,
@@ -583,6 +593,11 @@ function MainHome() {
 
             } catch (error) {
 
+                // 로그아웃 등으로 요청이 취소된 건 오류가 아님
+                if (error?.name === "AbortError") {
+                    return;
+                }
+
                 console.error(
                     "⭐ MainHome 일정 조회 오류:",
                     error
@@ -633,6 +648,11 @@ function MainHome() {
                     }
                 }
             } catch (error) {
+                // 로그아웃 등으로 요청이 취소된 건 오류가 아님
+                if (error?.name === "AbortError") {
+                    return;
+                }
+
                 console.error(
                     "리뷰 안내 조회 오류:",
                     error
@@ -705,6 +725,11 @@ function MainHome() {
                 }
 
             } catch (error) {
+
+                // 로그아웃 등으로 요청이 취소된 건 오류가 아님
+                if (error?.name === "AbortError") {
+                    return;
+                }
 
                 console.error(
                     "⭐ MainHome 게스트 모집 조회 오류:",
@@ -986,6 +1011,11 @@ function MainHome() {
 
                 } catch (error) {
 
+                    // 로그아웃 등으로 요청이 취소된 건 오류가 아님
+                    if (error?.name === "AbortError") {
+                        return;
+                    }
+
                     console.error(
                         "가입 후 메인 홈 진입 권한 확인 오류:",
                         error
@@ -1108,6 +1138,11 @@ function MainHome() {
 
 
                     if (error) {
+
+                        // 로그아웃 등으로 요청이 취소된 건 오류가 아님
+                        if (error?.name === "AbortError") {
+                            return;
+                        }
 
                         console.error(
                             "가입 후 홈 사용자 정보 조회 오류:",
@@ -1314,6 +1349,11 @@ function MainHome() {
                 );
 
             } catch (error) {
+
+                // 로그아웃 등으로 요청이 취소된 건 오류가 아님
+                if (error?.name === "AbortError") {
+                    return;
+                }
 
                 console.error(
                     "⭐ MainHome 활동 추천 동호회 조회 오류:",

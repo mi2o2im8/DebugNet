@@ -13,6 +13,9 @@ from app.repositories.club_event_repository import (
 from app.repositories.club_repository import (
     ClubRepository,
 )
+from app.repositories.notification_repository import (
+    NotificationRepository,
+)
 from app.repositories.match_repository import (
     MatchRepository,
 )
@@ -2964,6 +2967,49 @@ class ClubEventService:
             )
         )
 
+        # -------------------------------------------------
+        # 운영진에게 게스트 신청 알림
+        # - 알림 저장이 실패해도 신청은 정상 처리
+        # -------------------------------------------------
+        try:
+            notification_repository = NotificationRepository()
+
+            club_name = notification_repository.find_club_name(
+                club_id
+            )
+
+            nickname = notification_repository.find_user_nickname(
+                user_id
+            )
+
+            event_title = event.get("title") or "일정"
+
+            manager_ids = [
+                uid
+                for uid in notification_repository
+                .find_club_manager_user_ids(club_id)
+                if uid != user_id
+            ]
+
+            notification_repository.create_notifications(
+                user_ids=manager_ids,
+                notification_type="guest_application",
+                title="새로운 게스트 신청",
+                content=(
+                    f"[{club_name}] '{event_title}' 일정에 "
+                    f"{nickname}님이 게스트로 신청했어요."
+                ),
+                related_type="event",
+                related_id=event_id,
+                link_path=(
+                    f"/clubs/{club_id}/manage/events/"
+                    f"{event_id}/participants"
+                ),
+            )
+
+        except Exception as e:
+            print("게스트 신청 알림 실패:", e)
+
         return ClubEventGuestApplyResponse(
             event_id=event_id,
             event_participant_id=int(
@@ -3395,6 +3441,51 @@ class ClubEventService:
                     participant["user_id"]
                 ),
             )
+
+        # -------------------------------------------------
+        # 게스트 승인 시 신청한 사람에게 알림
+        # - 알림 저장이 실패해도 승인은 정상 처리
+        # -------------------------------------------------
+        if (
+            participant_type == "guest"
+            and new_status == "joined"
+        ):
+            try:
+                notification_repository = NotificationRepository()
+
+                club_name = notification_repository.find_club_name(
+                    club_id
+                )
+
+                event_title = event.get("title") or "일정"
+
+                # "2026-10-02" → "10월 2일"
+                date_text = ""
+                event_date = str(event.get("event_date") or "")
+                date_parts = event_date[:10].split("-")
+
+                if len(date_parts) == 3:
+                    date_text = (
+                        f"{int(date_parts[1])}월 "
+                        f"{int(date_parts[2])}일 "
+                    )
+
+                notification_repository.create_notifications(
+                    user_ids=[str(participant["user_id"])],
+                    notification_type="guest_approved",
+                    title="게스트 참가가 승인됐어요",
+                    content=(
+                        f"[{club_name}] {date_text}"
+                        f"'{event_title}' 일정에 "
+                        "게스트로 참가할 수 있어요."
+                    ),
+                    related_type="event",
+                    related_id=event_id,
+                    link_path=f"/guest-recruit/{event_id}",
+                )
+
+            except Exception as e:
+                print("게스트 승인 알림 실패:", e)
 
         return ClubEventGuestDecisionResponse(
             event_participant_id=int(

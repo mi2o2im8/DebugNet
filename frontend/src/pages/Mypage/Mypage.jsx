@@ -177,6 +177,11 @@ function Mypage() {
                 }
             })
             .catch((error) => {
+                // 로그아웃 등으로 요청이 취소된 건 오류가 아님
+                if (error?.name === "AbortError") {
+                    return;
+                }
+
                 console.error("받은 신청 개수 조회 실패:", error);
             });
 
@@ -199,6 +204,11 @@ function Mypage() {
                 if (isActive) setUserInfo(profile);
             })
             .catch((error) => {
+                // 로그아웃 등으로 요청이 취소된 건 오류가 아님
+                if (error?.name === "AbortError") {
+                    return;
+                }
+
                 console.error("⭐ 사용자 정보 API 오류:", error);
                 if (isActive) setUserInfo(null);
             })
@@ -214,6 +224,11 @@ function Mypage() {
                 if (isActive) setMyClubs(buildClubList(clubData));
             })
             .catch((error) => {
+                // 로그아웃 등으로 요청이 취소된 건 오류가 아님
+                if (error?.name === "AbortError") {
+                    return;
+                }
+
                 console.error("⭐ 내 동호회 API 오류:", error);
                 if (isActive) setMyClubs([]);
             })

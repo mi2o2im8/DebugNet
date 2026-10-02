@@ -1,6 +1,9 @@
 from typing import List, Optional
 
 from app.repositories.club_repository import ClubRepository
+from app.repositories.notification_repository import (
+    NotificationRepository,
+)
 from app.schemas.clubs import (
     ClubCreateRequest,
     ClubCreateResponse,
@@ -561,6 +564,49 @@ class ClubService:
                     pass
 
             raise
+
+        # -------------------------------------------------
+        # 새 동호회 개설 알림 (전체 사용자)
+        # - 공개 동호회만 알림 (비공개는 알리지 않음)
+        # - 개설한 본인은 제외
+        # - 알림 저장이 실패해도 동호회 생성은 정상 처리
+        # -------------------------------------------------
+        if request_data.visibility == "public":
+            try:
+                notification_repository = NotificationRepository()
+
+                receiver_ids = [
+                    uid
+                    for uid in notification_repository
+                    .find_all_user_ids()
+                    if uid != owner_id
+                ]
+
+                location_text = " ".join(
+                    part
+                    for part in [
+                        request_data.city,
+                        request_data.district,
+                    ]
+                    if part
+                )
+
+                notification_repository.create_notifications(
+                    user_ids=receiver_ids,
+                    notification_type="club_created",
+                    title="새로운 동호회가 생겼어요",
+                    content=(
+                        f"[{request_data.sport_name}] "
+                        f"'{request_data.club_name}' 동호회가 "
+                        f"{location_text}에서 새로 문을 열었어요."
+                    ),
+                    related_type="club",
+                    related_id=club_id,
+                    link_path=f"/clubs/{club_id}",
+                )
+
+            except Exception as e:
+                print("동호회 개설 알림 실패:", e)
 
         return ClubCreateResponse(
             club_id=club_id,

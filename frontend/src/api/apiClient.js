@@ -197,7 +197,7 @@ export const getAuthenticatedSession = async () => {
 // 인증 API 요청
 // =========================================================
 
-export const authenticatedRequest = async (
+const authenticatedRequestInner = async (
     path,
     {
         body,
@@ -231,6 +231,43 @@ export const authenticatedRequest = async (
         session,
         false
     );
+};
+
+// =========================================================
+// ⭐ 인증 API 요청 (외부에서 쓰는 함수)
+//
+// 로그아웃할 때 startLogout()이 진행 중인 요청을 전부 취소하는데,
+// 그 취소가 각 화면의 catch로 전달되면
+// "조회 오류: AbortError"가 콘솔에 줄줄이 찍히고,
+// 화면에 따라서는 실패 처리(다른 페이지로 이동 등)까지 실행된다.
+//
+// → 로그아웃 때문에 취소된 요청은 성공도 실패도 알리지 않고 그대로 둔다.
+//   (어차피 로그인 화면으로 이동하면서 그 화면들은 사라짐)
+//
+// ⭐ 화면이 직접 넘긴 signal로 취소한 경우나 로그아웃이 아닐 때의
+//    오류는 기존처럼 그대로 전달된다.
+// =========================================================
+
+export const authenticatedRequest = async (
+    path,
+    options = {}
+) => {
+    try {
+        return await authenticatedRequestInner(
+            path,
+            options
+        );
+    } catch (error) {
+        if (
+            error?.name === "AbortError" &&
+            logoutInProgress
+        ) {
+            // 끝나지 않는 Promise → then / catch 어느 쪽도 실행되지 않음
+            return new Promise(() => {});
+        }
+
+        throw error;
+    }
 };
 
 // =========================================================

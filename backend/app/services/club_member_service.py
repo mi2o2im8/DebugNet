@@ -4,6 +4,9 @@ from datetime import (
     timezone,
 )
 
+from app.repositories.notification_repository import (
+    NotificationRepository,
+)
 from app.repositories.club_member_repository import (
     ClubMemberRepository,
 )
@@ -1850,6 +1853,45 @@ class ClubMemberService:
             if next_role == "manager"
             else "일반 회원"
         )
+
+        # -------------------------------------------------
+        # 역할(등급) 변경 알림 → 변경된 회원 본인에게
+        # - 알림 저장이 실패해도 역할 변경은 정상 처리
+        # -------------------------------------------------
+        try:
+            notification_repository = NotificationRepository()
+
+            club_name = notification_repository.find_club_name(
+                club_id
+            )
+
+            if next_role == "manager":
+                notification_title = "운영진이 되었어요"
+                notification_content = (
+                    f"[{club_name}] 동호회 운영진으로 지정됐어요. "
+                    "이제 일정과 회원을 관리할 수 있어요."
+                )
+                notification_link = f"/clubs/{club_id}/manage"
+            else:
+                notification_title = "동호회 역할이 변경됐어요"
+                notification_content = (
+                    f"[{club_name}] 동호회 역할이 "
+                    "일반 회원으로 변경됐어요."
+                )
+                notification_link = f"/clubs/{club_id}/home"
+
+            notification_repository.create_notifications(
+                user_ids=[str(updated_member["user_id"])],
+                notification_type="role_changed",
+                title=notification_title,
+                content=notification_content,
+                related_type="club",
+                related_id=club_id,
+                link_path=notification_link,
+            )
+
+        except Exception as e:
+            print("역할 변경 알림 실패:", e)
 
         return ClubMemberUpdateResponse(
             club_member_id=club_member_id,
