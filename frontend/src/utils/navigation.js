@@ -146,7 +146,7 @@ export const getBackFallback = (pathname = window.location.pathname) => {
 
     // ----- 회원가입 -----
     if (path.startsWith("/signup/basic/")) return "/signup/basic";
-    if (path.startsWith("/signup")) return "/";
+    if (path.startsWith("/signup")) return "/Login";
 
     return "/mainhome";
 };

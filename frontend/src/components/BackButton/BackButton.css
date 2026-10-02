@@ -314,3 +314,20 @@
 .pb-back-text-button .BackButton-icon {
     flex: 0 0 auto;
 }
+
+
+/* ========================================
+   ⭐ 다크모드 (다크모드 지원 페이지에서만)
+======================================== */
+html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) .bottom-nav {
+  background-color: #12161c;
+  border-top-color: #303844;
+}
+
+html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) .bottom-nav-item {
+  color: #9ba7b7;
+}
+
+html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) .bottom-nav-item.active {
+  color: #20b26b;
+}

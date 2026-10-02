@@ -103,7 +103,6 @@ body {
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
-  border-inline: 1px solid var(--border);
   min-height: 100svh;
   padding-top: env(safe-area-inset-top, 0px);
   display: flex;
@@ -198,4 +197,19 @@ body::before {
   .match-team-list-header
 ) {
   top: env(safe-area-inset-top, 0px);
+}
+
+/* ========================================
+   ⭐ 다크모드 지원 페이지일 때 바깥 영역까지 어둡게
+   - 다크모드 미지원 페이지는 그대로 흰색 유지
+   - 다크모드 페이지가 늘어나면 :has() 안에 컨테이너 클래스만 추가
+======================================== */
+html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) {
+  --bg: #12161c;          /* body::before (상태바 영역) 색 */
+  background: #12161c;
+}
+
+html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) body,
+html.dark-mode:has(.mypage-container, .settings-page, .favorite-club-page) #root {
+  background: #12161c;
 }
