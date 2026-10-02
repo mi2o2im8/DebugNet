@@ -13,7 +13,6 @@ import {
     FiSave
 } from "react-icons/fi";
 
-import CustomSelect from "../../components/common/CustomSelect";
 
 import {
     getClubSettings,
@@ -23,23 +22,12 @@ import {
 import "./ClubSettings.css";
 
 
-const FREQUENCY_OPTIONS = [
-    { value: "주 1회", label: "주 1회" },
-    { value: "주 2회", label: "주 2회" },
-    { value: "주 3~4회", label: "주 3~4회" },
-    { value: "비정기 활동", label: "비정기 활동" },
-    { value: "자유 참여", label: "자유 참여" }
-];
-
-
 function ClubBasicSettings() {
     const { clubId } = useParams();
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
         clubName: "",
-        sportName: "",
-        activityFrequency: "",
         maxMembers: "",
         monthlyFee: 30000
     });
@@ -65,10 +53,6 @@ function ClubBasicSettings() {
                 setFormData({
                     clubName:
                         result.club_name || "",
-                    sportName:
-                        result.sport_name || "",
-                    activityFrequency:
-                        result.activity_frequency || "",
                     maxMembers:
                         result.max_members ?? "",
                     monthlyFee:
@@ -112,11 +96,6 @@ function ClubBasicSettings() {
             return;
         }
 
-        if (!formData.activityFrequency) {
-            alert("활동 빈도를 선택해주세요.");
-            return;
-        }
-
         if (
             formData.maxMembers !== ""
             && Number(formData.maxMembers) < 1
@@ -145,8 +124,6 @@ function ClubBasicSettings() {
                 clubId,
                 {
                     clubName: trimmedClubName,
-                    activityFrequency:
-                        formData.activityFrequency,
                     maxMembers:
                         formData.maxMembers === ""
                             ? null
@@ -255,25 +232,6 @@ function ClubBasicSettings() {
                             운동 종목은 활동 정보 수정에서
                             변경할 수 있습니다.
                         </small>
-                    </div>
-
-                    <div className="club-settings-field">
-                        <label>활동 빈도</label>
-
-                        <CustomSelect
-                            value={
-                                formData.activityFrequency
-                            }
-                            options={FREQUENCY_OPTIONS}
-                            placeholder="활동 빈도를 선택해주세요"
-                            ariaLabel="활동 빈도 선택"
-                            onChange={(value) =>
-                                updateField(
-                                    "activityFrequency",
-                                    value
-                                )
-                            }
-                        />
                     </div>
 
                     <div className="club-settings-field">
