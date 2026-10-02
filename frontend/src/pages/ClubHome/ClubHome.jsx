@@ -8,6 +8,11 @@ import { buildApiUrl } from "../../api/apiClient";
 import { useNotifications } from "../../context/NotificationContext";
 import profileIcon from "../../assets/img/basic_profile_img.png";
 import chatbotIcon from "../../assets/img/chatbot/chatbot-icon.png";
+// ⭐ 홈(MainHome)과 같은 섹션 아이콘 / 더보기 화살표
+import findClubIcon from "../../assets/img/playbridge_16_assets/find_club.png";
+import userIcon from "../../assets/img/playbridge_16_assets/user_icon.png";
+import activityIcon from "../../assets/img/playbridge_16_assets/activity.png";
+import backIcon from "../../assets/img/back.png";
 import ChatbotButton from "../../components/Chatbot/ChatbotButton";
 import Chatbot from "../Chatbot/Chatbot";
 import { supabase } from "../../../supabaseClient";
@@ -32,19 +37,37 @@ function ChevronRightIcon({ size = 14 }) {
 }
 
 // 섹션 제목 + 오른쪽 "전체보기"
-function SectionHeader({ title, onMore }) {
+function SectionHeader({ icon, title, onMore }) {
   return (
     <div className="ClubHome-section-header">
-      <h2>{title}</h2>
+      <div className="ClubHome-section-title">
+        {icon && <img src={icon} alt="" aria-hidden="true" />}
+        <h2>{title}</h2>
+      </div>
       {onMore && (
         <button type="button" className="ClubHome-section-more" onClick={onMore}>
-          전체보기
-          <ChevronRightIcon />
+          더보기
+          <img src={backIcon} alt="" aria-hidden="true" />
         </button>
       )}
     </div>
   );
 }
+
+// 게스트 일정 날짜: "2026-10-05" + "19:00:00" → "10/5(월) 19:00"
+const formatGuestSchedule = (eventDate, startTime) => {
+  const time = startTime ? String(startTime).slice(0, 5) : "";
+  const parts = String(eventDate || "").slice(0, 10).split("-");
+
+  if (parts.length !== 3) {
+    return time || "일정 미정";
+  }
+
+  const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  const weekday = ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
+
+  return `${Number(parts[1])}/${Number(parts[2])}(${weekday})${time ? ` ${time}` : ""}`;
+};
 
 // 비어 있을 때 안내 박스
 function EmptyState({ title, description, actionLabel, onAction }) {
@@ -729,6 +752,7 @@ function ClubHome() {
         <section className="ClubHome-all-clubs">
 
           <SectionHeader
+            icon={findClubIcon}
             title="전체 동호회"
             onMore={() => navigate("/clubs/all")}
           />
@@ -821,6 +845,7 @@ function ClubHome() {
       <section className="ClubHome-recruit">
 
         <SectionHeader
+          icon={userIcon}
           title={isSearchResult ? "검색 결과" : "회원 모집중"}
           onMore={
             isSearchResult
@@ -938,6 +963,7 @@ function ClubHome() {
         <section className="ClubHome-guest">
 
           <SectionHeader
+            icon={activityIcon}
             title="게스트 모집중"
             onMore={() => navigate("/guest-recruit")}
           />
@@ -978,48 +1004,41 @@ function ClubHome() {
                     >
 
                       <div className="Guest-card-image">
-
                         {event.event_image_url ? (
                           <img
-                            src={
-                              event.event_image_url
-                            }
-                            alt={
-                              event.title
-                            }
+                            src={event.event_image_url}
+                            alt={event.title || "게스트 모집"}
                           />
                         ) : (
-                          "이미지"
+                          <img
+                            className="Guest-card-fallback"
+                            src={activityIcon}
+                            alt=""
+                            aria-hidden="true"
+                          />
                         )}
 
+                        {/* 홈과 같은 "게스트 모집" 배지 */}
+                        <span className="Guest-card-badge">
+                          게스트 모집
+                        </span>
                       </div>
 
                       <h3 className="Guest-card-title">
-                        {event.title}
+                        {event.title || "게스트 모집"}
                       </h3>
 
                       <div className="Guest-card-info">
-
                         <span className="Guest-card-time">
-                          {event.start_time?.slice(
-                            0,
-                            5
-                          )}
-
-                          {" - "}
-
-                          {event.end_time?.slice(
-                            0,
-                            5
+                          {formatGuestSchedule(
+                            event.event_date,
+                            event.start_time
                           )}
                         </span>
 
                         <span className="Guest-card-location">
-                          └{" "}
-                          {event.location ||
-                            "장소 미정"}
+                          {event.location || "장소 미정"}
                         </span>
-
                       </div>
 
                     </div>

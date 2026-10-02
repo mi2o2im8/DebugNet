@@ -1150,3 +1150,75 @@
 .schedule-guest-text .schedule-guest-date {
     font-size: 10px;
 }
+
+/* =========================================================
+   ⭐ 소제목 · 동호회 이름만 1px 크게
+   - 다른 페이지 CSS(.section-header h3 등)가 덮어써도
+     홈 안에서는 이 크기가 적용되도록 .basic-home-main 으로 한정
+========================================================= */
+
+/* 소제목: 이번 달 일정 (16px → 17px) */
+.basic-home-main .schedule-title h3 {
+    font-size: 17px;
+}
+
+/* 소제목: 게스트 모집 / 이런 활동도 있어요 (16px → 17px) */
+.basic-home-main .section-header h3 {
+    font-size: 17px;
+}
+
+/* 소제목: 커뮤니티 미리보기 (16px → 17px) */
+.basic-home-main .cp-title h3 {
+    font-size: 17px;
+}
+
+/* 동호회 카드 - 동호회 이름 (13px → 14px) */
+.basic-home-main .club-card-content h4 {
+    font-size: 14px;
+}
+
+@media (max-width: 360px) {
+    /* 작은 화면 (12px → 13px) */
+    .basic-home-main .club-card-content h4 {
+        font-size: 13px;
+    }
+}
+
+/* =========================================================
+   ⭐ 동호회 찾아보기 / 만들기 카드 - 줄 맞춤
+   - 제목이 2줄이 돼도 두 카드의 설명 · 버튼 위치가 같게 유지
+   - 두 카드 높이를 같게 하고, 버튼은 항상 카드 맨 아래에 붙임
+========================================================= */
+
+.basic-home-main .club-section {
+    align-items: stretch;
+}
+
+.basic-home-main .club-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.basic-home-main .club-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 제목: 항상 2줄 높이를 차지 → 1줄이어도 가운데 정렬되어
+   옆 카드와 설명 시작 위치가 같아짐
+   keep-all: "없어요!" 처럼 단어 중간에서 줄이 끊기지 않게 */
+.basic-home-main .club-card-content h4 {
+    min-height: 2.8em;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    word-break: keep-all;
+}
+
+/* 버튼: 남는 공간을 위에 두고 항상 맨 아래 */
+.basic-home-main .club-card-content button {
+    margin-top: auto;
+}

@@ -64,7 +64,7 @@
     background: transparent;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 25px;
+    font-size: var(--fs-display);
     font-weight: 700;
     color: #222;
 
@@ -73,7 +73,7 @@
 
 .ClubHome-arrow {
     margin-left: 3px;
-    font-size: 25px;
+    font-size: var(--fs-display);
 }
 
 
@@ -154,7 +154,7 @@
     color: #fff;
 
     font-family: Arial, sans-serif;
-    font-size: 8px;
+    font-size: var(--fs-micro);
     font-weight: 700;
 
     line-height: 1;
@@ -216,7 +216,7 @@
 }
 
 .ClubHome-search-icon {
-  font-size: 16px;
+  font-size: var(--fs-title-sm);
   flex-shrink: 0;
 }
 
@@ -229,7 +229,7 @@
 
   background: transparent;
 
-  font-size: 14px;
+  font-size: var(--fs-body-lg);
   color: #222;
 }
 
@@ -241,7 +241,7 @@
   border: none;
   background: transparent;
 
-  font-size: 22px;
+  font-size: var(--fs-headline);
   color: #888;
 
   cursor: pointer;
@@ -293,7 +293,7 @@
     align-items: center;
     justify-content: center;
 
-    font-size: 20px;
+    font-size: var(--fs-title-lg);
 
     border-radius: 50%;
     background-color: #e9f7f3;
@@ -306,7 +306,7 @@
     margin: 0;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 13px;
+    font-size: var(--fs-body);
     line-height: 1.3;
 
     color: #555;
@@ -337,7 +337,7 @@
 
 /* 필터 제목 */
 .ClubHome-filter-item h3 {
-  font-size: 15px;
+  font-size: var(--fs-subtitle);
   margin-bottom: 10px;
 }
 
@@ -361,7 +361,7 @@
 
   background-color: #fff;
 
-  font-size: 13px;
+  font-size: var(--fs-body);
   cursor: pointer;
 }
 
@@ -431,7 +431,7 @@
 
   background-color: #fff;
 
-  font-size: 14px;
+  font-size: var(--fs-body-lg);
   font-weight: 600;
 
   cursor: pointer;
@@ -451,12 +451,12 @@
   background-color: #2e8b57;
   color: #fff;
 
-  font-size: 11px;
+  font-size: var(--fs-caption);
 }
 
 /* 화살표 */
 .ClubHome-filter-arrow {
-  font-size: 16px;
+  font-size: var(--fs-title-sm);
 }
 
 /* =========================================
@@ -485,13 +485,13 @@
   background-color: #edf7f0;
   color: #267348;
 
-  font-size: 12px;
+  font-size: var(--fs-body-sm);
 
   cursor: pointer;
 }
 
 .ClubHome-filter-chip span {
-  font-size: 16px;
+  font-size: var(--fs-title-sm);
   line-height: 1;
 }
 
@@ -562,7 +562,7 @@
 .ClubHome-filter-modal-header h2 {
   margin: 0;
 
-  font-size: 18px;
+  font-size: var(--fs-title);
   font-weight: 700;
 }
 
@@ -571,7 +571,7 @@
   border: none;
   background: none;
 
-  font-size: 28px;
+  font-size: var(--fs-display);
   color: #555;
 
   cursor: pointer;
@@ -597,7 +597,7 @@
 .ClubHome-filter-group h3 {
   margin: 0 0 14px;
 
-  font-size: 15px;
+  font-size: var(--fs-subtitle);
   font-weight: 700;
 }
 
@@ -624,7 +624,7 @@
 
   background-color: #fff;
 
-  font-size: 13px;
+  font-size: var(--fs-body);
 
   cursor: pointer;
   transition: 0.15s;
@@ -671,7 +671,7 @@
 
   background-color: #fff;
 
-  font-size: 14px;
+  font-size: var(--fs-body-lg);
   font-weight: 600;
 
   cursor: pointer;
@@ -689,7 +689,7 @@
   background-color: #2e8b57;
   color: #fff;
 
-  font-size: 14px;
+  font-size: var(--fs-body-lg);
   font-weight: 600;
 
   cursor: pointer;
@@ -727,7 +727,7 @@
   padding: 30px 0;
   text-align: center;
   color: #777;
-  font-size: 14px;
+  font-size: var(--fs-body-lg);
 }
 
 /* ========================================
@@ -786,7 +786,7 @@
     background-color: #008A6D;
 
     color: #fff;
-    font-size: 12px;
+    font-size: var(--fs-body-sm);
     font-weight: 700;
 }
 
@@ -797,7 +797,7 @@
     margin: 0;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 25px;
+    font-size: var(--fs-display);
     font-weight: 700;
 
     color: #222;
@@ -810,7 +810,7 @@
     margin: 8px 0 10px;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 15px;
+    font-size: var(--fs-subtitle);
     line-height: 1.5;
     text-align: left;
 
@@ -830,7 +830,7 @@
 
     font-family: "Maplestory", sans-serif;
     font-weight: bold;
-    font-size: 15px;
+    font-size: var(--fs-subtitle);
     color: #008A6D;
 
     cursor: pointer;
@@ -933,7 +933,7 @@
     margin: 0;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 25px;
+    font-size: var(--fs-display);
     font-weight: 700;
 
     color: #222;
@@ -1022,7 +1022,7 @@
     justify-content: center;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 10px;
+    font-size: var(--fs-caption);
 
     color: #999;
 }
@@ -1034,7 +1034,7 @@
     margin: 6px 0 0;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 18px;
+    font-size: var(--fs-title);
     font-weight: 700;
     line-height: 1.3;
 
@@ -1052,7 +1052,7 @@
     margin: 3px 0 0;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 12px;
+    font-size: var(--fs-body-sm);
     line-height: 1.3;
 
     color: #888;
@@ -1177,7 +1177,7 @@
     background-color: #eee;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 10px;
+    font-size: var(--fs-caption);
     color: #999;
 }
 
@@ -1194,7 +1194,7 @@
     margin: 6px 0 0;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 18px;
+    font-size: var(--fs-title);
     font-weight: 700;
     line-height: 1.3;
 
@@ -1210,7 +1210,7 @@
     margin: 6px 0 0;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 18px;
+    font-size: var(--fs-title);
     font-weight: 700;
     line-height: 1.3;
 
@@ -1230,7 +1230,7 @@
     margin: 5px 2px 0;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 11px;
+    font-size: var(--fs-caption);
     line-height: 1.3;
 
     color: #888;
@@ -1267,7 +1267,7 @@
     margin: 6px 0 0;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 18px;
+    font-size: var(--fs-title);
     font-weight: 700;
     line-height: 1.3;
 
@@ -1285,7 +1285,7 @@
     margin: 3px 0 0;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 12px;
+    font-size: var(--fs-body-sm);
     line-height: 1.3;
 
     color: #888;
@@ -1334,7 +1334,7 @@
 /* 챗봇 아이콘 */
 
 .ClubHome-chatbot-icon {
-    font-size: 23px;
+    font-size: var(--fs-headline);
     line-height: 1;
     margin-bottom: 5px;
 }
@@ -1343,7 +1343,7 @@
 /* 챗봇 글자 */
 
 .ClubHome-chatbot-text {
-    font-size: 12px;
+    font-size: var(--fs-body-sm);
     line-height: 1;
     margin-bottom: 5px;
 
@@ -1398,7 +1398,7 @@
     background: transparent;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 13px;
+    font-size: var(--fs-body);
 
     color: #999;
 
@@ -1409,7 +1409,7 @@
 /* 네비게이션 아이콘 */
 
 /* .ClubHome-nav-icon {
-    font-size: 30px;
+    font-size: var(--fs-display);
 } */
 
 
@@ -1460,7 +1460,7 @@
     background-color: #fff;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 12px;
+    font-size: var(--fs-body-sm);
     font-weight: 700;
 
     color: #777;
@@ -1486,14 +1486,19 @@
 
 
 /* =====================================================================
-   ⭐ 동호회 찾기 다듬기 (2026.10)
+   ⭐ 동호회 찾기 - 홈(MainHome)과 같은 UI로 맞춤
    - 위쪽 기존 규칙은 그대로 두고, 여기서 .ClubHome-container 기준으로 덮어씀
-   - 좌우 여백 16px로 통일 / 섹션 간격 28px로 통일
+   - 굵은 글씨(700)는 제목 · 카드 이름에만, 나머지는 기본(400)
+   - 섹션 제목 18px + 아이콘 / "더보기" 12px / 테두리 카드 / 점선 빈 상태
    ===================================================================== */
+
+.ClubHome-container {
+    background-color: #fff;
+}
 
 /* ---------- 상단 헤더 ---------- */
 .ClubHome-container .ClubHome-header {
-    height: 56px;
+    height: 52px;
     padding: 0 16px;
 }
 
@@ -1502,24 +1507,25 @@
     align-items: center;
     gap: 2px;
 
-    font-size: 22px;
-    letter-spacing: -0.5px;
+    font-size: var(--fs-title-lg);
+    font-weight: 700;
+    color: #222;
 }
 
 .ClubHome-container .ClubHome-arrow {
     display: inline-flex;
     align-items: center;
     margin: 2px 0 0;
-    color: #8a8f96;
+    color: #999;
 }
 
-/* ---------- 검색 + 필터 (본문과 같은 좌우 여백) ---------- */
+/* ---------- 검색 + 필터 ---------- */
 .ClubHome-container .ClubSearch-container {
     padding: 0 16px;
 }
 
 .ClubHome-container .ClubSearch-search-box {
-    margin: 4px 0 10px;
+    margin: 2px 0 10px;
 }
 
 .ClubHome-container .ClubSearch-filter-section {
@@ -1532,21 +1538,17 @@
     align-items: center;
     gap: 6px;
 
-    height: 36px;
-    padding: 0 14px;
+    height: 32px;
+    padding: 0 12px;
 
-    border: 1px solid #e3e6e8;
+    border: 1px solid #ddd;
     border-radius: 999px;
     background: #fff;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--fs-body);
+    font-weight: 400;
     color: #333;
-}
-
-.ClubHome-container .ClubSearch-filter-open-button:active {
-    background: #f4f6f5;
 }
 
 .ClubHome-container .ClubSearch-filter-arrow {
@@ -1554,7 +1556,7 @@
 }
 
 .ClubHome-container .ClubSearch-filter-count {
-    background: #008A6D;
+    background: #01A17F;
 }
 
 /* ---------- AI 맞춤 추천 카드 ---------- */
@@ -1562,30 +1564,36 @@
     width: calc(100% - 32px);
     min-height: 0;
 
-    margin: 14px auto 0;
-    padding: 20px 18px;
+    margin: 12px auto 0;
+    padding: 16px;
     gap: 12px;
 
-    border-radius: 18px;
+    border-radius: 12px;
     background-color: #eaf8f4;
 }
 
+.ClubHome-container .ClubHome-ai-title {
+    gap: 6px;
+}
+
 .ClubHome-container .ClubHome-ai-title h2 {
-    font-size: 20px;
-    letter-spacing: -0.4px;
+    font-size: var(--fs-title);
+    font-weight: 700;
+    color: #222;
 }
 
 .ClubHome-container .ClubHome-ai-badge {
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
-    font-size: 11px;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    font-size: var(--fs-caption);
 }
 
 .ClubHome-container .ClubHome-ai-description {
-    margin: 8px 0 14px;
-    font-size: 14px;
-    color: #5f6b66;
+    margin: 6px 0 12px;
+    font-size: var(--fs-body);
+    font-weight: 400;
+    color: #777;
 }
 
 .ClubHome-container .ClubHome-ai-button {
@@ -1593,140 +1601,252 @@
     align-items: center;
     gap: 2px;
 
-    padding: 8px 12px 8px 14px;
+    padding: 7px 10px 7px 12px;
 
     border: none;
     border-radius: 999px;
-    background-color: #008A6D;
+    background-color: #01A17F;
 
-    font-size: 14px;
+    font-size: var(--fs-body);
+    font-weight: 400;
     color: #fff;
 }
 
 .ClubHome-container .ClubHome-ai-button:active {
-    background-color: #00745c;
+    background-color: #008f70;
 }
 
 .ClubHome-container .ClubHome-ai-character {
-    width: 72px;
-    height: 72px;
+    width: 64px;
+    height: 64px;
 }
 
-/* ---------- 섹션 공통 ---------- */
+/* ---------- 섹션 공통 (홈 .section-header 와 같은 모양) ---------- */
 .ClubHome-container .ClubHome-all-clubs,
 .ClubHome-container .ClubHome-recruit,
 .ClubHome-container .ClubHome-guest {
-    margin-top: 28px;
+    margin-top: 24px;
     padding: 0 16px;
 }
 
 .ClubHome-container .ClubHome-section-header {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
+}
+
+.ClubHome-section-title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.ClubHome-section-title img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
 .ClubHome-container .ClubHome-section-header h2 {
-    font-size: 20px;
-    letter-spacing: -0.4px;
-    color: #1f2328;
+    margin: 0;
+    font-size: var(--fs-title);
+    font-weight: 700;
+    color: #333;
 }
 
 .ClubHome-section-more {
     display: inline-flex;
     align-items: center;
-    gap: 1px;
+    gap: 2px;
 
-    padding: 6px 0 6px 10px;
+    padding: 4px 0 4px 8px;
 
     border: none;
     background: transparent;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 13px;
-    color: #8a8f96;
+    font-size: var(--fs-body-sm);
+    font-weight: 400;
+    color: #777;
 
     cursor: pointer;
 }
 
-.ClubHome-section-more:active {
-    color: #008A6D;
+/* 뒤로가기 화살표를 뒤집어서 "›" 로 사용 (홈과 같음) */
+.ClubHome-section-more img {
+    width: 10px;
+    height: 10px;
+    object-fit: contain;
+    transform: rotate(180deg);
+    opacity: 0.7;
 }
 
-/* ---------- 동호회 카드 ---------- */
+/* ---------- 동호회 카드 (홈 게스트 카드와 같은 테두리 카드) ---------- */
 .ClubHome-container .Club-card {
-    border-radius: 0;
+    padding-bottom: 7px;
+
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+
+    background-color: #fff;
     text-align: left;
     cursor: pointer;
 }
 
 .ClubHome-container .Club-card-image {
     aspect-ratio: 4 / 3;
-    border-radius: 12px;
-    background-color: #eaf8f4;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+    border-radius: 0;
+    background-color: #edf3f1;
+    box-shadow: none;
 }
 
-.ClubHome-container .Club-card:active .Club-card-image {
-    opacity: 0.85;
+.ClubHome-container .Club-card:active {
+    background-color: #f7faf9;
 }
 
 /* 이미지 없을 때: 동호회 이름 첫 글자 */
 .ClubHome-container .Club-card-no-image {
-    font-size: 24px;
+    font-size: var(--fs-title-lg);
     font-weight: 700;
-    color: #008A6D;
+    color: #01A17F;
 }
 
 .ClubHome-container .Club-card-name {
-    margin: 8px 2px 0;
-    font-size: 15px;
-    letter-spacing: -0.3px;
+    margin: 6px 7px 0;
+    font-size: var(--fs-body);
+    font-weight: 700;
+    color: #333;
 }
 
 .ClubHome-container .Club-card-intro {
-    margin: 2px 2px 0;
-    font-size: 12px;
-    color: #8a8f96;
+    margin: 2px 7px 0;
+    font-size: var(--fs-caption);
+    font-weight: 400;
+    color: #888;
 }
 
-/* ---------- 비어 있을 때 ---------- */
+/* ---------- 게스트 카드 (홈 게스트 카드와 같은 모양) ---------- */
+.ClubHome-container .Guest-card {
+    padding-bottom: 7px;
+
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+
+    background-color: #fff;
+    text-align: left;
+    cursor: pointer;
+}
+
+.ClubHome-container .Guest-card-image {
+    position: relative;
+
+    aspect-ratio: 4 / 3;
+    border-radius: 0;
+    background-color: #edf3f1;
+}
+
+/* 이미지 없을 때: 홈과 같은 나침반 아이콘 */
+.ClubHome-container .Guest-card-image .Guest-card-fallback {
+    width: 40%;
+    height: 40%;
+    object-fit: contain;
+    opacity: 0.85;
+}
+
+.Guest-card-badge {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    z-index: 2;
+
+    display: inline-flex;
+    align-items: center;
+
+    height: 16px;
+    padding: 0 5px;
+
+    border-radius: 4px;
+    background: #01A17F;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: var(--fs-caption-sm);
+    font-weight: 400;
+    color: #fff;
+}
+
+.ClubHome-container .Guest-card-title {
+    margin: 6px 7px 0;
+    font-size: var(--fs-body);
+    font-weight: 700;
+    line-height: 1.3;
+    color: #333;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ClubHome-container .Guest-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin: 2px 7px 0;
+}
+
+.ClubHome-container .Guest-card-time,
+.ClubHome-container .Guest-card-location {
+    font-size: var(--fs-caption);
+    font-weight: 400;
+    line-height: 1.4;
+    color: #888;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---------- 비어 있을 때 (홈 .guest-empty 와 같은 점선 박스) ---------- */
 .ClubHome-empty {
     flex: 0 0 100%;
     box-sizing: border-box;
 
-    padding: 22px 16px;
+    padding: 22px 12px;
 
-    border-radius: 14px;
-    background: #f6f8f7;
+    border: 1px dashed #d8e2de;
+    border-radius: 8px;
+    background: #fff;
 
     text-align: center;
 }
 
 .ClubHome-empty-title {
     margin: 0;
-    font-size: 14px;
-    font-weight: 700;
-    color: #3d4448;
+    font-size: var(--fs-body);
+    font-weight: 400;
+    color: #666;
 }
 
 .ClubHome-empty-desc {
     margin: 4px 0 0;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
+    font-weight: 400;
     line-height: 1.5;
-    color: #8a8f96;
+    color: #999;
 }
 
 .ClubHome-empty-action {
-    margin-top: 12px;
-    padding: 7px 14px;
+    margin-top: 10px;
+    padding: 6px 12px;
 
-    border: 1px solid #008A6D;
+    border: 1px solid #01A17F;
     border-radius: 999px;
     background: #fff;
 
     font-family: "Maplestory", sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    color: #008A6D;
+    font-size: var(--fs-body-sm);
+    font-weight: 400;
+    color: #01A17F;
 
     cursor: pointer;
 }
@@ -1737,7 +1857,247 @@
 
 /* 불러오는 중 / 오류 문구 */
 .ClubHome-container .ClubHome-message {
-    padding: 24px 0;
-    font-size: 13px;
-    color: #8a8f96;
+    padding: 22px 0;
+    font-size: var(--fs-body-sm);
+    font-weight: 400;
+    color: #999;
+}
+
+/* =====================================================================
+   ⭐ 바깥 여백을 홈(MainHome)과 똑같이
+   - 홈: 가운데 최대 400px / 좌우 18px (360px 이하 화면은 14px)
+   - 섹션 사이 17px, 제목 아래 8px
+   ===================================================================== */
+
+.ClubHome-container {
+    --clubhome-gutter: 18px;
+}
+
+@media (max-width: 360px) {
+    .ClubHome-container {
+        --clubhome-gutter: 14px;
+    }
+}
+
+/* 화면이 넓어도 홈처럼 가운데 400px 안에만 그림 */
+.ClubHome-container .ClubHome-header,
+.ClubHome-container .ClubSearch-container,
+.ClubHome-container .ClubHome-all-clubs,
+.ClubHome-container .ClubHome-recruit,
+.ClubHome-container .ClubHome-guest,
+.ClubHome-container .ClubHome-search-result-header {
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+
+    margin-left: auto;
+    margin-right: auto;
+
+    padding-left: var(--clubhome-gutter);
+    padding-right: var(--clubhome-gutter);
+}
+
+/* 상단: 홈 위쪽 여백(12px)과 맞춤 */
+.ClubHome-container .ClubHome-header {
+    margin-top: 4px;
+}
+
+/* AI 카드는 카드 자체라서 안쪽 여백은 그대로, 바깥 폭만 맞춤 */
+.ClubHome-container .ClubHome-ai {
+    width: calc(100% - (var(--clubhome-gutter) * 2));
+    max-width: calc(400px - (var(--clubhome-gutter) * 2));
+
+    margin: 12px auto 0;
+}
+
+/* 섹션 사이 간격: 홈과 같은 17px */
+.ClubHome-container .ClubHome-all-clubs,
+.ClubHome-container .ClubHome-recruit,
+.ClubHome-container .ClubHome-guest {
+    margin-top: 17px;
+    padding-bottom: 0;
+}
+
+.ClubHome-container .ClubHome-section-header {
+    margin-bottom: 8px;
+}
+
+/* =====================================================================
+   ⭐ 글씨 크기 · 자간 · 프로필 사진을 홈과 똑같이
+   ===================================================================== */
+
+/* 자간: 위쪽 예전 규칙의 음수 자간을 지우고 홈과 같은 기본 자간 사용 */
+.ClubHome-container h2,
+.ClubHome-container h3,
+.ClubHome-container p,
+.ClubHome-container span,
+.ClubHome-container button {
+    letter-spacing: inherit;
+}
+
+/* 프로필 사진: 버튼 기본 테두리(검은 테두리)와 안쪽 여백 제거 */
+.ClubHome-container .ClubHome-profile-button {
+    padding: 0;
+    border: none;
+    background: transparent;
+    flex-shrink: 0;
+}
+
+/* 카드 글씨: 홈 게스트 카드와 같은 크기 (제목 11px / 정보 9px, 가운데 정렬) */
+.ClubHome-container .Club-card,
+.ClubHome-container .Guest-card {
+    text-align: center;
+}
+
+.ClubHome-container .Club-card-name,
+.ClubHome-container .Guest-card-title {
+    margin: 6px 5px 0;
+    font-size: var(--fs-caption);
+}
+
+.ClubHome-container .Club-card-intro {
+    margin: 2px 5px 0;
+    font-size: var(--fs-caption-sm);
+}
+
+.ClubHome-container .Guest-card-info {
+    margin: 2px 5px 0;
+}
+
+.ClubHome-container .Guest-card-time,
+.ClubHome-container .Guest-card-location {
+    font-size: var(--fs-caption-sm);
+}
+
+@media (max-width: 360px) {
+    .ClubHome-container .Club-card-name,
+    .ClubHome-container .Guest-card-title {
+        font-size: var(--fs-caption);
+    }
+
+    .ClubHome-container .Club-card-intro,
+    .ClubHome-container .Guest-card-time,
+    .ClubHome-container .Guest-card-location {
+        font-size: var(--fs-micro);
+    }
+}
+
+/* 비어 있을 때: 홈 .guest-empty 와 같은 11px 회색 */
+.ClubHome-container .ClubHome-empty-title {
+    font-size: var(--fs-caption);
+    color: #999;
+}
+
+.ClubHome-container .ClubHome-empty-desc {
+    font-size: var(--fs-caption);
+}
+
+.ClubHome-container .ClubHome-empty-action {
+    margin-top: 8px;
+    padding: 5px 10px;
+    font-size: var(--fs-caption);
+}
+
+/* =====================================================================
+   ⭐ 실제 홈 화면과 글씨 크기 · 색 맞춤
+   - 지역명: 홈 인사말("안녕하세요, ○○님!")과 같은 글꼴 · 크기
+   - 섹션 제목: 홈 "내 동호회 / 이번 달 일정"과 같은 16px 남색(#1d3557)
+   - 모집 중인 곳이 없을 때: 홈 "선택한 날짜에 일정이 없습니다"처럼 채운 박스
+   ===================================================================== */
+
+/* 지역명 = 홈 인사말 */
+.ClubHome-container .ClubHome-region {
+    font-family: var(--heading), "Maplestory", sans-serif;
+    font-size: var(--fs-title-lg);
+    font-weight: 700;
+    color: #222;
+}
+
+/* 섹션 제목 = 홈 섹션 제목 */
+.ClubHome-container .ClubHome-section-header h2 {
+    font-size: var(--fs-title-sm);
+    font-weight: 700;
+    color: #1d3557;
+}
+
+/* AI 카드 제목도 섹션 제목과 같은 크기 */
+.ClubHome-container .ClubHome-ai-title h2 {
+    font-size: var(--fs-title-sm);
+    color: #1d3557;
+}
+
+/* 더보기 = 홈 더보기 */
+.ClubHome-section-more {
+    color: #777;
+}
+
+/* 카드 글씨 색 = 홈 카드 */
+.ClubHome-container .Club-card-name,
+.ClubHome-container .Guest-card-title {
+    color: #333;
+}
+
+.ClubHome-container .Club-card-intro,
+.ClubHome-container .Guest-card-time,
+.ClubHome-container .Guest-card-location {
+    color: #888;
+}
+
+/* 비어 있을 때: 점선 대신 홈과 같은 연한 초록으로 채운 박스 */
+.ClubHome-empty {
+    padding: 15px 10px;
+
+    border: none;
+    border-radius: 8px;
+    background: #F4FBF9;
+}
+
+.ClubHome-container .ClubHome-empty-title {
+    font-size: var(--fs-body-sm);
+    color: #888;
+}
+
+.ClubHome-container .ClubHome-empty-desc {
+    font-size: var(--fs-caption);
+    color: #999;
+}
+
+.ClubHome-container .ClubHome-empty-action {
+    background: #fff;
+}
+
+/* =====================================================================
+   ⭐ 동호회 찾기 카드 글씨만 +1px
+   - 공통 글씨 크기 표(index.css)는 그대로 두고, 카드에서만 1px 크게
+   ===================================================================== */
+
+/* 카드 이름 */
+.ClubHome-container .Club-card-name,
+.ClubHome-container .Guest-card-title {
+    font-size: calc(var(--fs-caption) + 1px);
+}
+
+/* 카드 정보 (소개 · 날짜 · 장소) */
+.ClubHome-container .Club-card-intro,
+.ClubHome-container .Guest-card-time,
+.ClubHome-container .Guest-card-location {
+    font-size: calc(var(--fs-caption-sm) + 1px);
+}
+
+/* "게스트 모집" 배지 */
+.Guest-card-badge {
+    font-size: calc(var(--fs-caption-sm) + 1px);
+}
+
+@media (max-width: 360px) {
+    .ClubHome-container .Club-card-name,
+    .ClubHome-container .Guest-card-title {
+        font-size: var(--fs-caption);
+    }
+
+    .ClubHome-container .Club-card-intro,
+    .ClubHome-container .Guest-card-time,
+    .ClubHome-container .Guest-card-location {
+        font-size: var(--fs-caption-sm);
+    }
 }

@@ -1969,3 +1969,24 @@ body {
 .guest-slider .guest-empty {
     margin: 0;
 }
+
+/* =========================================================
+   ⭐ 소제목 · 동호회 이름만 1px 크게
+   - 다른 페이지 CSS(.section-header h3 등)가 덮어써도
+     메인 홈 안에서는 이 크기가 적용되도록 .main-home-main 으로 한정
+========================================================= */
+
+/* 소제목: 내 동호회 / 이번 달 일정 / 게스트 모집 / 이런 활동도 있어요 (16px → 17px) */
+.main-home-main .section-header h3 {
+    font-size: 17px;
+}
+
+/* 소제목: 커뮤니티 미리보기 (16px → 17px) */
+.main-home-main .cp-title h3 {
+    font-size: 17px;
+}
+
+/* 내 동호회 카드 - 동호회 이름 (13px → 14px) */
+.main-home-main .my-club-info h4 {
+    font-size: 14px;
+}
