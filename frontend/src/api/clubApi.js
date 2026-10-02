@@ -161,6 +161,7 @@ export const createClub = async (formData) => {
             activityImageUrls,
 
             joinMethod: formData.joinMethod,
+            isRecruiting: formData.isRecruiting,
             maxMembers: formData.maxMembers,
             monthlyFee: Number(formData.monthlyFee),
 
@@ -221,6 +222,39 @@ export async function updateClubSettings(
         {
             method: "PATCH",
             body: requestData
+        }
+    );
+}
+
+// ---------------------------------------------------------
+// 운영자용 가입 질문 목록 조회
+// ---------------------------------------------------------
+export async function getClubJoinQuestionSettings(
+    clubId
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/settings/join-questions`,
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// 가입 질문 전체 교체
+// ---------------------------------------------------------
+export async function replaceClubJoinQuestions(
+    clubId,
+    questions
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/settings/join-questions`,
+        {
+            method: "PUT",
+            body: {
+                questions
+            }
         }
     );
 }

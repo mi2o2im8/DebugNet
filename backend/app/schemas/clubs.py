@@ -105,6 +105,62 @@ class ClubJoinQuestionCreate(BaseModel):
 
         return stripped_value
 
+# -----------------------------------------------------
+# 가입 질문 관리용 개별 질문 Response
+# -----------------------------------------------------
+class ClubJoinQuestionResponse(BaseModel):
+    question_id: int
+    question_text: str
+    question_type: str = "text"
+    required: bool = False
+    display_order: int = 0
+
+
+# -----------------------------------------------------
+# 가입 질문 관리 목록 Response
+# -----------------------------------------------------
+class ClubJoinQuestionListResponse(BaseModel):
+    club_id: int
+    questions: list[ClubJoinQuestionResponse]
+
+
+# -----------------------------------------------------
+# 가입 질문 전체 교체 Request
+#
+# 빈 목록을 전달하면 모든 질문을 비활성화한다.
+# -----------------------------------------------------
+class ClubJoinQuestionReplaceRequest(BaseModel):
+    questions: list[ClubJoinQuestionCreate] = Field(
+        default_factory=list,
+        max_length=5,
+    )
+
+    @model_validator(mode="after")
+    def validate_questions(self):
+        normalized_questions = [
+            question.question_text.casefold()
+            for question in self.questions
+        ]
+
+        if (
+            len(normalized_questions)
+            != len(set(normalized_questions))
+        ):
+            raise ValueError(
+                "동일한 가입 질문을 중복해서 등록할 수 없습니다."
+            )
+
+        return self
+
+
+# -----------------------------------------------------
+# 가입 질문 전체 교체 Response
+# -----------------------------------------------------
+class ClubJoinQuestionReplaceResponse(BaseModel):
+    club_id: int
+    questions: list[ClubJoinQuestionResponse]
+    message: str
+
 
 class ClubCreateRequest(BaseModel):
     # 1단계: 기본 정보
@@ -295,6 +351,14 @@ class ClubCreateRequest(BaseModel):
         max_length=30,
     )
 
+    is_recruiting: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "is_recruiting",
+            "isRecruiting",
+        ),
+    )
+
     @field_validator("max_members", mode="before")
     @classmethod
     def normalize_max_members(cls, value):
@@ -398,6 +462,7 @@ class ClubSettingsResponse(BaseModel):
 
     join_method: str
     visibility: str
+    is_recruiting: bool = True
     user_role: str
 
 
@@ -461,6 +526,14 @@ class ClubSettingsUpdateRequest(BaseModel):
     visibility: str | None = Field(
         default=None,
         max_length=30,
+    )
+
+    is_recruiting: bool | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "is_recruiting",
+            "isRecruiting",
+        ),
     )
 
     @field_validator(

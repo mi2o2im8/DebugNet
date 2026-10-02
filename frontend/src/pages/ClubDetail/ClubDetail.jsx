@@ -106,6 +106,13 @@ function ClubDetail() {
   // 가입 신청 페이지 이동
   // -----------------------------------------------------
   const handleJoinClub = () => {
+    if (club?.is_recruiting === false) {
+      alert(
+        "현재 회원을 모집하지 않는 동호회입니다."
+      );
+      return;
+    }
+
     navigate(`/clubs/${clubId}/application`);
   };
 
@@ -449,13 +456,16 @@ function ClubDetail() {
           onClick={handleJoinClub}
           disabled={
             memberStatus === "pending" ||
-            memberStatus === "active"
+            memberStatus === "active" ||
+            club.is_recruiting === false
           }
         >
           {memberStatus === "pending"
             ? "승인 대기 중"
             : memberStatus === "active"
             ? "가입 완료"
+            : club.is_recruiting === false
+            ? "현재 회원 모집 없음"
             : "가입 신청하기"}
         </button>
 

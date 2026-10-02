@@ -729,16 +729,63 @@ class ClubRepository:
     def create_club_join_questions(
         self,
         question_rows: list[dict],
-    ) -> None:
+    ) -> list[dict]:
 
         if not question_rows:
+            return []
+
+        response = (
+            self.admin_client
+            .table("club_join_questions")
+            .insert(question_rows)
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 기존 활성 가입 질문 비활성화
+    #
+    # 과거 가입 신청 답변 보존을 위해 실제 삭제하지 않는다.
+    # -----------------------------------------------------
+    def deactivate_club_join_questions(
+        self,
+        club_id: int,
+    ) -> list[dict]:
+
+        response = (
+            self.admin_client
+            .table("club_join_questions")
+            .update({
+                "is_active": False,
+            })
+            .eq("club_id", club_id)
+            .eq("is_active", True)
+            .execute()
+        )
+
+        return response.data or []
+
+    # -----------------------------------------------------
+    # 가입 질문 교체 실패 시 기존 질문 복구
+    # -----------------------------------------------------
+    def reactivate_club_join_questions(
+        self,
+        question_ids: list[int],
+    ) -> None:
+
+        if not question_ids:
             return
 
-        self.admin_client.table(
-            "club_join_questions"
-        ).insert(
-            question_rows
-        ).execute()
+        (
+            self.admin_client
+            .table("club_join_questions")
+            .update({
+                "is_active": True,
+            })
+            .in_("question_id", question_ids)
+            .execute()
+        )
 
     # -----------------------------------------------------
     # 동호회 생성자를 동호회장으로 등록
@@ -791,7 +838,8 @@ class ClubRepository:
                 "club_id, club_name, club_intro, "
                 "max_members, monthly_fee, "
                 "activity_frequency, gender_rule, "
-                "join_method, visibility, status"
+                "join_method, visibility, "
+                "is_recruiting, status"
             )
             .eq("club_id", club_id)
             .eq("status", True)
@@ -969,15 +1017,17 @@ class ClubRepository:
     def get_join_questions(
         self,
         club_id: int,
-    ):
+    ) -> list[dict]:
+
         response = (
-            self.supabase
+            self.admin_client
             .table("club_join_questions")
             .select(
                 "question_id, club_id, question_text, "
                 "question_type, required, display_order"
             )
             .eq("club_id", club_id)
+            .eq("is_active", True)
             .order("display_order")
             .execute()
         )
@@ -1192,7 +1242,46 @@ class ClubRepository:
             params,
         ).execute()
 
-        return response.data or []
+        club_rows = response.data or []
+
+        if not club_rows:
+            return []
+
+        club_ids = [
+            int(club["club_id"])
+            for club in club_rows
+            if club.get("club_id") is not None
+        ]
+
+        if not club_ids:
+            return []
+
+        recruiting_response = (
+            self.admin_client
+            .table("clubs")
+            .select("club_id")
+            .in_("club_id", club_ids)
+            .eq("status", True)
+            .eq("is_recruiting", True)
+            .execute()
+        )
+
+        recruiting_club_ids = {
+            int(club["club_id"])
+            for club in (
+                recruiting_response.data or []
+            )
+        }
+
+        return [
+            club
+            for club in club_rows
+            if (
+                club.get("club_id") is not None
+                and int(club["club_id"])
+                in recruiting_club_ids
+            )
+        ]
 
     # =========================================================
     # 게스트 모집 중인 일정 조회

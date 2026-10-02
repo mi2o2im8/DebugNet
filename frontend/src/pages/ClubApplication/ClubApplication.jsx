@@ -73,6 +73,21 @@ function ClubApplication() {
 
         const clubData = await clubResponse.json();
 
+        if (clubData.is_recruiting === false) {
+          alert(
+            "현재 회원을 모집하지 않는 동호회입니다."
+          );
+
+          navigate(
+            `/clubs/${clubId}`,
+            {
+              replace: true,
+            }
+          );
+
+          return;
+        }
+
         setClub(clubData);
 
         // ---------------------------------------------

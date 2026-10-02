@@ -46,8 +46,8 @@ const createSettingMenus = (clubId) => [
     {
         id: "questions",
         label: "가입 질문 관리",
-        icon: FiHelpCircle,
-        disabled: true
+        path: "questions",
+        icon: FiHelpCircle
     },
     {
         id: "operators",

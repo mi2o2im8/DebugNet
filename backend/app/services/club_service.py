@@ -13,6 +13,9 @@ from app.schemas.clubs import (
     ClubSettingsUpdateResponse,
     ClubDeleteRequest,
     ClubDeleteResponse,
+    ClubJoinQuestionListResponse,
+    ClubJoinQuestionReplaceRequest,
+    ClubJoinQuestionReplaceResponse,
 )
 
 
@@ -23,6 +26,24 @@ class ClubService:
 
     def __init__(self):
         self.club_repository = ClubRepository()
+
+    def ensure_club_is_recruiting(
+        self,
+        club_id: int,
+    ) -> None:
+        club = self.club_repository.find_club_by_id(
+            club_id
+        )
+
+        if club is None:
+            raise LookupError(
+                "존재하지 않거나 비활성화된 동호회입니다."
+            )
+
+        if club.get("is_recruiting") is False:
+            raise ValueError(
+                "현재 회원을 모집하지 않는 동호회입니다."
+            )
 
     # -----------------------------------------------------
     # 동호회 검색
@@ -174,6 +195,10 @@ class ClubService:
         club_id: int,
         user_id: str,
     ):
+        self.ensure_club_is_recruiting(
+            club_id
+        )
+
         return self.club_repository.create_join_request(
             club_id=club_id,
             user_id=user_id,
@@ -202,6 +227,10 @@ class ClubService:
         application_message: str,
         answers: list,
     ):
+        self.ensure_club_is_recruiting(
+            club_id
+        )
+
         return self.club_repository.create_application(
             club_id=club_id,
             user_id=user_id,
@@ -290,6 +319,7 @@ class ClubService:
                 "gender_rule": gender_rule,
                 "join_method": request_data.join_method,
                 "visibility": request_data.visibility,
+                "is_recruiting": request_data.is_recruiting,
                 "status": True,
             }
         )
@@ -681,6 +711,11 @@ class ClubService:
                 club.get("visibility")
                 or "public"
             ),
+            is_recruiting=(
+                club.get("is_recruiting")
+                if club.get("is_recruiting") is not None
+                else True
+            ),
             user_role=user_role,
         )
 
@@ -797,6 +832,171 @@ class ClubService:
         return ClubSettingsUpdateResponse(
             club_id=club_id,
             message="동호회 설정이 수정되었습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 운영자용 가입 질문 목록 조회
+    # -----------------------------------------------------
+    def get_join_question_settings(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> ClubJoinQuestionListResponse:
+
+        club = self.club_repository.find_club_by_id(
+            club_id
+        )
+
+        if club is None:
+            raise LookupError(
+                "존재하지 않거나 비활성화된 동호회입니다."
+            )
+
+        membership = (
+            self.club_repository.find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is None:
+            raise PermissionError(
+                "이 동호회의 운영 권한이 없습니다."
+            )
+
+        user_role = str(
+            membership.get("role") or ""
+        )
+
+        if user_role not in {
+            "owner",
+            "manager",
+        }:
+            raise PermissionError(
+                "동호회장 또는 운영진만 "
+                "가입 질문을 조회할 수 있습니다."
+            )
+
+        questions = (
+            self.club_repository.get_join_questions(
+                club_id=club_id
+            )
+        )
+
+        return ClubJoinQuestionListResponse(
+            club_id=club_id,
+            questions=questions,
+        )
+
+    # -----------------------------------------------------
+    # 가입 질문 전체 교체
+    #
+    # 기존 질문은 삭제하지 않고 비활성화한다.
+    # 새 질문은 새로운 question_id로 등록한다.
+    # -----------------------------------------------------
+    def replace_join_questions(
+        self,
+        club_id: int,
+        user_id: str,
+        request_data: ClubJoinQuestionReplaceRequest,
+    ) -> ClubJoinQuestionReplaceResponse:
+
+        club = self.club_repository.find_club_by_id(
+            club_id
+        )
+
+        if club is None:
+            raise LookupError(
+                "존재하지 않거나 비활성화된 동호회입니다."
+            )
+
+        membership = (
+            self.club_repository.find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is None:
+            raise PermissionError(
+                "이 동호회의 운영 권한이 없습니다."
+            )
+
+        user_role = str(
+            membership.get("role") or ""
+        )
+
+        if user_role not in {
+            "owner",
+            "manager",
+        }:
+            raise PermissionError(
+                "동호회장 또는 운영진만 "
+                "가입 질문을 수정할 수 있습니다."
+            )
+
+        # 현재는 주관식 질문만 지원한다.
+        for question in request_data.questions:
+            if question.question_type != "text":
+                raise ValueError(
+                    "현재는 주관식 가입 질문만 지원합니다."
+                )
+
+        previous_questions = (
+            self.club_repository.get_join_questions(
+                club_id=club_id
+            )
+        )
+
+        previous_question_ids = [
+            int(question["question_id"])
+            for question in previous_questions
+        ]
+
+        self.club_repository.deactivate_club_join_questions(
+            club_id=club_id
+        )
+
+        question_rows = [
+            {
+                "club_id": club_id,
+                "question_text": question.question_text,
+                "question_type": question.question_type,
+                "required": question.required,
+                "display_order": index,
+                "is_active": True,
+            }
+            for index, question in enumerate(
+                request_data.questions
+            )
+        ]
+
+        try:
+            self.club_repository.create_club_join_questions(
+                question_rows=question_rows
+            )
+
+        except Exception:
+            # 새 질문 저장이 실패하면 기존 질문을 복구한다.
+            (
+                self.club_repository
+                .reactivate_club_join_questions(
+                    question_ids=previous_question_ids
+                )
+            )
+
+            raise
+
+        active_questions = (
+            self.club_repository.get_join_questions(
+                club_id=club_id
+            )
+        )
+
+        return ClubJoinQuestionReplaceResponse(
+            club_id=club_id,
+            questions=active_questions,
+            message="가입 질문이 수정되었습니다.",
         )
 
     # -----------------------------------------------------

@@ -3,7 +3,8 @@ import {
     FiPlus,
     FiShield,
     FiTrash2,
-    FiUserPlus
+    FiUserPlus,
+    FiUserX
 } from "react-icons/fi";
 
 import CustomSelect from "../../components/common/CustomSelect";
@@ -20,6 +21,23 @@ const JOIN_METHOD_OPTIONS = [
         title: "가입 신청 후 승인",
         description: "운영자의 승인을 받은 후 가입할 수 있어요.",
         icon: FiShield
+    },
+];
+
+const RECRUITING_OPTIONS = [
+    {
+        value: true,
+        title: "회원 모집 중",
+        description:
+            "신규 회원의 가입 신청을 받고 모집 목록에 표시합니다.",
+        icon: FiUserPlus
+    },
+    {
+        value: false,
+        title: "회원 모집 불필요",
+        description:
+            "현재 회원 중심으로 운영하며 신규 가입 신청을 받지 않습니다.",
+        icon: FiUserX
     }
 ];
 
@@ -126,6 +144,63 @@ function OperationStep({ formData, onChange }) {
                                 <span className="club-join-method-text">
                                     <strong>{option.title}</strong>
                                     <small>{option.description}</small>
+                                </span>
+
+                                <span className="club-join-method-radio">
+                                    {isSelected && <FiCheck />}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* 회원 모집 상태 */}
+            <div className="club-create-field">
+                <label>
+                    회원 모집 상태 <em>*</em>
+                </label>
+
+                <div
+                    className="club-join-method-list"
+                    role="radiogroup"
+                    aria-label="회원 모집 상태 선택"
+                >
+                    {RECRUITING_OPTIONS.map((option) => {
+                        const Icon = option.icon;
+                        const isSelected =
+                            formData.isRecruiting === option.value;
+
+                        return (
+                            <button
+                                key={String(option.value)}
+                                type="button"
+                                role="radio"
+                                aria-checked={isSelected}
+                                className={
+                                    isSelected
+                                        ? "club-join-method selected"
+                                        : "club-join-method"
+                                }
+                                onClick={() =>
+                                    onChange(
+                                        "isRecruiting",
+                                        option.value
+                                    )
+                                }
+                            >
+                                <span className="club-join-method-icon">
+                                    <Icon />
+                                </span>
+
+                                <span className="club-join-method-text">
+                                    <strong>
+                                        {option.title}
+                                    </strong>
+
+                                    <small>
+                                        {option.description}
+                                    </small>
                                 </span>
 
                                 <span className="club-join-method-radio">

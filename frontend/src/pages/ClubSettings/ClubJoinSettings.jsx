@@ -11,10 +11,10 @@ import {
 
 import {
     FiCheck,
-    FiLock,
     FiSave,
     FiShield,
-    FiUnlock,
+    FiUserPlus,
+    FiUserX,
     FiZap
 } from "react-icons/fi";
 
@@ -41,18 +41,20 @@ const JOIN_METHOD_OPTIONS = [
     }
 ];
 
-const VISIBILITY_OPTIONS = [
+const RECRUITING_OPTIONS = [
     {
-        value: "public",
-        title: "공개 동호회",
-        description: "검색과 추천 목록에 동호회가 표시됩니다.",
-        icon: FiUnlock
+        value: true,
+        title: "회원 모집 중",
+        description:
+            "신규 회원의 가입 신청을 받고 모집 목록에 표시합니다.",
+        icon: FiUserPlus
     },
     {
-        value: "private",
-        title: "비공개 동호회",
-        description: "외부 검색과 추천 목록에 표시되지 않습니다.",
-        icon: FiLock
+        value: false,
+        title: "회원 모집 불필요",
+        description:
+            "현재 회원 중심으로 운영하며 신규 가입 신청을 받지 않습니다.",
+        icon: FiUserX
     }
 ];
 
@@ -64,8 +66,8 @@ function ClubJoinSettings() {
     const [joinMethod, setJoinMethod] =
         useState("approval");
 
-    const [visibility, setVisibility] =
-        useState("public");
+    const [isRecruiting, setIsRecruiting] =
+        useState(true);
 
     const [isLoading, setIsLoading] =
         useState(true);
@@ -89,8 +91,8 @@ function ClubJoinSettings() {
                     result.join_method || "approval"
                 );
 
-                setVisibility(
-                    result.visibility || "public"
+                setIsRecruiting(
+                    result.is_recruiting ?? true
                 );
             })
             .catch((error) => {
@@ -123,7 +125,7 @@ function ClubJoinSettings() {
                 clubId,
                 {
                     joinMethod,
-                    visibility
+                    isRecruiting
                 }
             );
 
@@ -240,18 +242,18 @@ function ClubJoinSettings() {
                     </div>
 
                     <div className="club-settings-field">
-                        <label>공개 범위</label>
+                        <label>회원 모집 상태</label>
 
                         <div className="club-settings-choice-list">
-                            {VISIBILITY_OPTIONS.map(
+                            {RECRUITING_OPTIONS.map(
                                 (option) => {
                                     const Icon = option.icon;
                                     const isSelected =
-                                        visibility === option.value;
+                                        isRecruiting === option.value;
 
                                     return (
                                         <button
-                                            key={option.value}
+                                            key={String(option.value)}
                                             type="button"
                                             className={[
                                                 "club-settings-choice",
@@ -262,7 +264,7 @@ function ClubJoinSettings() {
                                                 .filter(Boolean)
                                                 .join(" ")}
                                             onClick={() =>
-                                                setVisibility(
+                                                setIsRecruiting(
                                                     option.value
                                                 )
                                             }

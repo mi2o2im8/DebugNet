@@ -108,6 +108,7 @@ function ClubCreate() {
 
         // 5단계
         joinMethod: "approval",
+        isRecruiting: true,
         maxMembers: "50",
         monthlyFee: 30000,
         joinQuestions: [],

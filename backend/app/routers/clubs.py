@@ -20,6 +20,9 @@ from app.schemas.clubs import (
     ClubSettingsUpdateResponse,
     ClubDeleteRequest,
     ClubDeleteResponse,
+    ClubJoinQuestionListResponse,
+    ClubJoinQuestionReplaceRequest,
+    ClubJoinQuestionReplaceResponse,
     ClubRecommendationRequest,
     ClubRecommendationDefaultsResponse,
     ClubRecommendationResponse,
@@ -273,6 +276,98 @@ def update_club_settings(
         ) from error
 
 # =========================================================
+# 운영자용 가입 질문 목록 조회
+#
+# GET /api/clubs/{club_id}/settings/join-questions
+# =========================================================
+
+@router.get(
+    "/{club_id}/settings/join-questions",
+    response_model=ClubJoinQuestionListResponse,
+)
+def get_club_join_question_settings(
+    club_id: int,
+    user_id: str = Depends(get_current_user_id),
+):
+    club_service = ClubService()
+
+    try:
+        return club_service.get_join_question_settings(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=(
+                "가입 질문 조회 중 오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
+# 가입 질문 전체 교체
+#
+# PUT /api/clubs/{club_id}/settings/join-questions
+# =========================================================
+
+@router.put(
+    "/{club_id}/settings/join-questions",
+    response_model=ClubJoinQuestionReplaceResponse,
+)
+def replace_club_join_questions(
+    club_id: int,
+    request_data: ClubJoinQuestionReplaceRequest,
+    user_id: str = Depends(get_current_user_id),
+):
+    club_service = ClubService()
+
+    try:
+        return club_service.replace_join_questions(
+            club_id=club_id,
+            user_id=user_id,
+            request_data=request_data,
+        )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except PermissionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=(
+                "가입 질문 수정 중 오류가 발생했습니다."
+            ),
+        ) from error
+
+# =========================================================
 # 동호회 삭제
 #
 # DELETE /api/clubs/{club_id}
@@ -468,6 +563,18 @@ def create_join_request(
             user_id=user_id,
         )
 
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
+
     except Exception as error:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -539,6 +646,18 @@ def create_application(
                 for answer in request.answers
             ],
         )
+
+    except LookupError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
 
     except Exception as error:
         raise HTTPException(
