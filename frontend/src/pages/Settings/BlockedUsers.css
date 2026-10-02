@@ -186,17 +186,17 @@
 }
 
 .dark-mode .blocked-user-image {
-    background: #303844;
+    background: #3d4552;
 }
 
 .dark-mode .blocked-unblock-button {
-    background: #1b2129;
+    background: #24282e;
 
-    border-color: #303844;
+    border-color: #3d4552;
 
     color: #e9edf2;
 }
 
 .dark-mode .blocked-unblock-button:hover {
-    background: #242b34;
+    background: #313844;
 }

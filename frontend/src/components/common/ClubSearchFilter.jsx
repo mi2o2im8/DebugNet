@@ -291,7 +291,14 @@ function ClubSearchFilter({
           className="ClubSearch-filter-open-button"
           onClick={openFilter}
         >
-          <span>☷ 필터 설정</span>
+          <span className="ClubSearch-filter-label">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+              <path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="16" cy="7" r="2" stroke="currentColor" strokeWidth="2" />
+              <circle cx="10" cy="17" r="2" stroke="currentColor" strokeWidth="2" />
+            </svg>
+            필터 설정
+          </span>
 
           {selectedFilterCount > 0 && (
             <span className="ClubSearch-filter-count">
@@ -299,7 +306,11 @@ function ClubSearchFilter({
             </span>
           )}
 
-          <span className="ClubSearch-filter-arrow">⌄</span>
+          <span className="ClubSearch-filter-arrow">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
         </button>
 
         {/* ------------------------------------------- */}

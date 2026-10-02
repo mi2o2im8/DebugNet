@@ -460,7 +460,16 @@
 ========================================================= */
 
 .dark-mode .favorite-club-page {
-    background-color: #12161c;
+    background-color: #2f3744;
+}
+
+/* 상단 제목 (공용 PageHeader) - 찜한 동호회 페이지만 어둡게 */
+.dark-mode .favorite-club-page .page-header {
+    background: #2f3744;
+}
+
+.dark-mode .favorite-club-page .page-header-title {
+    color: #f1f4f8;
 }
 
 .dark-mode .favorite-club-header h2,
@@ -470,9 +479,9 @@
 }
 
 .dark-mode .fav-notice {
-    background-color: #1b2129;
+    background-color: #24282e;
 
-    border-color: #2a4a43;
+    border-color: #345a51;
 }
 
 .dark-mode .fav-notice strong {
@@ -486,22 +495,22 @@
 
 .dark-mode .fav-card,
 .dark-mode .fav-message {
-    background-color: #1b2129;
+    background-color: #24282e;
 
-    border-color: #303844;
+    border-color: #3d4552;
 }
 
 .dark-mode .fav-card-main:active {
-    background-color: #242b34;
+    background-color: #313844;
 }
 
 .dark-mode .fav-card-thumb,
 .dark-mode .fav-empty-icon {
-    background-color: #242b34;
+    background-color: #313844;
 }
 
 .dark-mode .fav-card-full {
-    background-color: #303844;
+    background-color: #3d4552;
 
     color: #9ba7b7;
 }
@@ -554,4 +563,4 @@
         font-size: 14px;
     }
 
-}
+}
