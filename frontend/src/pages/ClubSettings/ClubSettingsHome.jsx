@@ -33,9 +33,9 @@ const createSettingMenus = (clubId) => [
     },
     {
         id: "activity",
-        label: "활동 지역·종목 수정",
-        icon: FiMapPin,
-        disabled: true
+        label: "활동 정보 수정",
+        path: "activity",
+        icon: FiMapPin
     },
     {
         id: "join",

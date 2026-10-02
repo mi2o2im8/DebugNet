@@ -78,6 +78,15 @@ class ClubScheduleCreate(BaseModel):
 
         return self
 
+class ClubActivityScheduleUpdate(ClubScheduleCreate):
+    club_schedule_id: int | None = Field(
+        default=None,
+        ge=1,
+        validation_alias=AliasChoices(
+            "club_schedule_id",
+            "clubScheduleId",
+        ),
+    )
 
 class ClubJoinQuestionCreate(BaseModel):
     question_text: str = Field(
@@ -561,6 +570,140 @@ class ClubSettingsUpdateRequest(BaseModel):
 
 
 class ClubSettingsUpdateResponse(BaseModel):
+    club_id: int
+    message: str
+
+# -----------------------------------------------------
+# 동호회 활동 정보 일정 Response
+# -----------------------------------------------------
+class ClubActivityScheduleResponse(BaseModel):
+    club_schedule_id: int
+    day_of_week: str
+    start_time: time
+    end_time: time
+
+
+# -----------------------------------------------------
+# 동호회 활동 정보 설정 Response
+# -----------------------------------------------------
+class ClubActivitySettingsResponse(BaseModel):
+    club_id: int
+    sport_name: str
+    region: str
+    venue_name: str | None = None
+    venue_address: str | None = None
+    activity_frequency: str
+    schedules: list[ClubActivityScheduleResponse] = Field(
+        default_factory=list
+    )
+    user_role: str
+
+
+# -----------------------------------------------------
+# 동호회 활동 정보 수정 Request
+# -----------------------------------------------------
+class ClubActivitySettingsUpdateRequest(BaseModel):
+    sport_name: str = Field(
+        min_length=1,
+        max_length=50,
+        validation_alias=AliasChoices(
+            "sport_name",
+            "sportName",
+        ),
+    )
+
+    region: str = Field(
+        min_length=1,
+        max_length=100,
+    )
+
+    venue_name: str | None = Field(
+        default=None,
+        max_length=100,
+        validation_alias=AliasChoices(
+            "venue_name",
+            "venueName",
+        ),
+    )
+
+    venue_address: str | None = Field(
+        default=None,
+        max_length=200,
+        validation_alias=AliasChoices(
+            "venue_address",
+            "venueAddress",
+        ),
+    )
+
+    activity_frequency: str = Field(
+        min_length=1,
+        max_length=50,
+        validation_alias=AliasChoices(
+            "activity_frequency",
+            "activityFrequency",
+        ),
+    )
+
+    schedules: list[ClubActivityScheduleUpdate] = Field(
+        min_length=1,
+        max_length=7,
+    )
+
+    @field_validator(
+        "sport_name",
+        "region",
+        "activity_frequency",
+    )
+    @classmethod
+    def strip_required_activity_strings(
+        cls,
+        value: str,
+    ) -> str:
+        stripped_value = value.strip()
+
+        if not stripped_value:
+            raise ValueError(
+                "활동 정보의 필수 입력값은 공백일 수 없습니다."
+            )
+
+        return stripped_value
+
+    @field_validator(
+        "venue_name",
+        "venue_address",
+    )
+    @classmethod
+    def strip_optional_activity_strings(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        if value is None:
+            return None
+
+        stripped_value = value.strip()
+
+        return stripped_value or None
+
+    @model_validator(mode="after")
+    def validate_activity_schedules(self):
+        active_schedules = [
+            schedule
+            for schedule in self.schedules
+            if schedule.enabled
+        ]
+
+        if not active_schedules:
+            raise ValueError(
+                "하나 이상의 활동 일정을 활성화해주세요."
+            )
+
+        return self
+
+
+# -----------------------------------------------------
+# 동호회 활동 정보 수정 Response
+# -----------------------------------------------------
+class ClubActivitySettingsUpdateResponse(BaseModel):
     club_id: int
     message: str
 

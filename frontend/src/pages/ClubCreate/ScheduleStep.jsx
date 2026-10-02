@@ -76,8 +76,45 @@ const FREQUENCY_OPTIONS = [
     "자유 참여"
 ];
 
+const includeCurrentOption = (
+    options,
+    currentValue
+) => {
+    if (
+        !currentValue
+        || options.some(
+            (option) => option.value === currentValue
+        )
+    ) {
+        return options;
+    }
+
+    return [
+        {
+            value: currentValue,
+            label: currentValue
+        },
+        ...options
+    ];
+};
+
 function ScheduleStep({ formData, onChange }) {
     const schedules = formData.schedules ?? [];
+
+    const cityOptions = includeCurrentOption(
+        CITY_OPTIONS,
+        formData.city
+    );
+
+    const districtOptions = includeCurrentOption(
+        DISTRICT_OPTIONS,
+        formData.district
+    );
+
+    const placeOptions = includeCurrentOption(
+        PLACE_OPTIONS,
+        formData.activityPlace
+    );
 
     const updateSchedule = (scheduleId, field, value) => {
         const updatedSchedules = schedules.map((schedule) =>
@@ -268,7 +305,7 @@ function ScheduleStep({ formData, onChange }) {
                 <div className="club-basic-region-row">
                     <CustomSelect
                         value={formData.city}
-                        options={CITY_OPTIONS}
+                        options={cityOptions}
                         placeholder="시·도 선택"
                         ariaLabel="시도 선택"
                         onChange={(value) =>
@@ -278,7 +315,7 @@ function ScheduleStep({ formData, onChange }) {
 
                     <CustomSelect
                         value={formData.district}
-                        options={DISTRICT_OPTIONS}
+                        options={districtOptions}
                         placeholder="구·군 선택"
                         ariaLabel="구군 선택"
                         onChange={(value) =>
@@ -290,7 +327,7 @@ function ScheduleStep({ formData, onChange }) {
                 {/* 실제 활동 장소 */}
                 <CustomSelect
                     value={formData.activityPlace}
-                    options={PLACE_OPTIONS}
+                    options={placeOptions}
                     placeholder="활동 장소를 선택해주세요"
                     ariaLabel="주요 활동 장소 선택"
                     onChange={(value) =>

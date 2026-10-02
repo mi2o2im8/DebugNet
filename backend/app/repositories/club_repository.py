@@ -881,6 +881,224 @@ class ClubRepository:
         return response.data[0]
 
     # -----------------------------------------------------
+    # 동호회 활동 장소 상세 조회
+    # -----------------------------------------------------
+    def find_club_venue_details(
+        self,
+        club_id: int,
+    ) -> dict | None:
+
+        response = (
+            self.admin_client
+            .table("club_venues")
+            .select("venue_name, address")
+            .eq("club_id", club_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 동호회 종목 수정
+    #
+    # 기존 운동 수준 데이터도 새로운 종목으로 연결한다.
+    # -----------------------------------------------------
+    def replace_club_sport(
+        self,
+        club_id: int,
+        sport_id: int,
+    ) -> None:
+
+        response = (
+            self.admin_client
+            .table("club_sports")
+            .update({
+                "sport_id": sport_id,
+            })
+            .eq("club_id", club_id)
+            .execute()
+        )
+
+        if not response.data:
+            self.create_club_sport(
+                club_id=club_id,
+                sport_id=sport_id,
+            )
+
+        (
+            self.admin_client
+            .table("club_sport_levels")
+            .update({
+                "sport_id": sport_id,
+            })
+            .eq("club_id", club_id)
+            .execute()
+        )
+
+    # -----------------------------------------------------
+    # 동호회 활동 지역 수정
+    # -----------------------------------------------------
+    def replace_club_region(
+        self,
+        club_id: int,
+        region: str,
+    ) -> None:
+
+        response = (
+            self.admin_client
+            .table("club_regions")
+            .update({
+                "region": region,
+            })
+            .eq("club_id", club_id)
+            .execute()
+        )
+
+        if not response.data:
+            self.create_club_region(
+                club_id=club_id,
+                region=region,
+            )
+
+    # -----------------------------------------------------
+    # 동호회 활동 장소 수정
+    # -----------------------------------------------------
+    def replace_club_venue(
+        self,
+        club_id: int,
+        venue_name: str | None,
+        venue_address: str | None,
+    ) -> None:
+
+        response = (
+            self.admin_client
+            .table("club_venues")
+            .update({
+                "venue_name": venue_name,
+                "address": venue_address,
+            })
+            .eq("club_id", club_id)
+            .execute()
+        )
+
+        if not response.data:
+            self.create_club_venue({
+                "club_id": club_id,
+                "venue_name": venue_name,
+                "address": venue_address,
+            })
+
+    # -----------------------------------------------------
+    # 동호회 정기 일정 동기화
+    #
+    # 기존 일정: 같은 ID를 유지하면서 수정
+    # 신규 일정: 새로운 행 생성
+    # 제거된 일정: 삭제하지 않고 비활성화
+    # -----------------------------------------------------
+    def sync_club_schedules(
+        self,
+        club_id: int,
+        schedule_rows: list[dict],
+    ) -> None:
+
+        existing_response = (
+            self.admin_client
+            .table("club_schedules")
+            .select("club_schedule_id")
+            .eq("club_id", club_id)
+            .execute()
+        )
+
+        existing_ids = {
+            int(row["club_schedule_id"])
+            for row in (existing_response.data or [])
+        }
+
+        received_existing_ids: set[int] = set()
+        new_schedule_rows: list[dict] = []
+
+        for schedule_row in schedule_rows:
+            schedule_id = schedule_row.get(
+                "club_schedule_id"
+            )
+
+            schedule_data = {
+                "club_id": club_id,
+                "day_of_week": schedule_row[
+                    "day_of_week"
+                ],
+                "start_time": schedule_row[
+                    "start_time"
+                ],
+                "end_time": schedule_row[
+                    "end_time"
+                ],
+                "is_active": True,
+            }
+
+            # 기존 일정 수정
+            if schedule_id is not None:
+                schedule_id = int(schedule_id)
+
+                if schedule_id not in existing_ids:
+                    raise ValueError(
+                        "해당 동호회에 속하지 않은 "
+                        "활동 일정입니다."
+                    )
+
+                (
+                    self.admin_client
+                    .table("club_schedules")
+                    .update(schedule_data)
+                    .eq(
+                        "club_schedule_id",
+                        schedule_id,
+                    )
+                    .eq("club_id", club_id)
+                    .execute()
+                )
+
+                received_existing_ids.add(
+                    schedule_id
+                )
+
+            # 신규 일정 추가
+            else:
+                new_schedule_rows.append(
+                    schedule_data
+                )
+
+        if new_schedule_rows:
+            (
+                self.admin_client
+                .table("club_schedules")
+                .insert(new_schedule_rows)
+                .execute()
+            )
+
+        # 저장 요청에서 빠진 기존 일정은 삭제하지 않고 비활성화
+        deactivated_ids = (
+            existing_ids - received_existing_ids
+        )
+
+        if deactivated_ids:
+            (
+                self.admin_client
+                .table("club_schedules")
+                .update({"is_active": False})
+                .eq("club_id", club_id)
+                .in_(
+                    "club_schedule_id",
+                    list(deactivated_ids),
+                )
+                .execute()
+            )
+
+    # -----------------------------------------------------
     # 동호회 비활성화
     #
     # 실제 데이터를 삭제하지 않고 앱에서 숨긴다.
@@ -1187,6 +1405,7 @@ class ClubRepository:
                     "start_time, end_time"
                 )
                 .eq("club_id", club_id)
+                .eq("is_active", True)
                 .order("club_schedule_id")
                 .execute()
             )

@@ -260,6 +260,35 @@ export async function replaceClubJoinQuestions(
 }
 
 // ---------------------------------------------------------
+// 동호회 활동 정보 설정 조회
+// ---------------------------------------------------------
+export async function getClubActivitySettings(clubId) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/settings/activity`,
+        {
+            method: "GET"
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// 동호회 활동 정보 설정 수정
+// ---------------------------------------------------------
+export async function updateClubActivitySettings(
+    clubId,
+    requestData
+) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/settings/activity`,
+        {
+            method: "PUT",
+            body: requestData
+        }
+    );
+}
+
+// ---------------------------------------------------------
 // 동호회 삭제
 //
 // 실제 DB 행은 삭제하지 않고 비활성화한다.

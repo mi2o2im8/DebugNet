@@ -11,6 +11,9 @@ from app.schemas.clubs import (
     ClubSettingsResponse,
     ClubSettingsUpdateRequest,
     ClubSettingsUpdateResponse,
+    ClubActivitySettingsResponse,
+    ClubActivitySettingsUpdateRequest,
+    ClubActivitySettingsUpdateResponse,
     ClubDeleteRequest,
     ClubDeleteResponse,
     ClubJoinQuestionListResponse,
@@ -832,6 +835,218 @@ class ClubService:
         return ClubSettingsUpdateResponse(
             club_id=club_id,
             message="동호회 설정이 수정되었습니다.",
+        )
+
+    # -----------------------------------------------------
+    # 동호회 활동 정보 설정 조회
+    # -----------------------------------------------------
+    def get_activity_settings(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> ClubActivitySettingsResponse:
+
+        club = self.club_repository.find_club_by_id(
+            club_id
+        )
+
+        if club is None:
+            raise LookupError(
+                "존재하지 않거나 비활성화된 동호회입니다."
+            )
+
+        membership = (
+            self.club_repository.find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is None:
+            raise PermissionError(
+                "이 동호회의 운영 권한이 없습니다."
+            )
+
+        user_role = str(
+            membership.get("role") or ""
+        )
+
+        if user_role not in {
+            "owner",
+            "manager",
+        }:
+            raise PermissionError(
+                "동호회장 또는 운영진만 활동 정보를 조회할 수 있습니다."
+            )
+
+        sport_name = (
+            self.club_repository
+            .find_club_sport_name(club_id)
+        )
+
+        region = (
+            self.club_repository
+            .find_club_region(club_id)
+        )
+
+        venue = (
+            self.club_repository
+            .find_club_venue_details(club_id)
+            or {}
+        )
+
+        schedules = (
+            self.club_repository
+            .find_club_schedules(club_id)
+        )
+
+        return ClubActivitySettingsResponse(
+            club_id=club_id,
+            sport_name=sport_name or "",
+            region=region or "",
+            venue_name=venue.get("venue_name"),
+            venue_address=venue.get("address"),
+            activity_frequency=(
+                club.get("activity_frequency")
+                or ""
+            ),
+            schedules=schedules,
+            user_role=user_role,
+        )
+
+    # -----------------------------------------------------
+    # 동호회 활동 정보 설정 수정
+    # -----------------------------------------------------
+    def update_activity_settings(
+        self,
+        club_id: int,
+        user_id: str,
+        request_data: ClubActivitySettingsUpdateRequest,
+    ) -> ClubActivitySettingsUpdateResponse:
+
+        club = self.club_repository.find_club_by_id(
+            club_id
+        )
+
+        if club is None:
+            raise LookupError(
+                "존재하지 않거나 비활성화된 동호회입니다."
+            )
+
+        membership = (
+            self.club_repository.find_active_membership(
+                club_id=club_id,
+                user_id=user_id,
+            )
+        )
+
+        if membership is None:
+            raise PermissionError(
+                "이 동호회의 운영 권한이 없습니다."
+            )
+
+        user_role = str(
+            membership.get("role") or ""
+        )
+
+        if user_role not in {
+            "owner",
+            "manager",
+        }:
+            raise PermissionError(
+                "동호회장 또는 운영진만 활동 정보를 수정할 수 있습니다."
+            )
+
+        sport = (
+            self.club_repository
+            .find_sport_by_name(
+                request_data.sport_name
+            )
+        )
+
+        if sport is None:
+            raise ValueError(
+                "등록되지 않은 운동 종목입니다."
+            )
+
+        if not request_data.venue_name:
+            raise ValueError(
+                "주요 활동 장소를 입력해주세요."
+            )
+
+        active_schedules = [
+            schedule
+            for schedule in request_data.schedules
+            if schedule.enabled
+        ]
+
+        if not active_schedules:
+            raise ValueError(
+                "하나 이상의 활동 일정을 활성화해주세요."
+            )
+
+        schedule_rows = [
+            {
+                "club_schedule_id": (
+                    schedule.club_schedule_id
+                ),
+                "day_of_week": (
+                    schedule.day_of_week
+                ),
+                "start_time": (
+                    schedule.start_time.isoformat()
+                ),
+                "end_time": (
+                    schedule.end_time.isoformat()
+                ),
+            }
+            for schedule in active_schedules
+        ]
+
+        sport_id = int(
+            sport["sport_id"]
+        )
+
+        self.club_repository.replace_club_sport(
+            club_id=club_id,
+            sport_id=sport_id,
+        )
+
+        self.club_repository.replace_club_region(
+            club_id=club_id,
+            region=request_data.region,
+        )
+
+        self.club_repository.replace_club_venue(
+            club_id=club_id,
+            venue_name=request_data.venue_name,
+            venue_address=request_data.venue_address,
+        )
+
+        updated_club = (
+            self.club_repository.update_club_settings(
+                club_id=club_id,
+                settings_data={
+                    "activity_frequency": (
+                        request_data.activity_frequency
+                    ),
+                },
+            )
+        )
+
+        if updated_club is None:
+            raise LookupError(
+                "동호회 활동 빈도 수정에 실패했습니다."
+            )
+
+        self.club_repository.sync_club_schedules(
+            club_id=club_id,
+            schedule_rows=schedule_rows,
+        )
+
+        return ClubActivitySettingsUpdateResponse(
+            club_id=club_id,
+            message="동호회 활동 정보가 수정되었습니다.",
         )
 
     # -----------------------------------------------------

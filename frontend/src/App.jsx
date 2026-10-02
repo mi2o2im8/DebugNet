@@ -27,6 +27,7 @@ import ClubIntroductionSettings from "./pages/ClubSettings/ClubIntroductionSetti
 import ClubJoinSettings from "./pages/ClubSettings/ClubJoinSettings";
 import ClubJoinQuestionSettings from "./pages/ClubSettings/ClubJoinQuestionSettings";
 import ClubDeleteSettings from "./pages/ClubSettings/ClubDeleteSettings";
+import ClubActivitySettings from "./pages/ClubSettings/ClubActivitySettings";
 
 import ClubHome from './pages/ClubHome/ClubHome';
 import ClubDetail from "./pages/ClubDetail/ClubDetail";
@@ -391,6 +392,12 @@ function App() {
                 <Route
                   path="/clubs/:clubId/manage/settings/introduction"
                   element={<ClubIntroductionSettings />}
+                />
+
+                {/* 동호회 활동 정보 수정 */}
+                <Route
+                  path="/clubs/:clubId/manage/settings/activity"
+                  element={<ClubActivitySettings />}
                 />
 
                 {/* 동호회 가입 방식 설정 */}
