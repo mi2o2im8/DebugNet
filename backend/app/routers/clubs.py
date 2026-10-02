@@ -416,6 +416,28 @@ def get_guest_recruiting_events():
         )
 
 # =========================================================
+# 내가 찜한 동호회 목록 조회
+#
+# GET /api/clubs/favorites
+# =========================================================
+@router.get("/favorites")
+def get_my_club_favorites(
+    user_id: str = Depends(get_current_user_id),
+):
+    club_service = ClubService()
+
+    try:
+        return club_service.get_my_club_favorites(
+            user_id=user_id,
+        )
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="찜한 동호회 목록 조회 중 오류가 발생했습니다.",
+        ) from error
+
+# =========================================================
 # 동호회 상세 조회
 #
 # GET /api/clubs/{club_id}
@@ -599,3 +621,93 @@ def get_club_user_dashboard(
             detail="이용자용 동호회 대시보드를 불러오는 중 오류가 발생했습니다.",
         ) from error
 
+# =========================================================
+# 동호회 찜 추가
+#
+# POST /api/clubs/{club_id}/favorite
+# =========================================================
+@router.post("/{club_id}/favorite")
+def create_club_favorite(
+    club_id: int,
+    user_id: str = Depends(get_current_user_id),
+):
+    club_service = ClubService()
+
+    try:
+        return club_service.create_club_favorite(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="동호회 찜 추가 중 오류가 발생했습니다.",
+        ) from error
+
+
+# =========================================================
+# 동호회 찜 취소
+#
+# DELETE /api/clubs/{club_id}/favorite
+# =========================================================
+@router.delete("/{club_id}/favorite")
+def delete_club_favorite(
+    club_id: int,
+    user_id: str = Depends(get_current_user_id),
+):
+    club_service = ClubService()
+
+    try:
+        deleted = club_service.delete_club_favorite(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="찜한 동호회를 찾을 수 없습니다.",
+            )
+
+        return {
+            "message": "동호회 찜이 취소되었습니다."
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="동호회 찜 취소 중 오류가 발생했습니다.",
+        ) from error
+
+
+# =========================================================
+# 동호회 찜 여부 확인
+#
+# GET /api/clubs/{club_id}/favorite
+# =========================================================
+@router.get("/{club_id}/favorite")
+def get_club_favorite(
+    club_id: int,
+    user_id: str = Depends(get_current_user_id),
+):
+    club_service = ClubService()
+
+    try:
+        is_favorite = club_service.is_club_favorite(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+        return {
+            "is_favorite": is_favorite
+        }
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="동호회 찜 여부 조회 중 오류가 발생했습니다.",
+        ) from error

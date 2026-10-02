@@ -452,6 +452,88 @@ class ClubRepository:
         # 3. 회원 기록은 있지만 withdrawn이고,
         #    새로운 가입 신청도 없으면 다시 가입 신청 가능
         return None
+
+    # -----------------------------------------------------
+    # 동호회 찜 추가
+    # -----------------------------------------------------
+    def create_club_favorite(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> dict:
+        response = (
+            self.admin_client
+            .table("club_favorites")
+            .insert({
+                "club_id": club_id,
+                "user_id": user_id,
+            })
+            .execute()
+        )
+
+        if not response.data:
+            raise ValueError("동호회 찜 추가에 실패했습니다.")
+
+        return response.data[0]
+
+    # -----------------------------------------------------
+    # 동호회 찜 취소
+    # -----------------------------------------------------
+    def delete_club_favorite(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> bool:
+        response = (
+            self.admin_client
+            .table("club_favorites")
+            .delete()
+            .eq("club_id", club_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+
+        return bool(response.data)
+
+    # -----------------------------------------------------
+    # 동호회 찜 여부 확인
+    # -----------------------------------------------------
+    def is_club_favorite(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> bool:
+        response = (
+            self.admin_client
+            .table("club_favorites")
+            .select("favorite_id")
+            .eq("club_id", club_id)
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        return bool(response.data)
+
+    # -----------------------------------------------------
+    # 내가 찜한 동호회 목록 조회
+    # -----------------------------------------------------
+    def get_my_club_favorites(
+        self,
+        user_id: str,
+    ) -> list[dict]:
+        response = (
+            self.admin_client
+            .table("club_favorites")
+            .select(
+                "favorite_id, club_id, created_at"
+            )
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .execute()
+        )
+
+        return response.data or []
     
     # -----------------------------------------------------
     # 종목명으로 sports 조회
