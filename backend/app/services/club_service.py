@@ -47,6 +47,105 @@ class ClubService:
     def get_club_by_id(self, club_id: int):
         return self.club_repository.get_club_by_id(club_id)
 
+    # -----------------------------------------------------
+    # 동호회 찜 추가
+    # -----------------------------------------------------
+    def create_club_favorite(
+        self,
+        club_id: int,
+        user_id: str,
+    ):
+        return self.club_repository.create_club_favorite(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+    # -----------------------------------------------------
+    # 동호회 찜 취소
+    # -----------------------------------------------------
+    def delete_club_favorite(
+        self,
+        club_id: int,
+        user_id: str,
+    ):
+        return self.club_repository.delete_club_favorite(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+    # -----------------------------------------------------
+    # 동호회 찜 여부 확인
+    # -----------------------------------------------------
+    def is_club_favorite(
+        self,
+        club_id: int,
+        user_id: str,
+    ) -> bool:
+        return self.club_repository.is_club_favorite(
+            club_id=club_id,
+            user_id=user_id,
+        )
+
+    # -----------------------------------------------------
+    # 내가 찜한 동호회 목록 조회
+    # -----------------------------------------------------
+    def get_my_club_favorites(
+        self,
+        user_id: str,
+    ):
+        favorites = self.club_repository.get_my_club_favorites(
+            user_id=user_id,
+        )
+
+        favorite_clubs = []
+
+        for favorite in favorites:
+            club_id = favorite.get("club_id")
+
+            if not club_id:
+                continue
+
+            club = self.club_repository.get_club_by_id(club_id)
+
+            if not club:
+                continue
+
+            # -------------------------------------------------
+            # 대표 이미지 URL 설정
+            # -------------------------------------------------
+            images = club.get("images") or []
+
+            representative_image = next(
+                (
+                    image
+                    for image in images
+                    if image.get("image_type") == "representative"
+                    and image.get("image_url")
+                ),
+                None,
+            )
+
+            # 대표 이미지가 없으면 첫 번째 이미지 사용
+            if representative_image is None:
+                representative_image = next(
+                    (
+                        image
+                        for image in images
+                        if image.get("image_url")
+                    ),
+                    None,
+                )
+
+            club["image_url"] = (
+                representative_image.get("image_url")
+                if representative_image
+                else None
+            )
+
+            favorite_clubs.append(club)
+
+        return favorite_clubs
+
     # ---------------------------------------------------------
     # 내가 가입한 동호회 조회
     # ---------------------------------------------------------

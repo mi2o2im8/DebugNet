@@ -1001,3 +1001,51 @@ export async function recommendClubs(requestData) {
         }
     );
 }
+
+// -----------------------------------------------------
+// 동호회 찜 추가
+// -----------------------------------------------------
+export async function createClubFavorite(clubId) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/favorite`,
+        {
+            method: "POST",
+        }
+    );
+}
+
+// -----------------------------------------------------
+// 동호회 찜 취소
+// -----------------------------------------------------
+export async function deleteClubFavorite(clubId) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/favorite`,
+        {
+            method: "DELETE",
+        }
+    );
+}
+
+// -----------------------------------------------------
+// 동호회 찜 여부 확인
+// -----------------------------------------------------
+export async function getClubFavorite(clubId) {
+    return authenticatedRequest(
+        `/api/clubs/${clubId}/favorite`,
+        {
+            method: "GET",
+        }
+    );
+}
+
+// -----------------------------------------------------
+// 내가 찜한 동호회 목록 조회
+// -----------------------------------------------------
+export async function getMyClubFavorites() {
+    return authenticatedRequest(
+        `/api/clubs/favorites`,
+        {
+            method: "GET",
+        }
+    );
+}

@@ -17,6 +17,9 @@ import { buildApiUrl } from "../../api/apiClient";
 import {
   getClubReviews,
   getClubLeaveReviews,
+  getClubFavorite,
+  createClubFavorite,
+  deleteClubFavorite,
 } from "../../api/clubApi";
 import { goBack } from "../../utils/navigation";
 
@@ -43,6 +46,9 @@ function ClubDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [memberStatus, setMemberStatus] = useState(null);
+
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   const [reviews, setReviews] = useState([]);
   const [reviewLoading, setReviewLoading] = useState(true);
@@ -101,6 +107,57 @@ function ClubDetail() {
   // -----------------------------------------------------
   const handleJoinClub = () => {
     navigate(`/clubs/${clubId}/application`);
+  };
+
+  // -----------------------------------------------------
+  // 동호회 찜 상태 확인
+  // -----------------------------------------------------
+  useEffect(() => {
+    const fetchFavoriteStatus = async () => {
+      try {
+        const response = await getClubFavorite(clubId);
+
+        setIsFavorite(
+          response?.is_favorite === true
+        );
+      } catch (error) {
+        console.error(
+          "동호회 찜 상태 조회 오류:",
+          error
+        );
+      }
+    };
+
+    fetchFavoriteStatus();
+  }, [clubId]);
+
+  // -----------------------------------------------------
+  // 동호회 찜 / 찜 취소
+  // -----------------------------------------------------
+  const handleFavorite = async () => {
+    if (favoriteLoading) {
+      return;
+    }
+
+    try {
+      setFavoriteLoading(true);
+
+      if (isFavorite) {
+        await deleteClubFavorite(clubId);
+        setIsFavorite(false);
+      } else {
+        await createClubFavorite(clubId);
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error(
+        "동호회 찜 처리 오류:",
+        error
+      );
+      alert("찜 처리 중 오류가 발생했습니다.");
+    } finally {
+      setFavoriteLoading(false);
+    }
   };
 
   // -----------------------------------------------------
@@ -274,8 +331,28 @@ function ClubDetail() {
             <FiShare2 />
           </button>
 
-          <button className="club-detail-header-btn">
-            <FiHeart />
+          <button
+            type="button"
+            className={`club-detail-header-btn ${
+              isFavorite
+                ? "club-detail-favorite-active"
+                : ""
+            }`}
+            onClick={handleFavorite}
+            disabled={favoriteLoading}
+            aria-label={
+              isFavorite
+                ? "찜 취소"
+                : "동호회 찜하기"
+            }
+          >
+            <FiHeart
+              fill={
+                isFavorite
+                  ? "currentColor"
+                  : "none"
+              }
+            />
           </button>
 
         </div>

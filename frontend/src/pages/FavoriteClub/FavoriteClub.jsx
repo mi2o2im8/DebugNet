@@ -12,9 +12,10 @@ import {
 import PageHeader from "../../components/PageHeader/PageHeader";
 import BottomNav from "../../components/BottomNav";
 
-// import {
-//     authenticatedRequest,
-// } from "../../api/apiClient";
+import {
+    getMyClubFavorites,
+    deleteClubFavorite,
+} from "../../api/clubApi";
 
 import {
     FiHeart,
@@ -48,7 +49,7 @@ import "./FavoriteClub.css";
 //   (배포 전에 꼭 false로!)
 // =========================================================
 
-const IS_FAVORITE_CONNECTED = false;
+const IS_FAVORITE_CONNECTED = true;
 
 const USE_PREVIEW_DATA = false;
 
@@ -272,28 +273,18 @@ function FavoriteClub() {
     // =========================================================
 
     useEffect(() => {
-
         if (!IS_FAVORITE_CONNECTED) return;
 
-
         const fetchFavoriteClubs = async () => {
-
             try {
-
                 setLoading(true);
-
                 setError("");
 
+                const data = await getMyClubFavorites();
 
-                // const data = await authenticatedRequest(
-                //     "/api/clubs/favorites"
-                // );
-                //
-                // setFavoriteClubs(data.items || []);
-
+                setFavoriteClubs(data || []);
 
             } catch (error) {
-
                 console.error(
                     "찜한 동호회 조회 실패:",
                     error
@@ -303,18 +294,12 @@ function FavoriteClub() {
                     error.message ||
                     "찜한 동호회를 불러오지 못했습니다."
                 );
-
             } finally {
-
                 setLoading(false);
-
             }
-
         };
 
-
         fetchFavoriteClubs();
-
     }, []);
 
 
@@ -354,34 +339,25 @@ function FavoriteClub() {
     // =========================================================
 
     const handleRemoveFavorite = async (clubId) => {
-
         const previousClubs = favoriteClubs;
 
+        // 화면에서 먼저 제거
         setFavoriteClubs((clubs) =>
             clubs.filter((club) => club.club_id !== clubId)
         );
 
-
-        if (!IS_FAVORITE_CONNECTED) return;
-
-
         try {
-
-            // await authenticatedRequest(
-            //     `/api/clubs/${clubId}/favorite`,
-            //     { method: "DELETE" }
-            // );
-
+            await deleteClubFavorite(clubId);
         } catch (error) {
-
             console.error("찜 해제 실패:", error);
 
+            // 실패하면 원래 목록으로 복구
             setFavoriteClubs(previousClubs);
 
-            alert("찜 해제에 실패했어요. 잠시 후 다시 시도해주세요.");
-
+            alert(
+                "찜 해제에 실패했어요. 잠시 후 다시 시도해주세요."
+            );
         }
-
     };
 
 
@@ -466,40 +442,6 @@ function FavoriteClub() {
             ================================================= */}
 
             <PageHeader title="찜한 동호회" />
-
-
-            {/* =================================================
-                연결 예정 안내
-            ================================================= */}
-
-            {!IS_FAVORITE_CONNECTED && (
-
-                <div
-                    className="fav-notice"
-                    role="status"
-                >
-
-                    <FiClock
-                        className="fav-notice-icon"
-                        aria-hidden="true"
-                    />
-
-                    <div>
-
-                        <strong>
-                            찜하기 기능은 곧 연결될 예정이에요
-                        </strong>
-
-                        <p>
-                            동호회 상세 페이지에서 하트를 누르면
-                            이곳에 차곡차곡 모아둘게요.
-                        </p>
-
-                    </div>
-
-                </div>
-
-            )}
 
 
             {/* =================================================
