@@ -46,7 +46,206 @@ class ClubRepository:
             params,
         ).execute()
 
-        return response.data
+        return self._attach_list_extras(response.data or [])
+
+    # -----------------------------------------------------
+    # ⭐ 동호회 찾기 목록용 추가 정보
+    #
+    # search_clubs RPC 결과에는 해시태그 / 생성일 / 회원 수가
+    # 없어서, 목록에 있는 동호회만 한 번에 모아서 붙인다.
+    #   - sport_name      : 종목 (여러 개면 쉼표로)
+    #   - region          : 활동 지역 (여러 개면 쉼표로)
+    #   - atmospheres     : 해시태그로 표시할 태그
+    #                       동호회 만들기 3단계에서 고른 소개 키워드
+    #                       (club_intro_keywords, 고른 순서대로)
+    #                       + 분위기 태그(club_atmospheres)가 있으면 뒤에 추가
+    #   - created_at      : 최신순 정렬
+    #   - current_members : 인기순 정렬 · "멤버 n명" 표시
+    #                       (club_members의 active 행 기준)
+    # 조회에 실패해도 목록 자체는 그대로 돌려준다.
+    # -----------------------------------------------------
+    def _attach_list_extras(self, club_rows):
+        club_ids = sorted({
+            int(club["club_id"])
+            for club in club_rows
+            if club.get("club_id") is not None
+        })
+
+        if not club_ids:
+            return club_rows
+
+        atmospheres_by_club = {}
+        created_at_by_club = {}
+        members_by_club = {}
+        sports_by_club = {}
+        regions_by_club = {}
+
+        try:
+            club_sports_response = (
+                self.admin_client
+                .table("club_sports")
+                .select("club_id, sport_id")
+                .in_("club_id", club_ids)
+                .execute()
+            )
+
+            club_sport_rows = club_sports_response.data or []
+
+            sport_ids = sorted({
+                item["sport_id"]
+                for item in club_sport_rows
+                if item.get("sport_id") is not None
+            })
+
+            sport_names = {}
+
+            if sport_ids:
+                sports_response = (
+                    self.admin_client
+                    .table("sports")
+                    .select("sport_id, sport_name")
+                    .in_("sport_id", sport_ids)
+                    .execute()
+                )
+
+                sport_names = {
+                    item["sport_id"]: item.get("sport_name")
+                    for item in sports_response.data or []
+                }
+
+            for item in club_sport_rows:
+                name = sport_names.get(item.get("sport_id"))
+
+                if name:
+                    names = sports_by_club.setdefault(int(item["club_id"]), [])
+
+                    if name not in names:
+                        names.append(name)
+        except Exception as error:
+            print("동호회 종목 조회 오류:", error)
+
+        try:
+            regions_response = (
+                self.admin_client
+                .table("club_regions")
+                .select("club_id, region")
+                .in_("club_id", club_ids)
+                .execute()
+            )
+
+            for item in regions_response.data or []:
+                region = item.get("region")
+
+                if region:
+                    regions = regions_by_club.setdefault(int(item["club_id"]), [])
+
+                    if region not in regions:
+                        regions.append(region)
+        except Exception as error:
+            print("동호회 지역 조회 오류:", error)
+
+        try:
+            atmospheres_response = (
+                self.admin_client
+                .table("club_atmospheres")
+                .select("club_id, atmosphere")
+                .in_("club_id", club_ids)
+                .execute()
+            )
+
+            for item in atmospheres_response.data or []:
+                if item.get("atmosphere"):
+                    atmospheres_by_club.setdefault(
+                        int(item["club_id"]), []
+                    ).append(item["atmosphere"])
+        except Exception as error:
+            print("동호회 분위기 태그 조회 오류:", error)
+
+        keywords_by_club = {}
+
+        try:
+            keywords_response = (
+                self.admin_client
+                .table("club_intro_keywords")
+                .select("club_id, keyword, display_order")
+                .in_("club_id", club_ids)
+                .order("display_order", desc=False)
+                .execute()
+            )
+
+            for item in keywords_response.data or []:
+                if item.get("keyword"):
+                    keywords_by_club.setdefault(
+                        int(item["club_id"]), []
+                    ).append(item["keyword"])
+        except Exception as error:
+            print("동호회 소개 키워드 조회 오류:", error)
+
+        # 소개 키워드 먼저, 분위기 태그는 뒤에 (중복 제거)
+        for club_id in set(keywords_by_club) | set(atmospheres_by_club):
+            merged = []
+
+            for tag in (
+                keywords_by_club.get(club_id, [])
+                + atmospheres_by_club.get(club_id, [])
+            ):
+                if tag not in merged:
+                    merged.append(tag)
+
+            atmospheres_by_club[club_id] = merged
+
+        try:
+            clubs_response = (
+                self.admin_client
+                .table("clubs")
+                .select("club_id, created_at")
+                .in_("club_id", club_ids)
+                .execute()
+            )
+
+            for item in clubs_response.data or []:
+                created_at_by_club[int(item["club_id"])] = item.get("created_at")
+        except Exception as error:
+            print("동호회 생성일 조회 오류:", error)
+
+        try:
+            members_response = (
+                self.admin_client
+                .table("club_members")
+                .select("club_id")
+                .in_("club_id", club_ids)
+                .eq("status", "active")
+                .execute()
+            )
+
+            for item in members_response.data or []:
+                club_id = int(item["club_id"])
+                members_by_club[club_id] = members_by_club.get(club_id, 0) + 1
+        except Exception as error:
+            print("동호회 회원 수 조회 오류:", error)
+
+        for club in club_rows:
+            if club.get("club_id") is None:
+                continue
+
+            club_id = int(club["club_id"])
+
+            if not club.get("sport_name") and sports_by_club.get(club_id):
+                club["sport_name"] = ", ".join(sports_by_club[club_id])
+
+            if not club.get("region") and regions_by_club.get(club_id):
+                club["region"] = ", ".join(regions_by_club[club_id])
+
+            if atmospheres_by_club.get(club_id) or not club.get("atmospheres"):
+                club["atmospheres"] = atmospheres_by_club.get(club_id, [])
+
+            if not club.get("created_at"):
+                club["created_at"] = created_at_by_club.get(club_id)
+
+            if club_id in members_by_club or "current_members" not in club:
+                club["current_members"] = members_by_club.get(club_id, 0)
+
+        return club_rows
 
     # -----------------------------------------------------
     # 동호회 상세 조회
@@ -1492,7 +1691,7 @@ class ClubRepository:
             )
         }
 
-        return [
+        recruiting_rows = [
             club
             for club in club_rows
             if (
@@ -1501,6 +1700,8 @@ class ClubRepository:
                 in recruiting_club_ids
             )
         ]
+
+        return self._attach_list_extras(recruiting_rows)
 
     # =========================================================
     # 게스트 모집 중인 일정 조회

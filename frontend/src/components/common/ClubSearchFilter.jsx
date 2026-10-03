@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./ClubSearch.css";
 
 // =====================================================
@@ -17,11 +17,20 @@ function ClubSearchFilter({
   },
   onSelectedFiltersChange = () => {},
   onToggleSearch = () => {},
+  // ⭐ 동호회 찾기(ClubHome)처럼 필터 버튼을 다른 곳에 두는 화면용
+  //   hideFilterButton : 기본 "필터 설정" 버튼 숨김
+  //   openRequest      : { key, scope } — key가 바뀔 때마다 모달 열기
+  //                      scope "sports" 이면 운동 종목만 보여줌
+  hideFilterButton = false,
+  openRequest = null,
 }) {
   // ---------------------------------------------------
   // 필터 모달 열림 / 닫힘
   // ---------------------------------------------------
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // "all" : 전체 필터 / "sports" : 운동 종목만
+  const [filterScope, setFilterScope] = useState("all");
 
   // ---------------------------------------------------
   // 모달 내부 임시 선택값
@@ -145,7 +154,8 @@ function ClubSearchFilter({
   // 필터 모달 열기
   // 기존 적용된 필터를 임시 선택값으로 복사
   // ---------------------------------------------------
-  const openFilter = () => {
+  const openFilter = (scope = "all") => {
+    setFilterScope(scope === "sports" ? "sports" : "all");
     setDraftSports([...selectedSports]);
     setDraftRegions([...selectedRegions]);
     setDraftDays([...selectedDays]);
@@ -153,6 +163,14 @@ function ClubSearchFilter({
 
     setIsFilterOpen(true);
   };
+
+  // 바깥에서 모달 열기 요청
+  useEffect(() => {
+    if (openRequest?.key) {
+      openFilter(openRequest.scope);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openRequest?.key]);
 
   // ---------------------------------------------------
   // 종목 선택 / 해제
@@ -203,6 +221,12 @@ function ClubSearchFilter({
   // ---------------------------------------------------
   const handleResetFilter = () => {
     setDraftSports([]);
+
+    // 종목만 보는 모달에서는 종목만 초기화
+    if (filterScope === "sports") {
+      return;
+    }
+
     setDraftRegions([]);
     setDraftDays([]);
     setDraftTimeSlots([]);
@@ -285,11 +309,13 @@ function ClubSearchFilter({
       {/* 필터 설정 버튼 */}
       {/* --------------------------------------------- */}
 
+      {(!hideFilterButton || selectedFilterCount > 0) && (
       <section className="ClubSearch-filter-section">
+        {!hideFilterButton && (
         <button
           type="button"
           className="ClubSearch-filter-open-button"
-          onClick={openFilter}
+          onClick={() => openFilter()}
         >
           <span className="ClubSearch-filter-label">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
@@ -312,6 +338,7 @@ function ClubSearchFilter({
             </svg>
           </span>
         </button>
+        )}
 
         {/* ------------------------------------------- */}
         {/* 선택된 필터 칩 */}
@@ -383,6 +410,7 @@ function ClubSearchFilter({
           </div>
         )}
       </section>
+      )}
 
       {/* --------------------------------------------- */}
       {/* 필터 모달 */}
@@ -399,7 +427,7 @@ function ClubSearchFilter({
           >
             {/* 모달 헤더 */}
             <div className="ClubSearch-filter-modal-header">
-              <h2>필터 설정</h2>
+              <h2>{filterScope === "sports" ? "운동 종목" : "필터 설정"}</h2>
 
               <button
                 type="button"
@@ -442,6 +470,8 @@ function ClubSearchFilter({
                 </div>
               </div>
 
+              {filterScope === "all" && (
+              <>
               {/* 활동 지역 */}
               <div className="ClubSearch-filter-group">
                 <h3>활동 지역</h3>
@@ -533,6 +563,8 @@ function ClubSearchFilter({
                   ))}
                 </div>
               </div>
+              </>
+              )}
             </div>
 
             {/* 모달 하단 버튼 */}

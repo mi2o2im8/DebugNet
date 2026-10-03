@@ -120,7 +120,7 @@ const getClubId = (club) =>
 // 로그인한 사용자의 관심 종목 / 활동 지역
 // (로그인 안 했거나 조회 실패하면 빈 목록 → 추천 뱃지만 안 뜸)
 // ---------------------------------------------------------
-const getUserPreferences = async () => {
+export const getUserPreferences = async () => {
     try {
         const {
             data: { user },
@@ -194,7 +194,7 @@ const getClubDetail = async (clubId) => {
 // ---------------------------------------------------------
 // 종목 이름 비교 ("축구ㆍ풋살"과 "축구"도 같은 종목으로 봄)
 // ---------------------------------------------------------
-const isSameSport = (a, b) => {
+export const isSameSport = (a, b) => {
     const clean = (text) => String(text).replace(/\s/g, "");
     const x = clean(a);
     const y = clean(b);
@@ -203,7 +203,7 @@ const isSameSport = (a, b) => {
 };
 
 // 지역 비교 ("서울 강서구" / "강서구" 모두 대응)
-const isSameRegion = (a, b) => {
+export const isSameRegion = (a, b) => {
     const x = String(a).trim();
     const y = String(b).trim();
 

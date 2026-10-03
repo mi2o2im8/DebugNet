@@ -2101,3 +2101,798 @@
         font-size: var(--fs-caption-sm);
     }
 }
+
+/* =====================================================================
+   ⭐ 동호회 찾기 개편: 탭 + 세로 리스트 + 리스트/카드 전환
+   - 섹션 3개(전체 / 회원 모집중 / 게스트 모집중)를 탭 하나로 합침
+   - 탭 바는 스크롤해도 화면 위에 고정
+   - 위쪽 기존 규칙은 그대로 두고 새 클래스만 추가
+   ===================================================================== */
+
+/* 탭 바 · 탭 내용도 다른 섹션처럼 가운데 400px */
+.ClubHome-container .ClubHome-tabbar,
+.ClubHome-container .ClubHome-tab-panel {
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ---------- 탭 바 (상단 고정) ---------- */
+.ClubHome-container .ClubHome-tabbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+
+    margin-top: 14px;
+
+    background-color: #fff;
+    border-bottom: 1px solid #eaeeec;
+}
+
+.ClubHome-tabbar-inner {
+    padding: 0 var(--clubhome-gutter);
+}
+
+.ClubHome-tabs {
+    display: flex;
+    gap: 2px;
+    margin: 0 -6px;
+}
+
+.ClubHome-tab {
+    height: 44px;
+    padding: 0 6px;
+    margin-bottom: -1px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    border: none;
+    border-bottom: 2.5px solid transparent;
+    background: transparent;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: var(--fs-body, 14px);
+    font-weight: 400;
+    color: #888;
+
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.ClubHome-tab.is-active {
+    border-bottom-color: #01A17F;
+    font-weight: 700;
+    color: #1d3557;
+}
+
+.ClubHome-tab-count {
+    font-size: var(--fs-caption, 12px);
+    color: #aaa;
+}
+
+.ClubHome-tab.is-active .ClubHome-tab-count {
+    color: #01A17F;
+}
+
+/* 개수 + 보기 전환 */
+.ClubHome-toolbar {
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ClubHome-container .ClubHome-toolbar-label {
+    margin: 0;
+    font-size: var(--fs-caption, 12px);
+    color: #777;
+}
+
+.ClubHome-view-toggle {
+    display: flex;
+    padding: 2px;
+
+    border-radius: 8px;
+    background: #f1f4f3;
+}
+
+.ClubHome-view-button {
+    width: 34px;
+    height: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+
+    color: #9aa3a0;
+    cursor: pointer;
+}
+
+.ClubHome-view-button.is-active {
+    background: #fff;
+    color: #01A17F;
+    box-shadow: 0 1px 2px rgba(16, 40, 32, 0.14);
+}
+
+.ClubHome-tab:focus-visible,
+.ClubHome-view-button:focus-visible,
+.ClubHome-row:focus-visible,
+.ClubHome-gcard:focus-visible,
+.ClubHome-guest-row:focus-visible {
+    outline: 2px solid #01A17F;
+    outline-offset: 2px;
+}
+
+/* ---------- 탭 내용 ---------- */
+.ClubHome-container .ClubHome-tab-panel {
+    padding: 4px var(--clubhome-gutter) 40px;
+}
+
+.ClubHome-container .ClubHome-tab-panel .ClubHome-empty {
+    margin-top: 12px;
+}
+
+/* 썸네일 공통: 사진 없으면 이름 첫 글자 */
+.ClubHome-row-thumb,
+.ClubHome-gcard-image {
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #edf3f1;
+}
+
+.ClubHome-row-thumb img,
+.ClubHome-gcard-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.ClubHome-thumb-initial {
+    font-size: var(--fs-title-lg, 22px);
+    font-weight: 700;
+    color: #01A17F;
+}
+
+/* 모집중 뱃지 */
+.ClubHome-badge {
+    flex-shrink: 0;
+
+    display: inline-flex;
+    align-items: center;
+
+    height: 18px;
+    padding: 0 6px;
+
+    border-radius: 4px;
+    background: #eaf8f4;
+
+    font-size: var(--fs-caption-sm, 11px);
+    font-weight: 700;
+    color: #01805f;
+}
+
+.ClubHome-badge--solid {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    height: 16px;
+    padding: 0 4px;
+
+    background: #01A17F;
+    color: #fff;
+}
+
+/* ---------- 리스트형 ---------- */
+.ClubHome-rows {
+    display: flex;
+    flex-direction: column;
+}
+
+.ClubHome-row {
+    width: 100%;
+    padding: 12px 0;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    border: none;
+    border-bottom: 1px solid #f0f2f1;
+    background: transparent;
+
+    font-family: inherit;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+}
+
+.ClubHome-row:active {
+    background-color: #f7faf9;
+}
+
+.ClubHome-row-thumb {
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
+}
+
+.ClubHome-row-body {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 2px;
+}
+
+.ClubHome-row-name-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.ClubHome-container .ClubHome-row-name {
+    margin: 0;
+    min-width: 0;
+
+    font-size: var(--fs-body, 14px);
+    font-weight: 700;
+    color: #333;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ClubHome-container .ClubHome-row-meta,
+.ClubHome-container .ClubHome-guest-info {
+    margin: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 3px;
+
+    font-size: var(--fs-caption, 12px);
+    color: #777;
+}
+
+.ClubHome-row-meta span,
+.ClubHome-guest-info span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ClubHome-row-meta svg,
+.ClubHome-guest-info svg {
+    flex-shrink: 0;
+}
+
+.ClubHome-container .ClubHome-row-intro {
+    margin: 0;
+
+    font-size: var(--fs-caption, 12px);
+    color: #555;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---------- 타일형 (3열) ---------- */
+.ClubHome-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 8px;
+    padding-top: 8px;
+}
+
+.ClubHome-gcard {
+    min-width: 0;
+    padding: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    border: none;
+    background: transparent;
+
+    font-family: inherit;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+}
+
+.ClubHome-gcard-image-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.ClubHome-gcard-image {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+}
+
+.ClubHome-gcard:active .ClubHome-gcard-image {
+    opacity: 0.85;
+}
+
+.ClubHome-container .ClubHome-gcard-name {
+    margin: 6px 1px 0;
+
+    font-size: var(--fs-body-sm, 13px);
+    font-weight: 700;
+    color: #333;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ClubHome-container .ClubHome-gcard-meta {
+    margin: 2px 1px 0;
+
+    display: flex;
+    align-items: center;
+    gap: 2px;
+
+    font-size: var(--fs-caption-sm, 11px);
+    color: #777;
+}
+
+.ClubHome-gcard-meta span,
+.ClubHome-container .ClubHome-gcard-tags {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ClubHome-gcard-meta svg {
+    flex-shrink: 0;
+}
+
+.ClubHome-container .ClubHome-gcard-tags {
+    margin: 3px 1px 0;
+    font-size: var(--fs-caption-sm, 11px);
+    color: #01805f;
+}
+
+/* ---------- 게스트 일정 (리스트형만) ---------- */
+.ClubHome-guest-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 8px;
+}
+
+.ClubHome-guest-row {
+    width: 100%;
+    padding: 12px;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    border: 1px solid #e6ebe9;
+    border-radius: 10px;
+    background: #fff;
+
+    font-family: inherit;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+}
+
+.ClubHome-guest-row:active {
+    background-color: #f7faf9;
+}
+
+.ClubHome-guest-date {
+    flex-shrink: 0;
+    width: 52px;
+    padding: 7px 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+
+    border-radius: 8px;
+    background: #eaf8f4;
+}
+
+.ClubHome-guest-dow {
+    font-size: var(--fs-caption-sm, 11px);
+    font-weight: 700;
+    color: #01805f;
+}
+
+.ClubHome-guest-day {
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: #1d3557;
+}
+
+.ClubHome-guest-month {
+    font-size: var(--fs-caption-sm, 11px);
+    color: #666;
+}
+
+.ClubHome-guest-body {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ClubHome-container .ClubHome-guest-title {
+    margin: 0 0 1px;
+
+    font-size: var(--fs-body, 14px);
+    font-weight: 700;
+    color: #333;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ClubHome-guest-count {
+    flex-shrink: 0;
+    align-self: flex-start;
+
+    font-size: var(--fs-caption-sm, 11px);
+    font-weight: 700;
+    color: #01805f;
+}
+
+.ClubHome-container .ClubHome-guest-footnote {
+    margin: 6px 0 0;
+    text-align: center;
+    font-size: var(--fs-caption, 12px);
+    color: #999;
+}
+
+/* ---------- 이용 도우미: 스크롤 내리는 동안 잠깐 숨김 ---------- */
+.ClubHome-chatbot-wrap .club-home-chatbot-button {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.ClubHome-chatbot-wrap.is-hidden .club-home-chatbot-button {
+    transform: translateY(16px) scale(0.9);
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ClubHome-chatbot-wrap .club-home-chatbot-button {
+        transition: none;
+    }
+}
+
+@media (max-width: 360px) {
+    .ClubHome-tab {
+        font-size: var(--fs-body-sm, 13px);
+    }
+
+    .ClubHome-row-thumb {
+        width: 64px;
+        height: 64px;
+    }
+}
+
+
+/* =====================================================================
+   ⭐ 2차 수정
+   - AI 추천 배너를 한 줄로 (상단 비중 줄이기, 캐릭터 · 초록 톤은 유지)
+   - 필터 / 종목 칩 + 정렬(추천순 · 최신순 · 인기순)
+   - 리스트에 해시태그 · 멤버 수
+   ===================================================================== */
+
+/* ---------- AI 추천 배너 (한 줄) ---------- */
+.ClubHome-container .ClubHome-ai-compact {
+    width: calc(100% - (var(--clubhome-gutter) * 2));
+    max-width: calc(400px - (var(--clubhome-gutter) * 2));
+    margin: 8px auto 0;
+    padding: 10px 12px 10px 10px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    border: none;
+    border-radius: 12px;
+    background-color: #eaf8f4;
+
+    font-family: "Maplestory", sans-serif;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+}
+
+.ClubHome-container .ClubHome-ai-compact:active {
+    background-color: #dff3ec;
+}
+
+.ClubHome-ai-compact-character {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+    background-color: #fff;
+    box-shadow: 0 3px 8px rgba(1, 161, 127, 0.15);
+}
+
+.ClubHome-ai-compact-character img {
+    width: 64%;
+    height: 64%;
+    object-fit: contain;
+    -webkit-user-drag: none;
+    user-select: none;
+}
+
+.ClubHome-ai-compact-text {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ClubHome-ai-compact-title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    font-size: var(--fs-body, 14px);
+    font-weight: 700;
+    color: #1d3557;
+    white-space: nowrap;
+}
+
+.ClubHome-container .ClubHome-ai-compact .ClubHome-ai-badge {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    font-size: var(--fs-caption-sm, 11px);
+}
+
+.ClubHome-ai-compact-desc {
+    font-size: var(--fs-caption, 12px);
+    color: #777;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ClubHome-ai-compact-button {
+    flex-shrink: 0;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+
+    height: 28px;
+    padding: 0 8px 0 10px;
+
+    border-radius: 999px;
+    background-color: #01A17F;
+
+    font-size: var(--fs-caption, 12px);
+    color: #fff;
+}
+
+/* ---------- 필터 / 종목 칩 ---------- */
+.ClubHome-chips {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.ClubHome-chip {
+    height: 30px;
+    max-width: 130px;
+    padding: 0 11px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    border: 1px solid #d9dfdd;
+    border-radius: 999px;
+    background: #fff;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: var(--fs-caption, 12px);
+    color: #333;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.ClubHome-chip svg {
+    flex-shrink: 0;
+}
+
+.ClubHome-chip.is-active {
+    border-color: #01A17F;
+    background: #eaf8f4;
+    color: #01805f;
+}
+
+.ClubHome-chip-count {
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+    background: #01A17F;
+
+    font-size: 10px;
+    color: #fff;
+}
+
+.ClubHome-chip:focus-visible,
+.ClubHome-sort-button:focus-visible,
+.ClubHome-sort-option:focus-visible,
+.ClubHome-ai-compact:focus-visible {
+    outline: 2px solid #01A17F;
+    outline-offset: 2px;
+}
+
+/* ---------- 정렬 ---------- */
+.ClubHome-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.ClubHome-sort {
+    position: relative;
+}
+
+.ClubHome-sort-button {
+    height: 30px;
+    padding: 0 2px 0 4px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+
+    border: none;
+    background: transparent;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: var(--fs-caption, 12px);
+    color: #555;
+    cursor: pointer;
+}
+
+.ClubHome-sort-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 30;
+
+    min-width: 96px;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+
+    border: 1px solid #e6ebe9;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(16, 40, 32, 0.12);
+}
+
+.ClubHome-sort-option {
+    width: 100%;
+    height: 34px;
+    padding: 0 10px;
+
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+
+    font-family: "Maplestory", sans-serif;
+    font-size: var(--fs-caption, 12px);
+    color: #333;
+    text-align: left;
+    cursor: pointer;
+}
+
+.ClubHome-sort-option:hover {
+    background: #f4f7f6;
+}
+
+.ClubHome-sort-option.is-active {
+    font-weight: 700;
+    color: #01805f;
+}
+
+/* ---------- 리스트 해시태그 · 멤버 수 ---------- */
+.ClubHome-row-foot {
+    margin-top: 2px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.ClubHome-tags {
+    min-width: 0;
+
+    display: flex;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.ClubHome-tag {
+    flex-shrink: 0;
+
+    height: 20px;
+    padding: 0 6px;
+
+    display: inline-flex;
+    align-items: center;
+
+    border-radius: 4px;
+    background: #f1f4f3;
+
+    font-size: var(--fs-caption-sm, 11px);
+    color: #555;
+}
+
+.ClubHome-row-members {
+    flex-shrink: 0;
+    font-size: var(--fs-caption-sm, 11px);
+    color: #777;
+}
+
+@media (max-width: 360px) {
+    .ClubHome-ai-compact-desc {
+        display: none;
+    }
+
+    .ClubHome-chip {
+        padding: 0 9px;
+    }
+}
